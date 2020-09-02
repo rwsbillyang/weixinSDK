@@ -124,14 +124,14 @@ fun Routing.officialAccountApi(path: String = "/weixin/oa") {
         post {
             val body: String = call.receiveText()
 
-            val msgSignature = call.request.queryParameters["msgSignature"]
+            val msgSignature = call.request.queryParameters["msg_signature"]
             val timeStamp = call.request.queryParameters["timeStamp"]
             val nonce = call.request.queryParameters["nonce"]
             val encryptType = call.request.queryParameters["encrypt_type"]?:"aes"
 
             val reXml = OA.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
 
-            call.respondText(reXml, ContentType.Text.Plain, HttpStatusCode.OK)
+            call.respondText(reXml?:"success", ContentType.Text.Plain, HttpStatusCode.OK)
         }
     }
 

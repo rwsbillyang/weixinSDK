@@ -2,6 +2,7 @@ package com.github.rwsbillyang.wxSDK.officialAccount
 
 
 import com.github.rwsbillyang.wxSDK.common.accessToken.*
+import com.github.rwsbillyang.wxSDK.common.msgSecurity.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.officialAccount.msg.*
 
 
@@ -80,12 +81,13 @@ class OAContext(
 ){
     var accessToken: IRefreshableValue
     var ticket: IRefreshableValue
+    var wxBizMsgCrypt = encodingAESKey?.let { WXBizMsgCrypt(token,it,appId) }
     var msgHub: WxOAMsgHub
 
     init {
         val msgHandler = customMsgHandler?: DefaultOAMsgHandler()
         val eventHandler = customEventHandler?: DefaultOAEventHandler()
-        msgHub = WxOAMsgHub(msgHandler, eventHandler, encodingAESKey)
+        msgHub = WxOAMsgHub(msgHandler, eventHandler, wxBizMsgCrypt)
 
         accessToken = customAccessToken?: RefreshableAccessToken(appId, AccessTokenRefresher(AccessTokenUrl(appId, secret)))
 

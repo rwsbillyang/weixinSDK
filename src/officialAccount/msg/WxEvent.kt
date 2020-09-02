@@ -30,8 +30,8 @@ class WxUnsubscribeEvent(base: BaseMsg): WxBaseEvent(base)
 /**
  * 用户未关注时，扫码关注后的事件推送
  *
- * @param eventKey EventKey	事件KEY值，qrscene_为前缀，后面为二维码的参数值
- * @param ticket Ticket	二维码的ticket，可用来换取二维码图片
+ * @property eventKey EventKey	事件KEY值，qrscene_为前缀，后面为二维码的参数值
+ * @property ticket Ticket	二维码的ticket，可用来换取二维码图片
  * */
 class WxScanSubscribeEvent(base: BaseMsg): WxBaseEvent(base)
 {
@@ -57,8 +57,8 @@ class WxScanSubscribeEvent(base: BaseMsg): WxBaseEvent(base)
 /**
  * 用户已关注时，扫码关注后的事件推送
  *
- * @param eventKey EventKey	事件KEY值，事件KEY值，是一个32位无符号整数，即创建二维码时的二维码scene_id
- * @param ticket Ticket	二维码的ticket，可用来换取二维码图片
+ * @property eventKey EventKey	事件KEY值，事件KEY值，是一个32位无符号整数，即创建二维码时的二维码scene_id
+ * @property ticket Ticket	二维码的ticket，可用来换取二维码图片
  * */
 class WxScanEvent(base: BaseMsg): WxBaseEvent(base)
 {
@@ -89,9 +89,9 @@ class WxScanEvent(base: BaseMsg): WxBaseEvent(base)
  * 用户同意上报地理位置后，每次进入公众号会话时，都会在进入时上报地理位置，或在进入会话后每5秒上报一次地理位置，
  * 公众号可以在公众平台网站中修改以上设置。上报地理位置时，微信会将上报地理位置事件推送到开发者填写的URL。
  *
- * @param latitude Latitude	地理位置纬度
- * @param longitude    地理位置经度
- * @param precision Precision	地理位置精度
+ * @property latitude Latitude	地理位置纬度
+ * @property longitude    地理位置经度
+ * @property precision Precision	地理位置精度
  * */
 open class WxLocationEvent(base: BaseMsg): WxBaseEvent(base)
 {
@@ -125,7 +125,7 @@ open class WxLocationEvent(base: BaseMsg): WxBaseEvent(base)
  *
  * 用户点击自定义菜单后，微信会把点击事件推送给开发者，请注意，点击菜单弹出子菜单，不会产生上报。
  *
- * @param eventKey EventKey 事件KEY值，与自定义菜单接口中KEY值对应
+ * @property eventKey EventKey 事件KEY值，与自定义菜单接口中KEY值对应
  * */
 class WxMenuClickEvent(base: BaseMsg): WxBaseEvent(base)
 {
@@ -147,8 +147,8 @@ class WxMenuClickEvent(base: BaseMsg): WxBaseEvent(base)
 /**
  * 点击菜单跳转链接时的事件推送
  *
- * @param eventKey EventKey	事件KEY值，设置的跳转URL
- * @property MenuID	指菜单ID，如果是个性化菜单，则可以通过这个字段，知道是哪个规则的菜单被点击了
+ * @property eventKey EventKey	事件KEY值，设置的跳转URL
+ * @property menuId MenuID	指菜单ID，如果是个性化菜单，则可以通过这个字段，知道是哪个规则的菜单被点击了
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  * */
 class WxMenuViewEvent(base: BaseMsg): WxBaseEvent(base)
@@ -177,9 +177,9 @@ class WxMenuViewEvent(base: BaseMsg): WxBaseEvent(base)
  *
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  *
- * @param eventKey EventKey	事件KEY值，由开发者在创建菜单时设定
- * @param scanType ScanType	扫描类型，一般是qrcode
- * @param scanResult ScanResult	扫描结果，即二维码对应的字符串信息
+ * @property eventKey EventKey	事件KEY值，由开发者在创建菜单时设定
+ * @property scanType ScanType	扫描类型，一般是qrcode
+ * @property scanResult ScanResult	扫描结果，即二维码对应的字符串信息
  * */
 open class WxMenuScanCodePushEvent(base: BaseMsg): WxBaseEvent(base)
 {
@@ -246,8 +246,8 @@ class SendPicsInfo(count: Int?, picList: List<Pic>?)
  *
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  *
- * @param eventKey EventKey	事件KEY值，由开发者在创建菜单时设定
- * @param picsInfo SendPicsInfo 图片的MD5值，开发者若需要，可用于验证接收到图片
+ * @property eventKey EventKey	事件KEY值，由开发者在创建菜单时设定
+ * @property picsInfo SendPicsInfo 图片的MD5值，开发者若需要，可用于验证接收到图片
  * */
 open class WxMenuPhotoEvent(base: BaseMsg): WxBaseEvent(base){
     var eventKey: String? = null
@@ -316,8 +316,6 @@ open class WxMenuPhotoEvent(base: BaseMsg): WxBaseEvent(base){
  *
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  *
- * @param eventKey EventKey	事件KEY值，由开发者在创建菜单时设定
- * @param picsInfo SendPicsInfo 图片的MD5值，开发者若需要，可用于验证接收到图片
  * */
 class WxMenuPhotoOrAlbumEvent(base: BaseMsg): WxMenuPhotoEvent(base)
 
@@ -327,8 +325,6 @@ class WxMenuPhotoOrAlbumEvent(base: BaseMsg): WxMenuPhotoEvent(base)
  *
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  *
- * @param eventKey EventKey	事件KEY值，由开发者在创建菜单时设定
- * @param picsInfo SendPicsInfo 图片的MD5值，开发者若需要，可用于验证接收到图片
  * */
 class WxMenuWxAlbumEvent(base: BaseMsg): WxMenuPhotoEvent(base)
 
@@ -336,12 +332,12 @@ class WxMenuWxAlbumEvent(base: BaseMsg): WxMenuPhotoEvent(base)
 /**
  * location_select：弹出地理位置选择器的事件推送
  *
- * @param eventKey EventKey	事件KEY值，由开发者在创建菜单时设定
- * @param locationX Location_X	X坐标信息
- * @param locationY Location_Y	Y坐标信息
- * @param scale Scale	精度，可理解为精度或者比例尺、越精细的话 scale越高
- * @param label Label	地理位置的字符串信息
- * @param poiname Poiname	朋友圈POI的名字，可能为空
+ * @property eventKey EventKey	事件KEY值，由开发者在创建菜单时设定
+ * @property locationX Location_X	X坐标信息
+ * @property locationY Location_Y	Y坐标信息
+ * @property scale Scale	精度，可理解为精度或者比例尺、越精细的话 scale越高
+ * @property label Label	地理位置的字符串信息
+ * @property poiname Poiname	朋友圈POI的名字，可能为空
  * */
 class WxMenuLocationEvent(base: BaseMsg): WxBaseEvent(base)
 {
@@ -429,7 +425,7 @@ class WxMenuMiniEvent(base: BaseMsg): WxBaseEvent(base)
  *
  * https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Template_Message_Interface.html
  *
- * @param status success 送达成功;
+ * @property status success 送达成功;
  * failed:user block: 送达由于用户拒收（用户设置拒绝接收公众号消息）;
  * failed: system failed: 发送状态为发送失败（非用户拒绝）
  * */
@@ -464,19 +460,19 @@ class WxTemplateSendJobFinish(base: BaseMsg): WxBaseEvent(base)
  * 将会在群发任务即将完成的时候，就推送群发结果，此时的推送人数数据将会与实际情形存在一定误差
  *
  *
- * @param status Status	群发的结果，为“send success”或“send fail”或“err(num)”。但send success时，也有可能因用户拒收公众号的消息、系统错误等原因造成
+ * @property status Status	群发的结果，为“send success”或“send fail”或“err(num)”。但send success时，也有可能因用户拒收公众号的消息、系统错误等原因造成
  * 少量用户接收失败。err(num)是审核失败的具体原因，可能的情况如下：err(10001):涉嫌广告, err(20001):涉嫌政治, err(20004):涉嫌社会,
  * err(20002):涉嫌色情, err(20006):涉嫌违法犯罪, err(20008):涉嫌欺诈, err(20013):涉嫌版权, err(22000):涉嫌互推(互相宣传),
  * err(21000):涉嫌其他, err(30001):原创校验出现系统错误且用户选择了被判为转载就不群发, err(30002): 原创校验被判定为不能群发,
  * err(30003): 原创校验被判定为转载文且用户选择了被判为转载就不群发, err(40001)：管理员拒绝, err(40002)：管理员30分钟内无响应，超时
  *
- * @param totalCount TotalCount	tag_id下粉丝数；或者openid_list中的粉丝数
- * @param filterCount FilterCount	过滤（过滤是指特定地区、性别的过滤、用户设置拒收的过滤，用户接收已超4条的过滤）后，准备发送的粉丝数，
+ * @property totalCount TotalCount	tag_id下粉丝数；或者openid_list中的粉丝数
+ * @property filterCount FilterCount	过滤（过滤是指特定地区、性别的过滤、用户设置拒收的过滤，用户接收已超4条的过滤）后，准备发送的粉丝数，
  * 原则上，FilterCount 约等于 SentCount + ErrorCount
- * @param sentCount SentCount	发送成功的粉丝数
- * @param errorCount ErrorCount	发送失败的粉丝数
- * @param copyrightCheckResult
- * @param articleUrlResult
+ * @property sentCount SentCount	发送成功的粉丝数
+ * @property errorCount ErrorCount	发送失败的粉丝数
+ * @property copyrightCheckResult
+ * @property articleUrlResult
  *
  * 群发图文消息的过程如下：
  * 首先，预先将图文消息中需要用到的图片，使用上传图文消息内图片接口，上传成功并获得图片 URL；

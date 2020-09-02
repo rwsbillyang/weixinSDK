@@ -56,6 +56,7 @@ class WxImgMSg(base: BaseMsg): WxBaseMsg(base)
 
 /**
  * 语音消息
+ * @property mediaId 语音消息媒体id，可以调用获取临时素材接口拉取数据。
  * @property format 语音格式，如amr，speex等
  * @property recognition 语音识别结果，UTF8编码 开通语音识别后，用户每次发送语音给公众号时，
  * 微信会在推送的语音消息XML数据包中，增加一个Recognition字段（注：由于客户端缓存，
@@ -64,8 +65,8 @@ class WxImgMSg(base: BaseMsg): WxBaseMsg(base)
  * */
 class WxVoiceMsg(base: BaseMsg): WxBaseMsg(base)
 {
-    var format: String? = null
     var mediaId: String?= null
+    var format: String? = null
     var recognition: String?= null
 
     override fun read(reader: XMLEventReader)
@@ -84,8 +85,10 @@ class WxVoiceMsg(base: BaseMsg): WxBaseMsg(base)
         }
     }
 }
+
 /**
  * 视频消息
+ * @property mediaId 视频消息媒体id，可以调用获取临时素材接口拉取数据
  * @property thumbMediaId 视频消息缩略图的媒体id，可以调用多媒体文件下载接口拉取数据。
  * */
 class WxVideoMsg(base: BaseMsg): WxBaseMsg(base)

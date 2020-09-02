@@ -55,6 +55,31 @@ class WXBizMsgCrypt(val token: String, val encodingAesKey: String, val  appId: S
 
 
     /**
+     * 接入微信时，验证填写的GET请求URL
+     * @param msgSignature 签名串，对应URL参数的msg_signature
+     * @param timeStamp 时间戳，对应URL参数的timestamp
+     * @param nonce 随机串，对应URL参数的nonce
+     * @param echoStr 随机串，对应URL参数的echostr
+     *
+     * @return 解密之后的echostr
+     * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
+     */
+    @Throws(AesException::class)
+    fun verifyUrl(
+        msgSignature: String,
+        timeStamp: String?,
+        nonce: String?,
+        echoStr: String?
+    ): String {
+        val signature =
+            getSHA1(token, timeStamp!!, nonce!!, echoStr!!)
+        if (signature != msgSignature) {
+            throw AesException(AesException.ValidateSignatureError)
+        }
+        return decrypt(echoStr)
+    }
+
+    /**
      * 解密从微信推送过来的消息（其中包含了签名验证），返回解密后的原文
      *
      * 检验消息的真实性，并且获取解密后的明文.
@@ -175,7 +200,7 @@ class WXBizMsgCrypt(val token: String, val encodingAesKey: String, val  appId: S
      * @throws AesException aes加密失败
      */
     @Throws(AesException::class)
-    fun encrypt(randomStr: String, text: String): String {
+    private fun encrypt(randomStr: String, text: String): String {
         val byteCollector = ByteGroup()
         val randomStrBytes = randomStr.toByteArray(CHARSET)
         val textBytes = text.toByteArray(CHARSET)
@@ -220,7 +245,7 @@ class WXBizMsgCrypt(val token: String, val encodingAesKey: String, val  appId: S
      * @throws AesException aes解密失败
      */
     @Throws(AesException::class)
-    fun decrypt(text: String?): String {
+    private fun decrypt(text: String?): String {
         val original: ByteArray
         original = try {
             // 设置解密模式为AES的CBC模式
@@ -267,30 +292,7 @@ class WXBizMsgCrypt(val token: String, val encodingAesKey: String, val  appId: S
 
 
 
-    /**
-     * 验证URL
-     * @param msgSignature 签名串，对应URL参数的msg_signature
-     * @param timeStamp 时间戳，对应URL参数的timestamp
-     * @param nonce 随机串，对应URL参数的nonce
-     * @param echoStr 随机串，对应URL参数的echostr
-     *
-     * @return 解密之后的echostr
-     * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
-     */
-    @Throws(AesException::class)
-    fun verifyUrl(
-        msgSignature: String,
-        timeStamp: String?,
-        nonce: String?,
-        echoStr: String?
-    ): String {
-        val signature =
-            getSHA1(token, timeStamp!!, nonce!!, echoStr!!)
-        if (signature != msgSignature) {
-            throw AesException(AesException.ValidateSignatureError)
-        }
-        return decrypt(echoStr)
-    }
+
 
 
 

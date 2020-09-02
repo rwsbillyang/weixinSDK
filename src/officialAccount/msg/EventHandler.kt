@@ -1,6 +1,6 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.msg
 
-import com.github.rwsbillyang.wxSDK.common.msg.IEventHandler
+
 import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.common.msg.WxBaseEvent
 
@@ -8,7 +8,7 @@ import com.github.rwsbillyang.wxSDK.common.msg.WxBaseEvent
  * 微信推送过来的事件的处理接口
  *
  * */
-interface IOAEventHandler: IEventHandler{
+interface IOAEventHandler{
     /**
      * 关注事件
      *
@@ -161,6 +161,10 @@ interface IOAEventHandler: IEventHandler{
      * */
     fun onWxTemplateSendJobFinish(e: WxTemplateSendJobFinish): ReBaseMSg?
 
+    /**
+     *  缺省处理函数
+     * */
+    fun onDefault(e: WxBaseEvent): ReBaseMSg?
 }
 
 class DefaultOAEventHandler: IOAEventHandler {

@@ -1,6 +1,5 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.msg
 
-import com.github.rwsbillyang.wxSDK.common.msg.IMsgHandler
 import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.common.msg.WxBaseMsg
 
@@ -8,7 +7,7 @@ import com.github.rwsbillyang.wxSDK.common.msg.WxBaseMsg
  * 微信推送过来的消息的处理接口
  *
  * */
-interface IOAMsgHandler: IMsgHandler
+interface IOAMsgHandler
 {
     /**
      * 文本消息的处理
@@ -18,7 +17,7 @@ interface IOAMsgHandler: IMsgHandler
     /**
      * 图片消息的处理
      * */
-    fun onWxImgMSg(msg: WxImgMSg): ReBaseMSg?
+    fun onWxImgMsg(msg: WxImgMSg): ReBaseMSg?
 
     /**
      * 语音消息的处理
@@ -45,14 +44,14 @@ interface IOAMsgHandler: IMsgHandler
      * */
     fun onWxLinkMsg(msg: WxLinkMsg): ReBaseMSg?
 
-
+    fun onDefault(msg: WxBaseMsg): ReBaseMSg?
 }
 
 class DefaultOAMsgHandler: IOAMsgHandler
 {
     override fun onWxTextMsg(msg: WxTextMsg) = onDefault(msg)
 
-    override fun onWxImgMSg(msg: WxImgMSg) = onDefault(msg)
+    override fun onWxImgMsg(msg: WxImgMSg) = onDefault(msg)
 
     override fun onWxVoiceMsg(msg: WxVoiceMsg) = onDefault(msg)
 

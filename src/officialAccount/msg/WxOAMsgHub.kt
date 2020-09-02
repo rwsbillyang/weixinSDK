@@ -1,19 +1,20 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.msg
 
 import com.github.rwsbillyang.wxSDK.common.msg.*
+import com.github.rwsbillyang.wxSDK.common.msgSecurity.WXBizMsgCrypt
 import javax.xml.stream.XMLEventReader
 
 class WxOAMsgHub(
     private val msgHandler: IOAMsgHandler,
     private val eventHandler: IOAEventHandler,
-    aesKey: String?
-):WxMsgHub(aesKey) {
+    wxBizMsgCrypt: WXBizMsgCrypt?
+):WxMsgHub(wxBizMsgCrypt) {
     override fun dispatchMsg(reader: XMLEventReader, base: BaseMsg): ReBaseMSg?{
         return when(base.msgType){
             BaseMsg.TEXT -> msgHandler.onWxTextMsg(
                 WxTextMsg(base).apply { read(reader) }
             )
-            BaseMsg.IMAGE -> msgHandler.onWxImgMSg(
+            BaseMsg.IMAGE -> msgHandler.onWxImgMsg(
                 WxImgMSg(base).apply { read(reader) }
             )
             BaseMsg.VOICE -> msgHandler.onWxVoiceMsg(
