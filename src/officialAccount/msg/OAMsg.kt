@@ -1,6 +1,6 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.msg
 
-import com.github.rwsbillyang.wxSDK.common.msg.BaseMsg
+import com.github.rwsbillyang.wxSDK.common.msg.BaseInfo
 import com.github.rwsbillyang.wxSDK.common.msg.WxBaseMsg
 import javax.xml.stream.XMLEventReader
 
@@ -9,7 +9,7 @@ import javax.xml.stream.XMLEventReader
  * 文本消息 微信服务器推送过来的
  * @property content 消息内容
  * */
-class WxTextMsg(base: BaseMsg): WxBaseMsg(base)
+class OATextMsg(base: BaseInfo): WxBaseMsg(base)
 {
     var content: String? = null
     override fun read(reader: XMLEventReader)
@@ -34,7 +34,7 @@ class WxTextMsg(base: BaseMsg): WxBaseMsg(base)
  * @property picUrl 图片链接（由系统生成）
  * @property mediaId 图片消息媒体id，可以调用获取临时素材接口拉取数据。
  * */
-class WxImgMSg(base: BaseMsg): WxBaseMsg(base)
+class OAImgMSg(base: BaseInfo): WxBaseMsg(base)
 {
     var picUrl: String? = null
     var mediaId: String? = null
@@ -63,7 +63,7 @@ class WxImgMSg(base: BaseMsg): WxBaseMsg(base)
  * 开发者开启或者关闭语音识别功能，对新关注者立刻生效，对已关注用户需要24小时生效。
  * 开发者可以重新关注此帐号进行测试）
  * */
-class WxVoiceMsg(base: BaseMsg): WxBaseMsg(base)
+class OAVoiceMsg(base: BaseInfo): WxBaseMsg(base)
 {
     var mediaId: String?= null
     var format: String? = null
@@ -91,7 +91,7 @@ class WxVoiceMsg(base: BaseMsg): WxBaseMsg(base)
  * @property mediaId 视频消息媒体id，可以调用获取临时素材接口拉取数据
  * @property thumbMediaId 视频消息缩略图的媒体id，可以调用多媒体文件下载接口拉取数据。
  * */
-class WxVideoMsg(base: BaseMsg): WxBaseMsg(base)
+class OAVideoMsg(base: BaseInfo): WxBaseMsg(base)
 {
     var mediaId: String? = null
     var thumbMediaId: String? = null
@@ -114,7 +114,7 @@ class WxVideoMsg(base: BaseMsg): WxBaseMsg(base)
  * 小视频消息
  * @property thumbMediaId 视频消息缩略图的媒体id，可以调用多媒体文件下载接口拉取数据。
  * */
-class WxShortVideoMsg(base: BaseMsg): WxBaseMsg(base)
+class OAShortVideoMsg(base: BaseInfo): WxBaseMsg(base)
 {
     var mediaId: String? = null
     var thumbMediaId: String? = null
@@ -140,7 +140,7 @@ class WxShortVideoMsg(base: BaseMsg): WxBaseMsg(base)
  * @property scale 地图缩放大小
  * @property label 地理位置信息
  * */
-class WxLocationMsg(base: BaseMsg): WxBaseMsg(base)
+class OALocationMsg(base: BaseInfo): WxBaseMsg(base)
 {
     var locationX: Float? = null
     var locationY: Float? = null
@@ -169,7 +169,7 @@ class WxLocationMsg(base: BaseMsg): WxBaseMsg(base)
  * @property description Description	消息描述
  * @property url Url	消息链接
  * */
-class WxLinkMsg(base: BaseMsg): WxBaseMsg(base)
+class OALinkMsg(base: BaseInfo): WxBaseMsg(base)
 {
     var title: String? = null
     var description: String? = null

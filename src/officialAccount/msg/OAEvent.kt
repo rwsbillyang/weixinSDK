@@ -1,6 +1,6 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.msg
 
-import com.github.rwsbillyang.wxSDK.common.msg.BaseMsg
+import com.github.rwsbillyang.wxSDK.common.msg.BaseInfo
 import com.github.rwsbillyang.wxSDK.common.msg.WxBaseEvent
 import javax.xml.stream.XMLEventReader
 import javax.xml.stream.XMLStreamException
@@ -14,7 +14,7 @@ import javax.xml.stream.XMLStreamException
  * 关于重试的消息排重，推荐使用FromUserName + CreateTime 排重。
  * 假如服务器无法保证在五秒内处理并回复，可以直接回复空串，微信服务器不会对此作任何处理，并且不会发起重试。
  * */
-class WxSubscribeEvent(base: BaseMsg): WxBaseEvent(base)
+class OASubscribeEvent(base: BaseInfo): WxBaseEvent(base)
 
 /**
  * 取消关注事件
@@ -24,7 +24,7 @@ class WxSubscribeEvent(base: BaseMsg): WxBaseEvent(base)
  * 关于重试的消息排重，推荐使用FromUserName + CreateTime 排重。
  * 假如服务器无法保证在五秒内处理并回复，可以直接回复空串，微信服务器不会对此作任何处理，并且不会发起重试。
  * */
-class WxUnsubscribeEvent(base: BaseMsg): WxBaseEvent(base)
+class OAUnsubscribeEvent(base: BaseInfo): WxBaseEvent(base)
 
 
 /**
@@ -33,7 +33,7 @@ class WxUnsubscribeEvent(base: BaseMsg): WxBaseEvent(base)
  * @property eventKey EventKey	事件KEY值，qrscene_为前缀，后面为二维码的参数值
  * @property ticket Ticket	二维码的ticket，可用来换取二维码图片
  * */
-class WxScanSubscribeEvent(base: BaseMsg): WxBaseEvent(base)
+class OAScanSubscribeEvent(base: BaseInfo): WxBaseEvent(base)
 {
     var eventKey: String? = null
     var ticket: String? = null
@@ -60,7 +60,7 @@ class WxScanSubscribeEvent(base: BaseMsg): WxBaseEvent(base)
  * @property eventKey EventKey	事件KEY值，事件KEY值，是一个32位无符号整数，即创建二维码时的二维码scene_id
  * @property ticket Ticket	二维码的ticket，可用来换取二维码图片
  * */
-class WxScanEvent(base: BaseMsg): WxBaseEvent(base)
+class OAScanEvent(base: BaseInfo): WxBaseEvent(base)
 {
     var eventKey: String? = null
     var ticket: String? = null
@@ -93,7 +93,7 @@ class WxScanEvent(base: BaseMsg): WxBaseEvent(base)
  * @property longitude    地理位置经度
  * @property precision Precision	地理位置精度
  * */
-open class WxLocationEvent(base: BaseMsg): WxBaseEvent(base)
+open class OALocationEvent(base: BaseInfo): WxBaseEvent(base)
 {
     var latitude: Float? = null
     var longitude: Float?= null
@@ -127,7 +127,7 @@ open class WxLocationEvent(base: BaseMsg): WxBaseEvent(base)
  *
  * @property eventKey EventKey 事件KEY值，与自定义菜单接口中KEY值对应
  * */
-class WxMenuClickEvent(base: BaseMsg): WxBaseEvent(base)
+class OAMenuClickEvent(base: BaseInfo): WxBaseEvent(base)
 {
     var eventKey: String? = null
     override fun read(reader: XMLEventReader) {
@@ -151,7 +151,7 @@ class WxMenuClickEvent(base: BaseMsg): WxBaseEvent(base)
  * @property menuId MenuID	指菜单ID，如果是个性化菜单，则可以通过这个字段，知道是哪个规则的菜单被点击了
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  * */
-class WxMenuViewEvent(base: BaseMsg): WxBaseEvent(base)
+class OAMenuViewEvent(base: BaseInfo): WxBaseEvent(base)
 {
     var eventKey: String? = null
     var menuId: String? = null
@@ -181,7 +181,7 @@ class WxMenuViewEvent(base: BaseMsg): WxBaseEvent(base)
  * @property scanType ScanType	扫描类型，一般是qrcode
  * @property scanResult ScanResult	扫描结果，即二维码对应的字符串信息
  * */
-open class WxMenuScanCodePushEvent(base: BaseMsg): WxBaseEvent(base)
+open class OAMenuScanCodePushEvent(base: BaseInfo): WxBaseEvent(base)
 {
     var eventKey: String? = null
     var scanType: String? = null
@@ -219,7 +219,7 @@ open class WxMenuScanCodePushEvent(base: BaseMsg): WxBaseEvent(base)
  *
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  * */
-class WxMenuScanCodeWaitEvent(base: BaseMsg): WxMenuScanCodePushEvent(base)
+class OAMenuScanCodeWaitEvent(base: BaseInfo): OAMenuScanCodePushEvent(base)
 
 
 
@@ -249,7 +249,7 @@ class SendPicsInfo(count: Int?, picList: List<Pic>?)
  * @property eventKey EventKey	事件KEY值，由开发者在创建菜单时设定
  * @property picsInfo SendPicsInfo 图片的MD5值，开发者若需要，可用于验证接收到图片
  * */
-open class WxMenuPhotoEvent(base: BaseMsg): WxBaseEvent(base){
+open class OAMenuPhotoEvent(base: BaseInfo): WxBaseEvent(base){
     var eventKey: String? = null
     var sendPicsInfo: SendPicsInfo? = null
     override fun read(reader: XMLEventReader) {
@@ -317,7 +317,7 @@ open class WxMenuPhotoEvent(base: BaseMsg): WxBaseEvent(base){
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  *
  * */
-class WxMenuPhotoOrAlbumEvent(base: BaseMsg): WxMenuPhotoEvent(base)
+class OAMenuPhotoOrAlbumEvent(base: BaseInfo): OAMenuPhotoEvent(base)
 
 
 /**
@@ -326,7 +326,7 @@ class WxMenuPhotoOrAlbumEvent(base: BaseMsg): WxMenuPhotoEvent(base)
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  *
  * */
-class WxMenuWxAlbumEvent(base: BaseMsg): WxMenuPhotoEvent(base)
+class OAMenuOAAlbumEvent(base: BaseInfo): OAMenuPhotoEvent(base)
 
 
 /**
@@ -339,7 +339,7 @@ class WxMenuWxAlbumEvent(base: BaseMsg): WxMenuPhotoEvent(base)
  * @property label Label	地理位置的字符串信息
  * @property poiname Poiname	朋友圈POI的名字，可能为空
  * */
-class WxMenuLocationEvent(base: BaseMsg): WxBaseEvent(base)
+class OAMenuLocationEvent(base: BaseInfo): WxBaseEvent(base)
 {
     var eventKey: String? = null
     var locationX: Float? = null
@@ -394,7 +394,7 @@ class WxMenuLocationEvent(base: BaseMsg): WxBaseEvent(base)
  * @param eventKey EventKey	事件KEY值，跳转的小程序路径
  * @param menuId MenuID	菜单ID，如果是个性化菜单，则可以通过这个字段，知道是哪个规则的菜单被点击了
  * */
-class WxMenuMiniEvent(base: BaseMsg): WxBaseEvent(base)
+class OAMenuMiniEvent(base: BaseInfo): WxBaseEvent(base)
 {
     var eventKey: String? = null
     var menuId: String? = null
@@ -429,7 +429,7 @@ class WxMenuMiniEvent(base: BaseMsg): WxBaseEvent(base)
  * failed:user block: 送达由于用户拒收（用户设置拒绝接收公众号消息）;
  * failed: system failed: 发送状态为发送失败（非用户拒绝）
  * */
-class WxTemplateSendJobFinish(base: BaseMsg): WxBaseEvent(base)
+class OATemplateSendJobFinish(base: BaseInfo): WxBaseEvent(base)
 {
     var status: String? = null
     override fun read(reader: XMLEventReader) {
@@ -525,7 +525,7 @@ class WxTemplateSendJobFinish(base: BaseMsg): WxBaseEvent(base)
     </ResultList>
     </ArticleUrlResult>
  * */
-class WxMassSendFinishEvent(base: BaseMsg): WxBaseEvent(base)
+class OAMassSendFinishEvent(base: BaseInfo): WxBaseEvent(base)
 {
     var msgId: Long? = null
     var status: String? = null

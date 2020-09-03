@@ -16,7 +16,7 @@ import javax.xml.stream.XMLEventReader
  * @param createTime 是微信公众平台记录粉丝发送该消息的具体时间
  * @param msgType 消息类型
  * */
-open class BaseMsg(
+open class BaseInfo(
     val toUserName: String?,
     val fromUserName: String?,
     val createTime: Long?,
@@ -36,14 +36,14 @@ open class BaseMsg(
         const val NEWS = "news"
         const val TRANSFER_TO_CUSTOMER_SERVICE = "transfer_customer_service"
 
-
+        val log: Logger = LoggerFactory.getLogger("BaseInfo")
         /**
          * 严格按照顺序来进行解析xml，当遇到"MsgType"时结束解析，从而进行对应的子消息的继续解析
          * Limit： 当MsgType不是ToUserName、FromUserName、CreateTime、CreateTime在之后时会导致这些字段未解析
          *
          * @return 返回XMLEventReader用于进一步解析xml
          * */
-        fun fromXml(xml: String,reader: XMLEventReader): BaseMsg
+        fun fromXml(xml: String,reader: XMLEventReader): BaseInfo
         {
             //val reader: XMLEventReader = XMLInputFactory.newInstance().createXMLEventReader(xml.byteInputStream())
             var toUserName: String? = null
@@ -73,7 +73,7 @@ open class BaseMsg(
                             count++
                             msgType = reader.elementText
                             if(count < 5){
-                                WxBaseMsg.log.warn("WARN: Maybe lack of value ToUserName,FromUserName,CreateTime before MsgType!!!  xml=$xml")
+                               log.warn("WARN: Maybe lack of value ToUserName,FromUserName,CreateTime before MsgType!!!  xml=$xml")
                             }
                             break
                         }
@@ -82,7 +82,7 @@ open class BaseMsg(
                 }
             }
 
-            return  BaseMsg(toUserName,fromUserName,createTime, msgType)
+            return  BaseInfo(toUserName,fromUserName,createTime, msgType)
         }
     }
 }
@@ -98,14 +98,11 @@ open class BaseMsg(
  * https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Receiving_standard_messages.html
  * https://work.weixin.qq.com/api/doc/90000/90135/90239
  *
- * @param base 通过fromXml解析出来BaseMsg，用组合代替继承实现
+ * @param base 通过fromXml解析出来BaseInfo，用组合代替继承实现
  * @property msgId msgId
  * */
-open class WxBaseMsg(val base: BaseMsg) {
+open class WxBaseMsg(val base: BaseInfo) {
     var msgId: Long? = null
-    companion object{
-        val log: Logger = LoggerFactory.getLogger("WxBaseMsg")
-    }
 
     open fun read(reader: XMLEventReader)
     {
@@ -127,7 +124,7 @@ open class WxBaseMsg(val base: BaseMsg) {
 /**
  * 事件基类
  * */
-open class WxBaseEvent(val base: BaseMsg)  {
+open class WxBaseEvent(val base: BaseInfo)  {
     companion object {
         const val SUBSCRIBE = "subscribe"
         const val UNSUBSCRIBE = "unsubscribe"
@@ -174,7 +171,7 @@ abstract class ReBaseMSg(
     fromUserName: String?,
     createTime: Long,
     msgType: String
-) : BaseMsg(toUserName, fromUserName, createTime, msgType) {
+) : BaseInfo(toUserName, fromUserName, createTime, msgType) {
     open fun toXml(): String {
         val builder = MsgBuilder("<xml>\n")
         builder.addData("ToUserName", toUserName)

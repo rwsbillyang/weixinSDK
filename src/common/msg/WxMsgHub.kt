@@ -37,10 +37,10 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
 
             val reader: XMLEventReader = XMLInputFactory.newInstance().createXMLEventReader(xmlText.byteInputStream())
 
-            val base = BaseMsg.fromXml(xmlText,reader)
+            val base = BaseInfo.fromXml(xmlText,reader)
 
             val reMsg = when(base.msgType){
-                BaseMsg.EVENT -> dispatchEvent(reader,base)
+                BaseInfo.EVENT -> dispatchEvent(reader,base)
                 else -> dispatchMsg(reader,base)
             }
 
@@ -57,7 +57,7 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
         return null
     }
 
-    abstract fun dispatchMsg(reader: XMLEventReader, base: BaseMsg): ReBaseMSg?
+    abstract fun dispatchMsg(reader: XMLEventReader, base: BaseInfo): ReBaseMSg?
 
-    abstract fun dispatchEvent(reader: XMLEventReader, base: BaseMsg): ReBaseMSg?
+    abstract fun dispatchEvent(reader: XMLEventReader, base: BaseInfo): ReBaseMSg?
 }

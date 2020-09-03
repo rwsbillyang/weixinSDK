@@ -82,12 +82,12 @@ class OAContext(
     var accessToken: IRefreshableValue
     var ticket: IRefreshableValue
     var wxBizMsgCrypt = encodingAESKey?.let { WXBizMsgCrypt(token,it,appId) }
-    var msgHub: WxOAMsgHub
+    var msgHub: OAMsgHub
 
     init {
         val msgHandler = customMsgHandler?: DefaultOAMsgHandler()
         val eventHandler = customEventHandler?: DefaultOAEventHandler()
-        msgHub = WxOAMsgHub(msgHandler, eventHandler, wxBizMsgCrypt)
+        msgHub = OAMsgHub(msgHandler, eventHandler, wxBizMsgCrypt)
 
         accessToken = customAccessToken?: RefreshableAccessToken(appId, AccessTokenRefresher(AccessTokenUrl(appId, secret)))
 

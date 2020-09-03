@@ -17,7 +17,7 @@ interface IOAEventHandler{
      * 关于重试的消息排重，推荐使用FromUserName + CreateTime 排重。
      * 假如服务器无法保证在五秒内处理并回复，可以直接回复空串，微信服务器不会对此作任何处理，并且不会发起重试。
      * */
-    fun onWxSubscribeEvent(e: WxSubscribeEvent): ReBaseMSg?
+    fun onOASubscribeEvent(e: OASubscribeEvent): ReBaseMSg?
 
     /**
      * 取消关注事件
@@ -27,18 +27,18 @@ interface IOAEventHandler{
      * 关于重试的消息排重，推荐使用FromUserName + CreateTime 排重。
      * 假如服务器无法保证在五秒内处理并回复，可以直接回复空串，微信服务器不会对此作任何处理，并且不会发起重试。
      * */
-    fun onWxUnsubscribeEvent(e: WxUnsubscribeEvent): ReBaseMSg?
+    fun onOAUnsubscribeEvent(e: OAUnsubscribeEvent): ReBaseMSg?
 
     /**
      * 用户未关注时，扫码关注后的事件推送
      * */
-    fun onWxScanSubscribeEvent(e: WxScanSubscribeEvent): ReBaseMSg?
+    fun onOAScanSubscribeEvent(e: OAScanSubscribeEvent): ReBaseMSg?
 
     /**
      * 用户已关注时，扫码关注后的事件推送
      *
      * */
-    fun onWxScanEvent(e: WxScanEvent): ReBaseMSg?
+    fun onOAScanEvent(e: OAScanEvent): ReBaseMSg?
 
     /**
      * 上报地理位置事件
@@ -46,19 +46,19 @@ interface IOAEventHandler{
      * 用户同意上报地理位置后，每次进入公众号会话时，都会在进入时上报地理位置，或在进入会话后每5秒上报一次地理位置，
      * 公众号可以在公众平台网站中修改以上设置。上报地理位置时，微信会将上报地理位置事件推送到开发者填写的URL。
      * */
-    fun onWxLocationEvent(e: WxLocationEvent): ReBaseMSg?
+    fun onOALocationEvent(e: OALocationEvent): ReBaseMSg?
 
     /**
      * 点击菜单拉取消息时的事件推送
      *
      * 用户点击自定义菜单后，微信会把点击事件推送给开发者，请注意，点击菜单弹出子菜单，不会产生上报。
      * */
-    fun onWxMenuClickEvent(e: WxMenuClickEvent): ReBaseMSg?
+    fun onOAMenuClickEvent(e: OAMenuClickEvent): ReBaseMSg?
 
     /**
      * 点击菜单跳转链接时的事件推送
      * */
-    fun onWxMenuViewEvent(e: WxMenuViewEvent): ReBaseMSg?
+    fun onOAMenuViewEvent(e: OAMenuViewEvent): ReBaseMSg?
 
     /**
      * scancode_push：扫码推事件的事件推送
@@ -66,7 +66,7 @@ interface IOAEventHandler{
      * 仅支持微信iPhone5.4.1以上版本，和Android5.4以上版本的微信用户
      * 旧版本微信用户点击后将没有回应，开发者也不能正常接收到事件推送。
      * */
-    fun onWxMenuScanCodePushEvent(e: WxMenuScanCodePushEvent): ReBaseMSg?
+    fun onOAMenuScanCodePushEvent(e: OAMenuScanCodePushEvent): ReBaseMSg?
 
     /**
      * scancode_waitmsg：扫码推事件且弹出“消息接收中”提示框的事件推送
@@ -74,7 +74,7 @@ interface IOAEventHandler{
      * 仅支持微信iPhone5.4.1以上版本，和Android5.4以上版本的微信用户
      * 旧版本微信用户点击后将没有回应，开发者也不能正常接收到事件推送。
      * */
-    fun onWxMenuScanCodeWaitEvent(e: WxMenuScanCodeWaitEvent): ReBaseMSg?
+    fun onOAMenuScanCodeWaitEvent(e: OAMenuScanCodeWaitEvent): ReBaseMSg?
 
     /**
      * pic_sysphoto：弹出系统拍照发图的事件推送
@@ -82,7 +82,7 @@ interface IOAEventHandler{
      * 仅支持微信iPhone5.4.1以上版本，和Android5.4以上版本的微信用户
      * 旧版本微信用户点击后将没有回应，开发者也不能正常接收到事件推送。
      * */
-    fun onWxMenuPhotoEvent(e: WxMenuPhotoEvent): ReBaseMSg?
+    fun onOAMenuPhotoEvent(e: OAMenuPhotoEvent): ReBaseMSg?
 
     /**
      * pic_photo_or_album：弹出拍照或者相册发图的事件推送
@@ -90,7 +90,7 @@ interface IOAEventHandler{
      * 仅支持微信iPhone5.4.1以上版本，和Android5.4以上版本的微信用户
      * 旧版本微信用户点击后将没有回应，开发者也不能正常接收到事件推送。
      * */
-    fun onWxMenuPhotoOrAlbumEvent(e: WxMenuPhotoOrAlbumEvent): ReBaseMSg?
+    fun onOAMenuPhotoOrAlbumEvent(e: OAMenuPhotoOrAlbumEvent): ReBaseMSg?
 
     /**
      * pic_weixin：弹出微信相册发图器的事件推送
@@ -98,7 +98,7 @@ interface IOAEventHandler{
      * 仅支持微信iPhone5.4.1以上版本，和Android5.4以上版本的微信用户
      * 旧版本微信用户点击后将没有回应，开发者也不能正常接收到事件推送。
      * */
-    fun onWxMenuWxAlbumEvent(e: WxMenuWxAlbumEvent): ReBaseMSg?
+    fun onOAMenuOAAlbumEvent(e: OAMenuOAAlbumEvent): ReBaseMSg?
 
     /**
      * location_select：弹出地理位置选择器的事件推送
@@ -106,7 +106,7 @@ interface IOAEventHandler{
      * 仅支持微信iPhone5.4.1以上版本，和Android5.4以上版本的微信用户
      * 旧版本微信用户点击后将没有回应，开发者也不能正常接收到事件推送。
      * */
-    fun onWxMenuLocationEvent(e: WxMenuLocationEvent): ReBaseMSg?
+    fun onOAMenuLocationEvent(e: OAMenuLocationEvent): ReBaseMSg?
 
     /**
      * 点击菜单跳转小程序的事件推送
@@ -114,7 +114,7 @@ interface IOAEventHandler{
      * 仅支持微信iPhone5.4.1以上版本，和Android5.4以上版本的微信用户
      * 旧版本微信用户点击后将没有回应，开发者也不能正常接收到事件推送。
      * */
-    fun onWxMenuMiniEvent(e: WxMenuMiniEvent): ReBaseMSg?
+    fun onOAMenuMiniEvent(e: OAMenuMiniEvent): ReBaseMSg?
 
     /**
      * 群发结果通知推送
@@ -148,7 +148,7 @@ interface IOAEventHandler{
      * 另外，请开发者注意，本接口中所有使用到media_id的地方，现在都可以使用素材管理中的永久素材media_id了。请但注意，使用同一个素材群发出去的
      * 链接是一样的，这意味着，删除某一次群发，会导致整个链接失效。
      * */
-    fun onWxWxMassSendFinishEvent(e: WxMassSendFinishEvent): ReBaseMSg?
+    fun onOAOAMassSendFinishEvent(e: OAMassSendFinishEvent): ReBaseMSg?
 
     /**
      * 在模版消息发送任务完成后，微信服务器会将是否送达成功作为通知，发送到开发者中心中填写的服务器配置地址中。
@@ -159,7 +159,7 @@ interface IOAEventHandler{
      * failed:user block: 送达由于用户拒收（用户设置拒绝接收公众号消息）;
      * failed: system failed: 发送状态为发送失败（非用户拒绝）
      * */
-    fun onWxTemplateSendJobFinish(e: WxTemplateSendJobFinish): ReBaseMSg?
+    fun onOATemplateSendJobFinish(e: OATemplateSendJobFinish): ReBaseMSg?
 
     /**
      *  缺省处理函数
@@ -168,37 +168,37 @@ interface IOAEventHandler{
 }
 
 class DefaultOAEventHandler: IOAEventHandler {
-    override fun onWxSubscribeEvent(e: WxSubscribeEvent) = onDefault(e)
+    override fun onOASubscribeEvent(e: OASubscribeEvent) = onDefault(e)
 
-    override fun onWxUnsubscribeEvent(e: WxUnsubscribeEvent) = onDefault(e)
+    override fun onOAUnsubscribeEvent(e: OAUnsubscribeEvent) = onDefault(e)
 
-    override fun onWxScanSubscribeEvent(e: WxScanSubscribeEvent) = onDefault(e)
+    override fun onOAScanSubscribeEvent(e: OAScanSubscribeEvent) = onDefault(e)
 
-    override fun onWxScanEvent(e: WxScanEvent) = onDefault(e)
+    override fun onOAScanEvent(e: OAScanEvent) = onDefault(e)
 
-    override fun onWxLocationEvent(e: WxLocationEvent) = onDefault(e)
+    override fun onOALocationEvent(e: OALocationEvent) = onDefault(e)
 
-    override fun onWxMenuClickEvent(e: WxMenuClickEvent) = onDefault(e)
+    override fun onOAMenuClickEvent(e: OAMenuClickEvent) = onDefault(e)
 
-    override fun onWxMenuViewEvent(e: WxMenuViewEvent) = onDefault(e)
+    override fun onOAMenuViewEvent(e: OAMenuViewEvent) = onDefault(e)
 
-    override fun onWxMenuScanCodePushEvent(e: WxMenuScanCodePushEvent) = onDefault(e)
+    override fun onOAMenuScanCodePushEvent(e: OAMenuScanCodePushEvent) = onDefault(e)
 
-    override fun onWxMenuScanCodeWaitEvent(e: WxMenuScanCodeWaitEvent) = onDefault(e)
+    override fun onOAMenuScanCodeWaitEvent(e: OAMenuScanCodeWaitEvent) = onDefault(e)
 
-    override fun onWxMenuPhotoEvent(e: WxMenuPhotoEvent) = onDefault(e)
+    override fun onOAMenuPhotoEvent(e: OAMenuPhotoEvent) = onDefault(e)
 
-    override fun onWxMenuPhotoOrAlbumEvent(e: WxMenuPhotoOrAlbumEvent) = onDefault(e)
+    override fun onOAMenuPhotoOrAlbumEvent(e: OAMenuPhotoOrAlbumEvent) = onDefault(e)
 
-    override fun onWxMenuWxAlbumEvent(e: WxMenuWxAlbumEvent) = onDefault(e)
+    override fun onOAMenuOAAlbumEvent(e: OAMenuOAAlbumEvent) = onDefault(e)
 
-    override fun onWxMenuLocationEvent(e: WxMenuLocationEvent) = onDefault(e)
+    override fun onOAMenuLocationEvent(e: OAMenuLocationEvent) = onDefault(e)
 
-    override fun onWxMenuMiniEvent(e: WxMenuMiniEvent) = onDefault(e)
+    override fun onOAMenuMiniEvent(e: OAMenuMiniEvent) = onDefault(e)
 
-    override fun onWxWxMassSendFinishEvent(e: WxMassSendFinishEvent) = onDefault(e)
+    override fun onOAOAMassSendFinishEvent(e: OAMassSendFinishEvent) = onDefault(e)
 
-    override fun onWxTemplateSendJobFinish(e: WxTemplateSendJobFinish) = onDefault(e)
+    override fun onOATemplateSendJobFinish(e: OATemplateSendJobFinish) = onDefault(e)
 
     override fun onDefault(e: WxBaseEvent): ReBaseMSg? {
         return null
