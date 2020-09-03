@@ -3,7 +3,7 @@ package com.github.rwsbillyang.wxSDK.work
 
 
 import com.github.rwsbillyang.wxSDK.common.accessToken.*
-import com.github.rwsbillyang.wxSDK.common.msgSecurity.WXBizMsgCrypt
+import com.github.rwsbillyang.wxSDK.common.aes.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.work.msg.*
 
 

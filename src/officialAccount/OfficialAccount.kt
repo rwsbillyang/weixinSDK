@@ -2,7 +2,7 @@ package com.github.rwsbillyang.wxSDK.officialAccount
 
 
 import com.github.rwsbillyang.wxSDK.common.accessToken.*
-import com.github.rwsbillyang.wxSDK.common.msgSecurity.WXBizMsgCrypt
+import com.github.rwsbillyang.wxSDK.common.aes.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.officialAccount.msg.*
 
 

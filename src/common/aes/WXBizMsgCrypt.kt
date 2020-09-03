@@ -1,9 +1,9 @@
-package com.github.rwsbillyang.wxSDK.common.msgSecurity
+package com.github.rwsbillyang.wxSDK.common.aes
 
 
-import com.github.rwsbillyang.wxSDK.common.msgSecurity.PKCS7Encoder.decode
-import com.github.rwsbillyang.wxSDK.common.msgSecurity.PKCS7Encoder.encode
-import com.github.rwsbillyang.wxSDK.common.msgSecurity.SHA1.getSHA1
+import com.github.rwsbillyang.wxSDK.common.aes.PKCS7Encoder.decode
+import com.github.rwsbillyang.wxSDK.common.aes.PKCS7Encoder.encode
+import com.github.rwsbillyang.wxSDK.common.aes.SHA1.getSHA1
 import org.apache.commons.codec.binary.Base64
 import java.nio.charset.Charset
 import java.util.*
@@ -35,9 +35,9 @@ import kotlin.experimental.and
  * @param encodingAesKey 公众平台上，开发者设置的EncodingAESKey
  * @param appId 公众平台appid
  */
-class WXBizMsgCrypt(val token: String, val encodingAesKey: String, val  appId: String) {
+class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  appId: String) {
     companion object {
-        var CHARSET = Charset.forName("utf-8")
+        var CHARSET: Charset = Charset.forName("utf-8")
     }
 
    private var base64 = Base64()
@@ -67,12 +67,12 @@ class WXBizMsgCrypt(val token: String, val encodingAesKey: String, val  appId: S
     @Throws(AesException::class)
     fun verifyUrl(
         msgSignature: String,
-        timeStamp: String?,
-        nonce: String?,
-        echoStr: String?
+        timeStamp: String,
+        nonce: String,
+        echoStr: String
     ): String {
         val signature =
-            getSHA1(token, timeStamp!!, nonce!!, echoStr!!)
+            getSHA1(token, timeStamp, nonce, echoStr)
         if (signature != msgSignature) {
             throw AesException(AesException.ValidateSignatureError)
         }
@@ -109,7 +109,7 @@ class WXBizMsgCrypt(val token: String, val encodingAesKey: String, val  appId: S
 
         // 密钥，公众账号的app secret
         // 提取密文
-        val encrypt: Array<Any?> = XMLUtil.extract(postData)
+        val encrypt: Array<Any?> = XmlUtil.extract(postData)
 
         //生成自己的安全签名
         val signature = getSHA1(token, timeStamp, nonce, encrypt[1].toString())
@@ -156,7 +156,7 @@ class WXBizMsgCrypt(val token: String, val encodingAesKey: String, val  appId: S
 
         // println("发送给平台的签名是: " + signature[1].toString());
         // 生成回复发送的xml
-        return XMLUtil.generateEncryptReMsg(encrypt, signature, timeStamp, nonce)
+        return XmlUtil.generateEncryptReMsg(encrypt, signature, timeStamp, nonce)
     }
 
 

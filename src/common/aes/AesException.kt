@@ -1,4 +1,4 @@
-package com.github.rwsbillyang.wxSDK.common.msgSecurity
+package com.github.rwsbillyang.wxSDK.common.aes
 
 /**
  * @copyright Copyright (c) 1998-2014 Tencent Inc.

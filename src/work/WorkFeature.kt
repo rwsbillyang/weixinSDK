@@ -1,7 +1,7 @@
 package com.github.rwsbillyang.wxSDK.work
 
 
-import com.github.rwsbillyang.wxSDK.common.msgSecurity.AesException
+import com.github.rwsbillyang.wxSDK.common.aes.AesException
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
@@ -113,22 +113,22 @@ fun Routing.workApi(path: String = "/weixin/work") {
             val signature = call.request.queryParameters["msg_signature"]
             val timestamp = call.request.queryParameters["timestamp"]
             val nonce = call.request.queryParameters["nonce"]
-            val echostr = call.request.queryParameters["echostr"] ?: ""
+            val echostr = call.request.queryParameters["echostr"]
 
             val token = WORK.token
 
-            if (StringUtils.isAnyBlank(token, signature, timestamp, nonce)) {
-                log.warn("invalid parameters: token=$token, signature=$signature, timestamp=$timestamp, nonce=$nonce")
+            if (StringUtils.isAnyBlank(token, signature, timestamp, nonce,echostr)) {
+                log.warn("invalid parameters: token=$token, signature=$signature, timestamp=$timestamp, nonce=$nonce, echostr=$echostr")
+                call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
             } else {
                 try{
-                    WORK.wxBizMsgCrypt.verifyUrl(signature!!,timestamp,nonce,echostr)
-                    call.respondText(echostr, ContentType.Text.Plain, HttpStatusCode.OK)
+                    val str = WORK.wxBizMsgCrypt.verifyUrl(signature!!,timestamp!!,nonce!!,echostr!!)
+                    call.respondText(str, ContentType.Text.Plain, HttpStatusCode.OK)
                 }catch (e: AesException){
                     log.warn("AesException: ${e.message}")
+                    call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
                 }
-
             }
-
         }
 
         /**
@@ -163,7 +163,7 @@ fun Routing.workApi(path: String = "/weixin/work") {
 
             val reXml = WORK.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
 
-            call.respondText(reXml?:"", ContentType.Text.Plain, HttpStatusCode.OK)
+            call.respondText(reXml?:"", ContentType.Text.Xml, HttpStatusCode.OK)
         }
     }
 

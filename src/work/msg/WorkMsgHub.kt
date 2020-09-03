@@ -1,7 +1,7 @@
 package com.github.rwsbillyang.wxSDK.work.msg
 
 import com.github.rwsbillyang.wxSDK.common.msg.*
-import com.github.rwsbillyang.wxSDK.common.msgSecurity.WXBizMsgCrypt
+import com.github.rwsbillyang.wxSDK.common.aes.WXBizMsgCrypt
 import javax.xml.stream.XMLEventReader
 
 

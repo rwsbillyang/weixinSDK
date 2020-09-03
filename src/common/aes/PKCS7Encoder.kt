@@ -1,4 +1,4 @@
-package com.github.rwsbillyang.wxSDK.common.msgSecurity
+package com.github.rwsbillyang.wxSDK.common.aes
 
 import java.nio.charset.Charset
 import java.util.*

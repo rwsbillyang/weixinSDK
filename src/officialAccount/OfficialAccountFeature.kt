@@ -1,7 +1,7 @@
 package com.github.rwsbillyang.wxSDK.officialAccount
 
 
-import com.github.rwsbillyang.wxSDK.common.msgSecurity.SignUtil
+import com.github.rwsbillyang.wxSDK.common.aes.SignUtil
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*

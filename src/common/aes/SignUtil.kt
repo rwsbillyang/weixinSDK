@@ -1,4 +1,4 @@
-package com.github.rwsbillyang.wxSDK.common.msgSecurity
+package com.github.rwsbillyang.wxSDK.common.aes
 
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.Logger

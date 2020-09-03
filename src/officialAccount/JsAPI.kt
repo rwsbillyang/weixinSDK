@@ -1,6 +1,6 @@
 package com.github.rwsbillyang.wxSDK.officialAccount
 
-import com.github.rwsbillyang.wxSDK.common.msgSecurity.SignUtil
+import com.github.rwsbillyang.wxSDK.common.aes.SignUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*

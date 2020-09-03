@@ -1,7 +1,7 @@
 package com.github.rwsbillyang.wxSDK.common.msg
 
-import com.github.rwsbillyang.wxSDK.common.msgSecurity.AesException
-import com.github.rwsbillyang.wxSDK.common.msgSecurity.WXBizMsgCrypt
+import com.github.rwsbillyang.wxSDK.common.aes.AesException
+import com.github.rwsbillyang.wxSDK.common.aes.WXBizMsgCrypt
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,8 +14,6 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
     companion object{
         val log: Logger = LoggerFactory.getLogger("WxMsgHub")
     }
-
-
     fun handleXmlMsg(
         postXmlMsg: String,
         msgSignature: String?,

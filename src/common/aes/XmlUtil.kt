@@ -1,7 +1,6 @@
-package com.github.rwsbillyang.wxSDK.common.msgSecurity
+package com.github.rwsbillyang.wxSDK.common.aes
 
 import com.github.rwsbillyang.wxSDK.common.msg.MsgBuilder
-import com.github.rwsbillyang.wxSDK.common.msgSecurity.AesException
 import org.xml.sax.InputSource
 import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
@@ -11,7 +10,7 @@ import javax.xml.parsers.DocumentBuilderFactory
  *
  * 提取消息格式中的密文及生成回复消息格式的接口.
  */
-internal object XMLUtil {
+internal object XmlUtil {
     /**
      * 提取出xml数据包中的加密消息
      * @param xmltext 待提取的xml字符串,形如：
@@ -28,12 +27,32 @@ internal object XMLUtil {
         val result = arrayOfNulls<Any?>(3)
         return try {
             val dbf = DocumentBuilderFactory.newInstance()
+
+            // This is the PRIMARY defense. If DTDs (doctypes) are disallowed, almost all XML entity attacks are prevented
+            // Xerces 2 only - http://xerces.apache.org/xerces2-j/features.html#disallow-doctype-decl
             dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+
+            // If you can't completely disable DTDs, then at least do the following:
+            // Xerces 1 - http://xerces.apache.org/xerces-j/features.html#external-general-entities
+            // Xerces 2 - http://xerces.apache.org/xerces2-j/features.html#external-general-entities
+            // JDK7+ - http://xml.org/sax/features/external-general-entities
             dbf.setFeature("http://xml.org/sax/features/external-general-entities", false)
+
+            // Xerces 1 - http://xerces.apache.org/xerces-j/features.html#external-parameter-entities
+            // Xerces 2 - http://xerces.apache.org/xerces2-j/features.html#external-parameter-entities
+            // JDK7+ - http://xml.org/sax/features/external-parameter-entities
             dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false)
+
+            // Disable external DTDs as well
             dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+            // and these as well, per Timothy Morgan's 2014 paper: "XML Schema, DTD, and Entity Attacks"
             dbf.isXIncludeAware = false
             dbf.isExpandEntityReferences = false
+            // And, per Timothy Morgan: "If for some reason support for inline DOCTYPEs are a requirement, then
+            // ensure the entity settings are disabled (as shown above) and beware that SSRF attacks
+            // (http://cwe.mitre.org/data/definitions/918.html) and denial
+            // of service attacks (such as billion laughs or decompression bombs via "jar:") are a risk."
+
             val db = dbf.newDocumentBuilder()
             val sr = StringReader(xmltext)
             val `is` = InputSource(sr)
@@ -79,7 +98,6 @@ internal object XMLUtil {
         builder.addTag("MsgSignature", signature)
         builder.addTag("TimeStamp", timestamp)
         builder.addTag("Nonce", nonce)
-
         builder.append("</xml>")
 
         return builder.toString()
