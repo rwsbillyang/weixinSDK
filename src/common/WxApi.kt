@@ -1,5 +1,10 @@
 package com.github.rwsbillyang.wxSDK.common
 
+import io.ktor.client.request.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 
 
 interface WxApi: IApi{
@@ -30,4 +35,45 @@ interface WxApi: IApi{
         val params = requestParams?.entries?.filter { it.value != null }?.joinToString("&") { "${it.key}=${it.value}" }?:""
         return  "$base/$group/$name?access_token=${accessToken()}&$params"
     }
+}
+
+
+
+/**
+ * 根据提供的参数自动拼凑一个带请求参数的GET请求url
+ * */
+fun url(base:String, group: String, name: String, requestParams: Map<String, Any?>?): String{
+    val params = requestParams?.entries?.filter { it.value != null }?.joinToString("&") { "${it.key}=${it.value}" }?:""
+    return  "$base/$group/$name?access_token=ACCESS_TOKEN&$params"
+}
+
+/**
+ * 返回数据类型为T
+ * */
+inline fun <reified T> get(base:String, group: String, name: String, parameters: Map<String, Any?>?) = runBlocking {
+    CoroutineScope(Dispatchers.IO).async {
+        client.get<T>(url(base, group,name, parameters))
+    }.await()
+}
+
+/**
+ * 请求数据类型为T1， 返回数据类型为T2，指定url
+ * urlFunc 提供url的函数，如 "$base/corp/get_join_qrcode?access_token=ACCESS_TOKEN&size_type=$sizeType"
+ * */
+inline fun <reified T1, reified T2> get(data: T1, url: String) = runBlocking {
+    CoroutineScope(Dispatchers.IO).async {
+        client.get<T2>(url)
+    }.await()
+}
+
+/**
+ * 请求数据类型为T1， 返回数据类型为T2
+ * */
+inline fun <reified T1, reified T2> post(base:String, group: String, name: String, paraBody: T1?, parameters: Map<String, Any?>? = null) = runBlocking {
+    CoroutineScope(Dispatchers.IO).async {
+        if(paraBody != null)
+            client.post(url(base, group,name, parameters)){ body = paraBody }
+        else
+            client.post<T2>(url(base, group,name, parameters))
+    }.await()
 }
