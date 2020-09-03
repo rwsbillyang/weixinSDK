@@ -1,6 +1,8 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.msg
 
 import com.github.rwsbillyang.wxSDK.common.msg.BaseInfo
+import com.github.rwsbillyang.wxSDK.common.msg.Pic
+import com.github.rwsbillyang.wxSDK.common.msg.SendPicsInfo
 import com.github.rwsbillyang.wxSDK.common.msg.WxBaseEvent
 import javax.xml.stream.XMLEventReader
 import javax.xml.stream.XMLStreamException
@@ -223,24 +225,6 @@ class OAMenuScanCodeWaitEvent(base: BaseInfo): OAMenuScanCodePushEvent(base)
 
 
 
-
-/**
- * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html#3
- * <item><PicMd5Sum><![CDATA[1b5f7c23b5bf75682a53e7b6d163e185]]></PicMd5Sum></item>
- * */
-class Pic(md5: String?)
-
-/**
- * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html#3
- *
-<SendPicsInfo>
-<Count>1</Count>
-<PicList><item><PicMd5Sum><![CDATA[1b5f7c23b5bf75682a53e7b6d163e185]]></PicMd5Sum></item></PicList>
-</SendPicsInfo>
-
- * */
-class SendPicsInfo(count: Int?, picList: List<Pic>?)
-
 /**
  * pic_sysphoto：弹出系统拍照发图的事件推送
  *
@@ -263,52 +247,12 @@ open class OAMenuPhotoEvent(base: BaseInfo): WxBaseEvent(base){
                         count++
                     }
                     "SendPicsInfo" -> {
-                        sendPicsInfo = picsInfoEvent(reader)
+                        sendPicsInfo = SendPicsInfo.fromXml(reader)
                         count++
                     }
                 }
             }
         }
-    }
-
-    /**
-     * Event为pic_sysphoto, pic_photo_or_album, pic_weixin时触发
-     *
-     *
-    <SendPicsInfo>
-    <Count>1</Count>
-    <PicList><item><PicMd5Sum><![CDATA[5a75aaca956d97be686719218f275c6b]]></PicMd5Sum></item></PicList>
-    </SendPicsInfo>
-     *
-     * @param reader reader
-     * @return 读取结果
-     * @throws XMLStreamException XML解析异常
-     */
-    @Throws(XMLStreamException::class)
-    private fun picsInfoEvent(reader: XMLEventReader): SendPicsInfo {
-        var count:Int? = null
-        val picList = mutableListOf<Pic>()
-
-       loop@ while (reader.hasNext()) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                val tagName = e.asStartElement().name.toString()
-                if ("Count" == tagName) {
-                    count = reader.elementText?.toInt()
-                } else if ("PicList" == tagName) {
-                    while (reader.hasNext()) {
-                        val event1 = reader.nextEvent()
-                        if (event1.isStartElement && "PicMd5Sum" == event1.asStartElement().name.toString())
-                        {
-                            picList.add(Pic(reader.elementText))
-                        } else if (event1.isEndElement && "PicList" == event1.asEndElement().name.toString()) {
-                            break@loop
-                        }
-                    }
-                }
-            }
-        }
-        return SendPicsInfo(count, picList)
     }
 }
 /**
