@@ -7,7 +7,7 @@ import com.github.rwsbillyang.wxSDK.common.aes.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.work.msg.*
 
 
-lateinit var WORK: WorkContext
+lateinit var _WORK: WorkContext
 
 /**
  * 调用API时可能需要用到的配置
@@ -52,7 +52,7 @@ class WorkConfiguration {
  * 调用API时可能需要用到的配置
  *
  * @param corpId       企业微信等申请的app id
- * @param secret      对应的secret
+ * @param secret      对应的secret 用于换取accessToken，其它情况下无需使用
  * @param token       Token可由开发者可以任意填写，用作生成签名（该Token会和接口URL中包含的Token进行比对，从而验证安全性）
  * @param encodingAESKey  43个字符，EncodingAESKey由开发者手动填写或随机生成，将用作消息体加解密密钥。
  * @param wechatId 比如公众号的微信号，客服系统中需要设置
@@ -102,7 +102,7 @@ class WorkContext(
  * */
 fun configWork(block: WorkConfiguration.() -> Unit){
     val config = WorkConfiguration().apply(block)
-    WORK = WorkContext(
+    _WORK = WorkContext(
         config.corpId,
         config.secret,
         config.token,

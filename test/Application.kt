@@ -20,16 +20,16 @@ fun Application.testableModule(testing: Boolean = false) {
     }
 
     install(OfficialAccountFeature) {
-        appId = "your_app_id"
+        appId = "wxb11529c136998cb6"
         secret = "your_app_secret_key"
-        encodingAESKey = "your_encodingAESKey or null "
-        token = "your_token"
+        encodingAESKey = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG"
+        token = "pamtest"
     }
     install(WorkFeature) {
-        corpId = "your_app_id"
+        corpId = "wx5823bf96d3bd56c7"
         secret = "your_app_secret_key"
-        encodingAESKey = "your_encodingAESKey"
-        token = "your_token"
+        encodingAESKey = "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C"
+        token = "QDG6eK"
     }
 
 

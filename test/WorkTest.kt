@@ -103,6 +103,7 @@ class WorkTest {
         try {
             val sMsg: String = wxcpt.decryptWxMsg(sReqMsgSig, sReqTimeStamp, sReqNonce, sReqData, "aes")
             println("\nafter decrypt msg: $sMsg")
+
             // 解析出明文xml标签的内容进行处理
             val dbf = DocumentBuilderFactory.newInstance()
             val db = dbf.newDocumentBuilder()
@@ -112,6 +113,7 @@ class WorkTest {
             val root: Element = document.getDocumentElement()
             val nodelist1: NodeList = root.getElementsByTagName("Content")
             val Content: String = nodelist1.item(0).getTextContent()
+
             println("Content：$Content")
         } catch (e: java.lang.Exception) {
             // 解密失败，失败原因请查看异常

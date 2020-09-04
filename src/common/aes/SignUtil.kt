@@ -12,6 +12,8 @@ object SignUtil {
     private val log: Logger = LoggerFactory.getLogger("SignUtil")
     /**
      * 认证微信，可以参见微信开发者文档
+     * https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Access_Overview.html
+     *
      * 加密/校验流程如下：
      * 1）将token、timestamp、nonce三个参数进行字典序排序
      * 2）将三个参数字符串拼接成一个字符串进行sha1加密
