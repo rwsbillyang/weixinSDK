@@ -51,6 +51,11 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
             throw AesException(AesException.IllegalAesKey)
         }
         println(encodingAesKey)
+
+        //FIXME: Apache Commons Codec 1.15 and 1.10 work fine, but v1.13 fail
+        //V1.15: Base32/Base64/BCodec: Added strict decoding property to control handling of trailing bits.
+        // Default lenient mode discards them without error. Strict mode raise an exception.
+        // Fixes CODEC-280. see https://commons.apache.org/proper/commons-codec/changes-report.html#a1.15
         aesKey = Base64.decodeBase64("$encodingAesKey=")
     }
 

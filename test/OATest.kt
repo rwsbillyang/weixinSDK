@@ -39,7 +39,7 @@ class OATest {
 //    fun tearDown() {
 //    }
 
-    //@Test
+    @Test
     @Throws(ParserConfigurationException::class, SAXException::class, IOException::class)
     fun testNormal() {
         try {
@@ -65,7 +65,7 @@ class OATest {
         }
     }
 
-    //@Test
+    @Test
     fun testAesEncrypt() {
         try {
             val pc = WXBizMsgCrypt(token, encodingAesKey, appId)
@@ -76,7 +76,7 @@ class OATest {
         }
     }
 
-    //@Test
+    @Test
     fun testAesEncrypt2() {
         try {
             val pc = WXBizMsgCrypt(token, encodingAesKey, appId)
@@ -87,18 +87,18 @@ class OATest {
         }
     }
 
-   // @Test
+    @Test
     fun testIllegalAesKey() {
         try {
             WXBizMsgCrypt(token, "abcde", appId)
         } catch (e: AesException) {
-            Assert.assertEquals(AesException.IllegalAesKey, e.code.toLong())
+            Assert.assertEquals(AesException.IllegalAesKey, e.code)
             return
         }
         Assert.fail("错误流程不抛出异常？？？")
     }
 
-   // @Test
+   @Test
     @Throws(ParserConfigurationException::class, SAXException::class, IOException::class)
     fun testValidateSignatureError() {
         try {
@@ -115,13 +115,13 @@ class OATest {
             val fromXML = String.format(xmlFormat, encrypt)
             pc.decryptWxMsg("12345", timestamp, nonce, fromXML) // 这里签名错误
         } catch (e: AesException) {
-            Assert.assertEquals(AesException.ValidateSignatureError, e.code.toLong())
+            Assert.assertEquals(AesException.ValidateSignatureError, e.code)
             return
         }
         Assert.fail("错误流程不抛出异常？？？")
     }
 
-    //@Test
+    @Test
     @Throws(AesException::class)
     fun testVerifyUrl() {
         val wxcpt = WXBizMsgCrypt(
