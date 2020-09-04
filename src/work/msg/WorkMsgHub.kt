@@ -31,7 +31,7 @@ class WorkMsgHub(
             BaseInfo.LINK -> msgHandler.onWorkLinkMsg(
                 WorkLinkMsg(base).apply { read(reader) }
             )
-            else -> msgHandler.onDefault(WorkBaseInfo(base).apply { read(reader) })
+            else -> msgHandler.onDefault(WorkBaseMsg(base).apply { read(reader) })
         }
     }
 

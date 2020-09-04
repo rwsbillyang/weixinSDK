@@ -1,6 +1,7 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.msg
 
 import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
+import com.github.rwsbillyang.wxSDK.common.msg.ReTextMsg
 import com.github.rwsbillyang.wxSDK.common.msg.WxBaseMsg
 
 

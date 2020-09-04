@@ -1,8 +1,8 @@
 package com.github.rwsbillyang.wxSDK.common.aes
 
-import java.security.MessageDigest
+import org.apache.commons.codec.digest.DigestUtils
 import java.util.*
-import kotlin.experimental.and
+
 
 /**
  *  @copyright Copyright (c) 1998-2014 Tencent Inc.
@@ -22,34 +22,21 @@ internal object SHA1 {
      * @throws AesException
      */
     fun getSHA1(
-        token: String,
-        timestamp: String,
-        nonce: String,
-        encrypt: String
+            token: String,
+            timestamp: String,
+            nonce: String,
+            encrypt: String
     ): String {
         return try {
             val array = arrayOf(token, timestamp, nonce, encrypt)
             Arrays.sort(array) // 字符串排序
 
             val sb = StringBuffer()
-            for (i in 0..3) {
-                sb.append(array[i])
+            for (anArr in array) {
+                sb.append(anArr)
             }
 
-            val sha1 = MessageDigest.getInstance("SHA-1")
-            sha1.update(sb.toString().toByteArray())
-            val digest = sha1.digest()
-
-            val hexstr = StringBuffer()
-            var shaHex = ""
-            for (i in digest.indices) {
-                shaHex = Integer.toHexString((digest[i] and 0xFF.toByte()).toInt())
-                if (shaHex.length < 2) {
-                    hexstr.append(0)
-                }
-                hexstr.append(shaHex)
-            }
-            hexstr.toString()
+            DigestUtils.sha1Hex(sb.toString())
         } catch (e: Exception) {
             e.printStackTrace()
             throw AesException(AesException.ComputeSignatureError)

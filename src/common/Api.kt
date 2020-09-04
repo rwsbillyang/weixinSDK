@@ -1,14 +1,13 @@
 package com.github.rwsbillyang.wxSDK.common
 
-import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.apache.*
+import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
-import io.ktor.http.*
 import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
@@ -16,31 +15,33 @@ import java.io.File
 import java.io.FileInputStream
 
 
- val apiJson = Json {
+val apiJson = Json {
     encodeDefaults = true
     useArrayPolymorphism = false
     //serialModule = serializersModuleOf(mapOf())
 }
 
 
- val client = HttpClient(CIO) {
+val client = HttpClient(Apache) {
+    install(HttpTimeout) {}
     install(JsonFeature) {
         serializer = KotlinxSerializer(apiJson)
     }
 }
 
- val xmlClient = HttpClient(CIO) {
-    install(JsonFeature) {
-        serializer = JacksonSerializer(jackson = XmlMapper().registerModule(KotlinModule()))
-        accept(ContentType.Application.Xml)
-    }
-}
+
+// val xmlClient = HttpClient(CIO) {
+//    install(JsonFeature) {
+//        serializer = JacksonSerializer(jackson = XmlMapper().registerModule(KotlinModule()))
+//        accept(ContentType.Application.Xml)
+//    }
+//}
 
 
-interface IApi{
+interface IApi {
     fun url(name: String, requestParams: Map<String, Any?>?, needAccessToken: Boolean = true): String
 
-    fun doGet(name: String, parameters: Map<String, Any?>?):Map<String, Any?> = runBlocking {
+    fun doGet(name: String, parameters: Map<String, Any?>?): Map<String, Any?> = runBlocking {
         CoroutineScope(Dispatchers.IO).async {
             client.get<Map<String, Any?>>(url(name, parameters))
         }.await()
@@ -52,16 +53,15 @@ interface IApi{
     fun <T> doGet(data: T, urlFunc: () -> String): Map<String, Any?> = runBlocking {
         val url = urlFunc()
         CoroutineScope(Dispatchers.IO).async {
-            client.get<Map<String, Any?>>( url)
+            client.get<Map<String, Any?>>(url)
         }.await()
     }
 
 
-
     fun doPost(name: String, paraBody: Any?, parameters: Map<String, Any?>? = null) = runBlocking {
         CoroutineScope(Dispatchers.IO).async {
-            if(paraBody != null)
-                client.post(url(name, parameters)){ body = paraBody }
+            if (paraBody != null)
+                client.post(url(name, parameters)) { body = paraBody }
             else
                 client.post<Map<String, Any?>>(url(name, parameters))
         }.await()
@@ -71,7 +71,7 @@ interface IApi{
     /**
      * name 和 urlFunc不能同时为空
      * */
-    fun <T> doPost(paraBody: T?, name: String?  = null, urlFunc:(() -> String)? = null ) = runBlocking {
+    fun <T> doPost(paraBody: T?, name: String? = null, urlFunc: (() -> String)? = null) = runBlocking {
         withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             val url = urlFunc?.let { it() } ?: url(name!!, null)
             if (paraBody != null)
@@ -82,11 +82,11 @@ interface IApi{
     }
 
 
-    fun doUpload(name: String ,filePath: String, parameters: Map<String, Any?>? = null)= runBlocking {
+    fun doUpload(name: String, filePath: String, parameters: Map<String, Any?>? = null) = runBlocking {
         CoroutineScope(Dispatchers.IO).async {
-            client.post<Map<String, Any?>>(url(name, parameters)){
+            client.post<Map<String, Any?>>(url(name, parameters)) {
                 val file = File(filePath)
-                body = MultiPartFormDataContent(formData{
+                body = MultiPartFormDataContent(formData {
                     appendInput("media", size = file.length()) {
                         FileInputStream(file).asInput()
                     }

@@ -11,7 +11,7 @@ import javax.xml.stream.XMLEventReader
  * @property msgId MsgId 消息id，64位整型
  * @property agentId 企业应用的id，整型。可在应用的设置页面查看
  * */
-open class WorkBaseInfo(val base: BaseInfo) {
+open class WorkBaseMsg(val base: BaseInfo) {
     var msgId: Long? = null
     var agentId: Int? = null
     open fun read(reader: XMLEventReader)
@@ -39,7 +39,7 @@ open class WorkBaseInfo(val base: BaseInfo) {
  * 文本消息 微信服务器推送过来的
  * @property content 消息内容
  * */
-class WorkTextMsg(base: BaseInfo): WorkBaseInfo(base)
+class WorkTextMsg(base: BaseInfo): WorkBaseMsg(base)
 {
     var content: String? = null
     override fun read(reader: XMLEventReader)
@@ -65,7 +65,7 @@ class WorkTextMsg(base: BaseInfo): WorkBaseInfo(base)
  * @property picUrl 图片链接（由系统生成）
  * @property mediaId 图片消息媒体id，可以调用获取临时素材接口拉取数据。
  * */
-class WorkImgMSg(base: BaseInfo): WorkBaseInfo(base)
+class WorkImgMSg(base: BaseInfo): WorkBaseMsg(base)
 {
     var picUrl: String? = null
     var mediaId: String? = null
@@ -93,7 +93,7 @@ class WorkImgMSg(base: BaseInfo): WorkBaseInfo(base)
  * @property format 语音格式，如amr，speex等
  *
  * */
-class WorkVoiceMsg(base: BaseInfo): WorkBaseInfo(base)
+class WorkVoiceMsg(base: BaseInfo): WorkBaseMsg(base)
 {
     var format: String? = null
     var mediaId: String?= null
@@ -122,7 +122,7 @@ class WorkVoiceMsg(base: BaseInfo): WorkBaseInfo(base)
  * @property mediaId 视频媒体文件id，可以调用获取媒体文件接口拉取数据，仅三天内有效
  * @property thumbMediaId ThumbMediaId	视频消息缩略图的媒体id，可以调用获取媒体文件接口拉取数据，仅三天内有效
  * */
-class WorkVideoMsg(base: BaseInfo): WorkBaseInfo(base)
+class WorkVideoMsg(base: BaseInfo): WorkBaseMsg(base)
 {
     var mediaId: String? = null
     var thumbMediaId: String? = null
@@ -149,7 +149,7 @@ class WorkVideoMsg(base: BaseInfo): WorkBaseInfo(base)
  * @property scale 地图缩放大小
  * @property label 地理位置信息
  * */
-class WorkLocationMsg(base: BaseInfo): WorkBaseInfo(base)
+class WorkLocationMsg(base: BaseInfo): WorkBaseMsg(base)
 {
     var locationX: Float? = null
     var locationY: Float? = null
@@ -181,7 +181,7 @@ class WorkLocationMsg(base: BaseInfo): WorkBaseInfo(base)
  * @property url Url	消息链接
  * @property picUrl PicUrl	封面缩略图的url
  * */
-class WorkLinkMsg(base: BaseInfo): WorkBaseInfo(base)
+class WorkLinkMsg(base: BaseInfo): WorkBaseMsg(base)
 {
     var title: String? = null
     var description: String? = null

@@ -1,9 +1,6 @@
 package com.github.rwsbillyang.wxSDK.work
 
 
-import kotlinx.serialization.*
-
-
 /**
  * 企业应用API
  * https://work.weixin.qq.com/api/doc/90000/90135/90226

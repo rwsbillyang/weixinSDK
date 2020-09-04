@@ -10,7 +10,7 @@ import java.util.*
  * 提供基于PKCS7算法的加解密接口.
  */
 internal object PKCS7Encoder {
-    var CHARSET = Charset.forName("utf-8")
+    var CHARSET: Charset = Charset.forName("utf-8")
     var BLOCK_SIZE = 32
 
     /**

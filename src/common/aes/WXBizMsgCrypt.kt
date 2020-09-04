@@ -74,6 +74,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
         val signature =
             getSHA1(token, timeStamp, nonce, echoStr)
         if (signature != msgSignature) {
+            println("verifyUrl: original signature: $msgSignature, generated signature: $signature")
             throw AesException(AesException.ValidateSignatureError)
         }
         return decrypt(echoStr)
@@ -118,6 +119,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
         // println("第三方收到URL中的签名：" + msg_sign);
         // println("第三方校验签名：" + signature);
         if (signature != msgSignature) {
+            println("decryptWxMsg: original signature: $msgSignature, generated signature: $signature")
             throw AesException(AesException.ValidateSignatureError)
         }
 

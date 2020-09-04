@@ -9,12 +9,13 @@ import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
 
 
-class WorkTest {
-    val sToken = "QDG6eK"
-    val sCorpID = "wx5823bf96d3bd56c7"
-    val sEncodingAESKey = "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C"
 
-    val wxcpt = WXBizMsgCrypt(sToken, sEncodingAESKey, sCorpID)
+class WorkTest {
+    private val sToken = "QDG6eK"
+    private val sCorpID = "wx5823bf96d3bd56c7"
+    private val sEncodingAESKey = "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C"
+
+    private val wxcpt = WXBizMsgCrypt(sToken, sEncodingAESKey, sCorpID)
 
     /**
     ------------使用示例一：验证回调URL---------------
@@ -98,7 +99,7 @@ class WorkTest {
 
         try {
             val sMsg: String = wxcpt.decryptWxMsg(sReqMsgSig, sReqTimeStamp, sReqNonce, sReqData, "aes")
-            println("after decrypt msg: $sMsg")
+            println("\nafter decrypt msg: $sMsg")
             // 解析出明文xml标签的内容进行处理
             val dbf = DocumentBuilderFactory.newInstance()
             val db = dbf.newDocumentBuilder()
@@ -144,7 +145,7 @@ class WorkTest {
             "<xml><ToUserName><![CDATA[mycreate]]></ToUserName><FromUserName><![CDATA[wx5823bf96d3bd56c7]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[this is a test]]></Content><MsgId>1234567890123456</MsgId><AgentID>128</AgentID></xml>"
         try {
             val sEncryptMsg: String = wxcpt.encryptReMsg(sRespData, sReqTimeStamp, sReqNonce)
-            println("after encrypt sEncrytMsg: $sEncryptMsg")
+            println("\nafter encrypt sEncrytMsg: $sEncryptMsg")
             // 加密成功
             // HttpUtils.SetResponse(sEncryptMsg);
         } catch (e: java.lang.Exception) {
