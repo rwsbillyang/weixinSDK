@@ -1,6 +1,7 @@
 package com.github.rwsbillyang.wxSDK.test
 
 import com.github.rwsbillyang.wxSDK.common.aes.WXBizMsgCrypt
+import org.junit.Test
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.NodeList
@@ -15,7 +16,7 @@ class WorkTest {
     private val sCorpID = "wx5823bf96d3bd56c7"
     private val sEncodingAESKey = "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C"
 
-    private val wxcpt = WXBizMsgCrypt(sToken, sEncodingAESKey, sCorpID)
+    val wxcpt = WXBizMsgCrypt(sToken, sEncodingAESKey, sCorpID)
 
     /**
     ------------使用示例一：验证回调URL---------------
@@ -30,6 +31,7 @@ class WorkTest {
     * 3. 解密出echostr原文，将原文当作Get请求的response，返回给企业微信
     * 第2，3步可以用企业微信提供的库函数VerifyURL来实现。
     */
+    //@Test
     fun testUrl()
     {
         // 解析出url上的参数值如下：
@@ -82,6 +84,7 @@ class WorkTest {
      *
      * 第2，3步可以用企业微信提供的库函数DecryptMsg来实现。
      * */
+    //@Test
     fun testMsgDecrypt(){
         // String sReqMsgSig = HttpUtils.ParseUrl("msg_signature");
         val sReqMsgSig = "477715d11cdb4164915debcba66cb864d751f3e6"
@@ -138,6 +141,7 @@ class WorkTest {
      *
      *  以上2，3，4步可以用企业微信提供的库函数EncryptMsg来实现。
      */
+    //@Test
     fun testEncryptReMsg(){
         val sReqTimeStamp = "1409659813"
         val sReqNonce = "1372623149"

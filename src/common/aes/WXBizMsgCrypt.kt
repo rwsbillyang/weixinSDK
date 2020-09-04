@@ -50,6 +50,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
         if (encodingAesKey.length != 43) {
             throw AesException(AesException.IllegalAesKey)
         }
+        println(encodingAesKey)
         aesKey = Base64.decodeBase64("$encodingAesKey=")
     }
 
@@ -105,7 +106,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
         timeStamp: String,
         nonce: String,
         postData: String,
-        encryptType: String?
+        encryptType: String? = "aes"
     ): String {
 
         // 密钥，公众账号的app secret
@@ -202,7 +203,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
      * @throws AesException aes加密失败
      */
     @Throws(AesException::class)
-    private fun encrypt(randomStr: String, text: String): String {
+    fun encrypt(randomStr: String, text: String): String {
         val byteCollector = ByteGroup()
         val randomStrBytes = randomStr.toByteArray(CHARSET)
         val textBytes = text.toByteArray(CHARSET)
