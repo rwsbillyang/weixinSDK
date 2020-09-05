@@ -53,7 +53,7 @@ open class BaseInfo(
             var msgType: String? = null
 
             var count = 0 //解析出的节点计数，用于报警
-            while (reader.hasNext()) {
+            while (reader.hasNext() && count < 5) {
                 val event = reader.nextEvent()
                 if (event.isStartElement) {
                     when(event.asStartElement().name.toString()){
@@ -76,9 +76,7 @@ open class BaseInfo(
                             if(count < 5){
                                log.warn("WARN: Maybe lack of value ToUserName,FromUserName,CreateTime before MsgType!!!  xml=$xml")
                             }
-                            break
                         }
-
                     }
                 }
             }

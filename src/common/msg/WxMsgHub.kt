@@ -22,16 +22,18 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
         encryptType: String?
     ): String?
     {
+        log.debug("post data: $postXmlMsg")
         try {
-            val xmlText = if(wxBizMsgCrypt != null) {
+            val xmlText = if(wxBizMsgCrypt == null) {
                 postXmlMsg
             }else{
                 if (StringUtils.isAllBlank(msgSignature, timeStamp, nonce)) {
                     log.warn("some one of is blank: msgSignature={},timeStamp={},nonce{}", msgSignature, timeStamp, nonce)
                     return null
                 }
-                wxBizMsgCrypt?.decryptWxMsg(msgSignature!!, timeStamp!!, nonce!!, postXmlMsg, encryptType)?:postXmlMsg
+                wxBizMsgCrypt.decryptWxMsg(msgSignature!!, timeStamp!!, nonce!!, postXmlMsg, encryptType)
             }
+            log.debug("after decrypt: $xmlText")
 
             val reader: XMLEventReader = XMLInputFactory.newInstance().createXMLEventReader(xmlText.byteInputStream())
 
@@ -44,11 +46,13 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
 
             reader.close()
 
-            return reMsg?.toXml()?.let { wxBizMsgCrypt?.encryptReMsg(it) }
+            return reMsg?.toXml()?.let { wxBizMsgCrypt?.encryptMsg(it)?.first }
 
         }catch (e: AesException){
+            e.printStackTrace()
             log.warn("${e.message}")
         }catch (e: Exception){
+            e.printStackTrace()
             log.warn("${e.message}")
         }
 
