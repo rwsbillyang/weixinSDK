@@ -28,7 +28,7 @@ class WorkTest {
     * 1.解析出Get请求的参数，包括消息体签名(msg_signature)，时间戳(timestamp)，随机数字串(nonce)以及企业微信推送过来的
     * 随机加密字符串(echostr),这一步注意作URL解码。
     * 2.验证消息体签名的正确性
-    * 3. 解密出echostr原文，将原文当作Get请求的response，返回给企业微信
+    * 3.解密出echostr原文，将原文当作Get请求的response，返回给企业微信
     * 第2，3步可以用企业微信提供的库函数VerifyURL来实现。
     */
     @Test
@@ -150,7 +150,7 @@ class WorkTest {
         val sRespData =
             "<xml><ToUserName><![CDATA[mycreate]]></ToUserName><FromUserName><![CDATA[wx5823bf96d3bd56c7]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[this is a test]]></Content><MsgId>1234567890123456</MsgId><AgentID>128</AgentID></xml>"
         try {
-            val sEncryptMsg: String = wxcpt.encryptReMsg(sRespData, sReqTimeStamp, sReqNonce)
+            val sEncryptMsg: String = wxcpt.encryptMsg(sRespData, sReqTimeStamp, sReqNonce,"mycreate", 128).first
             println("\nafter encrypt sEncrytMsg: $sEncryptMsg")
             // 加密成功
             // HttpUtils.SetResponse(sEncryptMsg);

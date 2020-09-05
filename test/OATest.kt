@@ -36,7 +36,7 @@ class OATest {
     @Throws(ParserConfigurationException::class, SAXException::class, IOException::class)
     fun testNormal() {
         try {
-            val afterEncrpt = pc.encryptReMsg(replyMsg, timestamp, nonce)
+            val afterEncrpt = pc.encryptMsg(replyMsg,  timestamp, nonce,"toUser").first
 
             val dbf = DocumentBuilderFactory.newInstance()
             val db = dbf.newDocumentBuilder()
@@ -65,7 +65,7 @@ class OATest {
     @Test
     fun testAesEncrypt() {
         try {
-            Assert.assertEquals(afterAesEncrypt, pc.encrypt(randomStr, replyMsg))
+            Assert.assertEquals(afterAesEncrypt, pc.encrypt(replyMsg, randomStr))
         } catch (e: AesException) {
             e.printStackTrace()
             Assert.fail("no异常")
@@ -75,7 +75,7 @@ class OATest {
     @Test
     fun testAesEncrypt2() {
         try {
-            Assert.assertEquals(afterAesEncrypt2, pc.encrypt(randomStr, replyMsg2))
+            Assert.assertEquals(afterAesEncrypt2, pc.encrypt(replyMsg2, randomStr))
         } catch (e: AesException) {
             e.printStackTrace()
             Assert.fail("no异常")
@@ -103,7 +103,7 @@ class OATest {
     @Throws(ParserConfigurationException::class, SAXException::class, IOException::class)
     fun testValidateSignatureError() {
         try {
-            val afterEncrpt = pc.encryptReMsg(replyMsg, timestamp, nonce)
+            val afterEncrpt = pc.encryptMsg(replyMsg,timestamp, nonce,"toUser").first
             val dbf = DocumentBuilderFactory.newInstance()
             val db = dbf.newDocumentBuilder()
             val sr = StringReader(afterEncrpt)
