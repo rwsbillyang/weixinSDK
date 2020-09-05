@@ -14,7 +14,7 @@ interface IWorkMsgHandler{
     fun onDefault(msg: WorkBaseMsg): ReBaseMSg?
 }
 
-class WorkMsgHandler : IWorkMsgHandler{
+open class DefaultWorkMsgHandler : IWorkMsgHandler{
     override fun onWorkTextMsg(msg: WorkTextMsg) = onDefault(msg)
 
     override fun onWorkImgMsg(msg: WorkImgMSg) = onDefault(msg)

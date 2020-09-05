@@ -49,7 +49,7 @@ interface IOAMsgHandler
     fun onDefault(msg: WxBaseMsg): ReBaseMSg?
 }
 
-class DefaultOAMsgHandler: IOAMsgHandler
+open class DefaultOAMsgHandler: IOAMsgHandler
 {
     override fun onOATextMsg(msg: OATextMsg) = onDefault(msg)
 

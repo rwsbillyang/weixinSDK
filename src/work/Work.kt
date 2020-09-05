@@ -1,7 +1,6 @@
 package com.github.rwsbillyang.wxSDK.work
 
 
-
 import com.github.rwsbillyang.wxSDK.common.accessToken.*
 import com.github.rwsbillyang.wxSDK.common.aes.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.work.msg.*
@@ -45,7 +44,7 @@ class WorkConfiguration {
     var accessToken: IRefreshableValue? = null
     //var ticket: IRefreshableValue? = null
 
-    //var weixinPath = "/weixin/oa"
+    var callbackPath = "/weixin/work"
 }
 
 /**
@@ -69,29 +68,32 @@ class WorkConfiguration {
  *  https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Access_Overview.html
  * */
 class WorkContext(
-    var corpId: String,
-    var secret: String,
-    var token: String,
-    var encodingAESKey: String,
-    var wechatId: String? = null,
-    var wechatName: String? = null,
-    customMsgHandler: IWorkMsgHandler?,
-    customEventHandler: IWorkEventHandler?,
-    customAccessToken: IRefreshableValue?
-    //customTicket: IRefreshableValue?
-){
+        var corpId: String,
+        var secret: String,
+        var token: String,
+        var encodingAESKey: String,
+        var wechatId: String? = null,
+        var wechatName: String? = null,
+        var callbackPath: String = "/weixin/work",
+        customMsgHandler: IWorkMsgHandler?,
+        customEventHandler: IWorkEventHandler?,
+        customAccessToken: IRefreshableValue?
+        //customTicket: IRefreshableValue?
+) {
     var accessToken: IRefreshableValue
+
     //var ticket: IRefreshableValue
-    var wxBizMsgCrypt = WXBizMsgCrypt(token,encodingAESKey,corpId)
+    var wxBizMsgCrypt = WXBizMsgCrypt(token, encodingAESKey, corpId)
     var msgHub: WorkMsgHub
 
 
     init {
-        val msgHandler = customMsgHandler?: WorkMsgHandler()
-        val eventHandler = customEventHandler?: WorkEventHandler()
-        msgHub = WorkMsgHub(msgHandler, eventHandler,wxBizMsgCrypt)
+        val msgHandler = customMsgHandler ?: DefaultWorkMsgHandler()
+        val eventHandler = customEventHandler ?: DefaultWorkEventHandler()
+        msgHub = WorkMsgHub(msgHandler, eventHandler, wxBizMsgCrypt)
 
-        accessToken = customAccessToken?: RefreshableAccessToken(corpId, AccessTokenRefresher(AccessTokenUrl(corpId, secret)))
+        accessToken = customAccessToken
+                ?: RefreshableAccessToken(corpId, AccessTokenRefresher(AccessTokenUrl(corpId, secret)))
 
         //ticket = customTicket?: RefreshableTicket(appId, TicketRefresher(TicketUrl(accessToken)))
     }
@@ -100,23 +102,24 @@ class WorkContext(
 /**
  * 非ktor平台可以使用此函数进行配置企业微信参数
  * */
-fun configWork(block: WorkConfiguration.() -> Unit){
+fun configWork(block: WorkConfiguration.() -> Unit) {
     val config = WorkConfiguration().apply(block)
     _WORK = WorkContext(
-        config.corpId,
-        config.secret,
-        config.token,
-        config.encodingAESKey,
-        config.wechatId,
-        config.wechatName,
-        config.msgHandler,
-        config.eventHandler,
-        config.accessToken
-        //config.ticket
+            config.corpId,
+            config.secret,
+            config.token,
+            config.encodingAESKey,
+            config.wechatId,
+            config.wechatName,
+            config.callbackPath,
+            config.msgHandler,
+            config.eventHandler,
+            config.accessToken
+            //config.ticket
     )
 }
 
-internal class AccessTokenUrl(private val corpId: String, private val secret: String): IUrlProvider{
+internal class AccessTokenUrl(private val corpId: String, private val secret: String) : IUrlProvider {
     override fun url() = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"
 }
 

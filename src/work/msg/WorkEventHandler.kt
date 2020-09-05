@@ -29,7 +29,7 @@ interface IWorkEventHandler{
     fun onWorkTagUpdateEvent(e: WorkTagUpdateEvent): ReBaseMSg?
 }
 
-class WorkEventHandler : IWorkEventHandler{
+open class DefaultWorkEventHandler : IWorkEventHandler{
     override fun onDefault(e: WxBaseEvent): ReBaseMSg? {
         return null
     }

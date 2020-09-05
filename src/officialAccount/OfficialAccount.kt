@@ -33,7 +33,7 @@ class OAConfiguration {
     var secret = "your_app_secret_key"
     var token = "your_token"
 
-    var encodingAESKey:String? = null
+    var encodingAESKey: String? = null
 
     var wechatId: String? = null
     var wechatName: String? = null
@@ -44,7 +44,7 @@ class OAConfiguration {
     var accessToken: IRefreshableValue? = null
     var ticket: IRefreshableValue? = null
 
-    //var weixinPath = "/weixin/oa"
+    var callbackPath = "/weixin/oa"
 }
 
 /**
@@ -68,57 +68,60 @@ class OAConfiguration {
  *  https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Access_Overview.html
  * */
 class OAContext(
-    var appId: String,
-    var secret: String,
-    var token: String,
-    var encodingAESKey: String? = null,
-    var wechatId: String? = null,
-    var wechatName: String? = null,
-    customMsgHandler: IOAMsgHandler?,
-    customEventHandler: IOAEventHandler?,
-    customAccessToken: IRefreshableValue?,
-    customTicket: IRefreshableValue?
-){
+        var appId: String,
+        var secret: String,
+        var token: String,
+        var encodingAESKey: String? = null,
+        var wechatId: String? = null,
+        var wechatName: String? = null,
+        var callbackPath: String = "/weixin/oa",
+        customMsgHandler: IOAMsgHandler?,
+        customEventHandler: IOAEventHandler?,
+        customAccessToken: IRefreshableValue?,
+        customTicket: IRefreshableValue?
+) {
     var accessToken: IRefreshableValue
     var ticket: IRefreshableValue
-    var wxBizMsgCrypt = encodingAESKey?.let { WXBizMsgCrypt(token,it,appId) }
+    var wxBizMsgCrypt = encodingAESKey?.let { WXBizMsgCrypt(token, it, appId) }
     var msgHub: OAMsgHub
 
     init {
-        val msgHandler = customMsgHandler?: DefaultOAMsgHandler()
-        val eventHandler = customEventHandler?: DefaultOAEventHandler()
+        val msgHandler = customMsgHandler ?: DefaultOAMsgHandler()
+        val eventHandler = customEventHandler ?: DefaultOAEventHandler()
         msgHub = OAMsgHub(msgHandler, eventHandler, wxBizMsgCrypt)
 
-        accessToken = customAccessToken?: RefreshableAccessToken(appId, AccessTokenRefresher(AccessTokenUrl(appId, secret)))
+        accessToken = customAccessToken
+                ?: RefreshableAccessToken(appId, AccessTokenRefresher(AccessTokenUrl(appId, secret)))
 
-        ticket = customTicket?: RefreshableTicket(appId, TicketRefresher(TicketUrl(accessToken)))
+        ticket = customTicket ?: RefreshableTicket(appId, TicketRefresher(TicketUrl(accessToken)))
     }
 }
 
 /**
  * 非ktor平台可以使用此函数进行配置公众号参数
  * */
-fun configOfficialAccount(block: OAConfiguration.() -> Unit){
+fun configOfficialAccount(block: OAConfiguration.() -> Unit) {
     val config = OAConfiguration().apply(block)
     _OA = OAContext(
-        config.appId,
-        config.secret,
-        config.token,
-        config.encodingAESKey,
-        config.wechatId,
-        config.wechatName,
-        config.msgHandler,
-        config.eventHandler,
-        config.accessToken,
-        config.ticket
+            config.appId,
+            config.secret,
+            config.token,
+            config.encodingAESKey,
+            config.wechatId,
+            config.wechatName,
+            config.callbackPath,
+            config.msgHandler,
+            config.eventHandler,
+            config.accessToken,
+            config.ticket
     )
 }
 
-internal class AccessTokenUrl(private val appId: String, private val secret: String): IUrlProvider{
+internal class AccessTokenUrl(private val appId: String, private val secret: String) : IUrlProvider {
     override fun url() = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$appId&secret=$secret"
 }
 
-internal class TicketUrl(private val accessToken: IRefreshableValue): IUrlProvider{
+internal class TicketUrl(private val accessToken: IRefreshableValue) : IUrlProvider {
     override fun url() = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
 
 }

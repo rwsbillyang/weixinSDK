@@ -28,6 +28,7 @@ class OfficialAccountFeature(config: OAConfiguration) {
                 config.encodingAESKey,
                 config.wechatId,
                 config.wechatName,
+                config.callbackPath,
                 config.msgHandler,
                 config.eventHandler,
                 config.accessToken,
@@ -66,7 +67,7 @@ class OfficialAccountFeature(config: OAConfiguration) {
 
 
 
-fun Routing.officialAccountApi(path: String = "/weixin/oa") {
+fun Routing.officialAccountApi(path: String = _OA.callbackPath) {
     val log = LoggerFactory.getLogger("officialAccountApi")
 
     route(path) {
@@ -94,18 +95,18 @@ fun Routing.officialAccountApi(path: String = "/weixin/oa") {
             val signature = call.request.queryParameters["signature"]
             val timestamp = call.request.queryParameters["timestamp"]
             val nonce = call.request.queryParameters["nonce"]
-            val echostr = call.request.queryParameters["echostr"] ?: ""
+            val echostr = call.request.queryParameters["echostr"]
 
             val token = _OA.token
 
-            if (StringUtils.isAnyBlank(token, signature, timestamp, nonce)) {
-                log.warn("invalid parameters: token=$token, signature=$signature, timestamp=$timestamp, nonce=$nonce")
+            if (StringUtils.isAnyBlank(token, signature, timestamp, nonce,echostr)) {
+                log.warn("invalid parameters: token=$token, signature=$signature, timestamp=$timestamp, nonce=$nonce,echostr=$echostr")
             } else {
                 if (!SignUtil.checkSignature(token, signature!!, timestamp!!, nonce!!)) {
                     log.warn("fail to check signature")
                 }
             }
-            call.respondText(echostr, ContentType.Text.Plain, HttpStatusCode.OK)
+            call.respondText(echostr?:"", ContentType.Text.Plain, HttpStatusCode.OK)
         }
 
         /**
@@ -135,7 +136,7 @@ fun Routing.officialAccountApi(path: String = "/weixin/oa") {
             val body: String = call.receiveText()
 
             val msgSignature = call.request.queryParameters["msg_signature"]
-            val timeStamp = call.request.queryParameters["timeStamp"]
+            val timeStamp = call.request.queryParameters["timestamp"]
             val nonce = call.request.queryParameters["nonce"]
             val encryptType = call.request.queryParameters["encrypt_type"]?:"aes"
 
@@ -157,6 +158,7 @@ class WorkFeature(config: WorkConfiguration) {
                 config.encodingAESKey,
                 config.wechatId,
                 config.wechatName,
+                config.callbackPath,
                 config.msgHandler,
                 config.eventHandler,
                 config.accessToken
@@ -195,7 +197,7 @@ class WorkFeature(config: WorkConfiguration) {
 
 
 
-fun Routing.workApi(path: String = "/weixin/work") {
+fun Routing.workApi(path: String = _WORK.callbackPath) {
     val log = LoggerFactory.getLogger("workApi")
 
     route(path) {

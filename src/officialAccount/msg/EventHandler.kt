@@ -167,7 +167,7 @@ interface IOAEventHandler{
     fun onDefault(e: WxBaseEvent): ReBaseMSg?
 }
 
-class DefaultOAEventHandler: IOAEventHandler {
+open class DefaultOAEventHandler: IOAEventHandler {
     override fun onOASubscribeEvent(e: OASubscribeEvent) = onDefault(e)
 
     override fun onOAUnsubscribeEvent(e: OAUnsubscribeEvent) = onDefault(e)
