@@ -4,7 +4,7 @@ package com.github.rwsbillyang.wxSDK.work.pay
 import com.github.rwsbillyang.wxSDK.common.WxApi
 
 
-abstract class QyPayApi: WxApi {
+abstract class QyPayApi: WxApi() {
     override val base = "https://api.mch.weixin.qq.com"
     override val group = "mmpaymkttransfers"
 
