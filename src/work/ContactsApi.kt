@@ -42,11 +42,11 @@ class UserApi: WorkBaseApi(){
 
     fun simpleList(departmentId: Int, fetchChild: Int) = doGet(
         SIMPLE_LIST,
-        mapOf("department_id" to departmentId, "fetch_child" to fetchChild))
+        mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString()))
 
     fun list(departmentId: Int, fetchChild: Int) = doGet(
         LIST,
-        mapOf("department_id" to departmentId, "fetch_child" to fetchChild))
+        mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString()))
 
     fun convertToOpenId(userId: String) = doPost(CONVERT_TO_OPENID, mapOf("userid" to userId))
 
@@ -64,8 +64,8 @@ class UserApi: WorkBaseApi(){
      * 支持企业用户获取实时成员加入二维码。
      *  https://work.weixin.qq.com/api/doc/90000/90135/91714
      * */
-    fun getJoinQrCode(sizeType: Int) = doGet(sizeType)
-    { "$base/corp/get_join_qrcode?access_token=ACCESS_TOKEN&size_type=$sizeType"}
+    fun getJoinQrCode(sizeType: Int) = doGet()
+    { "$base/corp/get_join_qrcode?access_token=${accessToken()}&size_type=$sizeType"}
     /**
      * 获取手机号随机串
      * 支持企业获取手机号随机串，该随机串可直接在企业微信终端搜索手机号对应的微信用户。
@@ -100,7 +100,7 @@ class DepartmentApi: WorkBaseApi(){
      *  @param id 部门id。（注：不能删除根部门；不能删除含有子部门、成员的部门）
      * https://work.weixin.qq.com/api/doc/90000/90135/90207
      * */
-    fun delete(id: Int) = doGet(DELETE, mapOf("id" to id))
+    fun delete(id: Int) = doGet(DELETE, mapOf("id" to id.toString()))
 
     /**
      *
@@ -108,7 +108,7 @@ class DepartmentApi: WorkBaseApi(){
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/90208
      * */
-    fun list(id: Int?) = doGet(LIST, mapOf("id" to id))
+    fun list(id: Int?) = doGet(LIST, mapOf("id" to id.toString()))
 
 }
 
@@ -138,13 +138,13 @@ class TagApi: WorkBaseApi(){
     /**
      * https://work.weixin.qq.com/api/doc/90000/90135/90212
      * */
-    fun delete(id: Int) = doGet(DELETE, mapOf("tagid" to id))
+    fun delete(id: Int) = doGet(DELETE, mapOf("tagid" to id.toString()))
 
     /**
      * 获取标签成员
      * https://work.weixin.qq.com/api/doc/90000/90135/90213
      * */
-    fun detail(id: Int) = doGet(DETAIL, mapOf("tagid" to id))
+    fun detail(id: Int) = doGet(DETAIL, mapOf("tagid" to id.toString()))
 
     /**
      * 增加标签成员

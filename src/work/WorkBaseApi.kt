@@ -9,7 +9,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
-abstract class WorkBaseApi: WxApi {
+abstract class WorkBaseApi: WxApi() {
     override val base = "https://qyapi.weixin.qq.com/cgi-bin"
     override fun accessToken() = _WORK.accessToken.get()
 
