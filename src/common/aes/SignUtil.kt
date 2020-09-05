@@ -3,13 +3,23 @@ package com.github.rwsbillyang.wxSDK.common.aes
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.UnsupportedEncodingException
-import java.security.NoSuchAlgorithmException
 import java.util.*
 
 
 object SignUtil {
     private val log: Logger = LoggerFactory.getLogger("SignUtil")
+
+    fun getSignature(token: String, timestamp: String, nonce: String): String
+    {
+        val arr = arrayOf(token, timestamp, nonce)
+        Arrays.sort(arr)
+        val sb = StringBuffer()
+        for (anArr in arr) {
+            sb.append(anArr)
+        }
+
+        return DigestUtils.sha1Hex(sb.toString())
+    }
     /**
      * 认证微信，可以参见微信开发者文档
      * https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Access_Overview.html
@@ -36,19 +46,12 @@ object SignUtil {
             content.append(anArr)
         }
 
-        try {
-            val signature3 = DigestUtils.sha1Hex(content.toString())
+        val signature3 = getSignature(token,timestamp,nonce)
 
-            return if(signature3 == signature) true
-            else{
-                log.warn("fail to check weixin signature:token=$token,timestamp=$timestamp,nonce=$nonce, signature=$signature,original content=$content")
-                false
-            }
-
-        } catch (e: NoSuchAlgorithmException) {
-            log.error("NoSuchAlgorithmException:{}", e.message)
-        } catch (e: UnsupportedEncodingException) {
-            log.error("UnsupportedEncodingException:{}", e.message)
+        return if(signature3 == signature) true
+        else{
+            log.warn("fail to check weixin signature:token=$token,timestamp=$timestamp,nonce=$nonce, signature=$signature,original content=$content")
+            false
         }
 
         return false

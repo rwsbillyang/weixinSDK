@@ -16,15 +16,18 @@ internal object XmlUtil {
      * @param xmltext 待提取的xml字符串,形如：
      * <xml>
      *     <ToUserName></ToUserName>
-     *     <Encrypt></Encrypt>
+     *     <Encrypt><![CDATA[7I...bKjU=]]></Encrypt>
+     *      <MsgSignature>a198da2128097708a2c6bd04f97e4eb71a11d10e</MsgSignature>
+     *      <TimeStamp>1599291766096</TimeStamp>
+     *      <Nonce>YU3g9W</Nonce>
      * </xml>
      *
-     * @return 提取出的加密消息字符串
+     * @return 提取出的加密消息字符串map
      * @throws AesException
      */
     @Throws(AesException::class)
-    fun extract(xmltext: String): Array<Any?> {
-        val result = arrayOfNulls<Any?>(3)
+    fun extract(xmltext: String): Map<String, String?> {
+       val map = mutableMapOf<String, String?>()
         return try {
             val dbf = DocumentBuilderFactory.newInstance()
 
@@ -58,13 +61,14 @@ internal object XmlUtil {
             val `is` = InputSource(sr)
             val document = db.parse(`is`)
             val root = document.documentElement
-            val nodelist1 = root.getElementsByTagName("Encrypt")
-            val nodelist2 = root.getElementsByTagName("ToUserName")
-            result[0] = 0
-            result[1] = nodelist1.item(0).textContent
-            result[2] = nodelist2.item(0).textContent
-            result
+
+            for(tag in listOf("ToUserName","Encrypt","TimeStamp","Nonce"))
+            {
+                map[tag] = root.getElementsByTagName(tag)?.item(0)?.textContent
+            }
+            return map
         } catch (e: Exception) {
+            println("Fail parse xml: $xmltext")
             e.printStackTrace()
             throw AesException(AesException.ParseXmlError)
         }
@@ -91,13 +95,17 @@ internal object XmlUtil {
         encrypt: String?,
         signature: String?,
         timestamp: String?,
-        nonce: String?
+        nonce: String?,
+        toUserName: String? = null,
+        agentId: Int? = null
     ): String {
         val builder = MsgBuilder("<xml>\n")
+        if(!toUserName.isNullOrBlank()) builder.addData("ToUserName", toUserName)
         builder.addData("Encrypt", encrypt)
         builder.addTag("MsgSignature", signature)
         builder.addTag("TimeStamp", timestamp)
         builder.addTag("Nonce", nonce)
+        if(agentId != null) builder.addTag("AgentID", agentId.toString())
         builder.append("</xml>")
 
         return builder.toString()

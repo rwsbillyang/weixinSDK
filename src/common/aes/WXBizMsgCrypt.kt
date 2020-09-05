@@ -77,8 +77,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
         nonce: String,
         echoStr: String
     ): String {
-        val signature =
-            getSHA1(token, timeStamp, nonce, echoStr)
+        val signature = getSHA1(token, timeStamp, nonce, echoStr)
         if (signature != msgSignature) {
             println("verifyUrl: original signature: $msgSignature, generated signature: $signature")
             throw AesException(AesException.ValidateSignatureError)
@@ -116,10 +115,11 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
 
         // 密钥，公众账号的app secret
         // 提取密文
-        val encrypt: Array<Any?> = XmlUtil.extract(postData)
+        val map = XmlUtil.extract(postData)
 
+        val encryptText =  map["Encrypt"].toString()
         //生成自己的安全签名
-        val signature = getSHA1(token, timeStamp, nonce, encrypt[1].toString())
+        val signature = getSHA1(token, timeStamp, nonce,encryptText)
 
         // 和URL中的签名比较是否相等
         // println("第三方收到URL中的签名：" + msg_sign);
@@ -130,41 +130,45 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
         }
 
         // 解密
-        return decrypt(encrypt[1].toString())
+        return decrypt(encryptText)
     }
 
     /**
-     * 将公众平台回复用户的消息加密打包.
+     * 生成xml格式字符串，包括Encrypt、ToUserName, AgentID, MsgSignature, Timestamp, Nonce等信息
+     * 提供toUserName或agentId时用于模拟一条来自微信的推送消息
      *
-     *  1. 对要发送的消息进行AES-CBC加密
-     *  1. 生成安全签名
-     *  1. 将消息密文和安全签名打包成xml格式
+     * @param replyMsg 回复消息，xml格式的字符串,形如：res_msg =
+     *   <xml>
+     *   <ToUserName></ToUserName>
+     *    <FromUserName></FromUserName>
+     *    <CreateTime>1411034505</CreateTime>
+     *    <MsgType></MsgType>
+     *   <Content></Content>
+     *   <FuncFlag>0</FuncFlag>
+     *   </xml>
      *
-     *
-     * @param replyMsg 公众平台待回复用户的消息，xml格式的字符串,形如：res_msg =
-    <xml>
-    <ToUserName></ToUserName>
-    <FromUserName></FromUserName>
-    <CreateTime>1411034505</CreateTime>
-    <MsgType></MsgType>
-    <Content></Content>
-    <FuncFlag>0</FuncFlag>
-    </xml>
-
      * @param timeStamp 时间戳，可以自己生成，也可以用URL参数的timestamp
      * @param nonce 随机串，可以自己生成，也可以用URL参数的nonce
+     * @param toUserName 用于测试，模拟构造一个推送消息或事件
+     * @param agentId 用于测试，模拟构造一个推送企业微信中的消息或事件
      *
-     * @return 加密后的可以直接回复用户的密文，包括msg_signature, timestamp, nonce, encrypt的xml格式的字符串
+     * @return 加密后的可以直接回复的密文，以及签名，签名用于模拟腾讯发送消息的测试
      * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
      */
     @Throws(AesException::class)
-    fun encryptReMsg(replyMsg: String, timeStamp: String = System.currentTimeMillis().toString(), nonce: String = getRandomStr()): String {
-        val encrypt = encrypt(getRandomStr(), replyMsg)
+    fun encryptMsg(replyMsg: String,
+                     timeStamp: String = System.currentTimeMillis().toString(),
+                     nonce: String = getRandomStr(),
+                     toUserName: String? = null,
+                     agentId: Int? = null
+                     ): Pair<String, String> {
+        val encrypt = encrypt(replyMsg)
         val signature = getSHA1(token, timeStamp, nonce, encrypt)
 
         // println("发送给平台的签名是: " + signature[1].toString());
         // 生成回复发送的xml
-        return XmlUtil.generateEncryptReMsg(encrypt, signature, timeStamp, nonce)
+        val xml = XmlUtil.generateEncryptReMsg(encrypt, signature, timeStamp, nonce,toUserName,agentId)
+        return Pair(xml, signature)
     }
 
 
@@ -208,7 +212,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
      * @throws AesException aes加密失败
      */
     @Throws(AesException::class)
-    fun encrypt(randomStr: String, text: String): String {
+    fun encrypt(text: String, randomStr: String = getRandomStr()): String {
         val byteCollector = ByteGroup()
         val randomStrBytes = randomStr.toByteArray(CHARSET)
         val textBytes = text.toByteArray(CHARSET)
@@ -271,6 +275,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
             e.printStackTrace()
             throw AesException(AesException.DecryptAESError)
         }
+
         val xmlContent: String
         val from_appid: String
         try {
@@ -296,12 +301,4 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
         }
         return xmlContent
     }
-
-
-
-
-
-
-
-
 }
