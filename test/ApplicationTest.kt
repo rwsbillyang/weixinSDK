@@ -32,7 +32,7 @@ class ApplicationTest {
         }
     }
 
-    //@Test
+    @Test
     fun testOAUrl(){
         withTestApplication({ OATestableModule(testing = true) }) {
 
@@ -63,8 +63,8 @@ class ApplicationTest {
                         val reTimeStamp =  map["TimeStamp"]?:""
                         val reNonce = map["Nonce"]?:""
                         val reEcrypt = map["Encrypt"]?:""
-                        val signature = SHA1.getSHA1(_OA.token, reTimeStamp, reNonce, reEcrypt)
-                        val msg = _OA.wxBizMsgCrypt!!.decryptWxMsg(signature,reTimeStamp,reNonce,response.content!!)
+                        val signature2 = SHA1.getSHA1(_OA.token, reTimeStamp, reNonce, reEcrypt)
+                        val msg = _OA.wxBizMsgCrypt!!.decryptWxMsg(signature2,reTimeStamp,reNonce,response.content!!)
                         println("Got OA reply: $msg")
                     }else{
                         println("in OA post, got response: ${response.content}")
@@ -112,8 +112,8 @@ class ApplicationTest {
                         val reTimeStamp =  map["TimeStamp"]?:""
                         val reNonce = map["Nonce"]?:""
                         val reEcrypt = map["Encrypt"]?:""
-                        val signature = SHA1.getSHA1(_WORK.token, reTimeStamp, reNonce, reEcrypt)
-                        val msg = _WORK.wxBizMsgCrypt!!.decryptWxMsg(signature,reTimeStamp,reNonce,response.content!!)
+                        val signature2 = SHA1.getSHA1(_WORK.token, reTimeStamp, reNonce, reEcrypt)
+                        val msg = _WORK.wxBizMsgCrypt!!.decryptWxMsg(signature2,reTimeStamp,reNonce,response.content!!)
                         println("Got wx work reply: $msg")
                     }else{
                         println("in wx work post, got response: ${response.content}")
