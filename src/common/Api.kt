@@ -8,6 +8,8 @@ import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
+import io.ktor.http.*
+import io.ktor.util.*
 import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
@@ -118,11 +120,31 @@ abstract class Api {
     }
 
 
-    fun doUpload(name: String, filePath: String, parameters: Map<String, String?>? = null) = runBlocking {
+    fun  doUpload(name: String, filePath: String, parameters: Map<String, String?>? = null,formData: Map<String, String>? = null) = runBlocking {
         CoroutineScope(Dispatchers.IO).async {
             client.post<Map<String, Any?>>(url(name, parameters)) {
                 val file = File(filePath)
                 body = MultiPartFormDataContent(formData {
+                    formData?.forEach{ append(it.key, it.value)}
+                    appendInput("media", size = file.length()) {
+                        FileInputStream(file).asInput()
+                    }
+                })
+            }
+        }.await()
+    }
+
+
+
+    inline fun <reified R> doUpload2(name: String, filePath: String,
+                                     parameters: Map<String, String?>? = null,
+                                     formData: Map<String, String>? = null) :R= runBlocking {
+        CoroutineScope(Dispatchers.IO).async {
+            client.post<R>(url(name, parameters)) {
+                val file = File(filePath)
+                body = MultiPartFormDataContent(formData {
+                    formData?.forEach{ append(it.key, it.value)}
+                    //append("media",filePath, ContentType.Video, file.length())
                     appendInput("media", size = file.length()) {
                         FileInputStream(file).asInput()
                     }
