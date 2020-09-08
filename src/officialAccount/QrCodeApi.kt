@@ -36,9 +36,20 @@ class QrCodeApi: OABaseApi() {
 
     /**
      * 通过ticket换取二维码
+     *
      * ticket正确情况下，http 返回码是200，是一张图片，可以直接展示或者下载
+     * TICKET已进行UrlEncode
      * */
     fun qrCodeUrl(ticket: String) = URLEncoder.encode("https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=$ticket","utf-8")
+
+
+    /**
+     * 将一条长链接转成短链接。
+     * 主要使用场景： 开发者用于生成二维码的原链接（商品、支付二维码等）太长导致扫码速度和成功率下降，
+     * 将原长链接通过此接口转成短链接再生成二维码将大大提升扫码速度和成功率。
+     * */
+    fun shortUrl(url: String):String? = doPost(mapOf("action" to "long2short", "long_url" to url)){
+        "https://api.weixin.qq.com/cgi-bin/shorturl?access_token=${accessToken()}"}["short_url"]?.toString()
 }
 
 /**
