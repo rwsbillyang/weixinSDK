@@ -79,6 +79,14 @@ class MsgApi : OABaseApi() {
     fun setSpeed(speed: Int): String = doPost2("speed/set", mapOf("speed" to speed))
 
     fun getSpeed():ResponseSpeed = doPost2("speed/get", null)
+
+
+    /**
+     * 通过API推送订阅模板消息给到授权微信用户
+     * https://developers.weixin.qq.com/doc/offiaccount/Message_Management/One-time_subscription_info.html
+     * TODO: 跳转重定向entry point的处理
+     * */
+    fun sendSubscribeMsg(msg: OneTimeTemplateMsg): Response = doPost2("template/subscribe", msg)
 }
 
 
@@ -107,6 +115,47 @@ class TemplateMsg(
         @SerialName("miniprogram")
         val mini: MiniProgram? = null
 )
+
+/**
+ *
+ * https://developers.weixin.qq.com/doc/offiaccount/Message_Management/One-time_subscription_info.html
+ * @param toUser    是	接收者openid
+ * @param templateId    是	订阅消息模板ID
+ * @param data    是	模板数据
+ * @param url    否	模板跳转链接（海外帐号没有跳转能力）
+ * @param mini    否	跳小程序所需数据，不需跳小程序可不用传该数据
+ * @param scene	是	订阅场景值
+ * @param title	是	消息标题，15字以内
+ * @param data	是	消息正文，value为消息内容文本（200字以内），没有固定格式，可用\n换行，
+ * color为整段消息内容的字体颜色（目前仅支持整段消息为一种颜色）
+ *
+ * 注：url和miniprogram都是非必填字段，若都不传则模板无跳转；若都传，会优先跳转至小程序。开发者可根据实际需要选择其中一种跳转方式即可。
+ * 当用户的微信客户端版本不支持跳小程序时，将会跳转至url。
+ * */
+@Serializable
+class OneTimeTemplateMsg(
+        @SerialName("touser")
+        val toUser: String,
+        @SerialName("template_id")
+        val templateId: String,
+        val scene: Int,
+        val title: String,
+        val data: Map<String, ValueColor>,
+        val url: String? = null,
+        @SerialName("miniprogram")
+        val mini: MiniProgram? = null
+){
+    constructor(
+                 toUser: String,
+                 templateId: String,
+                 scene: Int,
+                 title: String,
+                 content: String,
+                 url: String? = null,
+                 mini: MiniProgram? = null,
+                 color: String  = "173177"):
+            this(toUser, templateId, scene, title, mapOf("content" to ValueColor(content, color)),url, mini)
+}
 
 /**
  * 发送模板消息返回的结果
