@@ -1,13 +1,7 @@
 package com.github.rwsbillyang.wxSDK.common
 
-import io.ktor.client.request.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
 
-
-abstract class WxApi: Api(){
+abstract class WxApi : Api() {
     /**
      * API前面的公共部分，后面无斜杠，如：https://api.weixin.qq.com/cgi-bin
      * 公众号、企业微信等API在不同的域名下，故base不同
@@ -15,6 +9,7 @@ abstract class WxApi: Api(){
      * 如https://api.weixin.qq.com/cgi-bin/menu/create?access_token=ACCESS_TOKEN中前面的是所有API的共同部分
      * */
     abstract val base: String
+
     /**
      * API中的组，前后都无斜杠，如menu，意味着 各MenuAPI
      * */
@@ -31,12 +26,21 @@ abstract class WxApi: Api(){
      * @param requestParams 请求参数
      * @param needAccessToken 是否需要accessToken
      * */
-    override fun url(name: String, requestParams: Map<String, String?>?, needAccessToken: Boolean): String{
-        val params = requestParams?.entries?.filter { it.value != null }?.joinToString("&") { "${it.key}=${it.value}" }?:""
-        if(needAccessToken)
-            return  "$base/$group/$name?access_token=${accessToken()}&$params"
-        else
-            return  "$base/$group/$name?&$params"
+    override fun url(name: String, requestParams: Map<String, String?>?, needAccessToken: Boolean): String {
+        val params = requestParams?.entries?.filter { it.value != null }?.joinToString("&") { "${it.key}=${it.value}" }
+        return if (needAccessToken)
+        {
+            if (params.isNullOrBlank())
+                "$base/$group/$name?access_token=${accessToken()}"
+            else
+                "$base/$group/$name?access_token=${accessToken()}&$params"
+        }else {
+            if (params.isNullOrBlank())
+                "$base/$group/$name"
+            else
+                "$base/$group/$name?$params"
+        }
+
     }
 }
 

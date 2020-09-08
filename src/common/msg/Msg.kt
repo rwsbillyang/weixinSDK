@@ -194,7 +194,7 @@ abstract class ReBaseMSg(
  * https://work.weixin.qq.com/api/doc/90000/90135/90240#%E5%BC%B9%E5%87%BA%E7%B3%BB%E7%BB%9F%E6%8B%8D%E7%85%A7%E5%8F%91%E5%9B%BE%E7%9A%84%E4%BA%8B%E4%BB%B6%E6%8E%A8%E9%80%81
  * <item><PicMd5Sum><![CDATA[1b5f7c23b5bf75682a53e7b6d163e185]]></PicMd5Sum></item>
  * */
-class Pic(md5: String?)
+class Pic(val md5: String?)
 
 /**
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html#3
@@ -206,7 +206,7 @@ class Pic(md5: String?)
 </SendPicsInfo>
 
  * */
-class SendPicsInfo(count: Int?, picList: List<Pic>?){
+class SendPicsInfo(val count: Int?, val picList: List<Pic>?){
 
     companion object{
         /**
