@@ -6,7 +6,7 @@ import com.github.rwsbillyang.wxSDK.common.msg.WxBaseEvent
 
 /**
  * 微信推送过来的事件的处理接口
- *
+ * TODO: 微信认证事件推送 https://developers.weixin.qq.com/doc/offiaccount/Account_Management/Wechat_Accreditation_Event_Push.html
  * */
 interface IOAEventHandler{
     /**

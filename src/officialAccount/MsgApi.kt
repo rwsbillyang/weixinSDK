@@ -503,7 +503,6 @@ object MpNewsMsgSerializer : MsgSerializer<MpNewsMsg>() {
 abstract class MsgSerializer<T: IMsg>: KSerializer<T>{
     override val descriptor: SerialDescriptor =
             buildClassSerialDescriptor(serialName()) {
-                //element<Int?>("text", isOptional = true)
                 addContentElement(this)
                 element<String>("msgtype", isOptional = true)
                 element<String?>("clientmsgid", isOptional = true)
@@ -514,14 +513,13 @@ abstract class MsgSerializer<T: IMsg>: KSerializer<T>{
     override fun serialize(encoder: Encoder, value: T) =
             encoder.encodeStructure(descriptor) {
                 val count = serializeContent(this, value)
-                //encodeSerializableElement(descriptor, 0,TextContent.serializer(), value.text)
-                encodeStringElement(TextMsgSerializer.descriptor, count, value.msgType)
-                if(!value.clientMsgId.isNullOrBlank())encodeStringElement(TextMsgSerializer.descriptor, count+1, value.clientMsgId!!)
+                encodeStringElement(descriptor, count, value.msgType)
+                if(!value.clientMsgId.isNullOrBlank())encodeStringElement(descriptor, count+1, value.clientMsgId!!)
                 when (value.target.type) {
-                    TargetType.Tag -> encodeSerializableElement(TextMsgSerializer.descriptor, count+2, TagFilter.serializer(), value.target.tags!!)
-                    TargetType.OpenIds -> encodeSerializableElement(TextMsgSerializer.descriptor, count+3, ListSerializer(String.serializer()), value.target.openIds!!)
-                    TargetType.OpenId -> encodeStringElement(TextMsgSerializer.descriptor, count+3, value.target.openId!!)
-                    TargetType.WxName -> encodeStringElement(TextMsgSerializer.descriptor, count+4, value.target.wxName!!)
+                    TargetType.Tag -> encodeSerializableElement(descriptor, count+2, TagFilter.serializer(), value.target.tags!!)
+                    TargetType.OpenIds -> encodeSerializableElement(descriptor, count+3, ListSerializer(String.serializer()), value.target.openIds!!)
+                    TargetType.OpenId -> encodeStringElement(descriptor, count+3, value.target.openId!!)
+                    TargetType.WxName -> encodeStringElement(descriptor, count+4, value.target.wxName!!)
                 }
             }
 

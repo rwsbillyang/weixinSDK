@@ -42,22 +42,19 @@ class MediaApi : OABaseApi(){
 
 }
 /**
- * 图片（image）: 10M，支持PNG\JPEG\JPG\GIF格式
-
-语音（voice）：2M，播放长度不超过60s，支持AMR\MP3格式
-
-视频（video）：10MB，支持MP4格式
-
-缩略图（thumb）：64KB，支持JPG格式
+ * @property IMAGE 图片（image）: 10M，支持PNG\JPEG\JPG\GIF格式
+ * @property VOICE 语音（voice）：2M，播放长度不超过60s，支持AMR\MP3格式
+ * @property VIDEO 视频（video）：10MB，支持MP4格式
+ * @property THUMB 缩略图（thumb）：64KB，支持JPG格式
  * */
 enum class MediaType(val value: String){
     IMAGE("image"), VOICE("voice"), VIDEO("video"), THUMB("thumb")
 }
 
 /**
- * type	媒体文件类型，分别有图片（image）、语音（voice）、视频（video）和缩略图（thumb，主要用于视频与音乐格式的缩略图）
-media_id	媒体文件上传后，获取标识
-created_at	媒体文件上传时间戳
+ * @param type	媒体文件类型，分别有图片（image）、语音（voice）、视频（video）和缩略图（thumb，主要用于视频与音乐格式的缩略图）
+ * @param mediaId media_id	媒体文件上传后，获取标识
+ * @param createAt created_at	媒体文件上传时间戳
  * */
 @Serializable
 class ResponseUploadMedia(
@@ -73,7 +70,7 @@ class ResponseUploadMedia(
 ): IBase
 
 /**
- * 若是视频，则videoUrl为视频网址，其它情况均为默认值，结果为二进制数据
+ * @param videoUrl 若是视频，则videoUrl为视频网址，其它情况均为默认值null
  * https://developers.weixin.qq.com/doc/offiaccount/Asset_Management/Get_temporary_materials.html
  * */
 @Serializable
