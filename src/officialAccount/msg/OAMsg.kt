@@ -91,7 +91,7 @@ class OAVoiceMsg(base: BaseInfo): WxBaseMsg(base)
  * @property mediaId 视频消息媒体id，可以调用获取临时素材接口拉取数据
  * @property thumbMediaId 视频消息缩略图的媒体id，可以调用多媒体文件下载接口拉取数据。
  * */
-class OAVideoMsg(base: BaseInfo): WxBaseMsg(base)
+open class OAVideoMsg(base: BaseInfo): WxBaseMsg(base)
 {
     var mediaId: String? = null
     var thumbMediaId: String? = null
@@ -114,25 +114,8 @@ class OAVideoMsg(base: BaseInfo): WxBaseMsg(base)
  * 小视频消息
  * @property thumbMediaId 视频消息缩略图的媒体id，可以调用多媒体文件下载接口拉取数据。
  * */
-class OAShortVideoMsg(base: BaseInfo): WxBaseMsg(base)
-{
-    var mediaId: String? = null
-    var thumbMediaId: String? = null
-    override fun read(reader: XMLEventReader)
-    {
-        var count = 0
-        while (reader.hasNext() && count < 2) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when(event.asStartElement().name.toString()){
-                    "MediaId" -> {mediaId = reader.elementText; count++}
-                    "ThumbMediaId" -> {thumbMediaId = reader.elementText; count++}
-                }
-            }
-        }
-        super.read(reader)
-    }
-}
+class OAShortVideoMsg(base: BaseInfo): OAVideoMsg(base)
+
 /**
  * 地理位置消息
  * @property locationX Location_X	地理位置纬度

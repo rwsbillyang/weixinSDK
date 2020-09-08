@@ -89,7 +89,7 @@ class ReVideoMsg(
  * @param url Url	是	点击图文消息跳转链接
  * */
 @Serializable
-class Article(
+class ReArticleItem(
     val title: String,
     val description: String,
     val picUrl: String,
@@ -106,7 +106,7 @@ class Article(
  * @param articles Articles	是	图文消息信息，注意，如果图文数超过限制，则将只发限制内的条数
  * */
 class ReNewsMsg(
-    val articles: List<Article>,
+    val articles: List<ReArticleItem>,
     val articleCount: Int = articles.size,
     toUserName: String?,
     fromUserName: String?,
