@@ -3,7 +3,7 @@ package com.github.rwsbillyang.wxSDK.officialAccount
 
 import com.github.rwsbillyang.wxSDK.common.accessToken.*
 import com.github.rwsbillyang.wxSDK.common.aes.WXBizMsgCrypt
-import com.github.rwsbillyang.wxSDK.officialAccount.msg.*
+import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.*
 
 
 lateinit var _OA: OAContext

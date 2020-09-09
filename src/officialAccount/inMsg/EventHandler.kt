@@ -1,4 +1,4 @@
-package com.github.rwsbillyang.wxSDK.officialAccount.msg
+package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
 
 import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg

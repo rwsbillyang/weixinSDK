@@ -1,11 +1,9 @@
-package com.github.rwsbillyang.wxSDK.officialAccount.msg
+package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
 import com.github.rwsbillyang.wxSDK.common.msg.BaseInfo
-import com.github.rwsbillyang.wxSDK.common.msg.Pic
 import com.github.rwsbillyang.wxSDK.common.msg.SendPicsInfo
 import com.github.rwsbillyang.wxSDK.common.msg.WxBaseEvent
 import javax.xml.stream.XMLEventReader
-import javax.xml.stream.XMLStreamException
 
 
 /**

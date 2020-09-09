@@ -1,19 +1,24 @@
-package com.github.rwsbillyang.wxSDK.officialAccount.msg
+package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
 import com.github.rwsbillyang.wxSDK.common.msg.*
 import com.github.rwsbillyang.wxSDK.common.aes.WXBizMsgCrypt
 import javax.xml.stream.XMLEventReader
 
 class OAMsgHub(
-    private val msgHandler: IOAMsgHandler,
-    private val eventHandler: IOAEventHandler,
-    wxBizMsgCrypt: WXBizMsgCrypt?
+        private val msgHandler: IOAMsgHandler,
+        private val eventHandler: IOAEventHandler,
+        wxBizMsgCrypt: WXBizMsgCrypt?
 ):WxMsgHub(wxBizMsgCrypt) {
     override fun dispatchMsg(reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
         return when(base.msgType){
-            BaseInfo.TEXT -> msgHandler.onOATextMsg(
-                OATextMsg(base).apply { read(reader) }
-            )
+            BaseInfo.TEXT -> {
+                val msg = OACustomerClickMenuMsg(base).apply { read(reader) }
+                if(msg.menuId.isNullOrBlank())
+                    msgHandler.onOATextMsg(msg)
+                else{
+                    msgHandler.onOACustomerClickMenuMsg(msg)
+                }
+            }
             BaseInfo.IMAGE -> msgHandler.onOAImgMsg(
                 OAImgMSg(base).apply { read(reader) }
             )

@@ -1,8 +1,10 @@
-package com.github.rwsbillyang.wxSDK.officialAccount.msg
+package com.github.rwsbillyang.wxSDK.officialAccount.outMsg
 
 import com.github.rwsbillyang.wxSDK.common.msg.MsgBuilder
 import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
 
+
+//============================= 被动回复 消息 =============================//
 
 
 /**

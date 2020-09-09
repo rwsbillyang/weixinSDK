@@ -1,10 +1,11 @@
 package com.github.rwsbillyang.wxSDK.common.msg
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
 /**
- * 文本消息
+ * 被动回复消息 文本消息
  * */
 class ReTextMsg(
     val content: String,
@@ -25,7 +26,7 @@ class ReTextMsg(
 
 
 /**
- * 回复图片消息
+ * 被动回复消息 图片消息
  * */
 class ReImgMsg(
     val mediaId: String,
@@ -42,7 +43,7 @@ class ReImgMsg(
 }
 
 /**
- * 回复语音消息
+ * 被动回复消息 语音消息
  * */
 class ReVoiceMsg(
     val mediaId: String,
@@ -59,7 +60,7 @@ class ReVoiceMsg(
 }
 
 /**
- * 回复视频消息
+ * 被动回复消息 视频消息
  * */
 class ReVideoMsg(
     val mediaId: String,
@@ -81,7 +82,7 @@ class ReVideoMsg(
 
 
 /**
- * 回复图文消息
+ * 图文消息项, 既用于被动回复的图文消息（序列化为xml），也用于客服消息（序列化为JSON）之中
  *
  * @param title Title	是	图文消息标题
  * @param description Description	是	图文消息描述
@@ -92,12 +93,13 @@ class ReVideoMsg(
 class ReArticleItem(
     val title: String,
     val description: String,
+    @SerialName("picurl")
     val picUrl: String,
     val url: String
 )
 
 /**
- * 回复图文消息
+ * 被动回复消息 图文消息
  *
  * @param articleCount ArticleCount	是	图文消息个数；
  * 当用户发送文本、图片、语音、视频、图文、地理位置这六种消息时，开发者只能回复1条图文消息；

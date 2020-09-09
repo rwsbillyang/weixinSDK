@@ -1,4 +1,4 @@
-package com.github.rwsbillyang.wxSDK.officialAccount.msg
+package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
 import com.github.rwsbillyang.wxSDK.common.msg.BaseInfo
 import com.github.rwsbillyang.wxSDK.common.msg.WxBaseMsg
@@ -9,7 +9,7 @@ import javax.xml.stream.XMLEventReader
  * 文本消息 微信服务器推送过来的
  * @property content 消息内容
  * */
-class OATextMsg(base: BaseInfo): WxBaseMsg(base)
+open class OATextMsg(base: BaseInfo): WxBaseMsg(base)
 {
     var content: String? = null
     override fun read(reader: XMLEventReader)
@@ -20,6 +20,33 @@ class OATextMsg(base: BaseInfo): WxBaseMsg(base)
                 when(event.asStartElement().name.toString()){
                     "Content" -> {
                         content = reader.elementText
+                        break
+                    }
+                }
+            }
+        }
+        super.read(reader)
+    }
+}
+/**
+ * 文本消息 微信服务器推送过来的
+ * 当客服发送菜单消息进行问卷调查之后，客户可以选择，之后会将选项推送回服务器，依据bizmsgmenuid是否有内容来判断是否是菜单点击消息
+ *
+ *
+ * @property menuId 点击的菜单ID 参见客服消息中的菜单消息中的菜单，用户调查时用户点击的菜单id
+ * https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Service_Center_messages.html#7
+ * */
+class OACustomerClickMenuMsg(base: BaseInfo): OATextMsg(base)
+{
+    var menuId: String? = null
+    override fun read(reader: XMLEventReader)
+    {
+        while (reader.hasNext()) {
+            val event = reader.nextEvent()
+            if (event.isStartElement) {
+                when(event.asStartElement().name.toString()){
+                    "bizmsgmenuid" -> {
+                        menuId = reader.elementText
                         break
                     }
                 }

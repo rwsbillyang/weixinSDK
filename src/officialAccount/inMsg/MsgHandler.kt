@@ -1,4 +1,4 @@
-package com.github.rwsbillyang.wxSDK.officialAccount.msg
+package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
 import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.common.msg.ReTextMsg
@@ -15,6 +15,11 @@ interface IOAMsgHandler
      * 文本消息的处理
      * */
     fun onOATextMsg(msg: OATextMsg): ReBaseMSg?
+
+    /**
+     * 当客服发送菜单消息进行问卷调查之后，客户可以选择，之后会将选项推送回服务器，里面包含了菜单id： menuId
+     * */
+    fun onOACustomerClickMenuMsg(msg: OACustomerClickMenuMsg): ReBaseMSg?
 
     /**
      * 图片消息的处理
@@ -52,6 +57,7 @@ interface IOAMsgHandler
 open class DefaultOAMsgHandler: IOAMsgHandler
 {
     override fun onOATextMsg(msg: OATextMsg) = onDefault(msg)
+    override fun onOACustomerClickMenuMsg(msg: OACustomerClickMenuMsg) = onDefault(msg)
 
     override fun onOAImgMsg(msg: OAImgMSg) = onDefault(msg)
 
