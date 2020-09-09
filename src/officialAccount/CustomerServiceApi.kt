@@ -6,6 +6,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
+ * 请注意，必须先在公众平台官网为公众号设置微信号后才能使用该能力
+ *
  * 如果公众号处于开发模式，普通微信用户向公众号发消息时，微信服务器会先将消息POST到开发者填写的url上，如果希望将消息转发到客服系统，
  * 则需要开发者在响应包中返回MsgType为transfer_customer_service的消息，微信服务器收到响应后会把当次发送的消息转发至客服系统。
  * 您也可以在返回transfer_customer_service消息时，在XML中附上TransInfo信息指定分配给某个客服帐号。
@@ -14,6 +16,11 @@ import kotlinx.serialization.Serializable
  * */
 class CustomerServiceApi : OABaseApi(){
     override val group: String = "customservice"
+
+    /**
+     * 获取客服列表
+     * */
+    fun getAccountList():ResponseAccountList = doGet2("getkflist")
 
     /**
      * 添加客服帐号
@@ -101,6 +108,44 @@ class CustomerServiceApi : OABaseApi(){
             mapOf("starttime" to startTime, "endtime" to endTime, "msgid" to msgId, "number" to size))
 }
 
+@Serializable
+class ResponseAccountList(
+        @SerialName("errcode")
+        override val errCode: Int = 0,
+        @SerialName("errmsg")
+        override val errMsg: String? = null,
+        @SerialName("kf_list")
+        val list: List<KfAccount> ? = null
+): IBase
+/**
+ * @param account kf_account	完整客服帐号，格式为：帐号前缀@公众号微信号
+ * @param nickname kf_nick	客服昵称
+ * @param id kf_id	客服编号
+ * @param headImg kf_headimgurl	客服头像
+ * @param wechatId kf_wx	如果客服帐号已绑定了客服人员微信号， 则此处显示微信号
+ * @param inviteWx invite_wx	如果客服帐号尚未绑定微信号，但是已经发起了一个绑定邀请， 则此处显示绑定邀请的微信号
+ * @param inviteExpire invite_expire_time	如果客服帐号尚未绑定微信号，但是已经发起过一个绑定邀请， 邀请的过期时间，为unix 时间戳
+ * @param inviteStatus invite_status	邀请的状态，有等待确认“waiting”，被拒绝“rejected”， 过期“expired”
+ * */
+@Serializable
+class KfAccount(
+        @SerialName("kf_account")
+        val account: String,
+        @SerialName("kf_nick")
+        val nickname: String,
+        @SerialName("kf_id")
+        val id: String? = null,
+        @SerialName("kf_headimgurl")
+        val headImg: String? = null,
+        @SerialName("kf_wx")
+        val wechatId: String? = null,
+        @SerialName("invite_wx")
+        val inviteWx: String? = null,
+        @SerialName("invite_expire_time")
+        val inviteExpire: Long? = null,
+        @SerialName("invite_status")
+        val inviteStatus: String? = null
+)
 /**
  * 获取未接入会话列表
  *
@@ -203,3 +248,4 @@ class ChatItem(
         val text: String,
         val time: Long
 )
+
