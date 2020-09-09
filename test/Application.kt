@@ -3,13 +3,12 @@ package com.github.rwsbillyang.wxSDK.test
 import com.github.rwsbillyang.wxSDK.OfficialAccountFeature
 import com.github.rwsbillyang.wxSDK.WorkFeature
 import com.github.rwsbillyang.wxSDK.common.accessToken.IRefreshableValue
-import com.github.rwsbillyang.wxSDK.common.accessToken.IRefresher
 import com.github.rwsbillyang.wxSDK.common.apiJson
 import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.common.msg.ReTextMsg
 import com.github.rwsbillyang.wxSDK.common.msg.WxBaseMsg
-import com.github.rwsbillyang.wxSDK.officialAccount.msg.DefaultOAMsgHandler
-import com.github.rwsbillyang.wxSDK.officialAccount.msg.OATextMsg
+import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.DefaultOAMsgHandler
+import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.OATextMsg
 import com.github.rwsbillyang.wxSDK.officialAccountApi
 import com.github.rwsbillyang.wxSDK.work.msg.DefaultWorkMsgHandler
 import com.github.rwsbillyang.wxSDK.work.msg.WorkBaseMsg
