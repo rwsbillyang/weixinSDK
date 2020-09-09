@@ -113,7 +113,7 @@ abstract class Api {
     /**
      * 返回R泛型类型结果
      * */
-    inline fun <T, reified R> doPost2(data: T?, crossinline urlFunc: () -> String):R = runBlocking {
+    inline fun <T, reified R> doPost3(data: T?, crossinline urlFunc: () -> String):R = runBlocking {
         withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             client.post<R>(urlFunc()) { data?.let{body = data}  }
         }
