@@ -41,8 +41,8 @@ class OAConfiguration {
     var msgHandler: IOAMsgHandler? = null
     var eventHandler: IOAEventHandler? = null
 
-    var accessToken: IRefreshableValue? = null
-    var ticket: IRefreshableValue? = null
+    var accessToken: ITimelyRefreshValue? = null
+    var ticket: ITimelyRefreshValue? = null
 
     var callbackPath = "/weixin/oa"
 }
@@ -77,11 +77,11 @@ class OAContext(
         var callbackPath: String = "/weixin/oa",
         customMsgHandler: IOAMsgHandler?,
         customEventHandler: IOAEventHandler?,
-        customAccessToken: IRefreshableValue?,
-        customTicket: IRefreshableValue?
+        customAccessToken: ITimelyRefreshValue?,
+        customTicket: ITimelyRefreshValue?
 ) {
-    var accessToken: IRefreshableValue
-    var ticket: IRefreshableValue
+    var accessToken: ITimelyRefreshValue
+    var ticket: ITimelyRefreshValue
     var wxBizMsgCrypt = encodingAESKey?.let { WXBizMsgCrypt(token, it, appId) }
     var msgHub: OAMsgHub
 
@@ -91,9 +91,9 @@ class OAContext(
         msgHub = OAMsgHub(msgHandler, eventHandler, wxBizMsgCrypt)
 
         accessToken = customAccessToken
-                ?: RefreshableAccessToken(appId, AccessTokenRefresher(AccessTokenUrl(appId, secret)))
+                ?: TimelyRefreshAccessToken(appId, AccessTokenRefresher(AccessTokenUrl(appId, secret)))
 
-        ticket = customTicket ?: RefreshableTicket(appId, TicketRefresher(TicketUrl(accessToken)))
+        ticket = customTicket ?: TimelyRefreshTicket(appId, TicketRefresher(TicketUrl(accessToken)))
     }
 }
 
@@ -121,7 +121,7 @@ internal class AccessTokenUrl(private val appId: String, private val secret: Str
     override fun url() = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$appId&secret=$secret"
 }
 
-internal class TicketUrl(private val accessToken: IRefreshableValue) : IUrlProvider {
+internal class TicketUrl(private val accessToken: ITimelyRefreshValue) : IUrlProvider {
     override fun url() = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
 
 }

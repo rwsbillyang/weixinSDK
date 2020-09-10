@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * 动态刷新获取的值
  * */
-interface IRefreshableValue {
+interface ITimelyRefreshValue {
     fun get(): String?
 }
 
@@ -18,7 +18,7 @@ interface IRefreshableValue {
  *
  * 值更新后会发出更新通知
  * */
-open class RefreshableValue @JvmOverloads constructor(
+open class TimelyRefreshValue @JvmOverloads constructor(
     val appId: String,
     private val refresher: IRefresher,
     private var refreshIntervalTime: Long
@@ -95,11 +95,11 @@ open class RefreshableValue @JvmOverloads constructor(
  * @param refreshIntervalTime 刷新时间间隔，默认7100s
  *
  */
-class RefreshableAccessToken @JvmOverloads constructor(
+class TimelyRefreshAccessToken @JvmOverloads constructor(
     appId: String,
     refresher: IRefresher,
     refreshIntervalTime: Long = 7100000
-) : RefreshableValue(appId, refresher, refreshIntervalTime), IRefreshableValue {
+) : TimelyRefreshValue(appId, refresher, refreshIntervalTime), ITimelyRefreshValue {
     init {
         get() //第一次加载
     }
@@ -117,11 +117,11 @@ class RefreshableAccessToken @JvmOverloads constructor(
  * @param refreshIntervalTime 刷新时间间隔，默认7100s
  *
  */
-class RefreshableTicket(
+class TimelyRefreshTicket(
     appId: String,
     refresher: IRefresher,
     refreshIntervalTime: Long = 7100000
-) : RefreshableValue(appId, refresher, refreshIntervalTime), IRefreshableValue {
+) : TimelyRefreshValue(appId, refresher, refreshIntervalTime), ITimelyRefreshValue {
 
     init {
         get() //第一次加载

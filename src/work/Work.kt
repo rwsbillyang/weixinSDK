@@ -41,7 +41,7 @@ class WorkConfiguration {
     var msgHandler: IWorkMsgHandler? = null
     var eventHandler: IWorkEventHandler? = null
 
-    var accessToken: IRefreshableValue? = null
+    var accessToken: ITimelyRefreshValue? = null
     //var ticket: IRefreshableValue? = null
 
     var callbackPath = "/weixin/work"
@@ -77,10 +77,10 @@ class WorkContext(
         var callbackPath: String = "/weixin/work",
         customMsgHandler: IWorkMsgHandler?,
         customEventHandler: IWorkEventHandler?,
-        customAccessToken: IRefreshableValue?
-        //customTicket: IRefreshableValue?
+        customAccessToken: ITimelyRefreshValue?
+        //customTicket: ITimelyRefreshValue?
 ) {
-    var accessToken: IRefreshableValue
+    var accessToken: ITimelyRefreshValue
 
     //var ticket: IRefreshableValue
     var wxBizMsgCrypt = WXBizMsgCrypt(token, encodingAESKey, corpId)
@@ -93,7 +93,7 @@ class WorkContext(
         msgHub = WorkMsgHub(msgHandler, eventHandler, wxBizMsgCrypt)
 
         accessToken = customAccessToken
-                ?: RefreshableAccessToken(corpId, AccessTokenRefresher(AccessTokenUrl(corpId, secret)))
+                ?: TimelyRefreshAccessToken(corpId, AccessTokenRefresher(AccessTokenUrl(corpId, secret)))
 
         //ticket = customTicket?: RefreshableTicket(appId, TicketRefresher(TicketUrl(accessToken)))
     }

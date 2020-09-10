@@ -2,7 +2,7 @@ package com.github.rwsbillyang.wxSDK.test
 
 import com.github.rwsbillyang.wxSDK.OfficialAccountFeature
 import com.github.rwsbillyang.wxSDK.WorkFeature
-import com.github.rwsbillyang.wxSDK.common.accessToken.IRefreshableValue
+import com.github.rwsbillyang.wxSDK.common.accessToken.ITimelyRefreshValue
 import com.github.rwsbillyang.wxSDK.common.apiJson
 import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.common.msg.ReTextMsg
@@ -105,12 +105,12 @@ fun Application.WorkTestableModule(testing: Boolean = false) {
     }
 }
 
-class TestAccessTokenValue: IRefreshableValue {
+class TestAccessTokenValue: ITimelyRefreshValue {
     override fun get(): String {
         return "testAccessToken-${System.currentTimeMillis()}"
     }
 }
-class TestJsTicketValue: IRefreshableValue {
+class TestJsTicketValue: ITimelyRefreshValue {
     override fun get(): String {
         return "testTicket-${System.currentTimeMillis()}"
     }
