@@ -142,7 +142,11 @@ fun Routing.officialAccountApi(path: String = _OA.callbackPath) {
 
             val reXml = _OA.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
 
-            call.respondText(reXml?:"success", ContentType.Text.Plain, HttpStatusCode.OK)
+            if(reXml.isNullOrBlank())
+                call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
+            else
+                call.respondText(reXml, ContentType.Text.Xml, HttpStatusCode.OK)
+
         }
     }
 
@@ -300,7 +304,10 @@ fun Routing.workApi(path: String = _WORK.callbackPath) {
 
             val reXml = _WORK.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
 
-            call.respondText(reXml?:"", ContentType.Text.Xml, HttpStatusCode.OK)
+            if(reXml.isNullOrBlank())
+                call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
+            else
+                call.respondText(reXml, ContentType.Text.Xml, HttpStatusCode.OK)
         }
     }
 

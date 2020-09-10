@@ -22,7 +22,7 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
         encryptType: String?
     ): String?
     {
-        log.debug("post data: $postXmlMsg")
+        log.debug("Receive post data: $postXmlMsg")
         try {
             val xmlText = if(wxBizMsgCrypt == null) {
                 postXmlMsg
@@ -46,6 +46,8 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
 
             reader.close()
 
+            //val re = reMsg?.toXml()?.let { wxBizMsgCrypt?.encryptMsg(it)?.first }
+            //log.debug("Reply: $re")
             return reMsg?.toXml()?.let { wxBizMsgCrypt?.encryptMsg(it)?.first }
 
         }catch (e: AesException){

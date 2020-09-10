@@ -119,21 +119,21 @@ class TestJsTicketValue: ITimelyRefreshValue {
 class TestOAMsgHandler: DefaultOAMsgHandler()
 {
     override fun onOATextMsg(msg: OATextMsg): ReBaseMSg?{
-        return ReTextMsg("reply the msg: ${msg.content},msgId=${msg.msgId}", msg.base.fromUserName, msg.base.toUserName)
+        return ReTextMsg("TestOAMsgHandler reply the msg: ${msg.content},msgId=${msg.msgId}", msg.base.fromUserName, msg.base.toUserName)
     }
 
     override fun onDefault(msg: WxBaseMsg): ReBaseMSg? {
-        return ReTextMsg("default reply the msg: msgId=${msg.msgId}", msg.base.fromUserName, msg.base.toUserName)
+        return ReTextMsg("TestOAMsgHandler default reply the msg: msgId=${msg.msgId}", msg.base.fromUserName, msg.base.toUserName)
     }
 }
 
 class TestWorkMsgHandler: DefaultWorkMsgHandler()
 {
     override  fun onWorkTextMsg(msg: WorkTextMsg): ReBaseMSg?{
-        return ReTextMsg("reply the msg: content=${msg.content},msgId=${msg.msgId},agentId=${msg.agentId}", msg.base.fromUserName, msg.base.toUserName)
+        return ReTextMsg("TestWorkMsgHandler reply the msg: content=${msg.content},msgId=${msg.msgId},agentId=${msg.agentId}", msg.base.fromUserName, msg.base.toUserName)
     }
 
     override fun onDefault(msg: WorkBaseMsg): ReBaseMSg? {
-        return ReTextMsg("default reply the msg:: msgId=${msg.msgId},agentId=${msg.agentId}", msg.base.fromUserName, msg.base.toUserName)
+        return ReTextMsg("TestWorkMsgHandler default reply the msg: msgId=${msg.msgId},agentId=${msg.agentId}", msg.base.fromUserName, msg.base.toUserName)
     }
 }

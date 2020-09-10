@@ -113,7 +113,7 @@ class ApplicationTest {
                         val reNonce = map["Nonce"]?:""
                         val reEcrypt = map["Encrypt"]?:""
                         val signature2 = SHA1.getSHA1(_WORK.token, reTimeStamp, reNonce, reEcrypt)
-                        val msg = _WORK.wxBizMsgCrypt!!.decryptWxMsg(signature2,reTimeStamp,reNonce,response.content!!)
+                        val msg = _WORK.wxBizMsgCrypt.decryptWxMsg(signature2,reTimeStamp,reNonce,response.content!!)
                         println("Got wx work reply: $msg")
                     }else{
                         println("in wx work post, got response: ${response.content}")
