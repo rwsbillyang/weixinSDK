@@ -1,6 +1,6 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.outMsg
 
-import kotlinx.serialization.KSerializer
+import com.github.rwsbillyang.wxSDK.officialAccount.outMsg.ReceiverType.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -10,7 +10,6 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.CompositeEncoder
-import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.encodeStructure
 
@@ -18,12 +17,11 @@ import kotlinx.serialization.encoding.encodeStructure
 
 /**
  * 主动发的消息，包括群发消息、模板消息、客服消息，不是推送消息后然后立即回复给用户的消息，它们完全不同
- * @property receivers 消息接收者
+ *
  * @property msgType 消息类型
  * */
 interface IMsg {
     val msgType: String
-
     companion object {
         const val TEXT = "text"
         const val IMAGE = "image"
@@ -34,6 +32,7 @@ interface IMsg {
     }
 }
 
+interface ICustomerAndMassMsg: IMassMsg, ICustomerMsg
 
 
 /**
@@ -96,16 +95,18 @@ class TextContent(val content: String)
 class TextMsg(
         val text: TextContent,
         override val receivers: MsgReceivers,
-        override val clientMsgId: String? = null,
-        override val msgType: String = IMsg.TEXT
-) : IMassMsg, ICustomerMsg {
+        @SerialName("customservice")
+        override val customService: KfAccountName? = null,
+        override val clientMsgId: String? = null
+) : ICustomerAndMassMsg {
+    override val msgType: String = IMsg.TEXT
     /**
      * convenience constructor
      * @param content  文本内容
      * @param receivers 消息接收者
      * @param clientMsgId 开发者侧群发消息id，长度限制64字节，如不填，则后台默认以群发范围和群发内容的摘要值做为clientmsgid
      * */
-    constructor(content: String, receivers: MsgReceivers, clientMsgId: String? = null) : this(TextContent(content), receivers, clientMsgId)
+    constructor(content: String, receivers: MsgReceivers, clientMsgId: String? = null) : this(TextContent(content), receivers,null, clientMsgId)
     companion object{
         /**
          * 客服消息中可以有小程序链接（小程序必须与公众号有绑定关系），群发消息官方中没有明确说明
@@ -121,7 +122,7 @@ class TextMsg(
     }
 }
 
-object TextMsgSerializer : MassMsgSerializer<TextMsg>() {
+object TextMsgSerializer : MsgSerializer<TextMsg>() {
     override fun serialName() = "TextMsg"
     override fun addContentElement(builder: ClassSerialDescriptorBuilder) {
         builder.element<TextContent?>("text", isOptional = true)
@@ -135,7 +136,9 @@ object TextMsgSerializer : MassMsgSerializer<TextMsg>() {
 
 //============================= 群发和客服 之 语音消息 =============================//
 
-
+/**
+ * @param mediaId 发送的图片/语音/视频/图文消息（点击跳转到图文消息页）的媒体ID
+ * */
 @Serializable(with = VoiceMsgSerializer::class)
 class VoiceContent(@SerialName("media_id") val mediaId: String)
 
@@ -143,18 +146,20 @@ class VoiceContent(@SerialName("media_id") val mediaId: String)
 class VoiceMsg(
         val voice: VoiceContent,
         override val receivers: MsgReceivers,
-        override val clientMsgId: String? = null,
-        override val msgType: String = IMsg.VOICE
-) : IMassMsg, ICustomerMsg {
+        @SerialName("customservice")
+        override val customService: KfAccountName? = null,
+        override val clientMsgId: String? = null
+) : ICustomerAndMassMsg {
+    override val msgType: String = IMsg.VOICE
     /**
      * convenience constructor
      * @param receivers 消息接收者
      * @param clientMsgId 开发者侧群发消息id，长度限制64字节，如不填，则后台默认以群发范围和群发内容的摘要值做为clientmsgid
      * */
-    constructor(receivers: MsgReceivers, mediaId: String, clientMsgId: String? = null) : this(VoiceContent(mediaId), receivers, clientMsgId)
+    constructor(receivers: MsgReceivers, mediaId: String, clientMsgId: String? = null) : this(VoiceContent(mediaId), receivers, null,clientMsgId)
 }
 
-object VoiceMsgSerializer : MassMsgSerializer<VoiceMsg>() {
+object VoiceMsgSerializer : MsgSerializer<VoiceMsg>() {
     override fun serialName() = "VoiceMsg"
     override fun addContentElement(builder: ClassSerialDescriptorBuilder) {
         builder.element<VoiceContent?>("voice", isOptional = true)
@@ -170,26 +175,30 @@ object VoiceMsgSerializer : MassMsgSerializer<VoiceMsg>() {
 
 /**
  * 客服消息中增加了thumb字段
+ * @param mediaId 发送的图片/语音/视频/图文消息（点击跳转到图文消息页）的媒体ID
  * */
 @Serializable
 class VideoContent(
         @SerialName("media_id")
         val mediaId: String,
-        val title: String?,
-        val description: String?,
         @SerialName("thumb_media_id")
-        val thumb: String? = null
+        val thumb: String ? = null,
+        val title: String? = null,
+        val description: String? = null
 )
 
 @Serializable(with = VideoMsgSerializer::class)
 class VideoMsg(
         val mpvideo: VideoContent,
         override val receivers: MsgReceivers,
-        override val clientMsgId: String? = null,
-        override val msgType: String = IMsg.VIDEO
-) : IMassMsg, ICustomerMsg
+        @SerialName("customservice")
+        override val customService: KfAccountName? = null,
+        override val clientMsgId: String? = null
+) : ICustomerAndMassMsg{
+    override val msgType: String = IMsg.VIDEO
+}
 
-object VideoMsgSerializer : MassMsgSerializer<VideoMsg>() {
+object VideoMsgSerializer : MsgSerializer<VideoMsg>() {
     override fun serialName() = "VideoMsg"
     override fun addContentElement(builder: ClassSerialDescriptorBuilder) {
         builder.element<VideoContent?>("mpvideo", isOptional = true)
@@ -213,18 +222,20 @@ class CardContent(@SerialName("card_id") val cardId: String)
 class CardMsg(
         val wxcard: CardContent,
         override val receivers: MsgReceivers,
-        override val clientMsgId: String? = null,
-        override val msgType: String = IMsg.CARD
-) : IMassMsg, ICustomerMsg {
+        @SerialName("customservice")
+        override val customService: KfAccountName? = null,
+        override val clientMsgId: String? = null
+) : ICustomerAndMassMsg {
+    override val msgType: String = IMsg.CARD
     /**
      * convenience constructor
      * @param receivers 消息接收者
      * @param clientMsgId 开发者侧群发消息id，长度限制64字节，如不填，则后台默认以群发范围和群发内容的摘要值做为clientmsgid
      * */
-    constructor(receivers: MsgReceivers, cardId: String, clientMsgId: String? = null) : this(CardContent(cardId), receivers, clientMsgId)
+    constructor(receivers: MsgReceivers, cardId: String, clientMsgId: String? = null) : this(CardContent(cardId), receivers,null, clientMsgId)
 }
 
-object CardMsgSerializer : MassMsgSerializer<CardMsg>() {
+object CardMsgSerializer : MsgSerializer<CardMsg>() {
     override fun serialName() = "CardMsg"
     override fun addContentElement(builder: ClassSerialDescriptorBuilder) {
         builder.element<CardContent?>("wxcard", isOptional = true)
@@ -238,6 +249,9 @@ object CardMsgSerializer : MassMsgSerializer<CardMsg>() {
 
 //============================= 群发和客服 之 图文消息 =============================//
 
+/**
+ * @param mediaId 发送的图片/语音/视频/图文消息（点击跳转到图文消息页）的媒体ID
+ * */
 @Serializable
 class MpNewsContent(@SerialName("media_id") val mediaId: String)
 
@@ -249,9 +263,11 @@ class MpNewsMsg(
         val mpnews: MpNewsContent,
         val ignoreReprint: Int = 0,
         override val receivers: MsgReceivers,
+        @SerialName("customservice")
+        override val customService: KfAccountName? = null,
         override val clientMsgId: String? = null,
         override val msgType: String = IMsg.MPNEWS
-) : IMassMsg, ICustomerMsg {
+) : ICustomerAndMassMsg {
     /**
      * 群发消息
      * @param receivers 消息接收者
@@ -261,7 +277,7 @@ class MpNewsMsg(
      * 设置为0时，文章被判定为转载时，将停止群发操作。默认为0
      * */
     constructor(receivers: MsgReceivers, mediaId: String, ignoreReprint: Int = 0, clientMsgId: String? = null)
-            : this(MpNewsContent(mediaId), ignoreReprint, receivers, clientMsgId)
+            : this(MpNewsContent(mediaId),ignoreReprint, receivers,null, clientMsgId)
 
     /**
      * 客服消息
@@ -271,7 +287,7 @@ class MpNewsMsg(
     constructor(openId: String, mediaId: String): this(MpNewsContent(mediaId),receivers = MsgReceivers(ReceiverType.OpenId, openId = openId))
 }
 
-object MpNewsMsgSerializer : MassMsgSerializer<MpNewsMsg>() {
+object MpNewsMsgSerializer : MsgSerializer<MpNewsMsg>() {
     override fun serialName() = "MpNewsMsg"
     override fun addContentElement(builder: ClassSerialDescriptorBuilder) {
         builder.element<MpNewsContent?>("mpnews", isOptional = true)
@@ -287,7 +303,7 @@ object MpNewsMsgSerializer : MassMsgSerializer<MpNewsMsg>() {
 
 //============================= MsgSerializer =============================//
 
-abstract class MassMsgSerializer<T : IMassMsg> : KSerializer<T> {
+abstract class MsgSerializer<T : ICustomerAndMassMsg> : MassMsgSerializer<T>() {
     override val descriptor: SerialDescriptor =
             buildClassSerialDescriptor(serialName()) {
                 addContentElement(this)
@@ -296,6 +312,7 @@ abstract class MassMsgSerializer<T : IMassMsg> : KSerializer<T> {
                 element<String>("filter", isOptional = true)
                 element<String>("touser", isOptional = true)
                 element<String>("towxname", isOptional = true)
+                element<String>("customservice", isOptional = true)
             }
 
     override fun serialize(encoder: Encoder, value: T) =
@@ -309,25 +326,8 @@ abstract class MassMsgSerializer<T : IMassMsg> : KSerializer<T> {
                     ReceiverType.OpenId -> encodeStringElement(descriptor, count + 3, value.receivers.openId!!)
                     ReceiverType.WxName -> encodeStringElement(descriptor, count + 4, value.receivers.wxName!!)
                 }
+                if(value.customService != null) encodeSerializableElement(descriptor, count+5, KfAccountName.serializer(), value.customService!!)
             }
 
-    override fun deserialize(decoder: Decoder): T {
-        TODO("Not implement")
-    }
-
-    /**
-     * 名称
-     * */
-    abstract fun serialName(): String
-
-    /**
-     * 添加content的element索引
-     * */
-    abstract fun addContentElement(builder: ClassSerialDescriptorBuilder)
-
-    /**
-     * 序列化content正文，返回addContentElement添加的element数量
-     * */
-    abstract fun serializeContent(encoder: CompositeEncoder, msg: T): Int
 }
 

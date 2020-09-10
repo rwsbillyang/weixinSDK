@@ -1,16 +1,27 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.outMsg
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.ClassSerialDescriptorBuilder
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.CompositeEncoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.encoding.encodeStructure
 
 //============================= 群发时发送出去的消息 =============================//
 
 
 /**
+ * @property receivers 消息接收者
  * @property clientMsgId 开发者侧群发消息id，长度限制64字节，如不填，则后台默认以群发范围和群发内容的摘要值做为clientmsgid
+ * 使用 clientmsgid 参数，避免重复推送 群发时，微信后台将对 24 小时内的群发记录进行检查，如果该 clientmsgid 已经存在一条群发记录，
+ * 则会拒绝本次群发请求，返回已存在的群发msgid，开发者可以调用“查询群发消息发送状态”接口查看该条群发的状态。
  * */
 interface IMassMsg: IMsg {
     val receivers: MsgReceivers
@@ -43,9 +54,9 @@ class ImgContent(
 class ImgMsg(
         val images: ImgContent,
         override val receivers: MsgReceivers,
-        override val clientMsgId: String? = null,
-        override val msgType: String = IMsg.IMAGE
+        override val clientMsgId: String? = null
 ) : IMassMsg {
+    override val msgType: String = IMsg.IMAGE
     /**
      * convenience constructor
      * @param recommend 推荐语，不填则默认为“分享图片”
@@ -68,4 +79,49 @@ object ImgMsgSerializer : MassMsgSerializer<ImgMsg>() {
     }
 }
 
+
+
+abstract class MassMsgSerializer<T : IMassMsg> : KSerializer<T> {
+    override val descriptor: SerialDescriptor =
+            buildClassSerialDescriptor(serialName()) {
+                addContentElement(this)
+                element<String>("msgtype", isOptional = true)
+                element<String?>("clientmsgid", isOptional = true)
+                element<String>("filter", isOptional = true)
+                element<String>("touser", isOptional = true)
+                element<String>("towxname", isOptional = true)
+            }
+
+    override fun serialize(encoder: Encoder, value: T) =
+            encoder.encodeStructure(descriptor) {
+                val count = serializeContent(this, value)
+                encodeStringElement(descriptor, count, value.msgType)
+                if (!value.clientMsgId.isNullOrBlank()) encodeStringElement(descriptor, count + 1, value.clientMsgId!!)
+                when (value.receivers.type) {
+                    ReceiverType.Tag -> encodeSerializableElement(descriptor, count + 2, TagFilter.serializer(), value.receivers.tags!!)
+                    ReceiverType.OpenIds -> encodeSerializableElement(descriptor, count + 3, ListSerializer(String.serializer()), value.receivers.openIds!!)
+                    ReceiverType.OpenId -> encodeStringElement(descriptor, count + 3, value.receivers.openId!!)
+                    ReceiverType.WxName -> encodeStringElement(descriptor, count + 4, value.receivers.wxName!!)
+                }
+            }
+
+    override fun deserialize(decoder: Decoder): T {
+        TODO("Not implement")
+    }
+
+    /**
+     * 名称
+     * */
+    abstract fun serialName(): String
+
+    /**
+     * 添加content的element索引
+     * */
+    abstract fun addContentElement(builder: ClassSerialDescriptorBuilder)
+
+    /**
+     * 序列化content正文，返回addContentElement添加的element数量
+     * */
+    abstract fun serializeContent(encoder: CompositeEncoder, msg: T): Int
+}
 

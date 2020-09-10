@@ -40,6 +40,7 @@ class MsgApi : OABaseApi() {
 
     /**
      * 推送订阅模板消息给到授权微信用户
+     *
      * https://developers.weixin.qq.com/doc/offiaccount/Message_Management/One-time_subscription_info.html
      * TODO: 跳转重定向entry point的处理
      * */
@@ -47,29 +48,44 @@ class MsgApi : OABaseApi() {
     
     
     /**
+     * 根据标签进行群发【订阅号与服务号认证后均可用】
+     *
      * ReceiverType使用Tag类型
      * */
     fun massSendByTag(msg: IMassMsg): ResponseMassSend = doPost2("mass/sendall", msg)
 
     /**
+     * 根据OpenID列表群发【订阅号不可用，服务号认证后可用】
+     *
      * ReceiverType使用OpenIds类型
      * */
     fun massSendByOpenIds(msg: IMassMsg): ResponseMassSend = doPost2("mass/send", msg)
 
     /**
-     * 预览接口【订阅号与服务号认证后均可用】 ReceiverType使用OpenId类型
+     * 预览接口【订阅号与服务号认证后均可用】
      *
+     * ReceiverType使用OpenId类型
+     * 开发者可通过该接口发送消息给指定用户，在手机端查看消息的样式和排版。
      * 在保留对openID预览能力的同时，增加了对指定微信号发送预览的能力，但该能力每日调用次数有限制（100次）
      * */
     fun preview(msg: IMassMsg): ResponseMassSend = doPost2("mass/preview", msg)
 
     /**
+     * 删除群发【订阅号与服务号认证后均可用】
+     * 群发之后，随时可以通过该接口删除群发。
+     * 只有已经发送成功的消息才能删除
+     * 删除消息是将消息的图文详情页失效，已经收到的用户，还是能在其本地看到消息卡片。
+     * 删除群发消息只能删除图文消息和视频消息，其他类型的消息一经发送，无法删除。
+     * 如果多次群发发送的是一个图文消息，那么删除其中一次群发，就会删除掉这个图文消息，也导致所有群发都失效
+     *
      * @param msgId    是	msg_id 发送出去的消息ID，来自massSendByTag 或 massSendByOpenIds
      * @param articleId article_idx	否	要删除的文章在图文消息中的位置，第一篇编号为1，该字段不填或填0会删除全部文章
      * */
-    fun deleteMas(msgId: Long, articleId: Int? = null): Response = doPost2("mass/delete", mapOf("msg_id" to msgId, "article_idx" to articleId))
+    fun deleteMass(msgId: Long, articleId: Int? = null): Response = doPost2("mass/delete", mapOf("msg_id" to msgId, "article_idx" to articleId))
 
     /**
+     * 查询群发消息发送状态【订阅号与服务号认证后均可用】
+     *
      * @param msgId msg_id	群发消息后返回的消息id
      * @return    消息发送后的状态，SEND_SUCCESS表示发送成功，SENDING表示发送中，SEND_FAIL表示发送失败，DELETE表示已删除
      * */
@@ -77,6 +93,7 @@ class MsgApi : OABaseApi() {
 
 
     /**
+     * 设置群发速度
      * 群发速度的级别，是一个0到4的整数，数字越大表示群发速度越慢。
      * 0	80w/分钟
      * 1	60w/分钟
@@ -86,6 +103,9 @@ class MsgApi : OABaseApi() {
      * */
     fun setSpeed(speed: Int): String = doPost2("speed/set", mapOf("speed" to speed))
 
+    /**
+     * 获取群发速度
+     * */
     fun getSpeed(): ResponseSpeed = doPost2("speed/get", null)
 
 
@@ -102,6 +122,18 @@ class MsgApi : OABaseApi() {
      * */
     fun sendCustomerServiceMsg(msg: ICustomerMsg):Response = doPost2("custom/send",msg)
 
+    /**
+     * 下发客服输入状态
+     * 开发者可通过调用“客服输入状态”接口，发送客服当前输入状态给用户。
+     *
+     * 此接口需要客服消息接口权限。
+     * 如果不满足发送客服消息的触发条件，则无法下发输入状态。
+     * 下发输入状态，需要客服之前30秒内跟用户有过消息交互。
+     * 在输入状态中（持续15s），不可重复下发输入态。
+     * 在输入状态中，如果向用户下发消息，会同时取消输入状态。
+     */
+    fun sendInputState(cutomerOpenId: String, isTyping: Boolean): Response = doPost2("custom/typing", mapOf("touser" to cutomerOpenId,
+            "command" to if(isTyping)"Typing" else "CancelTyping"))
 }
 
 
