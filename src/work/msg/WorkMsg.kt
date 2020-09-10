@@ -26,7 +26,7 @@ open class WorkBaseMsg(val base: BaseInfo) {
                         count++
                     }
                     "AgentID" -> {
-                        reader.elementText?.toLong()
+                        agentId = reader.elementText?.toInt()
                         count++
                     }
                 }

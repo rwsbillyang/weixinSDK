@@ -41,6 +41,7 @@ class OACustomerClickMenuMsg(base: BaseInfo): OATextMsg(base)
     var menuId: String? = null
     override fun read(reader: XMLEventReader)
     {
+        super.read(reader)
         while (reader.hasNext()) {
             val event = reader.nextEvent()
             if (event.isStartElement) {
@@ -52,7 +53,6 @@ class OACustomerClickMenuMsg(base: BaseInfo): OATextMsg(base)
                 }
             }
         }
-        super.read(reader)
     }
 }
 
