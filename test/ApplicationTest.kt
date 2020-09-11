@@ -34,7 +34,7 @@ class ApplicationTest {
 
     @Test
     fun testOAUrl(){
-        withTestApplication({ OATestableModule(testing = true) }) {
+        withTestApplication({ apiTest(testing = true) }) {
 
             val signature = SignUtil.getSignature(_OA.token,timestamp, nonce)
             val getUrl  = "${_OA.callbackPath}?signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$echoStr"

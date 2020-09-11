@@ -6,10 +6,9 @@ import io.ktor.client.engine.apache.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
+import io.ktor.client.features.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
-import io.ktor.http.*
-import io.ktor.util.*
 import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
@@ -20,7 +19,13 @@ import java.io.FileInputStream
 val apiJson = Json {
     encodeDefaults = true
     useArrayPolymorphism = false
-    //serialModule = serializersModuleOf(mapOf())
+    //isLenient = true
+//    serializersModule = SerializersModule {
+//        contextual(String.serializer())//Need add this line, "Any" can be String
+//        //contextual(Long.serializer())//Need add this line, "Any" can be Long
+//        contextual(Int.serializer())//Need add this line, "Any" can be Long
+//    }
+
 }
 
 
@@ -28,6 +33,10 @@ val client = HttpClient(Apache) {
     install(HttpTimeout) {}
     install(JsonFeature) {
         serializer = KotlinxSerializer(apiJson)
+    }
+    install(Logging) {
+        logger = Logger.DEFAULT
+        level = LogLevel.ALL
     }
 }
 

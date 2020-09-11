@@ -3,10 +3,11 @@ package com.github.rwsbillyang.wxSDK.test
 import com.github.rwsbillyang.wxSDK.OfficialAccountFeature
 import com.github.rwsbillyang.wxSDK.WorkFeature
 import com.github.rwsbillyang.wxSDK.common.accessToken.ITimelyRefreshValue
-import com.github.rwsbillyang.wxSDK.common.apiJson
 import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.common.msg.ReTextMsg
+import com.github.rwsbillyang.wxSDK.common.msg.WxBaseEvent
 import com.github.rwsbillyang.wxSDK.common.msg.WxBaseMsg
+import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.DefaultOAEventHandler
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.DefaultOAMsgHandler
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.OATextMsg
 import com.github.rwsbillyang.wxSDK.officialAccountApi
@@ -29,17 +30,6 @@ import org.slf4j.event.Level
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.testableModule(testing: Boolean = false) {
-    install(ContentNegotiation) {
-        json(
-                json = apiJson,
-                contentType = ContentType.Application.Json
-        )
-    }
-    install(CallLogging) {
-        level = Level.DEBUG
-        filter { call -> call.request.path().startsWith("/") }
-    }
-
     class AuthenticationException : RuntimeException()
     class AuthorizationException : RuntimeException()
 
@@ -62,25 +52,27 @@ fun Application.testableModule(testing: Boolean = false) {
 
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
-fun Application.OATestableModule(testing: Boolean = false) {
-
+fun Application.apiTest(testing: Boolean = false){
     testableModule(testing)
-
     install(OfficialAccountFeature) {
-        appId = "wxb11529c136998cb6"
-        secret = "your_app_secret_key"
+        appId = "wx2ea341a3b3871d23"
+        secret = "89d147ef8e83c4cd097e96992127f0bc"
         encodingAESKey = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG"
-        token = "pamtest"
+        token = "com.github.rwsbillyang.wxSDK.test.testToken"
+        wechatId = "gh_b2f9163a8000"
+        wechatName = "测试号"
         msgHandler = TestOAMsgHandler()
+        eventHandler = OAEventTestHandler()
+
         accessToken = TestAccessTokenValue()
         ticket = TestJsTicketValue()
     }
-
-
     routing {
         officialAccountApi()
     }
 }
+
+
 
 
 @Suppress("unused") // Referenced in application.conf
@@ -96,6 +88,7 @@ fun Application.WorkTestableModule(testing: Boolean = false) {
         token = "QDG6eK"
 
         msgHandler = TestWorkMsgHandler()
+
         accessToken = TestAccessTokenValue()
     }
 
@@ -126,6 +119,14 @@ class TestOAMsgHandler: DefaultOAMsgHandler()
         return ReTextMsg("TestOAMsgHandler default reply the msg: msgId=${msg.msgId}", msg.base.fromUserName, msg.base.toUserName)
     }
 }
+class OAEventTestHandler: DefaultOAEventHandler(){
+    override fun onDefault(e: WxBaseEvent): ReBaseMSg? {
+        println("got event: ${e.event}")
+        return null
+
+    }
+}
+
 
 class TestWorkMsgHandler: DefaultWorkMsgHandler()
 {

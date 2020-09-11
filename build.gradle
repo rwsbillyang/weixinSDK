@@ -60,7 +60,9 @@ dependencies {
 
     //testImplementation('junit:junit:4.12')
     testCompile "io.ktor:ktor-server-tests:$ktor_version"
+
     //testCompile "io.ktor:ktor-server-test-host:$ktor_version"
+    implementation("io.ktor:ktor-client-logging:$ktor_version")
 
     compileOnly "com.github.ben-manes.caffeine:caffeine:2.7.0+"
 }
