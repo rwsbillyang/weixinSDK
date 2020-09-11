@@ -1,10 +1,12 @@
 package com.github.rwsbillyang.wxSDK
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.rwsbillyang.wxSDK.common.aes.AesException
 import com.github.rwsbillyang.wxSDK.common.aes.SignUtil
 import com.github.rwsbillyang.wxSDK.officialAccount._OA
 import com.github.rwsbillyang.wxSDK.officialAccount.OAConfiguration
 import com.github.rwsbillyang.wxSDK.officialAccount.OAContext
+import com.github.rwsbillyang.wxSDK.officialAccount.OAuthApi
 import com.github.rwsbillyang.wxSDK.work._WORK
 import com.github.rwsbillyang.wxSDK.work.WorkConfiguration
 import com.github.rwsbillyang.wxSDK.work.WorkContext
@@ -17,6 +19,7 @@ import io.ktor.util.*
 import io.ktor.util.pipeline.*
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 
 class OfficialAccountFeature(config: OAConfiguration) {
@@ -149,8 +152,65 @@ fun Routing.officialAccountApi(path: String = _OA.callbackPath) {
 
         }
     }
-
 }
+
+fun Routing.oAuthApi(oauthInfoPath: String = "/weixin/oauth/info",
+                     onAuthorizedPath: String = "/weixin/oauth/onAuthorized") {
+
+    val stateCache = Caffeine.newBuilder()
+            .maximumSize(Long.MAX_VALUE)
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .expireAfterAccess(0, TimeUnit.SECONDS)
+            .build<String, Boolean>()
+    /**
+     * 前端webapp请求该api获取appid，state等信息，然后重定向到腾讯的授权页面，用户授权之后将重定向到下面的onAuthorized
+     * @param needUserInfo 0或1分别表示是否需要获取用户信息
+     * @param host 跳转host，如："https：//www.example.com"
+     * */
+    get(oauthInfoPath){
+        val needUserInfo = call.request.queryParameters["needUserInfo"]?.toInt()?:0 == 1
+        val host = call.request.queryParameters["host"]
+        val info = OAuthApi.prepareOAuthInfo(host + onAuthorizedPath, needUserInfo)
+        stateCache.put(info.state, needUserInfo)
+        call.respond(info)
+    }
+    /**
+     * 腾讯在用户授权之后，将调用下面的api通知code，并附带上原state。
+     *
+     *
+     *
+     * 第二步：通过code换取网页授权access_token，然后必要的话获取用户信息。
+     * 然后将一些登录信息通知到前端（调用前端提供的url）
+     *
+     * 用户同意授权后, 如果用户同意授权，页面将跳转至此处的redirect_uri/?code=CODE&state=STATE。
+     * code作为换取access_token的票据，每次用户授权带上的code将不一样，code只能使用一次，5分钟未被使用自动过期。
+     *
+     * */
+    get(onAuthorizedPath){
+        val code = call.request.queryParameters["code"]
+        val state = call.request.queryParameters["state"]
+
+        if(code.isNullOrBlank() || state.isNullOrBlank()){
+            //TODO: notify webapp fail
+        }else{
+            val res =  OAuthApi.getAccessToken(code)
+            if(res.isOK() && res.accessToken != null && res.openId != null){
+                val needUserInfo = stateCache.getIfPresent(state)?:false
+                //stateCache.invalidate(state)
+                if(needUserInfo){
+                    val resUserInfo = OAuthApi.getUserInfo(res.accessToken, res.openId)
+                }else{
+                    //get openId
+                }
+                //TODO: query login info and notify webapp
+                //or use client?
+                call.respondRedirect("/auth.html", permanent = false)
+            }
+        }
+    }
+}
+
+
 
 
 class WorkFeature(config: WorkConfiguration) {
