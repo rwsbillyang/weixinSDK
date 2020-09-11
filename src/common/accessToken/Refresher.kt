@@ -3,8 +3,14 @@ package com.github.rwsbillyang.wxSDK.common.accessToken
 
 import com.github.rwsbillyang.wxSDK.common.client
 import com.github.rwsbillyang.wxSDK.common.WxException
+import com.github.rwsbillyang.wxSDK.common.apiJson
 import io.ktor.client.request.get
+import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -44,15 +50,25 @@ open class Refresher(private val urlProvider: IUrlProvider, private val key: Str
      */
     override  fun refresh(): String {
         val url = urlProvider.url()
-        log.info("refresh........ url=$url")
+        log.debug("to refresh for key=$key...,url=$url")
 
         return runBlocking {
-            val map = client.get<Map<String, Any?>>(url)
-            val value = map[key].toString()
-            if(value.isNullOrBlank()){
-                throw WxException("fail refresh")
+            val text: String = client.get<HttpResponse>(url).readText()
+            log.debug("got text: $text")
+            val jsonElement = apiJson.parseToJsonElement(text)
+            if(jsonElement is JsonObject){
+                val valueElement = jsonElement[key]
+                if(valueElement == null || valueElement is JsonNull)
+                {
+                    log.error("fail refresh key=$key, because: $text")
+                    throw WxException("fail refresh key=$key")
+                }else{
+                    val value = valueElement.jsonPrimitive.content
+                    log.debug("got value=$value for key=$key")
+                    value
+                }
             }else{
-                value
+                throw WxException("fail refresh key=$key, not a jsonObject: $text")
             }
         }
     }

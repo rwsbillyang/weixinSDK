@@ -28,7 +28,7 @@ open class TimelyRefreshValue @JvmOverloads constructor(
     }
 
     companion object {
-        private val log: Logger = LoggerFactory.getLogger("MutableValue")
+        private val log: Logger = LoggerFactory.getLogger("TimelyRefreshValue")
     }
 
     /**
@@ -71,7 +71,7 @@ open class TimelyRefreshValue @JvmOverloads constructor(
                 )
             }
         } catch (e: Exception) {
-            log.warn("fail to refresh:{}", e.message)
+            log.error("fail to refresh: ${e.message}")
             refreshingFlag.set(false)
         }
         return timelyValue.value

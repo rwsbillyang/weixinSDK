@@ -48,9 +48,9 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
      */
     init {
         if (encodingAesKey.length != 43) {
+            println("invalid encodingAesKey: $encodingAesKey")
             throw AesException(AesException.IllegalAesKey)
         }
-        println(encodingAesKey)
 
         //FIXME: Apache Commons Codec 1.15 and 1.10 work fine, but v1.13 fail
         //V1.15: Base32/Base64/BCodec: Added strict decoding property to control handling of trailing bits.

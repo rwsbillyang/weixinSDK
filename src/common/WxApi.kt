@@ -30,10 +30,12 @@ abstract class WxApi : Api() {
         val params = requestParams?.entries?.filter { it.value != null }?.joinToString("&") { "${it.key}=${it.value}" }
         return if (needAccessToken)
         {
+            val token = accessToken()
+            requireNotNull(token){"accessToken should NOT null"}
             if (params.isNullOrBlank())
-                "$base/$group/$name?access_token=${accessToken()}"
+                "$base/$group/$name?access_token=${token}"
             else
-                "$base/$group/$name?access_token=${accessToken()}&$params"
+                "$base/$group/$name?access_token=${token}&$params"
         }else {
             if (params.isNullOrBlank())
                 "$base/$group/$name"
