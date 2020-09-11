@@ -1,14 +1,17 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
 
+import com.github.rwsbillyang.wxSDK.common.msg.BaseInfo
+import com.github.rwsbillyang.wxSDK.common.msg.IDispatcher
 import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.common.msg.WxBaseEvent
+import javax.xml.stream.XMLEventReader
 
 /**
  * 微信推送过来的事件的处理接口
  * TODO: 微信认证事件推送 https://developers.weixin.qq.com/doc/offiaccount/Account_Management/Wechat_Accreditation_Event_Push.html
  * */
-interface IOAEventHandler{
+interface IOAEventHandler: IDispatcher {
     /**
      * 关注事件
      *
@@ -203,5 +206,11 @@ open class DefaultOAEventHandler: IOAEventHandler {
     override fun onDefault(e: WxBaseEvent): ReBaseMSg? {
         return null
     }
+
+    /**
+     * 未知类型的msg或event可以继续进行读取其额外信息，从而可以自定义分发和处理
+     * 返回null表示由onDefault继续处理
+     * */
+    override fun onDispatch(reader: XMLEventReader, base: BaseInfo) = null
 
 }

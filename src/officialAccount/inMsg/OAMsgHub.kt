@@ -37,7 +37,7 @@ class OAMsgHub(
             BaseInfo.LINK -> msgHandler.onOALinkMsg(
                 OALinkMsg(base).apply { read(reader) }
             )
-            else -> msgHandler.onDefault(WxBaseMsg(base).apply { read(reader) })
+            else -> msgHandler.onDispatch(reader, base)?: msgHandler.onDefault(WxBaseMsg(base).apply { read(reader) })
         }
     }
 
@@ -95,7 +95,7 @@ class OAMsgHub(
             WxBaseEvent.TEMPLATE_SEND_JOB_FINISH -> eventHandler.onOATemplateSendJobFinish(
                 OATemplateSendJobFinish(base).apply { read(reader) }
             )
-            else -> eventHandler.onDefault(baseEvent)
+            else -> eventHandler.onDispatch(reader, base)?: eventHandler.onDefault(baseEvent)
         }
     }
 }

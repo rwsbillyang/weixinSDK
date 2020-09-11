@@ -1,9 +1,12 @@
 package com.github.rwsbillyang.wxSDK.work.msg
 
+import com.github.rwsbillyang.wxSDK.common.msg.BaseInfo
+import com.github.rwsbillyang.wxSDK.common.msg.IDispatcher
 import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.common.msg.WxBaseEvent
+import javax.xml.stream.XMLEventReader
 
-interface IWorkEventHandler{
+interface IWorkEventHandler: IDispatcher {
     fun onDefault(e: WxBaseEvent): ReBaseMSg?
     fun onWorkSubscribeEvent(e: WorkSubscribeEvent): ReBaseMSg?
     fun onWorkUnsubscribeEvent(e: WorkUnsubscribeEvent): ReBaseMSg?
@@ -76,5 +79,11 @@ open class DefaultWorkEventHandler : IWorkEventHandler{
     override fun onWorkUserDelEvent(e: WorkUserDelEvent) = onDefault(e)
 
     override fun onWorkTagUpdateEvent(e: WorkTagUpdateEvent) = onDefault(e)
+    /**
+     * 未知类型的msg或event可以继续进行读取其额外信息，从而可以自定义分发和处理
+     * 返回null表示由onDefault继续处理
+     * */
+    override fun onDispatch(reader: XMLEventReader, base: BaseInfo) = null
+
 
 }

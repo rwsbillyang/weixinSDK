@@ -31,7 +31,7 @@ class WorkMsgHub(
             BaseInfo.LINK -> msgHandler.onWorkLinkMsg(
                 WorkLinkMsg(base).apply { read(reader) }
             )
-            else -> msgHandler.onDefault(WorkBaseMsg(base).apply { read(reader) })
+            else -> msgHandler.onDispatch(reader, base)?: msgHandler.onDefault(WorkBaseMsg(base).apply { read(reader) })
         }
     }
 
@@ -117,7 +117,7 @@ class WorkMsgHub(
             }
             else -> {
                 log.warn("not support event: ${baseEvent.event}")
-                eventHandler.onDefault(baseEvent)
+                eventHandler.onDispatch(reader, base)?: eventHandler.onDefault(baseEvent)
             }
         }
     }

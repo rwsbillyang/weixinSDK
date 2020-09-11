@@ -1,15 +1,14 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
-import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
-import com.github.rwsbillyang.wxSDK.common.msg.ReTextMsg
-import com.github.rwsbillyang.wxSDK.common.msg.WxBaseMsg
+import com.github.rwsbillyang.wxSDK.common.msg.*
+import javax.xml.stream.XMLEventReader
 
 
 /**
  * 微信推送过来的消息的处理接口
  *
  * */
-interface IOAMsgHandler
+interface IOAMsgHandler: IDispatcher
 {
     /**
      * 文本消息的处理
@@ -74,5 +73,10 @@ open class DefaultOAMsgHandler: IOAMsgHandler
     override fun onDefault(msg: WxBaseMsg): ReBaseMSg? {
         return ReTextMsg("欢迎关注！", msg.base.fromUserName, msg.base.toUserName)
     }
+    /**
+     * 未知类型的msg或event可以继续进行读取其额外信息，从而可以自定义分发和处理
+     * 返回null表示由onDefault继续处理
+     * */
+    override fun onDispatch(reader: XMLEventReader, base: BaseInfo) = null
 
 }

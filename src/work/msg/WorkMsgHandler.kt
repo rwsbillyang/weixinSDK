@@ -1,10 +1,13 @@
 package com.github.rwsbillyang.wxSDK.work.msg
 
 
+import com.github.rwsbillyang.wxSDK.common.msg.BaseInfo
+import com.github.rwsbillyang.wxSDK.common.msg.IDispatcher
 import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
+import javax.xml.stream.XMLEventReader
 
 
-interface IWorkMsgHandler{
+interface IWorkMsgHandler: IDispatcher {
     fun onWorkTextMsg(msg: WorkTextMsg): ReBaseMSg?
     fun onWorkImgMsg(msg: WorkImgMSg): ReBaseMSg?
     fun onWorkVoiceMsg(msg: WorkVoiceMsg): ReBaseMSg?
@@ -30,5 +33,9 @@ open class DefaultWorkMsgHandler : IWorkMsgHandler{
     override fun onDefault(msg: WorkBaseMsg): ReBaseMSg? {
         return null
     }
-
+    /**
+     * 未知类型的msg或event可以继续进行读取其额外信息，从而可以自定义分发和处理
+     * 返回null表示由onDefault继续处理
+     * */
+    override fun onDispatch(reader: XMLEventReader, base: BaseInfo) = null
 }
