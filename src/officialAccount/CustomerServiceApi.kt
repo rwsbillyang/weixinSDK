@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * 用户被客服接入以后，客服关闭会话以前，处于会话过程中时，用户发送的消息均会被直接转发至客服系统。当会话超过30分钟客服没有关闭时，
  * 微信服务器会自动停止转发至客服，而将消息恢复发送至开发者填写的url上。用户在等待队列中时，用户发送的消息仍然会被推送至开发者填写的url上。
  * */
-class CustomerServiceApi : OABaseApi(){
+object CustomerServiceApi : OABaseApi(){
     override val group: String = "customservice"
 
     /**

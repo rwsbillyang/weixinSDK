@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 /**
  * 管理模板之用
  * */
-class TemplateApi: OABaseApi(){
+object TemplateApi: OABaseApi(){
     override val group: String = "template"
 
     /**

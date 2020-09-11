@@ -8,21 +8,14 @@ class Invoice(
     @SerialName("card_id")val cardId: String,
     @SerialName("encrypt_code")val encryptCode: String)
 
-class InvoiceApi: WorkBaseApi() {
+object InvoiceApi: WorkBaseApi() {
     override val group = "card/invoice/reimburse"
-    companion object{
-        const val GET_INVOICE_INFO = "getinvoiceinfo"
-        const val UPDATE_STATUS = "updateinvoicestatus"
-
-        const val GET_INVOICE_INFO_BATCH = "getinvoiceinfobatch"
-        const val UPDATE_STATUS_BATCH = "updatestatusbatch"
-    }
 
     /**
      * 查询电子发票
      * */
     fun getInvoiceInfo(cardId: String, encryptCode: String) = doPost(
-        GET_INVOICE_INFO,
+            "getinvoiceinfo",
         mapOf("card_id" to cardId,"encrypt_code" to encryptCode))
 
 
@@ -34,7 +27,7 @@ class InvoiceApi: WorkBaseApi() {
      * https://work.weixin.qq.com/api/doc/90000/90135/90285
      * */
     fun updateStatus(cardId: String, encryptCode: String, status: String) = doPost(
-        UPDATE_STATUS,
+            "updateinvoicestatus",
         mapOf("card_id" to cardId,"encrypt_code" to encryptCode,"reimburse_status" to status))
 
 
@@ -43,7 +36,7 @@ class InvoiceApi: WorkBaseApi() {
      *
      * */
     fun getInvoiceInfoBatch(invoiceList: List<Invoice>) = doPost(
-        GET_INVOICE_INFO_BATCH,
+            "getinvoiceinfobatch",
         mapOf( "item_list" to invoiceList))
 
     /**
@@ -56,7 +49,7 @@ class InvoiceApi: WorkBaseApi() {
      * encrypt_code	是	发票卡券的加密code，和card_id共同构成一张发票卡券的唯一标识
      * */
     fun batchUpdateStatus(openId:String, invoiceList: List<Invoice>, status: String) = doPost(
-        UPDATE_STATUS_BATCH,
+            "updatestatusbatch",
         mapOf("openid" to openId, "invoice_list" to invoiceList, "reimburse_status" to status))
 
 

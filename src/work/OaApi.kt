@@ -9,10 +9,7 @@ enum class CheckInDataType(val value: Int){
 
 class CheckinApi: WorkBaseApi(){
     override val group = "checkin"
-    companion object{
-        const val GET_CHECK_IN_DATA = "getcheckindata"
-        const val GET_CHECK_IN_RULE = "getcheckinoption"
-    }
+
 
     /**
      * 获取打卡数据
@@ -24,7 +21,7 @@ class CheckinApi: WorkBaseApi(){
      * */
     fun getCheckInData(openCheckInDataType: CheckInDataType, startTime: Long, endTime: Long, userIdList: List<String>)
             = doPost(
-        GET_CHECK_IN_DATA, mapOf("opencheckindatatype" to openCheckInDataType.value, "" to startTime,
+            "getcheckindata", mapOf("opencheckindatatype" to openCheckInDataType.value, "" to startTime,
         "endtime" to endTime, "useridlist" to userIdList))
 
     /**
@@ -34,7 +31,7 @@ class CheckinApi: WorkBaseApi(){
      * useridlist	是	需要获取打卡规则的用户列表
      * */
     fun getCheckInRule(datetime: Long, userIdList: List<String>) = doPost(
-        GET_CHECK_IN_RULE,
+            "getcheckinoption",
         mapOf("datetime" to datetime, "useridlist" to userIdList))
  }
 

@@ -8,7 +8,7 @@ import com.github.rwsbillyang.wxSDK.common.IBase
  * 用户管理
  * TODO: 其余API
  * */
-class UserApi : OABaseApi(){
+object UserApi : OABaseApi(){
     override val group: String = "user"
 
     /**

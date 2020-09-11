@@ -15,24 +15,15 @@ import kotlinx.serialization.Serializable
  * 如果发现上一次拉取菜单的请求在5分钟以前，就会拉取一下菜单，如果菜单有更新，就会刷新客户端的菜单。
  * 测试时可以尝试取消关注公众账号后再次关注，则可以看到创建后的效果.
  * */
- class MenuApi: OABaseApi() {
+object MenuApi: OABaseApi() {
     override val group = "menu"
-    companion object{
-        const val CREATE = "create"
-        const val DETAIL = "get"
-        const val DELETE = "delete"
-
-        const val CREATE_CONDITIONAL = "addconditional"
-        const val DELETE_CONDITIONAL = "delconditional"
-        const val TRY_MATCH = "trymatch"
-    }
 
     /**
      * 创建普通菜单
      *
      * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Creating_Custom-Defined_Menu.html
      * */
-    fun create(menus: List<Menu>): Response = doPost2(CREATE, Menus(menus))
+    fun create(menus: List<Menu>): Response = doPost2("create", Menus(menus))
 
     /**
      * 获取自定义菜单配置
@@ -42,7 +33,7 @@ import kotlinx.serialization.Serializable
      *
      * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Creating_Custom-Defined_Menu.html
      * */
-    fun detail(): ResponseMenusDetail = doGet2(DETAIL)
+    fun detail(): ResponseMenusDetail = doGet2("get")
 
     /**
      *
@@ -50,7 +41,7 @@ import kotlinx.serialization.Serializable
      *
      * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Creating_Custom-Defined_Menu.html
      * */
-    fun delete(): Response = doGet2(DELETE)
+    fun delete(): Response = doGet2("delete")
 
     /**
      * 创建个性化菜单
@@ -69,7 +60,7 @@ import kotlinx.serialization.Serializable
      *
      * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Personalized_menu_interface.html
      * */
-    fun createConditional(menus: List<Menu>, matchRule: MatchRule): ResponseMenuId = doPost2(CREATE_CONDITIONAL,ConditionalMenus(menus, matchRule) )
+    fun createConditional(menus: List<Menu>, matchRule: MatchRule): ResponseMenuId = doPost2("addconditional",ConditionalMenus(menus, matchRule) )
 
     /**
      * 删除个性化菜单
@@ -77,13 +68,13 @@ import kotlinx.serialization.Serializable
      *
      * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Personalized_menu_interface.html
      * */
-    fun deleteConditional(menuId: String): Response = doPost2(DELETE_CONDITIONAL, MenuId(menuId))
+    fun deleteConditional(menuId: String): Response = doPost2("delconditional", MenuId(menuId))
 
     /**
      * 测试个性化菜单匹配结果
      * @param  user_id 可以是粉丝的OpenID，也可以是粉丝的微信号。
      * */
-    fun tryMatch(userId: String): Response = doPost2(TRY_MATCH,  mapOf("user_id" to userId))
+    fun tryMatch(userId: String): Response = doPost2("trymatch",  mapOf("user_id" to userId))
 }
 
 

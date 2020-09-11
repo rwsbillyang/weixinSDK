@@ -1,25 +1,8 @@
 package com.github.rwsbillyang.wxSDK.work
 
 
-class UserApi: WorkBaseApi(){
+object UserApi: WorkBaseApi(){
     override val group = "user"
-    companion object{
-        const val GET_USER_INFO = "getuserinfo"
-        const val CREATE = "create"
-        const val DETAIL = "get"
-        const val UPDATE = "update"
-        const val DELETE = "delete"
-        const val BATCH_DELETE = "batchdelete"
-        const val SIMPLE_LIST = "simplelist"
-        const val LIST = "list"
-        const val CONVERT_TO_OPENID = "convert_to_openid"
-        const val CONVERT_TO_USERID = "convert_to_userid"
-        const val GET_MOBILE_HASHCODE = "get_mobile_hashcode"
-        const val AUTH_SUCC = "authsucc"
-        //const val GET_JOIN_QRCODE = "corp/get_join_qrcode"
-    }
-
-
     /**
      * 获取访问用户身份
      *
@@ -28,35 +11,35 @@ class UserApi: WorkBaseApi(){
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/91023
      * */
-    fun getUserInfo(code: String) = doGet(GET_USER_INFO, mapOf("code" to code))
+    fun getUserInfo(code: String) = doGet("getuserinfo", mapOf("code" to code))
 
-    fun create(body: Map<String, Any?>)= doPost(CREATE, body)
+    fun create(body: Map<String, Any?>)= doPost("create", body)
 
-    fun detail(userId: String) = doGet(DETAIL, mapOf("userid" to userId))
+    fun detail(userId: String) = doGet("get", mapOf("userid" to userId))
 
-    fun update(body: Map<String, Any?>) = doPost(UPDATE, body)
+    fun update(body: Map<String, Any?>) = doPost("update", body)
 
-    fun delete(userId: String) = doGet(DELETE, mapOf("userid" to userId))
+    fun delete(userId: String) = doGet("delete", mapOf("userid" to userId))
 
-    fun batchDelete(userIdList: List<String>) = doPost(BATCH_DELETE,userIdList)
+    fun batchDelete(userIdList: List<String>) = doPost("batchdelete",userIdList)
 
     fun simpleList(departmentId: Int, fetchChild: Int) = doGet(
-        SIMPLE_LIST,
+            "simplelist",
         mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString()))
 
     fun list(departmentId: Int, fetchChild: Int) = doGet(
-        LIST,
+            "list",
         mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString()))
 
-    fun convertToOpenId(userId: String) = doPost(CONVERT_TO_OPENID, mapOf("userid" to userId))
+    fun convertToOpenId(userId: String) = doPost("convert_to_openid", mapOf("userid" to userId))
 
     /**
      * 该接口主要应用于使用企业支付之后的结果查询。
      * 开发者需要知道某个结果事件的openid对应企业微信内成员的信息时，可以通过调用该接口进行转换查询。
      * */
-    fun convertToUserId(openId: String) = doPost(CONVERT_TO_USERID, mapOf("openid" to openId))
+    fun convertToUserId(openId: String) = doPost("convert_to_userid", mapOf("openid" to openId))
 
-    fun authSucc(userId: String) = doGet(AUTH_SUCC, mapOf("userid" to userId))
+    fun authSucc(userId: String) = doGet("authsucc", mapOf("userid" to userId))
 
 
     /**
@@ -71,7 +54,7 @@ class UserApi: WorkBaseApi(){
      * 支持企业获取手机号随机串，该随机串可直接在企业微信终端搜索手机号对应的微信用户。
      * */
     fun getMobileHashCode(mobile: String, state: String) = doPost(
-        GET_MOBILE_HASHCODE,
+            "get_mobile_hashcode",
         mapOf("mobile" to mobile, "state" to state))
 
 }

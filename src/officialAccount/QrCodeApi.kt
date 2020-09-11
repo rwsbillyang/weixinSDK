@@ -22,7 +22,7 @@ import java.net.URLEncoder
  * 如果用户已经关注公众号，在用户扫描后会自动进入会话，微信也会将带场景值扫描事件推送给开发者。
  *
  * */
-class QrCodeApi: OABaseApi() {
+object QrCodeApi: OABaseApi() {
     override val group: String = "qrcode"
 
     /**

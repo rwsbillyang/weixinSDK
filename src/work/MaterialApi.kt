@@ -2,13 +2,6 @@ package com.github.rwsbillyang.wxSDK.work
 
 class MaterialApi : WorkBaseApi(){
     override val group = "media"
-    companion object{
-        const val UPLOAD = "upload"
-        const val UPLOAD_IMG = "uploadimg"
-
-        const val GET_MATERIAL = "get"
-        const val GET_HD_VOICE = "get/jssdk"
-    }
 
     /**
      * 上传临时素材
@@ -24,7 +17,7 @@ class MaterialApi : WorkBaseApi(){
      * 视频（video） ：10MB，支持MP4格式
      * 普通文件（file）：20MB
      * */
-    fun upload(type: String, file: String) = doUpload(UPLOAD, file, mapOf("type" to type))
+    fun upload(type: String, file: String) = doUpload("upload", file, mapOf("type" to type))
 
 
     /**
@@ -35,13 +28,13 @@ class MaterialApi : WorkBaseApi(){
      * 每个企业每天最多可上传100张图片,图片文件大小应在 5B ~ 2MB 之间
      * TODO: POST的请求包中，form-data中媒体文件标识，应包含有filename、content-type等信息
      * */
-    fun uploadImg(file: String) = doUpload(UPLOAD_IMG, file)
+    fun uploadImg(file: String) = doUpload("uploadimg", file)
 
     /**
      * TODO: 本接口支持通过在http header里指定Range来分块下载。
      * 在文件很大，可能下载超时的情况下，推荐使用分块下载。
      * */
-    fun getMaterial(mediaId: String) = doGet(GET_MATERIAL, mapOf("media_id" to mediaId))
+    fun getMaterial(mediaId: String) = doGet("get", mapOf("media_id" to mediaId))
 
     /**
      * 获取高清语音素材
@@ -50,5 +43,5 @@ class MaterialApi : WorkBaseApi(){
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/90255
      * */
-    fun getHDVoice(mediaId: String) = doGet(GET_HD_VOICE, mapOf("media_id" to mediaId))
+    fun getHDVoice(mediaId: String) = doGet("get/jssdk", mapOf("media_id" to mediaId))
 }

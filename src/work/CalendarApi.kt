@@ -26,34 +26,28 @@ data class Calendar(
     @SerialName("cal_id") val id: String? = null
 )
 
-class CalendarApi : WorkBaseApi(){
+object CalendarApi : WorkBaseApi(){
     override val group = "oa/calendar"
-    companion object{
-        const val ADD = "add"
-        const val UPDATE = "update"
-        const val GET_LIST = "get"
-        const val DELETE = "del"
-    }
 
-    fun add(calendar: Calendar) = doPost(ADD, mapOf("calendar" to calendar))
+    fun add(calendar: Calendar) = doPost("add", mapOf("calendar" to calendar))
 
     /**
      * 更新日历
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/92619
      * */
-    fun update(calendar: Calendar) = doPost(UPDATE, mapOf("calendar" to calendar))
+    fun update(calendar: Calendar) = doPost("update", mapOf("calendar" to calendar))
 
 
     /**
      * 获取日历
      * */
-    fun getList(idList: List<String>) = doPost(GET_LIST, mapOf("cal_id_list" to idList))
+    fun getList(idList: List<String>) = doPost("get", mapOf("cal_id_list" to idList))
 
     /**
      * 删除日历
      * */
-    fun delete(id: String) = doPost(DELETE, mapOf("cal_id" to  id))
+    fun delete(id: String) = doPost("del", mapOf("cal_id" to  id))
 }
 
 class Schedule: WorkBaseApi(){
