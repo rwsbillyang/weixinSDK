@@ -4,7 +4,7 @@ package com.github.rwsbillyang.wxSDK.common.aes
 import com.github.rwsbillyang.wxSDK.common.aes.PKCS7Encoder.decode
 import com.github.rwsbillyang.wxSDK.common.aes.PKCS7Encoder.encode
 import com.github.rwsbillyang.wxSDK.common.aes.SHA1.getSHA1
-import org.apache.commons.codec.binary.Base64
+//import org.apache.commons.codec.binary.Base64
 import java.nio.charset.Charset
 import java.util.*
 import javax.crypto.Cipher
@@ -35,13 +35,15 @@ import kotlin.experimental.and
  * @param encodingAesKey 公众平台上，开发者设置的EncodingAESKey
  * @param appId 公众平台appid
  */
-class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  appId: String) {
+class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val appId: String) {
     companion object {
-        var CHARSET: Charset = Charset.forName("utf-8")
+        val CHARSET: Charset = Charset.forName("utf-8")
     }
 
-   private var base64 = Base64()
-   private var aesKey: ByteArray
+    //private var base64 = Base64()
+    private val base64Decoder = Base64.getDecoder()
+    private val base64Encoder = Base64.getEncoder()
+    private val aesKey: ByteArray
 
     /**
      * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
@@ -56,7 +58,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
         //V1.15: Base32/Base64/BCodec: Added strict decoding property to control handling of trailing bits.
         // Default lenient mode discards them without error. Strict mode raise an exception.
         // Fixes CODEC-280. see https://commons.apache.org/proper/commons-codec/changes-report.html#a1.15
-        aesKey = Base64.decodeBase64("$encodingAesKey=")
+        aesKey = base64Decoder.decode("$encodingAesKey=") //base64.decodeBase64()
     }
 
 
@@ -72,10 +74,10 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
      */
     @Throws(AesException::class)
     fun verifyUrl(
-        msgSignature: String,
-        timeStamp: String,
-        nonce: String,
-        echoStr: String
+            msgSignature: String,
+            timeStamp: String,
+            nonce: String,
+            echoStr: String
     ): String {
         val signature = getSHA1(token, timeStamp, nonce, echoStr)
         if (signature != msgSignature) {
@@ -106,20 +108,20 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
      */
     @Throws(AesException::class)
     fun decryptWxMsg(
-        msgSignature: String,
-        timeStamp: String,
-        nonce: String,
-        postData: String,
-        encryptType: String? = "aes"
+            msgSignature: String,
+            timeStamp: String,
+            nonce: String,
+            postData: String,
+            encryptType: String? = "aes"
     ): String {
 
         // 密钥，公众账号的app secret
         // 提取密文
         val map = XmlUtil.extract(postData)
 
-        val encryptText =  map["Encrypt"].toString()
+        val encryptText = map["Encrypt"].toString()
         //生成自己的安全签名
-        val signature = getSHA1(token, timeStamp, nonce,encryptText)
+        val signature = getSHA1(token, timeStamp, nonce, encryptText)
 
         // 和URL中的签名比较是否相等
         // println("第三方收到URL中的签名：" + msg_sign);
@@ -157,17 +159,17 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
      */
     @Throws(AesException::class)
     fun encryptMsg(replyMsg: String,
-                     timeStamp: String = System.currentTimeMillis().toString(),
-                     nonce: String = getRandomStr(),
-                     toUserName: String? = null,
-                     agentId: Int? = null
-                     ): Pair<String, String> {
+                   timeStamp: String = System.currentTimeMillis().toString(),
+                   nonce: String = getRandomStr(),
+                   toUserName: String? = null,
+                   agentId: Int? = null
+    ): Pair<String, String> {
         val encrypt = encrypt(replyMsg)
         val signature = getSHA1(token, timeStamp, nonce, encrypt)
 
         // println("发送给平台的签名是: " + signature[1].toString());
         // 生成回复发送的xml
-        val xml = XmlUtil.generateEncryptReMsg(encrypt, signature, timeStamp, nonce,toUserName,agentId)
+        val xml = XmlUtil.generateEncryptReMsg(encrypt, signature, timeStamp, nonce, toUserName, agentId)
         return Pair(xml, signature)
     }
 
@@ -193,16 +195,16 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
     }
 
     // 随机生成16位字符串
-    private fun getRandomStr(): String{
-            val base = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-            val random = Random()
-            val sb = StringBuffer()
-            for (i in 0..15) {
-                val number = random.nextInt(base.length)
-                sb.append(base[number])
-            }
-            return sb.toString()
+    private fun getRandomStr(): String {
+        val base = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        val random = Random()
+        val sb = StringBuffer()
+        for (i in 0..15) {
+            val number = random.nextInt(base.length)
+            sb.append(base[number])
         }
+        return sb.toString()
+    }
 
     /**
      * 对明文进行加密.
@@ -242,7 +244,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
             val encrypted = cipher.doFinal(unencrypted)
 
             // 使用BASE64对加密后的字符串进行编码
-            base64.encodeToString(encrypted)
+            base64Encoder.encodeToString(encrypted)//base64.encodeToString(encrypted)
         } catch (e: Exception) {
             e.printStackTrace()
             throw AesException(AesException.EncryptAESError)
@@ -267,7 +269,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
             cipher.init(Cipher.DECRYPT_MODE, key_spec, iv)
 
             // 使用BASE64对密文进行解码
-            val encrypted = Base64.decodeBase64(text)
+            val encrypted = base64Decoder.decode(text) //Base64.decodeBase64(text)
 
             // 解密
             cipher.doFinal(encrypted)
@@ -287,8 +289,8 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val  
             val xmlLength = recoverNetworkBytesOrder(networkOrder)
             xmlContent = String(Arrays.copyOfRange(bytes, 20, 20 + xmlLength), CHARSET)
             from_appid = String(
-                Arrays.copyOfRange(bytes, 20 + xmlLength, bytes.size),
-                CHARSET
+                    Arrays.copyOfRange(bytes, 20 + xmlLength, bytes.size),
+                    CHARSET
             )
         } catch (e: Exception) {
             e.printStackTrace()
