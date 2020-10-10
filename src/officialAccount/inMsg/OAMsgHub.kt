@@ -89,7 +89,7 @@ class OAMsgHub(
             WxBaseEvent.VIEW_MINI_PROGRAM -> eventHandler.onOAMenuMiniEvent(
                 OAMenuMiniEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.MASS_SEND_JOB_FINISH -> eventHandler.onOAOAMassSendFinishEvent(
+            WxBaseEvent.MASS_SEND_JOB_FINISH -> eventHandler.onOAMassSendFinishEvent(
                 OAMassSendFinishEvent(base).apply { read(reader) }
             )
             WxBaseEvent.TEMPLATE_SEND_JOB_FINISH -> eventHandler.onOATemplateSendJobFinish(

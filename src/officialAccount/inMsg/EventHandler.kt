@@ -151,7 +151,7 @@ interface IOAEventHandler: IDispatcher {
      * 另外，请开发者注意，本接口中所有使用到media_id的地方，现在都可以使用素材管理中的永久素材media_id了。请但注意，使用同一个素材群发出去的
      * 链接是一样的，这意味着，删除某一次群发，会导致整个链接失效。
      * */
-    fun onOAOAMassSendFinishEvent(e: OAMassSendFinishEvent): ReBaseMSg?
+    fun onOAMassSendFinishEvent(e: OAMassSendFinishEvent): ReBaseMSg?
 
     /**
      * 在模版消息发送任务完成后，微信服务器会将是否送达成功作为通知，发送到开发者中心中填写的服务器配置地址中。
@@ -199,7 +199,7 @@ open class DefaultOAEventHandler: IOAEventHandler {
 
     override fun onOAMenuMiniEvent(e: OAMenuMiniEvent) = onDefault(e)
 
-    override fun onOAOAMassSendFinishEvent(e: OAMassSendFinishEvent) = onDefault(e)
+    override fun onOAMassSendFinishEvent(e: OAMassSendFinishEvent) = onDefault(e)
 
     override fun onOATemplateSendJobFinish(e: OATemplateSendJobFinish) = onDefault(e)
 
