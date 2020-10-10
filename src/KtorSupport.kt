@@ -3,10 +3,7 @@ package com.github.rwsbillyang.wxSDK
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.rwsbillyang.wxSDK.common.aes.AesException
 import com.github.rwsbillyang.wxSDK.common.aes.SignUtil
-import com.github.rwsbillyang.wxSDK.officialAccount._OA
-import com.github.rwsbillyang.wxSDK.officialAccount.OAConfiguration
-import com.github.rwsbillyang.wxSDK.officialAccount.OAContext
-import com.github.rwsbillyang.wxSDK.officialAccount.OAuthApi
+import com.github.rwsbillyang.wxSDK.officialAccount.*
 import com.github.rwsbillyang.wxSDK.work._WORK
 import com.github.rwsbillyang.wxSDK.work.WorkConfiguration
 import com.github.rwsbillyang.wxSDK.work.WorkContext
@@ -17,6 +14,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
 import io.ktor.util.pipeline.*
+import kotlinx.coroutines.async
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -154,30 +152,35 @@ fun Routing.officialAccountApi(path: String = _OA.callbackPath) {
     }
 }
 
-fun Routing.oAuthApi(oauthInfoPath: String = "/weixin/oauth/info",
-                     onAuthorizedPath: String = "/weixin/oauth/onAuthorized") {
-
+fun Routing.oAuthApi(
+        oauthInfoPath: String = "/api/wx/oauth/info",
+        notifyPath: String = "/api/wx/oauth/notify",
+        notifyWebAppUrl: String = "/wx/auth",
+        needUserInfo: ((String, String) -> Int)? = null,
+        onGetOauthAccessToken: ((ResponseOauthAccessToken)-> Unit)? = null,
+        onGetUserInfo: ((info: ResponseUserInfo) -> Unit)? = null
+) {
+    val log = LoggerFactory.getLogger("oAuthApi")
     val stateCache = Caffeine.newBuilder()
             .maximumSize(Long.MAX_VALUE)
             .expireAfterWrite(5, TimeUnit.MINUTES)
             .expireAfterAccess(0, TimeUnit.SECONDS)
             .build<String, Boolean>()
     /**
-     * 前端webapp请求该api获取appid，state等信息，然后重定向到腾讯的授权页面，用户授权之后将重定向到下面的onAuthorized
-     * @param needUserInfo 0或1分别表示是否需要获取用户信息
+     * 前端webapp请求该api获取appid，state等信息，然后重定向到腾讯的授权页面，用户授权之后将重定向到下面的notify
+     * @param userInfo 0或1分别表示是否需要获取用户信息，优先使用前端提供的参数, 没有提供的话使用needUserInfo(host, uri)进行判断（用于从某个用户设置中获取），再没有的话则默认为0
      * @param host 跳转host，如："https：//www.example.com"
      * */
     get(oauthInfoPath){
-        val needUserInfo = call.request.queryParameters["needUserInfo"]?.toInt()?:0 == 1
-        val host = call.request.queryParameters["host"]
-        val info = OAuthApi.prepareOAuthInfo(host + onAuthorizedPath, needUserInfo)
-        stateCache.put(info.state, needUserInfo)
-        call.respond(info)
+        val userInfo = (call.request.queryParameters["userInfo"]?.toInt()?:(needUserInfo?.let { it(call.request.host(), call.request.uri) })?:0) == 1
+        val host = call.request.queryParameters["host"]?:call.request.host()
+
+        val oAuthInfo = OAuthApi.prepareOAuthInfo(host + notifyPath, userInfo)
+        stateCache.put(oAuthInfo.state, userInfo)
+        call.respond(oAuthInfo)
     }
     /**
      * 腾讯在用户授权之后，将调用下面的api通知code，并附带上原state。
-     *
-     *
      *
      * 第二步：通过code换取网页授权access_token，然后必要的话获取用户信息。
      * 然后将一些登录信息通知到前端（调用前端提供的url）
@@ -186,31 +189,41 @@ fun Routing.oAuthApi(oauthInfoPath: String = "/weixin/oauth/info",
      * code作为换取access_token的票据，每次用户授权带上的code将不一样，code只能使用一次，5分钟未被使用自动过期。
      *
      * */
-    get(onAuthorizedPath){
+    get(notifyPath){
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]
 
         if(code.isNullOrBlank() || state.isNullOrBlank()){
-            //TODO: notify webapp fail
+            //notify webapp fail
+            call.respondRedirect("$notifyWebAppUrl?state=$state&code=KO&msg=nullCodeOrState", permanent = false)
         }else{
-            val res =  OAuthApi.getAccessToken(code)
-            if(res.isOK() && res.accessToken != null && res.openId != null){
+            val res = OAuthApi.getAccessToken(code)
+            if(res.isOK()  && res.openId != null){
+
+                onGetOauthAccessToken?.let { async { it.invoke(res) } }
+
+                var url = "$notifyWebAppUrl?state=$state&code=OK&openId=${res.openId}"
                 val needUserInfo = stateCache.getIfPresent(state)?:false
-                //stateCache.invalidate(state)
-                if(needUserInfo){
+                stateCache.invalidate(state)
+                if(needUserInfo && res.accessToken != null){
                     val resUserInfo = OAuthApi.getUserInfo(res.accessToken, res.openId)
-                }else{
-                    //get openId
+                    if(resUserInfo.isOK())
+                    {
+                        if(resUserInfo.unionId != null){
+                            url += "&unionId=${resUserInfo.unionId}"
+                        }
+                        //async save fan user info
+                        onGetUserInfo?.let { async { it.invoke(resUserInfo)} }
+                    }else{
+                        log.warn("fail getUserInfo: $resUserInfo")
+                    }
                 }
-                //TODO: query login info and notify webapp
-                //or use client?
-                call.respondRedirect("/auth.html", permanent = false)
+                //notify webapp OK
+                call.respondRedirect(url, permanent = false)
             }
         }
     }
 }
-
-
 
 
 class WorkFeature(config: WorkConfiguration) {

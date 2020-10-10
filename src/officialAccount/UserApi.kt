@@ -51,9 +51,8 @@ class OpenIdLang(@SerialName("openid")val openId: String, val lang: String = "zh
  * @param qrScene qr_scene	二维码扫码场景（开发者自定义）
  * @param qrSceneStr qr_scene_str	二维码扫码场景描述（开发者自定义）
  * */
-
 @Serializable
-data class UserInfo(
+class UserInfo(
         val subscribe: Int? = null,
         @SerialName("openId")
         val openid: String? = null,

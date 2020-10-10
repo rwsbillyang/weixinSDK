@@ -44,7 +44,7 @@ class OAConfiguration {
     var accessToken: ITimelyRefreshValue? = null
     var ticket: ITimelyRefreshValue? = null
 
-    var callbackPath = "/weixin/oa"
+    var callbackPath = "/api/wx/oa"
 }
 
 /**
@@ -74,7 +74,7 @@ class OAContext(
         var encodingAESKey: String? = null,
         var wechatId: String? = null,
         var wechatName: String? = null,
-        var callbackPath: String = "/weixin/oa",
+        var callbackPath: String = "/api/wx/oa",
         customMsgHandler: IOAMsgHandler?,
         customEventHandler: IOAEventHandler?,
         customAccessToken: ITimelyRefreshValue?,

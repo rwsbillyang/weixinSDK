@@ -44,7 +44,7 @@ class WorkConfiguration {
     var accessToken: ITimelyRefreshValue? = null
     //var ticket: IRefreshableValue? = null
 
-    var callbackPath = "/weixin/work"
+    var callbackPath = "/api/wx/work"
 }
 
 /**
@@ -74,7 +74,7 @@ class WorkContext(
         var encodingAESKey: String,
         var wechatId: String? = null,
         var wechatName: String? = null,
-        var callbackPath: String = "/weixin/work",
+        var callbackPath: String = "/api/wx/work",
         customMsgHandler: IWorkMsgHandler?,
         customEventHandler: IWorkEventHandler?,
         customAccessToken: ITimelyRefreshValue?
