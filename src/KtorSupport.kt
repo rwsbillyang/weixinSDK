@@ -50,7 +50,7 @@ class OfficialAccountFeature {
 
 
 
-fun Routing.officialAccountApi(path: String = OfficialAccount._OA.callbackPath) {
+fun Routing.officialAccountApi(path: String = OfficialAccount.OA.callbackPath) {
     val log = LoggerFactory.getLogger("officialAccountApi")
 
     route(path) {
@@ -80,7 +80,7 @@ fun Routing.officialAccountApi(path: String = OfficialAccount._OA.callbackPath) 
             val nonce = call.request.queryParameters["nonce"]
             val echostr = call.request.queryParameters["echostr"]
 
-            val token = OfficialAccount._OA.token
+            val token = OfficialAccount.OA.token
 
             if (StringUtils.isAnyBlank(token, signature, timestamp, nonce,echostr)) {
                 log.warn("invalid parameters: token=$token, signature=$signature, timestamp=$timestamp, nonce=$nonce,echostr=$echostr")
@@ -123,7 +123,7 @@ fun Routing.officialAccountApi(path: String = OfficialAccount._OA.callbackPath) 
             val nonce = call.request.queryParameters["nonce"]
             val encryptType = call.request.queryParameters["encrypt_type"]?:"aes"
 
-            val reXml = OfficialAccount._OA.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
+            val reXml = OfficialAccount.OA.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
 
             if(reXml.isNullOrBlank())
                 call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)

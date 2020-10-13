@@ -7,7 +7,13 @@ import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.*
 
 
 object OfficialAccount {
-    lateinit var _OA: OAContext
+    val OA: OAContext
+        get() {
+            requireNotNull(_OA)
+            return _OA!!
+        }
+
+    private var _OA: OAContext? = null
     /**
      * 非ktor平台可以使用此函数进行配置公众号参数
      * */
@@ -29,11 +35,14 @@ object OfficialAccount {
     }
 
     /**
-     * 更新配置，通常用于管理后台修改配置
+     * 更新配置，通常用于管理后台修改配置, 若自定义了msgHandler/eventHandler，需要再次指定它们
      * */
     fun update(block: OAConfiguration.() -> Unit) {
-        val config = OAConfiguration().apply(block)
-        _OA.onChange(config)
+        if(_OA != null){
+            _OA!!.onChange(OAConfiguration().apply(block))
+        }else{
+            config(block)
+        }
     }
 }
 /**

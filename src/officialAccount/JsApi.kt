@@ -29,7 +29,7 @@ object JsAPI {
             log.error("cannot include # in url")
             return null
         }
-        val jsApiTicket = OfficialAccount._OA.ticket.get()
+        val jsApiTicket = OfficialAccount.OA.ticket.get()
         if(jsApiTicket == null){
             log.error("jsApiTicket is null, does you config correctly?")
             return null
