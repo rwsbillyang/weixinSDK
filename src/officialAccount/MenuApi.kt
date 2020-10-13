@@ -100,11 +100,15 @@ class ResponseMenuId(
 
 @Serializable
 class ResponseMenusDetail(
+        @SerialName("errcode")
+        override val errCode: Int = 0,
+        @SerialName("errmsg")
+        override val errMsg: String? = null,
         @SerialName("menu")
         val menus: MenuItem? = null,
         @SerialName("conditionalmenu")
         val conditionalMenu: MenuItem?= null
-)
+): IBase
 /**
  * @param matchRule 为空则表示默认菜单，否则未个性菜单
  * */
