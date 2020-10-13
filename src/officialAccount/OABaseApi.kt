@@ -4,5 +4,5 @@ import com.github.rwsbillyang.wxSDK.common.WxApi
 
 abstract class OABaseApi : WxApi(){
     override val base = "https://api.weixin.qq.com/cgi-bin"
-    override fun accessToken() = _OA.accessToken.get()
+    override fun accessToken() = OfficialAccount._OA.accessToken.get()
 }

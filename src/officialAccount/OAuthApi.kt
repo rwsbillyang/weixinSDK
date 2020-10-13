@@ -27,7 +27,7 @@ object OAuthApi: OABaseApi() {
      * */
     fun prepareOAuthInfo(redirectUri: String, needUserInfo: Boolean = false):OAuthInfo {
         val state = RandomStringUtils.randomAlphanumeric(16)
-        return OAuthInfo(_OA.appId, URLEncoder.encode(redirectUri,"UTF-8") ,if(needUserInfo) "snsapi_userinfo" else "snsapi_base",state)
+        return OAuthInfo(OfficialAccount._OA.appId, URLEncoder.encode(redirectUri,"UTF-8") ,if(needUserInfo) "snsapi_userinfo" else "snsapi_base",state)
     }
 
     /**
@@ -37,13 +37,13 @@ object OAuthApi: OABaseApi() {
      *
      * "https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code"
      * */
-    fun getAccessToken(code: String):ResponseOauthAccessToken = doGet2("access_token", mapOf("appid" to _OA.appId, "secret" to _OA.secret, "code" to code, "grant_type" to "authorization_code"))
+    fun getAccessToken(code: String):ResponseOauthAccessToken = doGet2("access_token", mapOf("appid" to OfficialAccount._OA.appId, "secret" to OfficialAccount._OA.secret, "code" to code, "grant_type" to "authorization_code"))
 
     /**
      * 第三步：刷新access_token（如果需要）
      * https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=APPID&grant_type=refresh_token&refresh_token=REFRESH_TOKEN
      * */
-    fun refreshAccessToken(refreshToken: String):ResponseOauthAccessToken = doGet2("refresh_token", mapOf("appid" to _OA.appId, "secret" to _OA.secret, "refresh_token" to refreshToken, "grant_type" to "refresh_token"))
+    fun refreshAccessToken(refreshToken: String):ResponseOauthAccessToken = doGet2("refresh_token", mapOf("appid" to OfficialAccount._OA.appId, "secret" to OfficialAccount._OA.secret, "refresh_token" to refreshToken, "grant_type" to "refresh_token"))
 
 
     /**

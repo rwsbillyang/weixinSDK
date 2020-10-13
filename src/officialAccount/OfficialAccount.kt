@@ -6,8 +6,36 @@ import com.github.rwsbillyang.wxSDK.common.aes.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.*
 
 
-lateinit var _OA: OAContext
+object OfficialAccount {
+    lateinit var _OA: OAContext
+    /**
+     * 非ktor平台可以使用此函数进行配置公众号参数
+     * */
+    fun config(block: OAConfiguration.() -> Unit) {
+        val config = OAConfiguration().apply(block)
+        _OA = OAContext(
+                config.appId,
+                config.secret,
+                config.token,
+                config.encodingAESKey,
+                config.wechatId,
+                config.wechatName,
+                config.callbackPath,
+                config.msgHandler,
+                config.eventHandler,
+                config.accessToken,
+                config.ticket
+        )
+    }
 
+    /**
+     * 更新配置，通常用于管理后台修改配置
+     * */
+    fun update(block: OAConfiguration.() -> Unit) {
+        val config = OAConfiguration().apply(block)
+        _OA.onChange(config)
+    }
+}
 /**
  * 调用API时可能需要用到的配置
  *
@@ -29,18 +57,15 @@ lateinit var _OA: OAContext
  *  https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Access_Overview.html
  * */
 class OAConfiguration {
-    var appId = "your_app_id"
-    var secret = "your_app_secret_key"
-    var token = "your_token"
-
+    var appId : String = "your_app_id"
+    var secret: String = "your_app_secret_key"
+    var token: String = "your_token"
     var encodingAESKey: String? = null
-
     var wechatId: String? = null
     var wechatName: String? = null
 
-    var msgHandler: IOAMsgHandler? = null
+    var msgHandler: IOAMsgHandler?  = null
     var eventHandler: IOAEventHandler? = null
-
     var accessToken: ITimelyRefreshValue? = null
     var ticket: ITimelyRefreshValue? = null
 
@@ -95,27 +120,67 @@ class OAContext(
 
         ticket = customTicket ?: TimelyRefreshTicket(appId, TicketRefresher(TicketUrl(accessToken)))
     }
+    fun onChange(config: OAConfiguration){
+        var dirty1 = false
+        var dirty2 = false
+        if(config.appId != appId){
+            appId = config.appId
+            dirty1 = true
+        }
+        if(config.secret != secret){
+            secret = config.secret
+            dirty2 = true
+        }
+        if(config.token != token){
+            token = config.token
+            dirty1 = true
+        }
+        if(config.encodingAESKey != encodingAESKey){
+            encodingAESKey = config.encodingAESKey
+            dirty1 = true
+        }
+        if(config.wechatId != wechatId){
+            wechatId = config.wechatId
+        }
+        if(config.wechatName != wechatName){
+            wechatName = config.wechatName
+        }
+
+        var dirty3 = false
+        val msgHandler = if(config.msgHandler != null){
+            dirty3 = true
+            config.msgHandler!!
+        }else msgHub.msgHandler
+
+        val eventHandler = if(config.eventHandler != null){
+            dirty3 = true
+            config.eventHandler!!
+        }else msgHub.eventHandler
+
+        if(dirty1) {
+            wxBizMsgCrypt = encodingAESKey?.let { WXBizMsgCrypt(token, it, appId) }
+            dirty3 = true
+        }
+        if(dirty3){
+            msgHub = OAMsgHub(msgHandler, eventHandler, wxBizMsgCrypt)
+        }
+
+       if(config.accessToken != null)
+           accessToken = config.accessToken!!
+        else if(dirty1 || dirty2){
+           accessToken = TimelyRefreshAccessToken(appId, AccessTokenRefresher(AccessTokenUrl(appId, secret)))
+       }
+
+       if(config.ticket != null)
+           ticket = config.ticket!!
+        else if(dirty1 || dirty2){
+           ticket = TimelyRefreshTicket(appId, TicketRefresher(TicketUrl(accessToken)))
+       }
+
+    }
 }
 
-/**
- * 非ktor平台可以使用此函数进行配置公众号参数
- * */
-fun configOfficialAccount(block: OAConfiguration.() -> Unit) {
-    val config = OAConfiguration().apply(block)
-    _OA = OAContext(
-            config.appId,
-            config.secret,
-            config.token,
-            config.encodingAESKey,
-            config.wechatId,
-            config.wechatName,
-            config.callbackPath,
-            config.msgHandler,
-            config.eventHandler,
-            config.accessToken,
-            config.ticket
-    )
-}
+
 
 internal class AccessTokenUrl(private val appId: String, private val secret: String) : IUrlProvider {
     override fun url() = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$appId&secret=$secret"

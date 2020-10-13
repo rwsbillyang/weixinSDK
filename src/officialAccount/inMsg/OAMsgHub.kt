@@ -5,8 +5,8 @@ import com.github.rwsbillyang.wxSDK.common.aes.WXBizMsgCrypt
 import javax.xml.stream.XMLEventReader
 
 class OAMsgHub(
-        private val msgHandler: IOAMsgHandler,
-        private val eventHandler: IOAEventHandler,
+         val msgHandler: IOAMsgHandler,
+         val eventHandler: IOAEventHandler,
         wxBizMsgCrypt: WXBizMsgCrypt?
 ):WxMsgHub(wxBizMsgCrypt) {
     override fun dispatchMsg(reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{

@@ -20,27 +20,11 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
 
-class OfficialAccountFeature(config: OAConfiguration) {
-    init {
-        _OA = OAContext(
-                config.appId,
-                config.secret,
-                config.token,
-                config.encodingAESKey,
-                config.wechatId,
-                config.wechatName,
-                config.callbackPath,
-                config.msgHandler,
-                config.eventHandler,
-                config.accessToken,
-                config.ticket
-        )
-    }
-
+class OfficialAccountFeature {
     // Body of the feature
-    private fun intercept(context: PipelineContext<Unit, ApplicationCall>) {
-        //  context.call.response.header(name, value)
-    }
+//    private fun intercept(context: PipelineContext<Unit, ApplicationCall>) {
+//        //  context.call.response.header(name, value)
+//    }
 
     // Implements ApplicationFeature as a companion object.
     companion object Feature : ApplicationFeature<ApplicationCallPipeline, OAConfiguration, OfficialAccountFeature> {
@@ -49,26 +33,24 @@ class OfficialAccountFeature(config: OAConfiguration) {
 
         // Code to execute when installing the feature.
         override fun install(pipeline: ApplicationCallPipeline, configure: OAConfiguration.() -> Unit): OfficialAccountFeature {
-
+            OfficialAccount.config(configure)
+            
             // 首先创建一个Configuration，然后对其apply：执行install的configure代码块，
-            val configuration = OAConfiguration().apply(configure)
-
-            // 然后用上面的Configuration实例对象，创建自己的Feature，
-            val feature = OfficialAccountFeature(configuration)
+            //val configuration = OAConfiguration().apply(configure)
 
             // Install an interceptor that will be run on each call and call feature instance
 //            pipeline.intercept(ApplicationCallPipeline.Setup) {
 //                feature.intercept(this)
 //            }
 
-            return feature
+            return OfficialAccountFeature()
         }
     }
 }
 
 
 
-fun Routing.officialAccountApi(path: String = _OA.callbackPath) {
+fun Routing.officialAccountApi(path: String = OfficialAccount._OA.callbackPath) {
     val log = LoggerFactory.getLogger("officialAccountApi")
 
     route(path) {
@@ -98,7 +80,7 @@ fun Routing.officialAccountApi(path: String = _OA.callbackPath) {
             val nonce = call.request.queryParameters["nonce"]
             val echostr = call.request.queryParameters["echostr"]
 
-            val token = _OA.token
+            val token = OfficialAccount._OA.token
 
             if (StringUtils.isAnyBlank(token, signature, timestamp, nonce,echostr)) {
                 log.warn("invalid parameters: token=$token, signature=$signature, timestamp=$timestamp, nonce=$nonce,echostr=$echostr")
@@ -141,7 +123,7 @@ fun Routing.officialAccountApi(path: String = _OA.callbackPath) {
             val nonce = call.request.queryParameters["nonce"]
             val encryptType = call.request.queryParameters["encrypt_type"]?:"aes"
 
-            val reXml = _OA.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
+            val reXml = OfficialAccount._OA.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
 
             if(reXml.isNullOrBlank())
                 call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
