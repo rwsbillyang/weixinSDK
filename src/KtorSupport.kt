@@ -50,7 +50,7 @@ class OfficialAccountFeature {
 
 
 
-fun Routing.officialAccountApi(path: String = OfficialAccount.OA.callbackPath) {
+fun Routing.officialAccountApi(path: String = OfficialAccount.wxEntryPoint) {
     val log = LoggerFactory.getLogger("officialAccountApi")
 
     route(path) {
@@ -135,9 +135,9 @@ fun Routing.officialAccountApi(path: String = OfficialAccount.OA.callbackPath) {
 }
 
 fun Routing.oAuthApi(
-        oauthInfoPath: String = "/api/wx/oauth/info",
-        notifyPath: String = "/api/wx/oauth/notify",
-        notifyWebAppUrl: String = "/wx/auth",
+        oauthInfoPath: String = OfficialAccount.oauthInfoPath,
+        notifyPath: String = OfficialAccount.notifyPath,
+        notifyWebAppUrl: String = OfficialAccount.notifyWebAppUrl,
         needUserInfo: ((String, String) -> Int)? = null,
         onGetOauthAccessToken: ((ResponseOauthAccessToken)-> Unit)? = null,
         onGetUserInfo: ((info: ResponseUserInfo) -> Unit)? = null

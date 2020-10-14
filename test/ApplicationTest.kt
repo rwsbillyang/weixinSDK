@@ -37,7 +37,7 @@ class ApplicationTest {
         withTestApplication({ apiTest(testing = true) }) {
 
             val signature = SignUtil.getSignature(OfficialAccount.OA.token,timestamp, nonce)
-            val getUrl  = "${OfficialAccount.OA.callbackPath}?signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$echoStr"
+            val getUrl  = "${OfficialAccount.wxEntryPoint}?signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$echoStr"
 
             handleRequest(HttpMethod.Get,getUrl).apply {
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -50,7 +50,7 @@ class ApplicationTest {
             //将原始文本用timestamp和nonce拼接后，用sha1加密，得到加密消息，再置于post data
             val (xml, msgSignature) = OfficialAccount.OA.wxBizMsgCrypt!!.encryptMsg(originalTextMsg, timestamp, nonce,toUser)
 
-            val postUrl = "${OfficialAccount.OA.callbackPath}?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce&encrypt_type=aes"
+            val postUrl = "${OfficialAccount.wxEntryPoint}?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce&encrypt_type=aes"
             handleRequest(HttpMethod.Post,postUrl){
                 setBody(xml)
             }.apply {

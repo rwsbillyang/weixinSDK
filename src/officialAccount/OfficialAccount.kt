@@ -7,13 +7,32 @@ import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.*
 
 
 object OfficialAccount {
+    private var _OA: OAContext? = null
     val OA: OAContext
         get() {
             requireNotNull(_OA)
             return _OA!!
         }
+    fun isInited() = _OA != null
 
-    private var _OA: OAContext? = null
+
+    /**
+     * 微信接入点
+     * */
+    var wxEntryPoint = "/api/wx/oa"
+    /**
+     * 前端获取api签名信息，冲定向到请求腾讯授权页面
+     * */
+    var oauthInfoPath: String = "/api/wx/oauth/info"
+    /**
+     * 用户授权后的通知路径
+     * */
+    var notifyPath: String = "/api/wx/oauth/notify"
+    /**
+     * 通知前端的授权结果路径
+     * */
+    var notifyWebAppUrl: String = "/wx/auth"
+
     /**
      * 非ktor平台可以使用此函数进行配置公众号参数
      * */
@@ -26,7 +45,6 @@ object OfficialAccount {
                 config.encodingAESKey,
                 config.wechatId,
                 config.wechatName,
-                config.callbackPath,
                 config.msgHandler,
                 config.eventHandler,
                 config.accessToken,
@@ -77,8 +95,6 @@ class OAConfiguration {
     var eventHandler: IOAEventHandler? = null
     var accessToken: ITimelyRefreshValue? = null
     var ticket: ITimelyRefreshValue? = null
-
-    var callbackPath = "/api/wx/oa"
 }
 
 /**
@@ -108,7 +124,6 @@ class OAContext(
         var encodingAESKey: String? = null,
         var wechatId: String? = null,
         var wechatName: String? = null,
-        var callbackPath: String = "/api/wx/oa",
         customMsgHandler: IOAMsgHandler?,
         customEventHandler: IOAEventHandler?,
         customAccessToken: ITimelyRefreshValue?,
