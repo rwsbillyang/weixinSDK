@@ -17,14 +17,14 @@ import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
  * @param description 音乐描述
  * */
 class ReMusicMsg(
-    val musicUrl: String? = null,
-    val hqMusicUrl: String? = null,
-    val thumbMediaId: String? = null,
-    val title: String? = null,
-    val description: String? = null,
-    toUserName: String?,
-    fromUserName: String?,
-    createTime: Long = System.currentTimeMillis()
+        val thumbMediaId: String,
+        val musicUrl: String? = null,
+        val hqMusicUrl: String? = null,
+        val title: String? = null,
+        val description: String? = null,
+        toUserName: String?,
+        fromUserName: String?,
+        createTime: Long = System.currentTimeMillis()
 
 ) : ReBaseMSg(toUserName, fromUserName, createTime, MUSIC) {
     override fun addMsgContent(builder: MsgBuilder) {
@@ -69,13 +69,13 @@ class ReMusicMsg(
  * 长度不超过30个字符.  请注意，必须先在公众平台官网为公众号设置微信号后才能使用该能力。
  * */
 class ReTransferMsg(
-    toUserName: String?,
-    fromUserName: String?,
-    createTime: Long = System.currentTimeMillis(),
-    val kfAccount: String? = null
-): ReBaseMSg(toUserName, fromUserName, createTime, TRANSFER_TO_CUSTOMER_SERVICE) {
+        toUserName: String?,
+        fromUserName: String?,
+        createTime: Long = System.currentTimeMillis(),
+        val kfAccount: String? = null
+) : ReBaseMSg(toUserName, fromUserName, createTime, TRANSFER_TO_CUSTOMER_SERVICE) {
     override fun addMsgContent(builder: MsgBuilder) {
-        if(!kfAccount.isNullOrBlank()){
+        if (!kfAccount.isNullOrBlank()) {
             builder.append("<TransInfo>\n")
             builder.addData("KfAccount", kfAccount)
             builder.append("</TransInfo>\n")

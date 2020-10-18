@@ -42,18 +42,18 @@ enum class MenuType(val value: String) {
     ViewMiniProgram("view_miniprogram"),
     @SerialName("media_id") MediaId("media_id"),
     @SerialName("view_limited") ViewLimited("view_limited"),
-    @SerialName("unknown")
-    Unknown("Unknown")
+    @SerialName("parent")
+    Parent("parent") //自定义的类型，用于前端将菜单类型标识为一级菜单
 }
 
 /**
- * type	是	菜单的响应动作类型
- * name	是	菜单的名字。不能为空，主菜单不能超过16字节，子菜单不能超过40字节。
- * key	click等点击类型必须	菜单KEY值，用于消息接口推送，不超过128字节
- * url	view类型必须	网页链接，成员点击菜单可打开链接，不超过1024字节。为了提高安全性，建议使用https的url
- * pagepath	view_miniprogram类型必须	小程序的页面路径
- * appid	view_miniprogram类型必须	小程序的appid（仅认证公众号可配置）
- * sub_button	否	二级菜单数组，个数应为1~5个
+ * @param type	是	菜单的响应动作类型
+ * @param name	是	菜单的名字。不能为空，主菜单不能超过16字节，子菜单不能超过40字节。
+ * @param key	click等点击类型必须	菜单KEY值，用于消息接口推送，不超过128字节
+ * @param url	view类型必须	网页链接，成员点击菜单可打开链接，不超过1024字节。为了提高安全性，建议使用https的url
+ * @param pagepath	view_miniprogram类型必须	小程序的页面路径
+ * @param appid	view_miniprogram类型必须	小程序的appid（仅认证公众号可配置）
+ * @param sub_button	否	二级菜单数组，个数应为1~5个
  * */
 @Serializable
 data class Menu(val name: String,
