@@ -1,7 +1,9 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.outMsg
 
+
+import com.github.rwsbillyang.wxSDK.common.msg.ImagesContent
+import com.github.rwsbillyang.wxSDK.common.msg.VideoContent
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
@@ -33,26 +35,11 @@ interface IMassMsg: IMsg {
 //============================= 群发之 图片消息 =============================//
 
 /**
- *
- * @param recommend 推荐语，不填则默认为“分享图片”
- * */
-@Serializable
-class ImgContent(
-        @SerialName("media_ids")
-        val mediaIds: List<String>,
-        val recommend: String? = null,
-        @SerialName("need_open_comment")
-        val needOpenComment: Int = 0,
-        @SerialName("only_fans_can_comment")
-        val onlyFansCanComment: Int = 0
-)
-
-/**
  * 群发消息的图片消息，若是客服消息请使用 CustomerImgMsg,二者内容上有区别
  * */
 @Serializable(with = ImgMsgSerializer::class)
-class ImgMsg(
-        val images: ImgContent,
+class ImgsMsg(
+        val images: ImagesContent,
         override val receivers: MsgReceivers,
         override val clientMsgId: String? = null
 ) : IMassMsg {
@@ -64,21 +51,45 @@ class ImgMsg(
      * @param clientMsgId 开发者侧群发消息id，长度限制64字节，如不填，则后台默认以群发范围和群发内容的摘要值做为clientmsgid
      * */
     constructor(receivers: MsgReceivers, mediaIds: List<String>, recommend: String, needOpenComment: Int = 0, onlyFansCanComment: Int = 0, clientMsgId: String? = null)
-            : this(ImgContent(mediaIds, recommend, needOpenComment, onlyFansCanComment), receivers, clientMsgId)
+            : this(ImagesContent(mediaIds, recommend, needOpenComment, onlyFansCanComment), receivers, clientMsgId)
 }
 
-object ImgMsgSerializer : MassMsgSerializer<ImgMsg>() {
+object ImgMsgSerializer : MassMsgSerializer<ImgsMsg>() {
     override fun serialName() = "ImgMsg"
     override fun addContentElement(builder: ClassSerialDescriptorBuilder) {
-        builder.element<ImgContent?>("images", isOptional = true)
+        builder.element<ImagesContent?>("images", isOptional = true)
     }
 
-    override fun serializeContent(encoder: CompositeEncoder, msg: ImgMsg): Int {
-        encoder.encodeSerializableElement(descriptor, 0, ImgContent.serializer(), msg.images)
+    override fun serializeContent(encoder: CompositeEncoder, msg: ImgsMsg): Int {
+        encoder.encodeSerializableElement(descriptor, 0, ImagesContent.serializer(), msg.images)
         return 1
     }
 }
 
+
+
+
+//============================= 群发 之 视频消息 =============================//
+@Serializable(with = VideoMsgSerializer::class)
+class VideoMsg(
+        val mpvideo: VideoContent,
+        override val receivers: MsgReceivers,
+        override val clientMsgId: String? = null
+) : IMassMsg{
+    override val msgType: String = IMsg.MPVIDEO
+}
+
+object VideoMsgSerializer : MassMsgSerializer<VideoMsg>() {
+    override fun serialName() = "VideoMsg"
+    override fun addContentElement(builder: ClassSerialDescriptorBuilder) {
+        builder.element<VideoContent?>("mpvideo", isOptional = true)
+    }
+
+    override fun serializeContent(encoder: CompositeEncoder, msg: VideoMsg): Int {
+        encoder.encodeSerializableElement(descriptor, 0, VideoContent.serializer(), msg.mpvideo)
+        return 1
+    }
+}
 
 
 abstract class MassMsgSerializer<T : IMassMsg> : KSerializer<T> {

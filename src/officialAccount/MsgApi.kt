@@ -132,7 +132,7 @@ object MsgApi : OABaseApi() {
      * 在输入状态中（持续15s），不可重复下发输入态。
      * 在输入状态中，如果向用户下发消息，会同时取消输入状态。
      */
-    fun sendInputState(cutomerOpenId: String, isTyping: Boolean): Response = doPost2("custom/typing", mapOf("touser" to cutomerOpenId,
+    fun sendInputState(customerOpenId: String, isTyping: Boolean): Response = doPost2("custom/typing", mapOf("touser" to customerOpenId,
             "command" to if(isTyping)"Typing" else "CancelTyping"))
 }
 

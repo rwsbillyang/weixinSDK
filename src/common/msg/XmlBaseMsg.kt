@@ -172,7 +172,7 @@ abstract class ReBaseMSg(
     msgType: String
 ) : BaseInfo(toUserName, fromUserName, createTime, msgType) {
     open fun toXml(): String {
-        val builder = MsgBuilder("<xml>\n")
+        val builder = XmlMsgBuilder("<xml>\n")
         builder.addData("ToUserName", toUserName)
         builder.addData("FromUserName", fromUserName)
         builder.addTag("CreateTime", createTime.toString().substring(0, 10))
@@ -184,7 +184,7 @@ abstract class ReBaseMSg(
 
     override fun toString() = toXml()
 
-    protected abstract fun addMsgContent(builder: MsgBuilder)
+    protected abstract fun addMsgContent(builderXml: XmlMsgBuilder)
 }
 
 

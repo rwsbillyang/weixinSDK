@@ -1,7 +1,7 @@
 package com.github.rwsbillyang.wxSDK.common.msg
 
 
-class MsgBuilder(str: String? = null) {
+class XmlMsgBuilder(str: String? = null) {
     private var builder: StringBuilder = if(str.isNullOrBlank()) StringBuilder()else StringBuilder(str)
 
     fun append(str: String?) {

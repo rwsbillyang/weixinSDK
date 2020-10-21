@@ -1,5 +1,6 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.outMsg
 
+import com.github.rwsbillyang.wxSDK.common.msg.*
 import com.github.rwsbillyang.wxSDK.officialAccount.outMsg.ReceiverType.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -26,7 +27,7 @@ interface IMsg {
         const val TEXT = "text"
         const val IMAGE = "image"
         const val VOICE = "voice"
-        const val VIDEO = "mpvideo"
+        const val MPVIDEO = "mpvideo"
         const val MPNEWS = "mpnews"
         const val CARD = "wxcard"
     }
@@ -88,8 +89,6 @@ class TagFilter(
 
 //============================= 群发和客服 之 文本消息 =============================//
 
-@Serializable
-class TextContent(val content: String)
 
 @Serializable(with = TextMsgSerializer::class)
 class TextMsg(
@@ -129,20 +128,14 @@ object TextMsgSerializer : MsgSerializer<TextMsg>() {
     }
 
     override fun serializeContent(encoder: CompositeEncoder, msg: TextMsg): Int {
-        encoder.encodeSerializableElement(descriptor, 0, TextContent.serializer(), msg.text)
+        encoder.encodeSerializableElement(descriptor, 0, String.serializer(), msg.text.content)
         return 1
     }
 }
 
 //============================= 群发和客服 之 语音消息 =============================//
 
-/**
- * @param mediaId 发送的图片/语音/视频/图文消息（点击跳转到图文消息页）的媒体ID
- * */
 @Serializable(with = VoiceMsgSerializer::class)
-class VoiceContent(@SerialName("media_id") val mediaId: String)
-
-@Serializable
 class VoiceMsg(
         val voice: VoiceContent,
         override val receivers: MsgReceivers,
@@ -166,55 +159,13 @@ object VoiceMsgSerializer : MsgSerializer<VoiceMsg>() {
     }
 
     override fun serializeContent(encoder: CompositeEncoder, msg: VoiceMsg): Int {
-        encoder.encodeSerializableElement(descriptor, 0, VoiceContent.serializer(), msg.voice)
+        encoder.encodeSerializableElement(descriptor, 0, String.serializer(), msg.voice.mediaId)
         return 1
     }
 }
 
-//============================= 群发和客服 之 视频消息 =============================//
-
-/**
- * 客服消息中增加了thumb字段
- * @param mediaId 发送的图片/语音/视频/图文消息（点击跳转到图文消息页）的媒体ID
- * */
-@Serializable
-class VideoContent(
-        @SerialName("media_id")
-        val mediaId: String,
-        @SerialName("thumb_media_id")
-        val thumb: String ? = null,
-        val title: String? = null,
-        val description: String? = null
-)
-
-@Serializable(with = VideoMsgSerializer::class)
-class VideoMsg(
-        val mpvideo: VideoContent,
-        override val receivers: MsgReceivers,
-        @SerialName("customservice")
-        override val customService: KfAccountName? = null,
-        override val clientMsgId: String? = null
-) : ICustomerAndMassMsg{
-    override val msgType: String = IMsg.VIDEO
-}
-
-object VideoMsgSerializer : MsgSerializer<VideoMsg>() {
-    override fun serialName() = "VideoMsg"
-    override fun addContentElement(builder: ClassSerialDescriptorBuilder) {
-        builder.element<VideoContent?>("mpvideo", isOptional = true)
-    }
-
-    override fun serializeContent(encoder: CompositeEncoder, msg: VideoMsg): Int {
-        encoder.encodeSerializableElement(descriptor, 0, VideoContent.serializer(), msg.mpvideo)
-        return 1
-    }
-}
 
 //============================= 群发和客服 之 卡券消息 =============================//
-
-@Serializable
-class CardContent(@SerialName("card_id") val cardId: String)
-
 /**
  * 特别注意客服消息接口投放卡券仅支持非自定义Code码和导入code模式的卡券的卡券
  * */
@@ -242,19 +193,12 @@ object CardMsgSerializer : MsgSerializer<CardMsg>() {
     }
 
     override fun serializeContent(encoder: CompositeEncoder, msg: CardMsg): Int {
-        encoder.encodeSerializableElement(descriptor, 0, CardContent.serializer(), msg.wxcard)
+        encoder.encodeSerializableElement(descriptor, 0, String.serializer(), msg.wxcard.cardId)
         return 1
     }
 }
 
 //============================= 群发和客服 之 图文消息 =============================//
-
-/**
- * @param mediaId 发送的图片/语音/视频/图文消息（点击跳转到图文消息页）的媒体ID
- * */
-@Serializable
-class MpNewsContent(@SerialName("media_id") val mediaId: String)
-
 /**
  * 发送图文消息（点击跳转到图文消息页面）
  * */

@@ -24,7 +24,7 @@ class TemplateMsg(
         val toUser: String,
         @SerialName("template_id")
         val templateId: String,
-        val data: Map<String, ValueColor>,
+        val data: Map<String, ColoredValue>,
         val url: String? = null,
         @SerialName("miniprogram")
         val mini: MiniProgram? = null
@@ -54,7 +54,7 @@ class OneTimeTemplateMsg(
         val templateId: String,
         val scene: Int,
         val title: String,
-        val data: Map<String, ValueColor>,
+        val data: Map<String, ColoredValue>,
         val url: String? = null,
         @SerialName("miniprogram")
         val mini: MiniProgram? = null
@@ -68,7 +68,7 @@ class OneTimeTemplateMsg(
             url: String? = null,
             mini: MiniProgram? = null,
             color: String = "173177") :
-            this(toUser, templateId, scene, title, mapOf("content" to ValueColor(content, color)), url, mini)
+            this(toUser, templateId, scene, title, mapOf("content" to ColoredValue(content, color)), url, mini)
 }
 
 /**
@@ -104,7 +104,7 @@ class MiniProgram(
  * @param color    否	模板内容字体颜色，不填默认为黑色
  * */
 @Serializable
-class ValueColor(
+class ColoredValue(
         val value: String,
         val color: String = "#173177",
 )

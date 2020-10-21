@@ -1,6 +1,6 @@
 package com.github.rwsbillyang.wxSDK.common.aes
 
-import com.github.rwsbillyang.wxSDK.common.msg.MsgBuilder
+import com.github.rwsbillyang.wxSDK.common.msg.XmlMsgBuilder
 import org.xml.sax.InputSource
 import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
@@ -99,7 +99,7 @@ internal object XmlUtil {
         toUserName: String? = null,
         agentId: Int? = null
     ): String {
-        val builder = MsgBuilder("<xml>\n")
+        val builder = XmlMsgBuilder("<xml>\n")
         if(!toUserName.isNullOrBlank()) builder.addData("ToUserName", toUserName)
         builder.addData("Encrypt", encrypt)
         builder.addTag("MsgSignature", signature)

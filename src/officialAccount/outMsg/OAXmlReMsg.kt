@@ -1,10 +1,10 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.outMsg
 
-import com.github.rwsbillyang.wxSDK.common.msg.MsgBuilder
+import com.github.rwsbillyang.wxSDK.common.msg.XmlMsgBuilder
 import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
 
 
-//============================= 被动回复 消息 =============================//
+//============================= 公众号支持，企业微信未提及支持 被动回复 消息 =============================//
 
 
 /**
@@ -27,14 +27,14 @@ class ReMusicMsg(
         createTime: Long = System.currentTimeMillis()
 
 ) : ReBaseMSg(toUserName, fromUserName, createTime, MUSIC) {
-    override fun addMsgContent(builder: MsgBuilder) {
-        builder.append("<Music>\n")
-        builder.addData("Title", title)
-        builder.addData("Description", description)
-        builder.addData("MusicUrl", musicUrl)
-        builder.addData("HQMusicUrl", hqMusicUrl)
-        builder.addData("ThumbMediaId", thumbMediaId)
-        builder.append("</Music>\n")
+    override fun addMsgContent(builderXml: XmlMsgBuilder) {
+        builderXml.append("<Music>\n")
+        builderXml.addData("Title", title)
+        builderXml.addData("Description", description)
+        builderXml.addData("MusicUrl", musicUrl)
+        builderXml.addData("HQMusicUrl", hqMusicUrl)
+        builderXml.addData("ThumbMediaId", thumbMediaId)
+        builderXml.append("</Music>\n")
     }
 }
 
@@ -74,11 +74,11 @@ class ReTransferMsg(
         createTime: Long = System.currentTimeMillis(),
         val kfAccount: String? = null
 ) : ReBaseMSg(toUserName, fromUserName, createTime, TRANSFER_TO_CUSTOMER_SERVICE) {
-    override fun addMsgContent(builder: MsgBuilder) {
+    override fun addMsgContent(builderXml: XmlMsgBuilder) {
         if (!kfAccount.isNullOrBlank()) {
-            builder.append("<TransInfo>\n")
-            builder.addData("KfAccount", kfAccount)
-            builder.append("</TransInfo>\n")
+            builderXml.append("<TransInfo>\n")
+            builderXml.addData("KfAccount", kfAccount)
+            builderXml.append("</TransInfo>\n")
         }
     }
 }
