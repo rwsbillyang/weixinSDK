@@ -11,7 +11,7 @@ class OAMsgHub(
 ):WxMsgHub(wxBizMsgCrypt) {
     override fun dispatchMsg(reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
         return when(base.msgType){
-            BaseInfo.TEXT -> {
+            InMsgType.TEXT -> {
                 val msg = OACustomerClickMenuMsg(base).apply { read(reader) }
                 if(msg.menuId.isNullOrBlank())
                     msgHandler.onOATextMsg(msg)
@@ -19,22 +19,22 @@ class OAMsgHub(
                     msgHandler.onOACustomerClickMenuMsg(msg)
                 }
             }
-            BaseInfo.IMAGE -> msgHandler.onOAImgMsg(
+            InMsgType.IMAGE -> msgHandler.onOAImgMsg(
                 OAImgMSg(base).apply { read(reader) }
             )
-            BaseInfo.VOICE -> msgHandler.onOAVoiceMsg(
+            InMsgType.VOICE -> msgHandler.onOAVoiceMsg(
                 OAVoiceMsg(base).apply { read(reader) }
             )
-            BaseInfo.VIDEO -> msgHandler.onOAVideoMsg(
+            InMsgType.VIDEO -> msgHandler.onOAVideoMsg(
                 OAVideoMsg(base).apply { read(reader) }
             )
-            BaseInfo.SHORT_VIDEO -> msgHandler.onOAShortVideoMsg(
+            InMsgType.SHORT_VIDEO -> msgHandler.onOAShortVideoMsg(
                 OAShortVideoMsg(base).apply { read(reader) }
             )
-            BaseInfo.LOCATION -> msgHandler.onOALocationMsg(
+            InMsgType.LOCATION -> msgHandler.onOALocationMsg(
                 OALocationMsg(base).apply { read(reader) }
             )
-            BaseInfo.LINK -> msgHandler.onOALinkMsg(
+            InMsgType.LINK -> msgHandler.onOALinkMsg(
                 OALinkMsg(base).apply { read(reader) }
             )
             else -> msgHandler.onDispatch(reader, base)?: msgHandler.onDefault(WxBaseMsg(base).apply { read(reader) })
@@ -44,7 +44,7 @@ class OAMsgHub(
     override fun dispatchEvent(reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
         val baseEvent = WxBaseEvent(base).apply { read(reader) }
         return when (baseEvent.event) {
-            WxBaseEvent.SUBSCRIBE -> {
+            InEventType.SUBSCRIBE -> {
                 val subscribeEvent = OAScanSubscribeEvent(base).apply { read(reader) }
                 if (subscribeEvent.ticket.isNullOrBlank()) {
                     eventHandler.onOASubscribeEvent(OASubscribeEvent(base))
@@ -52,47 +52,47 @@ class OAMsgHub(
                     eventHandler.onOAScanSubscribeEvent(subscribeEvent)
                 }
             }
-            WxBaseEvent.UNSUBSCRIBE -> eventHandler.onOAUnsubscribeEvent(
+            InEventType.UNSUBSCRIBE -> eventHandler.onOAUnsubscribeEvent(
                 OAUnsubscribeEvent(base)
             )
-            WxBaseEvent.SCAN -> eventHandler.onOAScanEvent(
+            InEventType.SCAN -> eventHandler.onOAScanEvent(
                 OAScanEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.LOCATION -> eventHandler.onOALocationEvent(
+            InEventType.LOCATION -> eventHandler.onOALocationEvent(
                 OALocationEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.CLICK -> eventHandler.onOAMenuClickEvent(
+            InEventType.CLICK -> eventHandler.onOAMenuClickEvent(
                 OAMenuClickEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.VIEW -> eventHandler.onOAMenuViewEvent(
+            InEventType.VIEW -> eventHandler.onOAMenuViewEvent(
                 OAMenuViewEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.SCAN_CODE_PUSH ->
+            InEventType.SCAN_CODE_PUSH ->
                 eventHandler.onOAMenuScanCodePushEvent(
                     OAMenuScanCodePushEvent(base).apply { read(reader) }
                 )
-            WxBaseEvent.SCAN_CODE_WAIT_MSG -> eventHandler.onOAMenuScanCodeWaitEvent(
+            InEventType.SCAN_CODE_WAIT_MSG -> eventHandler.onOAMenuScanCodeWaitEvent(
                 OAMenuScanCodeWaitEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.PIC_SYS_PHOTO -> eventHandler.onOAMenuPhotoEvent(
+            InEventType.PIC_SYS_PHOTO -> eventHandler.onOAMenuPhotoEvent(
                 OAMenuPhotoEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.PIC_PHOTO_OR_ALBUM -> eventHandler.onOAMenuPhotoOrAlbumEvent(
+            InEventType.PIC_PHOTO_OR_ALBUM -> eventHandler.onOAMenuPhotoOrAlbumEvent(
                 OAMenuPhotoOrAlbumEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.PIC_WEIXIN -> eventHandler.onOAMenuOAAlbumEvent(
+            InEventType.PIC_WEIXIN -> eventHandler.onOAMenuOAAlbumEvent(
                 OAMenuOAAlbumEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.LOCATION_SELECT -> eventHandler.onOAMenuLocationEvent(
+            InEventType.LOCATION_SELECT -> eventHandler.onOAMenuLocationEvent(
                 OAMenuLocationEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.VIEW_MINI_PROGRAM -> eventHandler.onOAMenuMiniEvent(
+            InEventType.VIEW_MINI_PROGRAM -> eventHandler.onOAMenuMiniEvent(
                 OAMenuMiniEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.MASS_SEND_JOB_FINISH -> eventHandler.onOAMassSendFinishEvent(
+            InEventType.MASS_SEND_JOB_FINISH -> eventHandler.onOAMassSendFinishEvent(
                 OAMassSendFinishEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.TEMPLATE_SEND_JOB_FINISH -> eventHandler.onOATemplateSendJobFinish(
+            InEventType.TEMPLATE_SEND_JOB_FINISH -> eventHandler.onOATemplateSendJobFinish(
                 OATemplateSendJobFinish(base).apply { read(reader) }
             )
             else -> eventHandler.onDispatch(reader, base)?: eventHandler.onDefault(baseEvent)

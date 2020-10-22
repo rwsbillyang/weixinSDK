@@ -11,9 +11,9 @@ import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.DefaultOAEventHandler
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.DefaultOAMsgHandler
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.OATextMsg
 import com.github.rwsbillyang.wxSDK.officialAccountApi
-import com.github.rwsbillyang.wxSDK.work.msg.DefaultWorkMsgHandler
-import com.github.rwsbillyang.wxSDK.work.msg.WorkBaseMsg
-import com.github.rwsbillyang.wxSDK.work.msg.WorkTextMsg
+import com.github.rwsbillyang.wxSDK.work.inMsg.DefaultWorkMsgHandler
+import com.github.rwsbillyang.wxSDK.work.inMsg.WorkBaseMsg
+import com.github.rwsbillyang.wxSDK.work.inMsg.WorkTextMsg
 import com.github.rwsbillyang.wxSDK.workApi
 import io.ktor.application.*
 import io.ktor.response.*

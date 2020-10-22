@@ -1,4 +1,4 @@
-package com.github.rwsbillyang.wxSDK.work.msg
+package com.github.rwsbillyang.wxSDK.work.inMsg
 
 
 import com.github.rwsbillyang.wxSDK.common.msg.BaseInfo

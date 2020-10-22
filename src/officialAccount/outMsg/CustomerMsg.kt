@@ -50,7 +50,7 @@ class CustomerVideoMsg(
         @SerialName("customservice")
         override val customService: KfAccountName? = null
 ) : ICustomerMsg{
-    override val msgType: String = BaseInfo.VIDEO
+    override val msgType: String = InMsgType.VIDEO
 }
 
 
@@ -72,7 +72,7 @@ class CustomerNewsMsg(
     /**
      * convenience constructor
      * */
-    constructor(openId: String, articleItem: ReArticleItem)
+    constructor(openId: String, articleItem: ArticleItem)
             : this(NewsContent(listOf(articleItem)), openId)
 }
 

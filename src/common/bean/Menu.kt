@@ -43,7 +43,7 @@ enum class MenuType(val value: String) {
     @SerialName("media_id") MediaId("media_id"),
     @SerialName("view_limited") ViewLimited("view_limited"),
     @SerialName("parent")
-    Parent("parent") //自定义的类型，用于前端将菜单类型标识为一级菜单
+    Parent("parent") //官方API无此类型，为方便构建树形关系而自定义的类型，用于前端将菜单类型标识为一级菜单
 }
 
 /**

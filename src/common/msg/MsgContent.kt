@@ -13,26 +13,25 @@ import kotlinx.serialization.Serializable
  * @property KF 客服消息
  * */
 @Serializable
-sealed class MsgBody(val flag: Int) {
+sealed class MsgBody(val flag: Byte) {
     companion object {
-        const val RE = 0b0000_0001
-        const val MASS = 0b0000_0010
-        const val KF = 0b0000_0100
+        const val RE: Byte = 0b0000_0001 //1
+        const val MASS: Byte = 0b0000_0010 //2
+        const val KF: Byte = 0b0000_0100 //4
 
-
-        const val RE_KF = RE or KF
-        const val RE_MASS = RE or MASS
-        const val MASS_KF = MASS or KF
-        const val ALL = RE or MASS or KF
+        const val RE_KF: Byte = 0b0000_0101 //5
+        const val RE_MASS: Byte = 0b0000_0011 //3
+        const val MASS_KF: Byte = 0b0000_0110 //6
+        const val ALL: Byte = 0b0000_0111 //7
     }
 }
 
 @Serializable
-@SerialName(BaseInfo.TEXT)
+@SerialName(InMsgType.TEXT)
 data class TextContent(val content: String) : MsgBody(ALL)
 
 @Serializable
-@SerialName(BaseInfo.VOICE)
+@SerialName(InMsgType.VOICE)
 data class VoiceContent(
         @SerialName("media_id")
         val mediaId: String
@@ -44,7 +43,7 @@ data class VoiceContent(
  * 图片消息 （被动回复消息、客服消息）
  * */
 @Serializable
-@SerialName(BaseInfo.IMAGE)
+@SerialName(InMsgType.IMAGE)
 data class ImageContent(
         @SerialName("media_id")
         val mediaId: String
@@ -75,7 +74,7 @@ data class ImagesContent(
  * 视频消息（被动回复, 群发）
  * */
 @Serializable
-@SerialName(BaseInfo.VIDEO)
+@SerialName(InMsgType.VIDEO)
 data class VideoContent(
         @SerialName("media_id")
         val mediaId: String,
@@ -112,7 +111,7 @@ data class VideoKfContent(
  * ThumbMediaId	是	缩略图的媒体id，通过素材管理中的接口上传多媒体文件，得到的id
  * */
 @Serializable
-@SerialName(BaseInfo.MUSIC)
+@SerialName(InMsgType.MUSIC)
 data class MusicContent(
         @SerialName("thumb_media_id")
         val thumbMediaId: String,
@@ -137,7 +136,7 @@ data class MusicContent(
  * @param url Url	是	点击图文消息跳转链接
  * */
 @Serializable
-class ReArticleItem(
+class ArticleItem(
         val title: String,
         val description: String,
         @SerialName("picurl")
@@ -152,9 +151,9 @@ class ReArticleItem(
  * 发送图文客服消息（点击跳转到外链） 图文消息条数限制在1条以内，注意，如果图文数超过1，则将会返回错误码45008。
  * */
 @Serializable
-@SerialName(BaseInfo.NEWS)
+@SerialName(InMsgType.NEWS)
 data class NewsContent(
-        val articles: List<ReArticleItem>
+        val articles: List<ArticleItem>
 ) : MsgBody(RE_KF)
 
 

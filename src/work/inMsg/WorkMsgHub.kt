@@ -1,4 +1,4 @@
-package com.github.rwsbillyang.wxSDK.work.msg
+package com.github.rwsbillyang.wxSDK.work.inMsg
 
 import com.github.rwsbillyang.wxSDK.common.msg.*
 import com.github.rwsbillyang.wxSDK.common.aes.WXBizMsgCrypt
@@ -12,23 +12,23 @@ class WorkMsgHub(
 ): WxMsgHub(wxBizMsgCrypt) {
     override fun dispatchMsg(reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
         return when(base.msgType){
-            BaseInfo.TEXT -> msgHandler.onWorkTextMsg(
+            InMsgType.TEXT -> msgHandler.onWorkTextMsg(
                 WorkTextMsg(base).apply { read(reader) }
             )
-            BaseInfo.IMAGE -> msgHandler.onWorkImgMsg(
+            InMsgType.IMAGE -> msgHandler.onWorkImgMsg(
                 WorkImgMSg(base).apply { read(reader) }
             )
-            BaseInfo.VOICE -> msgHandler.onWorkVoiceMsg(
+            InMsgType.VOICE -> msgHandler.onWorkVoiceMsg(
                 WorkVoiceMsg(base).apply { read(reader) }
             )
-            BaseInfo.VIDEO -> msgHandler.onWorkVideoMsg(
+            InMsgType.VIDEO -> msgHandler.onWorkVideoMsg(
                 WorkVideoMsg(base).apply { read(reader) }
             )
 
-            BaseInfo.LOCATION -> msgHandler.onWorkLocationMsg(
+            InMsgType.LOCATION -> msgHandler.onWorkLocationMsg(
                 WorkLocationMsg(base).apply { read(reader) }
             )
-            BaseInfo.LINK -> msgHandler.onWorkLinkMsg(
+            InMsgType.LINK -> msgHandler.onWorkLinkMsg(
                 WorkLinkMsg(base).apply { read(reader) }
             )
             else -> msgHandler.onDispatch(reader, base)?: msgHandler.onDefault(WorkBaseMsg(base).apply { read(reader) })
@@ -38,38 +38,38 @@ class WorkMsgHub(
     override fun dispatchEvent(reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
         val baseEvent = WorkBaseEvent(base).apply { read(reader) }
         return when (baseEvent.event) {
-            WxBaseEvent.SUBSCRIBE -> eventHandler.onWorkSubscribeEvent(
+            InEventType.SUBSCRIBE -> eventHandler.onWorkSubscribeEvent(
                 WorkSubscribeEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.UNSUBSCRIBE -> eventHandler.onWorkUnsubscribeEvent(
+            InEventType.UNSUBSCRIBE -> eventHandler.onWorkUnsubscribeEvent(
                 WorkUnsubscribeEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.LOCATION -> eventHandler.onWorkLocationEvent(
+            InEventType.LOCATION -> eventHandler.onWorkLocationEvent(
                 WorkLocationEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.CLICK -> eventHandler.onWorkMenuClickEvent(
+            InEventType.CLICK -> eventHandler.onWorkMenuClickEvent(
                 WorkMenuClickEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.VIEW -> eventHandler.onWorkMenuViewEvent(
+            InEventType.VIEW -> eventHandler.onWorkMenuViewEvent(
                 WorkMenuViewEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.SCAN_CODE_PUSH ->
+            InEventType.SCAN_CODE_PUSH ->
                 eventHandler.onWorkMenuScanCodePushEvent(
                     WorkMenuScanCodePushEvent(base).apply { read(reader) }
                 )
-            WxBaseEvent.SCAN_CODE_WAIT_MSG -> eventHandler.onWorkMenuScanCodeWaitEvent(
+            InEventType.SCAN_CODE_WAIT_MSG -> eventHandler.onWorkMenuScanCodeWaitEvent(
                 WorkMenuScanCodeWaitEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.PIC_SYS_PHOTO -> eventHandler.onWorkMenuPhotoEvent(
+            InEventType.PIC_SYS_PHOTO -> eventHandler.onWorkMenuPhotoEvent(
                 WorkMenuPhotoEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.PIC_PHOTO_OR_ALBUM -> eventHandler.onWorkMenuPhotoOrAlbumEvent(
+            InEventType.PIC_PHOTO_OR_ALBUM -> eventHandler.onWorkMenuPhotoOrAlbumEvent(
                 WorkMenuPhotoOrAlbumEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.PIC_WEIXIN -> eventHandler.onWorkMenuWorkAlbumEvent(
+            InEventType.PIC_WEIXIN -> eventHandler.onWorkMenuWorkAlbumEvent(
                 WorkMenuWorkAlbumEvent(base).apply { read(reader) }
             )
-            WxBaseEvent.LOCATION_SELECT -> eventHandler.onWorkMenuLocationEvent(
+            InEventType.LOCATION_SELECT -> eventHandler.onWorkMenuLocationEvent(
                 WorkMenuLocationEvent(base).apply { read(reader) }
             )
 

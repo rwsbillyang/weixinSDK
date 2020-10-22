@@ -1,7 +1,8 @@
-package com.github.rwsbillyang.wxSDK.work.msg
+package com.github.rwsbillyang.wxSDK.work.inMsg
 
 
 import com.github.rwsbillyang.wxSDK.common.msg.BaseInfo
+import com.github.rwsbillyang.wxSDK.common.msg.InEventType
 import com.github.rwsbillyang.wxSDK.common.msg.SendPicsInfo
 import com.github.rwsbillyang.wxSDK.common.msg.WxBaseEvent
 import javax.xml.stream.XMLEventReader
@@ -128,7 +129,7 @@ class WorkEnterAgent(base: BaseInfo): WorkBaseEvent(base){
 open class WorkLocationEvent(base: BaseInfo): WorkBaseEvent(base)
 {
     init {
-        event = LOCATION
+        event = InEventType.LOCATION
     }
     var latitude: Float? = null
     var longitude: Float?= null
@@ -549,7 +550,7 @@ class WorkTagUpdateEvent(base: BaseInfo): WorkChangeContactEvent(base) {
 class WorkMenuClickEvent(base: BaseInfo): WorkBaseEvent(base)
 {
     init {
-        event = CLICK
+        event = InEventType.CLICK
     }
     var eventKey: String? = null
     override fun read(reader: XMLEventReader) {
@@ -577,7 +578,7 @@ class WorkMenuClickEvent(base: BaseInfo): WorkBaseEvent(base)
 class WorkMenuViewEvent(base: BaseInfo): WorkBaseEvent(base)
 {
     init {
-        event = VIEW
+        event = InEventType.VIEW
     }
     var eventKey: String? = null
     //var menuId: String? = null
@@ -607,7 +608,7 @@ class WorkMenuViewEvent(base: BaseInfo): WorkBaseEvent(base)
 open class WorkMenuScanCodePushEvent(base: BaseInfo): WorkBaseEvent(base)
 {
     init {
-        event = SCAN_CODE_PUSH
+        event = InEventType.SCAN_CODE_PUSH
     }
     var eventKey: String? = null
     var scanType: String? = null
@@ -648,7 +649,7 @@ open class WorkMenuScanCodePushEvent(base: BaseInfo): WorkBaseEvent(base)
 class WorkMenuScanCodeWaitEvent(base: BaseInfo): WorkMenuScanCodePushEvent(base)
 {
     init {
-        event = SCAN_CODE_WAIT_MSG
+        event = InEventType.SCAN_CODE_WAIT_MSG
     }
 }
 
@@ -663,7 +664,7 @@ class WorkMenuScanCodeWaitEvent(base: BaseInfo): WorkMenuScanCodePushEvent(base)
  * */
 open class WorkMenuPhotoEvent(base: BaseInfo): WorkBaseEvent(base){
     init {
-        event = PIC_SYS_PHOTO
+        event = InEventType.PIC_SYS_PHOTO
     }
     var eventKey: String? = null
     var sendPicsInfo: SendPicsInfo? = null
@@ -696,7 +697,7 @@ open class WorkMenuPhotoEvent(base: BaseInfo): WorkBaseEvent(base){
 class WorkMenuPhotoOrAlbumEvent(base: BaseInfo): WorkMenuPhotoEvent(base)
 {
     init {
-        event = PIC_PHOTO_OR_ALBUM
+        event = InEventType.PIC_PHOTO_OR_ALBUM
     }
 }
 
@@ -708,7 +709,7 @@ class WorkMenuPhotoOrAlbumEvent(base: BaseInfo): WorkMenuPhotoEvent(base)
 class WorkMenuWorkAlbumEvent(base: BaseInfo): WorkMenuPhotoEvent(base)
 {
     init {
-        event = PIC_WEIXIN
+        event = InEventType.PIC_WEIXIN
     }
 }
 
@@ -725,7 +726,7 @@ class WorkMenuWorkAlbumEvent(base: BaseInfo): WorkMenuPhotoEvent(base)
 class WorkMenuLocationEvent(base: BaseInfo): WorkBaseEvent(base)
 {
     init {
-        event = LOCATION_SELECT
+        event = InEventType.LOCATION_SELECT
     }
     var eventKey: String? = null
     var locationX: Float? = null

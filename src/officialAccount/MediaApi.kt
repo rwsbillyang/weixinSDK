@@ -19,9 +19,14 @@ object MediaApi : OABaseApi(){
     /**
      * 上传图文消息内的图片,返回其URL,可放置图文消息中使用
      *
+     * https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Batch_Sends_and_Originality_Checks.html
+     *
      * 本接口所上传的图片不占用公众号的素材库中图片数量的100000个的限制。图片仅支持jpg/png格式，大小必须在1MB以下。
+     * @param file 文件路径
+     * @return 上传图片的URL，可用于后续群发中，放置到图文消息中。错误时微信会返回错误码等信息，请根据错误码查询错误信息
      * */
-    fun uploadNewsImage(file: String): String? = doUpload("uploadimg", file)["url"].toString()
+    fun uploadNewsImage(file: String): ResponseUploadNewsImg = doUpload2("uploadimg", file)
+
     /**
      * 下载视频
      * */
@@ -80,4 +85,14 @@ class ResponseDownVideo(
     @SerialName("errmsg")
     override val errMsg: String? = null,
     val videoUrl: String? = null
+):IBase
+
+
+@Serializable
+class ResponseUploadNewsImg(
+        @SerialName("errcode")
+        override val errCode: Int = 0,
+        @SerialName("errmsg")
+        override val errMsg: String? = null,
+        val url: String? = null
 ):IBase

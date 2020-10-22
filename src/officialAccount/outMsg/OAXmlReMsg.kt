@@ -1,5 +1,6 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.outMsg
 
+import com.github.rwsbillyang.wxSDK.common.msg.InMsgType
 import com.github.rwsbillyang.wxSDK.common.msg.XmlMsgBuilder
 import com.github.rwsbillyang.wxSDK.common.msg.ReBaseMSg
 
@@ -26,7 +27,7 @@ class ReMusicMsg(
         fromUserName: String?,
         createTime: Long = System.currentTimeMillis()
 
-) : ReBaseMSg(toUserName, fromUserName, createTime, MUSIC) {
+) : ReBaseMSg(toUserName, fromUserName, createTime, InMsgType.MUSIC) {
     override fun addMsgContent(builderXml: XmlMsgBuilder) {
         builderXml.append("<Music>\n")
         builderXml.addData("Title", title)
@@ -73,7 +74,7 @@ class ReTransferMsg(
         fromUserName: String?,
         createTime: Long = System.currentTimeMillis(),
         val kfAccount: String? = null
-) : ReBaseMSg(toUserName, fromUserName, createTime, TRANSFER_TO_CUSTOMER_SERVICE) {
+) : ReBaseMSg(toUserName, fromUserName, createTime, InMsgType.TRANSFER_TO_CUSTOMER_SERVICE) {
     override fun addMsgContent(builderXml: XmlMsgBuilder) {
         if (!kfAccount.isNullOrBlank()) {
             builderXml.append("<TransInfo>\n")
