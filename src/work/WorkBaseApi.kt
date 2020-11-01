@@ -3,7 +3,6 @@ package com.github.rwsbillyang.wxSDK.work
 
 import com.github.rwsbillyang.wxSDK.common.ResponseCallbackIps
 import com.github.rwsbillyang.wxSDK.common.WxApi
-import com.github.rwsbillyang.wxSDK.common.client
 import io.ktor.client.request.get
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

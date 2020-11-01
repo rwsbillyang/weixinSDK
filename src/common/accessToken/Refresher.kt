@@ -1,13 +1,10 @@
 package com.github.rwsbillyang.wxSDK.common.accessToken
 
 
-import com.github.rwsbillyang.wxSDK.common.client
-import com.github.rwsbillyang.wxSDK.common.WxException
-import com.github.rwsbillyang.wxSDK.common.apiJson
+import com.github.rwsbillyang.wxSDK.common.*
 import io.ktor.client.request.get
 import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -44,6 +41,7 @@ open class Refresher(private val urlProvider: IUrlProvider, private val key: Str
     companion object {
         private val log: Logger = LoggerFactory.getLogger("Refresher")
     }
+    val wrapper = ClientWrapper()
 
     /**
      * 向远程发出请求，获取最新值然后返回
@@ -53,9 +51,9 @@ open class Refresher(private val urlProvider: IUrlProvider, private val key: Str
         log.debug("to refresh for key=$key...,url=$url")
 
         return runBlocking {
-            val text: String = client.get<HttpResponse>(url).readText()
+            val text: String = wrapper.client.get<HttpResponse>(url).readText()
             log.debug("got text: $text")
-            val jsonElement = apiJson.parseToJsonElement(text)
+            val jsonElement = wrapper.apiJson.parseToJsonElement(text)
             if(jsonElement is JsonObject){
                 val valueElement = jsonElement[key]
                 if(valueElement == null || valueElement is JsonNull)
@@ -73,7 +71,6 @@ open class Refresher(private val urlProvider: IUrlProvider, private val key: Str
         }
     }
 }
-
 
 
 /**

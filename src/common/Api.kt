@@ -15,41 +15,42 @@ import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileInputStream
 
-
-val apiJson = Json {
-    encodeDefaults = true
-    useArrayPolymorphism = false
-    //isLenient = true
-//    serializersModule = SerializersModule {
-//        contextual(String.serializer())//Need add this line, "Any" can be String
-//        //contextual(Long.serializer())//Need add this line, "Any" can be Long
-//        contextual(Int.serializer())//Need add this line, "Any" can be Long
-//    }
-
-}
-
-
-val client = HttpClient(Apache) {
-    install(HttpTimeout) {}
-    install(JsonFeature) {
-        serializer = KotlinxSerializer(apiJson)
+open class ClientWrapper{
+    open val apiJson = Json {
+        encodeDefaults = true
+        useArrayPolymorphism = false
     }
-    install(Logging) {
-        logger = Logger.DEFAULT
-        level = LogLevel.ALL
+
+
+    open val client = HttpClient(Apache) {
+        install(HttpTimeout) {}
+        install(JsonFeature) {
+            serializer = KotlinxSerializer(apiJson)
+        }
+        install(Logging) {
+            logger = Logger.DEFAULT
+            level = LogLevel.ALL
+        }
+    }
+
+    inline fun <reified R> doGetByUrl(url: String): R = runBlocking {
+        CoroutineScope(Dispatchers.IO).async {
+            client.get<R>(url)
+        }.await()
+    }
+
+    /**
+     * 返回R泛型类型结果
+     * */
+    inline fun <T, reified R> doPostByUrl(url: String, data: T? = null):R = runBlocking {
+        CoroutineScope(Dispatchers.IO).async {
+            client.post<R>(url) { data?.let{body = data}  }
+        }.await()
     }
 }
+abstract class Api: ClientWrapper(){
 
 
-// val xmlClient = HttpClient(CIO) {
-//    install(JsonFeature) {
-//        serializer = JacksonSerializer(jackson = XmlMapper().registerModule(KotlinModule()))
-//        accept(ContentType.Application.Xml)
-//    }
-//}
-
-
-abstract class Api {
     abstract fun url(name: String, requestParams: Map<String, String?>?, needAccessToken: Boolean = true): String
 
     /**
@@ -74,23 +75,15 @@ abstract class Api {
     /**
      * 返回R泛型类型结果
      * */
-    inline fun <reified R> doGet2(name: String, parameters: Map<String, String?>? = null): R = runBlocking {
-        CoroutineScope(Dispatchers.IO).async {
-            client.get<R>(url(name, parameters))
-        }.await()
-    }
+    inline fun <reified R> doGet2(name: String, parameters: Map<String, String?>? = null): R
+             = doGetByUrl(url(name, parameters))
+
     /**
      * 返回R泛型类型结果
      * urlFunc 提供url的函数，如 "$base/corp/get_join_qrcode?access_token=ACCESS_TOKEN&size_type=$sizeType"
      * */
-    inline fun <reified R> doGet2(crossinline urlFunc: () -> String): R = runBlocking {
-        val url = urlFunc()
-        CoroutineScope(Dispatchers.IO).async {
-            client.get<R>(url)
-        }.await()
-    }
-
-
+    inline fun <reified R> doGet2(crossinline urlFunc: () -> String): R
+            = doGetByUrl(urlFunc())
 
     /**
      * 返回Map<String, Any?>类型结果
@@ -113,21 +106,15 @@ abstract class Api {
     /**
      * 返回R泛型类型结果
      * */
-    inline fun <T, reified R> doPost2(name: String, data: T?, parameters: Map<String, String?>? = null):R = runBlocking {
-        CoroutineScope(Dispatchers.IO).async {
-            client.post<R>(url(name, parameters)) { data?.let{body = data}  }
-        }.await()
-    }
+    inline fun <T, reified R> doPost2(name: String, data: T?, parameters: Map<String, String?>? = null):R
+        = doPostByUrl(url(name, parameters), data)
+
 
     /**
      * 返回R泛型类型结果
      * */
-    inline fun <T, reified R> doPost3(data: T?, crossinline urlFunc: () -> String):R = runBlocking {
-        withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
-            client.post<R>(urlFunc()) { data?.let{body = data}  }
-        }
-    }
-
+    inline fun <T, reified R> doPost3(data: T?, crossinline urlFunc: () -> String):R
+            = doPostByUrl(urlFunc(), data)
 
     fun  doUpload(name: String, filePath: String, parameters: Map<String, String?>? = null,formData: Map<String, String>? = null) = runBlocking {
         CoroutineScope(Dispatchers.IO).async {

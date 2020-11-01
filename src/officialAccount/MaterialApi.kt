@@ -2,7 +2,6 @@ package com.github.rwsbillyang.wxSDK.officialAccount
 
 import com.github.rwsbillyang.wxSDK.common.IBase
 import com.github.rwsbillyang.wxSDK.common.Response
-import com.github.rwsbillyang.wxSDK.common.apiJson
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString

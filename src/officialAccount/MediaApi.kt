@@ -53,7 +53,7 @@ object MediaApi : OABaseApi(){
  * @property THUMB 缩略图（thumb）：64KB，支持JPG格式
  * */
 enum class MediaType(val value: String){
-    IMAGE("image"), VOICE("voice"), VIDEO("video"), THUMB("thumb")
+   NEWS("news"), IMAGE("image"), VOICE("voice"), VIDEO("video"), THUMB("thumb")
 }
 
 /**
