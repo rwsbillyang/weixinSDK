@@ -65,6 +65,9 @@ dependencies {
     //testCompile "io.ktor:ktor-server-test-host:$ktor_version"
     implementation("io.ktor:ktor-client-logging:$ktor_version")
 
+    //implementation 'com.github.wechatpay-apiv3:wechatpay-apache-httpclient:0.2.1'
+    implementation "org.apache.httpcomponents:httpmime:4.5.12"
+
     compileOnly "com.github.ben-manes.caffeine:caffeine:2.7.0+"
 }
 
