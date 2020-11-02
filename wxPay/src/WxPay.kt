@@ -57,6 +57,7 @@ object WxPay {
             config.serialNo,
             config.privateKey,
             config.apiV3Key.toByteArray(),
+                config.payNotifyUrl,
             //config.useAutoUpdateCertificatesVerifier,
             config.certificate
         )
@@ -91,6 +92,8 @@ class WxPayConfiguration {
 
     var serialNo: String = "your_serialNo" // 商户证书序列号
 
+    var payNotifyUrl: String = "/api/sale/wx/payNotify"
+
     // 你的商户私钥
     var privateKey: String = """
         -----BEGIN PRIVATE KEY-----
@@ -113,6 +116,7 @@ class WxPayContext(
     val serialNo: String,
     val privateKey: String,
     val apiV3Key: ByteArray,
+    val payNotifyUrl: String,
     //val useAutoUpdateCertificatesVerifier: Boolean = true,
     val certificate: String? = null
 ) {

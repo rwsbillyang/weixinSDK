@@ -23,7 +23,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
-
 /**
  * @param appId 公众号ID	appid	string[1,32]	是	body 直连商户申请的公众号或移动应用appid。示例值：wxd678efh567hg6787
  * @param mchId 直连商户号	mchid	string[1,32]	是	body 直连商户的商户号，由微信支付生成并下发。示例值：1230000109
@@ -43,32 +42,32 @@ import kotlinx.serialization.Serializable
  * */
 @Serializable
 class Transaction(
-    @SerialName("appid")
+        @SerialName("appid")
         val appId: String,
-    @SerialName("mchid")
+        @SerialName("mchid")
         val mchId: String,
-    val description: String,
-    @SerialName("out_trade_no")
+        val description: String,
+        @SerialName("out_trade_no")
         val orderId: String,
-    @SerialName("notify_url")
+        @SerialName("notify_url")
         val notifyUrl: String,
-    val amount: OrderAmount,
-    val payer: Payer,
-    @SerialName("scene_info")
+        val amount: OrderAmount,
+        val payer: Payer,
+        @SerialName("scene_info")
         val sceneInfo: SceneInfo? = null,
-    val attach: String? = null,
-    @SerialName("time_expire")
+        val attach: String? = null,
+        @SerialName("time_expire")
         val expire: String? = null,
-    @SerialName("goods_tag")
+        @SerialName("goods_tag")
         val goodsTags: String? = null,
-    val detail: OrderDetail? = null
-)
-{
+        val detail: OrderDetail? = null
+) {
     constructor(orderId: String, description: String, total: Int, openId: String,
                 ip: String, notifyUrl: String,
+                attach: String? = null,
                 appId: String = WxPay.context.appId,
                 mchId: String = WxPay.context.mchId)
-            : this(appId, mchId, description, orderId, notifyUrl, OrderAmount(total), Payer(openId), SceneInfo(ip))
+            : this(appId, mchId, description, orderId, notifyUrl, OrderAmount(total), Payer(openId), SceneInfo(ip), attach = attach)
 }
 
 /**
@@ -137,13 +136,13 @@ class GoodsDetail(
  * */
 @Serializable
 class SceneInfo(
-    @SerialName("payer_client_ip")
+        @SerialName("payer_client_ip")
         val ip: String,
-    @SerialName("device_id")
+        @SerialName("device_id")
         val deviceId: String? = null,
-    @SerialName("store_info")
+        @SerialName("store_info")
         val storeInfo: StoreInfo? = null,
-    @SerialName("h5_info")
+        @SerialName("h5_info")
         val h5Info: H5Info? = null
 )
 

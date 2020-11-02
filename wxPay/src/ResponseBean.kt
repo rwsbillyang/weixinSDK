@@ -32,6 +32,7 @@ interface IResponse {
     val code: String?
     val message: String?
     val detail: ErrorDetail?
+    fun isOK() = code == null
 }
 
 
@@ -52,7 +53,7 @@ class ErrorDetail(
 @Serializable
 class ResponseClose(override val code: String? = null,
                     override val message: String? = null,
-                    override val detail: ErrorDetail? = null): IResponse
+                    override val detail: ErrorDetail? = null) : IResponse
 
 @Serializable
 class ResponseOrder(
@@ -117,7 +118,7 @@ class ResponseOrderH5(
  * 优惠功能	promotion_detail	array	否	优惠功能，享受优惠时返回该字段。
  * https://pay.weixin.qq.com/wiki/doc/apiv3/wxpay/pay/transactions/chapter3_2.shtml
  * */
-
+@Serializable
 class OrderPayDetail(
         @SerialName("appid")
         val appId: String,
@@ -147,7 +148,7 @@ class OrderPayDetail(
         override val code: String? = null,
         override val message: String? = null,
         override val detail: ErrorDetail? = null
-): IResponse
+) : IResponse
 
 /**
  * @param total 总金额	total	int	是	订单总金额，单位为分。示例值：100
