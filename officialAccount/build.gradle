@@ -2,7 +2,7 @@ buildscript {
     repositories {
         jcenter()
     }
-    
+
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
@@ -15,7 +15,7 @@ apply plugin: 'java-library'
 //apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
-group 'com.github.rwsbillyang'
+group 'com.github.rwsbillyang.wxSDK'
 version '0.0.1'
 //mainClassName = "io.ktor.server.netty.EngineMain"
 
@@ -44,25 +44,22 @@ dependencies {
     implementation "io.ktor:ktor-client-serialization-jvm:$ktor_version"
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-core:1.0.0-RC" // JVM dependency
 
+    compileOnly "io.ktor:ktor-server-netty:$ktor_version"
+    testCompile "io.ktor:ktor-server-tests:$ktor_version"
+
+
     // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
 
     //commons-codec 1.13 会报 base64异常，1.10，1.15没有问题
     // https://mvnrepository.com/artifact/commons-codec/commons-codec
-    implementation group: 'commons-codec', name: 'commons-codec', version: '1.15'
+    //implementation group: 'commons-codec', name: 'commons-codec', version: '1.15'
 
-    compileOnly "io.ktor:ktor-server-netty:$ktor_version"
-
-    //testImplementation('junit:junit:4.12')
-    testCompile "io.ktor:ktor-server-tests:$ktor_version"
-
-    //testCompile "io.ktor:ktor-server-test-host:$ktor_version"
-    implementation("io.ktor:ktor-client-logging:$ktor_version")
-
-    //implementation 'com.github.wechatpay-apiv3:wechatpay-apache-httpclient:0.2.1'
-    implementation "org.apache.httpcomponents:httpmime:4.5.12"
 
     compileOnly "com.github.ben-manes.caffeine:caffeine:2.7.0+"
+
+    implementation ("com.github.rwsbillyang:wxSDK:0.0.1")
+    //implementation project(":common")
 }
 
 

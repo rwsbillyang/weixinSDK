@@ -2,7 +2,7 @@ buildscript {
     repositories {
         jcenter()
     }
-    
+
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
@@ -38,6 +38,7 @@ dependencies {
     implementation "ch.qos.logback:logback-classic:$logback_version"
     //implementation "io.ktor:ktor-client-core:$ktor_version"
     implementation "io.ktor:ktor-client-core-jvm:$ktor_version"
+    implementation("io.ktor:ktor-client-logging-jvm:$ktor_version")
     implementation "io.ktor:ktor-client-apache:$ktor_version"
     //implementation "io.ktor:ktor-client-http-timeout:$ktor_version"
     implementation "io.ktor:ktor-client-json-jvm:$ktor_version"
@@ -50,19 +51,6 @@ dependencies {
     //commons-codec 1.13 会报 base64异常，1.10，1.15没有问题
     // https://mvnrepository.com/artifact/commons-codec/commons-codec
     implementation group: 'commons-codec', name: 'commons-codec', version: '1.15'
-
-    compileOnly "io.ktor:ktor-server-netty:$ktor_version"
-
-    //testImplementation('junit:junit:4.12')
-    testCompile "io.ktor:ktor-server-tests:$ktor_version"
-
-    //testCompile "io.ktor:ktor-server-test-host:$ktor_version"
-    implementation("io.ktor:ktor-client-logging:$ktor_version")
-
-    //implementation 'com.github.wechatpay-apiv3:wechatpay-apache-httpclient:0.2.1'
-    implementation "org.apache.httpcomponents:httpmime:4.5.12"
-
-    compileOnly "com.github.ben-manes.caffeine:caffeine:2.7.0+"
 }
 
 
