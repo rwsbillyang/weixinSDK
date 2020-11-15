@@ -27,7 +27,7 @@ import kotlinx.serialization.Serializable
 
 abstract class WorkBaseApi: WxApi() {
     override val base = "https://qyapi.weixin.qq.com/cgi-bin"
-    override fun accessToken() = _WORK.accessToken.get()
+    override fun accessToken() = Work.WORK.accessToken.get()
 
     /**
      * 企业微信在回调企业指定的URL时，是通过特定的IP发送出去的。如果企业需要做防火墙配置，那么可以通过这个接口获取到所有相关的IP段。

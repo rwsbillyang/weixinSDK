@@ -25,60 +25,23 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
-import io.ktor.util.pipeline.*
-import org.apache.commons.lang3.StringUtils
+
 import org.slf4j.LoggerFactory
 
 
-class WorkFeature(config: WorkConfiguration) {
-    init {
-        _WORK = WorkContext(
-                config.corpId,
-                config.secret,
-                config.token,
-                config.encodingAESKey,
-                config.wechatId,
-                config.wechatName,
-                config.callbackPath,
-                config.msgHandler,
-                config.eventHandler,
-                config.accessToken
-                //config.ticket
-        )
-    }
-
-    // Body of the feature
-    private fun intercept(context: PipelineContext<Unit, ApplicationCall>) {
-        //  context.call.response.header(name, value)
-    }
-
-    // Implements ApplicationFeature as a companion object.
+class WorkFeature {
     companion object Feature : ApplicationFeature<ApplicationCallPipeline, WorkConfiguration, WorkFeature> {
-        // Creates a unique key for the feature.
         override val key = AttributeKey<WorkFeature>("WorkFeature")
-
-        // Code to execute when installing the feature.
         override fun install(pipeline: ApplicationCallPipeline, configure: WorkConfiguration.() -> Unit): WorkFeature {
-
-            // 首先创建一个Configuration，然后对其apply：执行install的configure代码块，
-            val configuration = WorkConfiguration().apply(configure)
-
-            // 然后用上面的Configuration实例对象，创建自己的Feature，
-            val feature = WorkFeature(configuration)
-
-            // Install an interceptor that will be run on each call and call feature instance
-//            pipeline.intercept(ApplicationCallPipeline.Setup) {
-//                feature.intercept(this)
-//            }
-
-            return feature
+            Work.config(configure)
+            return WorkFeature()
         }
     }
 }
 
 
 
-fun Routing.workApi(path: String = _WORK.callbackPath) {
+fun Routing.workApi(path: String = Work.callbackPath) {
     val log = LoggerFactory.getLogger("workApi")
 
     route(path) {
@@ -133,14 +96,16 @@ fun Routing.workApi(path: String = _WORK.callbackPath) {
             val nonce = call.request.queryParameters["nonce"]
             val echostr = call.request.queryParameters["echostr"]
 
-            val token = _WORK.token
+            val token = Work.WORK.token
 
-            if (StringUtils.isAnyBlank(token, signature, timestamp, nonce,echostr)) {
+            //if (StringUtils.isAnyBlank(token, signature, timestamp, nonce,echostr)) {
+            if(token.isNullOrBlank() || signature.isNullOrBlank() || timestamp.isNullOrBlank()
+                    || nonce.isNullOrBlank() || echostr.isNullOrBlank()){
                 log.warn("invalid parameters: token=$token, signature=$signature, timestamp=$timestamp, nonce=$nonce, echostr=$echostr")
                 call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
             } else {
                 try{
-                    val str = _WORK.wxBizMsgCrypt.verifyUrl(signature!!,timestamp!!,nonce!!,echostr!!)
+                    val str = Work.WORK.wxBizMsgCrypt.verifyUrl(signature!!,timestamp!!,nonce!!,echostr!!)
                     call.respondText(str, ContentType.Text.Plain, HttpStatusCode.OK)
                 }catch (e: AesException){
                     log.warn("AesException: ${e.message}")
@@ -179,7 +144,7 @@ fun Routing.workApi(path: String = _WORK.callbackPath) {
             val nonce = call.request.queryParameters["nonce"]
             val encryptType = call.request.queryParameters["encrypt_type"]?:"aes"
 
-            val reXml = _WORK.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
+            val reXml = Work.WORK.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
 
             if(reXml.isNullOrBlank())
                 call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)

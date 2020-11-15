@@ -31,7 +31,7 @@ object OfficialAccount {
             requireNotNull(_OA)
             return _OA!!
         }
-    fun isInited() = _OA != null
+    fun isInit() = _OA != null
 
 
     /**

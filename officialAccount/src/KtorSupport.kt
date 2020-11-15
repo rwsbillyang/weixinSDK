@@ -33,28 +33,10 @@ import java.util.concurrent.TimeUnit
 
 
 class OfficialAccountFeature {
-    // Body of the feature
-//    private fun intercept(context: PipelineContext<Unit, ApplicationCall>) {
-//        //  context.call.response.header(name, value)
-//    }
-
-    // Implements ApplicationFeature as a companion object.
     companion object Feature : ApplicationFeature<ApplicationCallPipeline, OAConfiguration, OfficialAccountFeature> {
-        // Creates a unique key for the feature.
         override val key = AttributeKey<OfficialAccountFeature>("OfficialAccountFeature")
-
-        // Code to execute when installing the feature.
         override fun install(pipeline: ApplicationCallPipeline, configure: OAConfiguration.() -> Unit): OfficialAccountFeature {
             OfficialAccount.config(configure)
-            
-            // 首先创建一个Configuration，然后对其apply：执行install的configure代码块，
-            //val configuration = OAConfiguration().apply(configure)
-
-            // Install an interceptor that will be run on each call and call feature instance
-//            pipeline.intercept(ApplicationCallPipeline.Setup) {
-//                feature.intercept(this)
-//            }
-
             return OfficialAccountFeature()
         }
     }
@@ -164,6 +146,8 @@ fun Routing.oAuthApi(
      * 前端webapp请求该api获取appid，state等信息，然后重定向到腾讯的授权页面，用户授权之后将重定向到下面的notify
      * @param userInfo 0或1分别表示是否需要获取用户信息，优先使用前端提供的参数, 没有提供的话使用needUserInfo(host, uri)进行判断（用于从某个用户设置中获取），再没有的话则默认为0
      * @param host 跳转host，如："https：//www.example.com"
+     * 前端重定向地址：https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect" 然后重定向到该url
+     *
      * */
     get(oauthInfoPath){
         val userInfo = (call.request.queryParameters["userInfo"]?.toInt()?:(needUserInfo?.let { it(call.request.host(), call.request.uri) })?:0) == 1
@@ -193,7 +177,6 @@ fun Routing.oAuthApi(
         }else{
             val res = OAuthApi.getAccessToken(code)
             if(res.isOK()  && res.openId != null){
-
                 onGetOauthAccessToken?.let { async { it.invoke(res) } }
 
                 var url = "$notifyWebAppUrl?state=$state&code=OK&openId=${res.openId}"

@@ -23,8 +23,39 @@ import com.github.rwsbillyang.wxSDK.accessToken.*
 import com.github.rwsbillyang.wxSDK.aes.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.work.inMsg.*
 
+object Work {
+    private  var _WORK: WorkContext? = null
+    val WORK: WorkContext
+    get() {
+        requireNotNull(_WORK)
+        return _WORK!!
+    }
 
-lateinit var _WORK: WorkContext
+    fun isInit() = _WORK != null
+
+    var callbackPath: String = "/api/wx/work"
+
+    /**
+     * 非ktor平台可以使用此函数进行配置企业微信参数
+     * */
+    fun config(block: WorkConfiguration.() -> Unit) {
+        val config = WorkConfiguration().apply(block)
+        _WORK = WorkContext(
+                config.corpId,
+                config.secret,
+                config.token,
+                config.encodingAESKey,
+                config.wechatId,
+                config.wechatName,
+                config.msgHandler,
+                config.eventHandler,
+                config.accessToken
+                //config.ticket
+        )
+        callbackPath = config.callbackPath
+    }
+}
+
 
 /**
  * 调用API时可能需要用到的配置
@@ -92,7 +123,7 @@ class WorkContext(
         var encodingAESKey: String,
         var wechatId: String? = null,
         var wechatName: String? = null,
-        var callbackPath: String = "/api/wx/work",
+
         customMsgHandler: IWorkMsgHandler?,
         customEventHandler: IWorkEventHandler?,
         customAccessToken: ITimelyRefreshValue?
@@ -117,25 +148,7 @@ class WorkContext(
     }
 }
 
-/**
- * 非ktor平台可以使用此函数进行配置企业微信参数
- * */
-fun configWork(block: WorkConfiguration.() -> Unit) {
-    val config = WorkConfiguration().apply(block)
-    _WORK = WorkContext(
-            config.corpId,
-            config.secret,
-            config.token,
-            config.encodingAESKey,
-            config.wechatId,
-            config.wechatName,
-            config.callbackPath,
-            config.msgHandler,
-            config.eventHandler,
-            config.accessToken
-            //config.ticket
-    )
-}
+
 
 internal class AccessTokenUrl(private val corpId: String, private val secret: String) : IUrlProvider {
     override fun url() = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"
