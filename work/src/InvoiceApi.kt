@@ -32,7 +32,7 @@ object InvoiceApi: WorkBaseApi() {
     /**
      * 查询电子发票
      * */
-    fun getInvoiceInfo(cardId: String, encryptCode: String) = doPost(
+    fun getInvoiceInfo(cardId: String, encryptCode: String) = doPost3(
             "getinvoiceinfo",
         mapOf("card_id" to cardId,"encrypt_code" to encryptCode))
 
@@ -44,7 +44,7 @@ object InvoiceApi: WorkBaseApi() {
      * 报销：当电子发票报销完成后，应该使用本接口执行报销操作。执行报销操作后的电子发票将从用户的卡包中移除，用户可以在卡包的消息中查看到电子发票的核销信息。注意，报销为不可逆操作，请开发者慎重调用。
      * https://work.weixin.qq.com/api/doc/90000/90135/90285
      * */
-    fun updateStatus(cardId: String, encryptCode: String, status: String) = doPost(
+    fun updateStatus(cardId: String, encryptCode: String, status: String) = doPost3(
             "updateinvoicestatus",
         mapOf("card_id" to cardId,"encrypt_code" to encryptCode,"reimburse_status" to status))
 
@@ -53,7 +53,7 @@ object InvoiceApi: WorkBaseApi() {
      * 批量查询电子发票
      *
      * */
-    fun getInvoiceInfoBatch(invoiceList: List<Invoice>) = doPost(
+    fun getInvoiceInfoBatch(invoiceList: List<Invoice>) = doPost3(
             "getinvoiceinfobatch",
         mapOf( "item_list" to invoiceList))
 
@@ -66,7 +66,7 @@ object InvoiceApi: WorkBaseApi() {
      * card_id	是	发票卡券的card_id
      * encrypt_code	是	发票卡券的加密code，和card_id共同构成一张发票卡券的唯一标识
      * */
-    fun batchUpdateStatus(openId:String, invoiceList: List<Invoice>, status: String) = doPost(
+    fun batchUpdateStatus(openId:String, invoiceList: List<Invoice>, status: String) = doPost3(
             "updatestatusbatch",
         mapOf("openid" to openId, "invoice_list" to invoiceList, "reimburse_status" to status))
 

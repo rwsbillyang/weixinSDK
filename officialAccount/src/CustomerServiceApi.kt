@@ -38,7 +38,7 @@ object CustomerServiceApi : OABaseApi(){
     /**
      * 获取客服列表
      * */
-    fun getAccountList(): ResponseAccountList = doGet2("getkflist")
+    fun getAccountList(): ResponseAccountList = doGet("getkflist")
 
     /**
      * 添加客服帐号
@@ -48,7 +48,7 @@ object CustomerServiceApi : OABaseApi(){
      * @param account kf_account	帐号前缀 完整客服帐号的前缀，帐号前缀最多10个字符，必须是英文、数字字符或者下划线，此处为前缀。最终账号完整格式为：帐号前缀@公众号微信号，故配置中wechatId不能为空。
      * @param nickname	客服昵称，最长16个字
      * */
-    fun accountAdd(account: String, nickname: String): Response = doPost2("kfaccount/add", mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}", "nickname" to nickname))
+    fun accountAdd(account: String, nickname: String): Response = doPost("kfaccount/add", mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}", "nickname" to nickname))
 
     /**
      * 邀请绑定客服帐号
@@ -58,27 +58,27 @@ object CustomerServiceApi : OABaseApi(){
      * @param  account kf_account	帐号前缀
      * @param inviteWx invite_wx	接收绑定邀请的客服微信号
      * */
-    fun accountInvite(account: String, inviteWx: String): Response = doPost2("kfaccount/inviteworker", mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}", "invite_wx" to inviteWx))
+    fun accountInvite(account: String, inviteWx: String): Response = doPost("kfaccount/inviteworker", mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}", "invite_wx" to inviteWx))
 
 
     /**
      * 更新客服信息
      * @param  account kf_account	帐号前缀
      * */
-    fun accountUpdate(account: String, nickname: String): Response  = doPost2("kfaccount/update", mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}", "nickname" to nickname))
+    fun accountUpdate(account: String, nickname: String): Response  = doPost("kfaccount/update", mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}", "nickname" to nickname))
 
     /**
      * 上传客服头像
      * @param  account kf_account	帐号前缀
      * */
-    fun accountUploadHeadImg(account: String, file: String): Response  = doUpload2("kfaccount/uploadheadimg", file, mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}"))
+    fun accountUploadHeadImg(account: String, file: String): Response  = doUpload("kfaccount/uploadheadimg", file, mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}"))
 
 
     /**
      * 删除客服帐号
      * @param  account kf_account	帐号前缀
      * */
-    fun accountDel(account: String): Response  = doGet2("kfaccount/del", mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}"))
+    fun accountDel(account: String): Response  = doGet("kfaccount/del", mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}"))
 
 
 
@@ -88,29 +88,29 @@ object CustomerServiceApi : OABaseApi(){
      * @param  account kf_account	帐号前缀
      * @param customer 客户的openId
      * */
-    fun sessionCreate(account: String, customer: String): Response  = doPost2("kfsession/create", mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}", "openid" to customer))
+    fun sessionCreate(account: String, customer: String): Response  = doPost("kfsession/create", mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}", "openid" to customer))
 
     /**
      * 关闭会话
      * @param  account kf_account	帐号前缀
      * @param customer 客户的openId
      * */
-    fun sessionClose(account: String, customer: String): Response = doPost2("kfsession/close", mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}", "openid" to customer))
+    fun sessionClose(account: String, customer: String): Response = doPost("kfsession/close", mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}", "openid" to customer))
 
 
     /**
      * 根据某个客户信息，获取客户会话状态
      * */
-    fun sessionState(customer: String): ResponseSessionState = doGet2("kfsession/getsession", mapOf("openid" to customer))
+    fun sessionState(customer: String): ResponseSessionState = doGet("kfsession/getsession", mapOf("openid" to customer))
 
     /**
      * 获取某个客服的会话列表
      *
      * 可以遍历所有客服，然后获取各个客户的会话列表，并进而根据列表项中的粉丝openId查询会话状态
      * */
-    fun sessionList(account: String): ResponseSessionList = doGet2("kfsession/getsessionlist", mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}"))
+    fun sessionList(account: String): ResponseSessionList = doGet("kfsession/getsessionlist", mapOf("kf_account" to "$account@${OfficialAccount.OA.wechatId}"))
 
-    fun sessionWaitList(): ResponseWaitList = doGet2("kfsession/getwaitcase")
+    fun sessionWaitList(): ResponseWaitList = doGet("kfsession/getwaitcase")
 
 
     /**
@@ -122,7 +122,7 @@ object CustomerServiceApi : OABaseApi(){
      * @param msgId msgid	起始消息id，顺序从小到大，第一次从1开始
      * @param size number	每次获取条数，最多10000条
      * */
-    fun chatHistory(startTime: Long, endTime: Long, msgId: Long, size: Int): ResponseChatList = doPost2("msgrecord/getmsglist",
+    fun chatHistory(startTime: Long, endTime: Long, msgId: Long, size: Int): ResponseChatList = doPost("msgrecord/getmsglist",
             mapOf("starttime" to startTime, "endtime" to endTime, "msgid" to msgId, "number" to size))
 }
 

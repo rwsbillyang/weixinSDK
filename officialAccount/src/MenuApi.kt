@@ -41,7 +41,7 @@ object MenuApi: OABaseApi() {
      *
      * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Creating_Custom-Defined_Menu.html
      * */
-    fun create(menus: List<Menu>): Response = doPost2("create", Menus(menus))
+    fun create(menus: List<Menu>): Response = doPost("create", Menus(menus))
 
     /**
      * 获取自定义菜单配置
@@ -51,7 +51,7 @@ object MenuApi: OABaseApi() {
      *
      * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Creating_Custom-Defined_Menu.html
      * */
-    fun detail(): ResponseMenusDetail = doGet2("get")
+    fun detail(): ResponseMenusDetail = doGet("get")
 
     /**
      *
@@ -59,7 +59,7 @@ object MenuApi: OABaseApi() {
      *
      * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Creating_Custom-Defined_Menu.html
      * */
-    fun delete(): Response = doGet2("delete")
+    fun delete(): Response = doGet("delete")
 
     /**
      * 创建个性化菜单
@@ -78,7 +78,7 @@ object MenuApi: OABaseApi() {
      *
      * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Personalized_menu_interface.html
      * */
-    fun createConditional(menus: List<Menu>, matchRule: MatchRule): ResponseMenuId = doPost2("addconditional",
+    fun createConditional(menus: List<Menu>, matchRule: MatchRule): ResponseMenuId = doPost("addconditional",
         ConditionalMenus(menus, matchRule) )
 
     /**
@@ -87,13 +87,13 @@ object MenuApi: OABaseApi() {
      *
      * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Personalized_menu_interface.html
      * */
-    fun deleteConditional(menuId: String): Response = doPost2("delconditional", MenuId(menuId))
+    fun deleteConditional(menuId: String): Response = doPost("delconditional", MenuId(menuId))
 
     /**
      * 测试个性化菜单匹配结果
      * @param  user_id 可以是粉丝的OpenID，也可以是粉丝的微信号。
      * */
-    fun tryMatch(userId: String): Response = doPost2("trymatch",  mapOf("user_id" to userId))
+    fun tryMatch(userId: String): Response = doPost("trymatch",  mapOf("user_id" to userId))
 }
 
 

@@ -35,12 +35,12 @@ object UserApi : OABaseApi(){
      *
      * https://developers.weixin.qq.com/doc/offiaccount/User_Management/Get_users_basic_information_UnionID.html#UinonId
      * */
-    fun getUserInfo(openId: String, lang: String = "zh_CN"): ResponseUserInfo = doGet2("info", mapOf("openid" to openId,"lang" to lang))
+    fun getUserInfo(openId: String, lang: String = "zh_CN"): ResponseUserInfo = doGet("info", mapOf("openid" to openId,"lang" to lang))
 
     /**
      * 批量获取用户基本信息, 最多支持一次拉取100条。
      * */
-    fun batchGet(list: List<OpenIdLang>): ResponseUserInfoList = doPost2("batchget", mapOf("user_list" to list))
+    fun batchGet(list: List<OpenIdLang>): ResponseUserInfoList = doPost("batchget", mapOf("user_list" to list))
 }
 
 /**

@@ -29,35 +29,35 @@ object UserApi: WorkBaseApi(){
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/91023
      * */
-    fun getUserInfo(code: String) = doGet("getuserinfo", mapOf("code" to code))
+    fun getUserInfo(code: String) = doGet3("getuserinfo", mapOf("code" to code))
 
-    fun create(body: Map<String, Any?>)= doPost("create", body)
+    fun create(body: Map<String, Any?>)= doPost3("create", body)
 
-    fun detail(userId: String) = doGet("get", mapOf("userid" to userId))
+    fun detail(userId: String) = doGet3("get", mapOf("userid" to userId))
 
-    fun update(body: Map<String, Any?>) = doPost("update", body)
+    fun update(body: Map<String, Any?>) = doPost3("update", body)
 
-    fun delete(userId: String) = doGet("delete", mapOf("userid" to userId))
+    fun delete(userId: String) = doGet3("delete", mapOf("userid" to userId))
 
-    fun batchDelete(userIdList: List<String>) = doPost("batchdelete",userIdList)
+    fun batchDelete(userIdList: List<String>) = doPost3("batchdelete",userIdList)
 
-    fun simpleList(departmentId: Int, fetchChild: Int) = doGet(
+    fun simpleList(departmentId: Int, fetchChild: Int) = doGet3(
             "simplelist",
         mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString()))
 
-    fun list(departmentId: Int, fetchChild: Int) = doGet(
+    fun list(departmentId: Int, fetchChild: Int) = doGet3(
             "list",
         mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString()))
 
-    fun convertToOpenId(userId: String) = doPost("convert_to_openid", mapOf("userid" to userId))
+    fun convertToOpenId(userId: String) = doPost3("convert_to_openid", mapOf("userid" to userId))
 
     /**
      * 该接口主要应用于使用企业支付之后的结果查询。
      * 开发者需要知道某个结果事件的openid对应企业微信内成员的信息时，可以通过调用该接口进行转换查询。
      * */
-    fun convertToUserId(openId: String) = doPost("convert_to_userid", mapOf("openid" to openId))
+    fun convertToUserId(openId: String) = doPost3("convert_to_userid", mapOf("openid" to openId))
 
-    fun authSucc(userId: String) = doGet("authsucc", mapOf("userid" to userId))
+    fun authSucc(userId: String) = doGet3("authsucc", mapOf("userid" to userId))
 
 
     /**
@@ -71,7 +71,7 @@ object UserApi: WorkBaseApi(){
      * 获取手机号随机串
      * 支持企业获取手机号随机串，该随机串可直接在企业微信终端搜索手机号对应的微信用户。
      * */
-    fun getMobileHashCode(mobile: String, state: String) = doPost(
+    fun getMobileHashCode(mobile: String, state: String) = doPost3(
             "get_mobile_hashcode",
         mapOf("mobile" to mobile, "state" to state))
 
@@ -91,17 +91,17 @@ class DepartmentApi: WorkBaseApi(){
      * 创建部门
      * https://work.weixin.qq.com/api/doc/90000/90135/90204
      * */
-    fun create(body: Map<String, Any?>) = doPost(CREATE,body)
+    fun create(body: Map<String, Any?>) = doPost3(CREATE,body)
     /**
      * https://work.weixin.qq.com/api/doc/90000/90135/90206
      * */
-    fun update(body: Map<String, Any?>) = doPost(UPDATE,body)
+    fun update(body: Map<String, Any?>) = doPost3(UPDATE,body)
 
     /**
      *  @param id 部门id。（注：不能删除根部门；不能删除含有子部门、成员的部门）
      * https://work.weixin.qq.com/api/doc/90000/90135/90207
      * */
-    fun delete(id: Int) = doGet(DELETE, mapOf("id" to id.toString()))
+    fun delete(id: Int) = doGet3(DELETE, mapOf("id" to id.toString()))
 
     /**
      *
@@ -109,7 +109,7 @@ class DepartmentApi: WorkBaseApi(){
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/90208
      * */
-    fun list(id: Int?) = doGet(LIST, mapOf("id" to id.toString()))
+    fun list(id: Int?) = doGet3(LIST, mapOf("id" to id.toString()))
 
 }
 
@@ -129,30 +129,30 @@ class TagApi: WorkBaseApi(){
      * 创建
      * https://work.weixin.qq.com/api/doc/90000/90135/90210
      * */
-    fun create(tagname: String, id: Int?) = doPost(CREATE, mapOf("tagname" to tagname, "tagid" to id))
+    fun create(tagname: String, id: Int?) = doPost3(CREATE, mapOf("tagname" to tagname, "tagid" to id))
 
     /**
      * https://work.weixin.qq.com/api/doc/90000/90135/90211
      * */
-    fun update(tagname: String, id: Int) = doPost(UPDATE, mapOf("tagname" to tagname, "tagid" to id))
+    fun update(tagname: String, id: Int) = doPost3(UPDATE, mapOf("tagname" to tagname, "tagid" to id))
 
     /**
      * https://work.weixin.qq.com/api/doc/90000/90135/90212
      * */
-    fun delete(id: Int) = doGet(DELETE, mapOf("tagid" to id.toString()))
+    fun delete(id: Int) = doGet3(DELETE, mapOf("tagid" to id.toString()))
 
     /**
      * 获取标签成员
      * https://work.weixin.qq.com/api/doc/90000/90135/90213
      * */
-    fun detail(id: Int) = doGet(DETAIL, mapOf("tagid" to id.toString()))
+    fun detail(id: Int) = doGet3(DETAIL, mapOf("tagid" to id.toString()))
 
     /**
      * 增加标签成员
      * 注意：userlist、partylist不能同时为空，单次请求长度不超过1000
      * https://work.weixin.qq.com/api/doc/90000/90135/90214
      * */
-    fun addTagUsers(id: Int, userlist: List<String>?, partylist: List<Int>?) = doPost(
+    fun addTagUsers(id: Int, userlist: List<String>?, partylist: List<Int>?) = doPost3(
         ADD_TAG_USERS,
         mapOf("tagid" to id, "userlist" to userlist, "partylist" to partylist))
 
@@ -162,11 +162,11 @@ class TagApi: WorkBaseApi(){
      * 注意：userlist、partylist不能同时为空，单次请求长度不超过1000
      * https://work.weixin.qq.com/api/doc/90000/90135/90214
      * */
-    fun delTagUsers(id: Int, userlist: List<String>?, partylist: List<Int>?) = doPost(
+    fun delTagUsers(id: Int, userlist: List<String>?, partylist: List<Int>?) = doPost3(
         DEL_TAG_USERS,
         mapOf("tagid" to id, "userlist" to userlist, "partylist" to partylist))
 
-    fun list() = doGet(LIST, null)
+    fun list() = doGet3(LIST, null)
 }
 
 class BatchUserCallback(val url: String?,
@@ -194,29 +194,29 @@ class UserBatchApi: WorkBaseApi(){
      * 同一用户只须邀请一次，被邀请的用户如果未安装企业微信，在3天内每天会收到一次通知，最多持续3天。
      * 因为邀请频率是异步检查的，所以调用接口返回成功，并不代表接收者一定能收到邀请消息（可能受上述频率限制无法接收）。
      * */
-    fun invite(user: List<Int>?, party: List<Int>?, tag: List<Int>?) = doPost(
+    fun invite(user: List<Int>?, party: List<Int>?, tag: List<Int>?) = doPost3(
         INVITE,
         mapOf("user" to user, "party" to party, "tag" to tag))
 
     fun syncUser(mediaId: String, toInvite: Boolean = true, callback: BatchUserCallback?=null)
-            = doPost(
+            = doPost3(
         SYNC_USER,
         BatchUserBody(mediaId, toInvite, callback)
     )
 
     fun replaceUser(mediaId: String, toInvite: Boolean = true, callback: BatchUserCallback?=null)
-            = doPost(
+            = doPost3(
         REPLACE_USER,
         BatchUserBody(mediaId, toInvite, callback)
     )
 
     fun replaceParty(mediaId: String, callback: BatchUserCallback?=null)
-            = doPost(
+            = doPost3(
         REPLACE_PARTY,
         BatchUserBody(mediaId, null, callback)
     )
 
     fun getResult(jobId: String)
-            = doPost(GET_RESULT, mapOf("jobid" to jobId))
+            = doPost3(GET_RESULT, mapOf("jobid" to jobId))
 
 }

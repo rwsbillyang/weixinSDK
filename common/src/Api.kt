@@ -72,13 +72,10 @@ abstract class Api: ClientWrapper(){
     abstract fun url(name: String, requestParams: Map<String, String?>?, needAccessToken: Boolean = true): String
 
     /**
-     * 返回Map<String, Any?>类型结果
+     * 返回R泛型类型结果
      * */
-    fun doGet(name: String, parameters: Map<String, String?>? = null): Map<String, Any?> = runBlocking {
-        CoroutineScope(Dispatchers.IO).async {
-            client.get<Map<String, Any?>>(url(name, parameters))
-        }.await()
-    }
+    inline fun <reified R> doGet(name: String, parameters: Map<String, String?>? = null): R
+            = doGetByUrl(url(name, parameters))
 
     /**
      * 返回Map<String, Any?>类型结果
@@ -92,12 +89,6 @@ abstract class Api: ClientWrapper(){
 
     /**
      * 返回R泛型类型结果
-     * */
-    inline fun <reified R> doGet2(name: String, parameters: Map<String, String?>? = null): R
-             = doGetByUrl(url(name, parameters))
-
-    /**
-     * 返回R泛型类型结果
      * urlFunc 提供url的函数，如 "$base/corp/get_join_qrcode?access_token=ACCESS_TOKEN&size_type=$sizeType"
      * */
     inline fun <reified R> doGet2(crossinline urlFunc: () -> String): R
@@ -106,7 +97,31 @@ abstract class Api: ClientWrapper(){
     /**
      * 返回Map<String, Any?>类型结果
      * */
-    fun <T> doPost(name: String, data: T?, parameters: Map<String, String?>? = null) = runBlocking {
+    fun doGet3(name: String, parameters: Map<String, String?>? = null): Map<String, Any?> = runBlocking {
+        CoroutineScope(Dispatchers.IO).async {
+            client.get<Map<String, Any?>>(url(name, parameters))
+        }.await()
+    }
+
+
+
+    /**
+     * 返回R泛型类型结果
+     * */
+    inline fun <T, reified R> doPost(name: String, data: T?, parameters: Map<String, String?>? = null):R
+            = doPostByUrl(url(name, parameters), data)
+
+    /**
+     * 返回R泛型类型结果
+     * */
+    inline fun <T, reified R> doPost(data: T?, crossinline urlFunc: () -> String):R
+            = doPostByUrl(urlFunc(), data)
+
+
+    /**
+     * 返回Map<String, Any?>类型结果
+     * */
+    fun <T> doPost3(name: String, data: T?, parameters: Map<String, String?>? = null) = runBlocking {
         CoroutineScope(Dispatchers.IO).async {
             client.post<Map<String, Any?>>(url(name, parameters)) { data?.let{body = data}  }
         }.await()
@@ -114,27 +129,32 @@ abstract class Api: ClientWrapper(){
     /**
      * 返回Map<String, Any?>类型结果
      * */
-    fun <T> doPost(data: T?, urlFunc: () -> String):Map<String, Any?> = runBlocking {
+    fun <T> doPost4(data: T?, urlFunc: () -> String):Map<String, Any?> = runBlocking {
         withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             val url = urlFunc()
             client.post<Map<String, Any?>>(url) { data?.let{body = data}  }
         }
     }
 
-    /**
-     * 返回R泛型类型结果
-     * */
-    inline fun <T, reified R> doPost2(name: String, data: T?, parameters: Map<String, String?>? = null):R
-        = doPostByUrl(url(name, parameters), data)
 
+    inline fun <reified R> doUpload(name: String, filePath: String,
+                                    parameters: Map<String, String?>? = null,
+                                    formData: Map<String, String>? = null) :R= runBlocking {
+        CoroutineScope(Dispatchers.IO).async {
+            client.post<R>(url(name, parameters)) {
+                val file = File(filePath)
+                body = MultiPartFormDataContent(formData {
+                    formData?.forEach{ append(it.key, it.value)}
+                    //append("media",filePath, ContentType.Video, file.length())
+                    appendInput("media", size = file.length()) {
+                        FileInputStream(file).asInput()
+                    }
+                })
+            }
+        }.await()
+    }
 
-    /**
-     * 返回R泛型类型结果
-     * */
-    inline fun <T, reified R> doPost3(data: T?, crossinline urlFunc: () -> String):R
-            = doPostByUrl(urlFunc(), data)
-
-    fun  doUpload(name: String, filePath: String, parameters: Map<String, String?>? = null,formData: Map<String, String>? = null) = runBlocking {
+    fun  doUpload3(name: String, filePath: String, parameters: Map<String, String?>? = null,formData: Map<String, String>? = null) = runBlocking {
         CoroutineScope(Dispatchers.IO).async {
             client.post<Map<String, Any?>>(url(name, parameters)) {
                 val file = File(filePath)
@@ -150,21 +170,6 @@ abstract class Api: ClientWrapper(){
 
 
 
-    inline fun <reified R> doUpload2(name: String, filePath: String,
-                                     parameters: Map<String, String?>? = null,
-                                     formData: Map<String, String>? = null) :R= runBlocking {
-        CoroutineScope(Dispatchers.IO).async {
-            client.post<R>(url(name, parameters)) {
-                val file = File(filePath)
-                body = MultiPartFormDataContent(formData {
-                    formData?.forEach{ append(it.key, it.value)}
-                    //append("media",filePath, ContentType.Video, file.length())
-                    appendInput("media", size = file.length()) {
-                        FileInputStream(file).asInput()
-                    }
-                })
-            }
-        }.await()
-    }
+
 }
 

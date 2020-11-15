@@ -30,7 +30,7 @@ object ExternalContactsApi : WorkBaseApi() {
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/92571
      * */
-    fun getFollowUserList() = doGet("get_follow_user_list", null)
+    fun getFollowUserList() = doGet3("get_follow_user_list", null)
 
 
 
@@ -39,26 +39,26 @@ object ExternalContactsApi : WorkBaseApi() {
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/92227
      * */
-    fun addContactWay(body: Map<String, Any?>) = doPost("add_contact_way", body)
+    fun addContactWay(body: Map<String, Any?>) = doPost3("add_contact_way", body)
 
     /**
      * 获取企业已配置的「联系我」方式
      *
      * @param configId 来自addContactWay的返回结果中的值
      * */
-    fun getContactWay(configId: String) = doPost("get_contact_way", mapOf("config_id" to configId))
+    fun getContactWay(configId: String) = doPost3("get_contact_way", mapOf("config_id" to configId))
 
     /**
      * 更新企业已配置的「联系我」方式
      *
      * 更新企业配置的「联系我」二维码和「联系我」小程序按钮中的信息，如使用人员和备注等。
      * */
-    fun updateContactWay(body: Map<String, Any?>) = doPost("update_contact_way", body)
+    fun updateContactWay(body: Map<String, Any?>) = doPost3("update_contact_way", body)
 
     /**
      * 删除企业已配置的「联系我」方式
      * */
-    fun delContactWay(configId: String) = doPost("del_contact_way", mapOf("config_id" to configId))
+    fun delContactWay(configId: String) = doPost3("del_contact_way", mapOf("config_id" to configId))
 
 
     /* 客户管理 */
@@ -70,14 +70,14 @@ object ExternalContactsApi : WorkBaseApi() {
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/92113
      * */
-    fun list(userId: String) = doGet("list", mapOf("userid" to userId))
+    fun list(userId: String) = doGet3("list", mapOf("userid" to userId))
 
     /**
      * 获取客户详情
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/92114
      * */
-    fun detail(externalUserId: String) = doGet("get", mapOf("external_userid" to externalUserId))
+    fun detail(externalUserId: String) = doGet3("get", mapOf("external_userid" to externalUserId))
 
     /**
      * 修改客户备注信息
@@ -86,7 +86,7 @@ object ExternalContactsApi : WorkBaseApi() {
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/92115
      * */
-    fun updateRemark(body: Map<String, Any?> ) = doPost("remark", body)
+    fun updateRemark(body: Map<String, Any?> ) = doPost3("remark", body)
 
     /* 客户标签 */
     /**
@@ -95,21 +95,21 @@ object ExternalContactsApi : WorkBaseApi() {
      * 要查询的标签id，如果不填则获取该企业的所有客户标签，目前暂不支持标签组id
      * https://work.weixin.qq.com/api/doc/90000/90135/92117
      * */
-    fun getCorpTagList(id: String?) = doPost("get_corp_tag_list", mapOf("tag_id" to id))
+    fun getCorpTagList(id: String?) = doPost3("get_corp_tag_list", mapOf("tag_id" to id))
 
     /**
      * 添加企业客户标签
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/92117
      * */
-    fun addCorpTag(body: Map<String, Any?>) = doPost("add_corp_tag",body)
+    fun addCorpTag(body: Map<String, Any?>) = doPost3("add_corp_tag",body)
 
     /**
      * 编辑企业客户标签
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/92117
      * */
-    fun editCorpTag(id: String, name: String?, order:Int?) = doPost(
+    fun editCorpTag(id: String, name: String?, order:Int?) = doPost3(
             "edit_corp_tag",
         mapOf("id" to id, "name" to name, "order" to order))
 
@@ -122,7 +122,7 @@ object ExternalContactsApi : WorkBaseApi() {
      * 如果一个标签组下所有的标签均被删除，则标签组会被自动删除。
      * https://work.weixin.qq.com/api/doc/90000/90135/92117
      * */
-    fun delCorpTag(tagIds: List<String>?, groupIds:  List<String>?) = doPost(
+    fun delCorpTag(tagIds: List<String>?, groupIds:  List<String>?) = doPost3(
             "del_corp_tag",
         mapOf("tag_id" to tagIds, "group_id" to groupIds))
 
@@ -140,7 +140,7 @@ object ExternalContactsApi : WorkBaseApi() {
      *
      * add_tag和remove_tag不可同时为空。
      * */
-    fun markTag(userId: String, externalUserId: String, addTag: List<String>?, removeTag: List<String>?) = doPost(
+    fun markTag(userId: String, externalUserId: String, addTag: List<String>?, removeTag: List<String>?) = doPost3(
             "mark_tag",
         mapOf("userid" to userId, "external_userid" to externalUserId, "add_tag" to addTag, "remove_tag" to removeTag))
 
@@ -154,7 +154,7 @@ object ExternalContactsApi : WorkBaseApi() {
      * 用于获取配置过客户群管理的客户群列表
      * https://work.weixin.qq.com/api/doc/90000/90135/92119
      * */
-    fun getGroupChatList(body: Map<String, Any?>) = doPost("groupchat/list", body)
+    fun getGroupChatList(body: Map<String, Any?>) = doPost3("groupchat/list", body)
 
 
     /**
@@ -166,7 +166,7 @@ object ExternalContactsApi : WorkBaseApi() {
      *
      * @param chatId 客户群ID
      * */
-    fun getGroupChatDetail(chatId: String) = doPost("groupchat/get", mapOf("chat_id" to chatId))
+    fun getGroupChatDetail(chatId: String) = doPost3("groupchat/get", mapOf("chat_id" to chatId))
 
 
 
@@ -181,14 +181,14 @@ object ExternalContactsApi : WorkBaseApi() {
      *
      *  https://work.weixin.qq.com/api/doc/90000/90135/92135
      * */
-    fun sendMsg(body: Map<String, Any?>) = doPost("add_msg_template", body)
+    fun sendMsg(body: Map<String, Any?>) = doPost3("add_msg_template", body)
 
     /**
      * 获取企业群发消息发送结果
      *
      * msgId来自sendMsg的返回结果
      * */
-    fun getMsgSendResult(msgId: String) = doPost("get_group_msg_result", mapOf("msgid" to msgId))
+    fun getMsgSendResult(msgId: String) = doPost3("get_group_msg_result", mapOf("msgid" to msgId))
     /**
      * 发送新客户欢迎语
      *
@@ -199,15 +199,15 @@ object ExternalContactsApi : WorkBaseApi() {
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/92137
      * */
-    fun sendWelcomeMsg(body: Map<String, Any?>) = doPost("send_welcome_msg", body)
+    fun sendWelcomeMsg(body: Map<String, Any?>) = doPost3("send_welcome_msg", body)
     /**
      * 群欢迎语素材管理
      * https://work.weixin.qq.com/api/doc/90000/90135/92366
      * */
-    fun addWelcome(body: Map<String, Any?>) = doPost("group_welcome_template/add", body)
-    fun editWelcome(body: Map<String, Any?>) = doPost("group_welcome_template/edit", body)
-    fun getWelcome(templateId: String) = doPost("group_welcome_template/get", mapOf("template_id" to templateId))
-    fun delWelcome(templateId: String) = doPost("group_welcome_template/del", mapOf("template_id" to templateId))
+    fun addWelcome(body: Map<String, Any?>) = doPost3("group_welcome_template/add", body)
+    fun editWelcome(body: Map<String, Any?>) = doPost3("group_welcome_template/edit", body)
+    fun getWelcome(templateId: String) = doPost3("group_welcome_template/get", mapOf("template_id" to templateId))
+    fun delWelcome(templateId: String) = doPost3("group_welcome_template/del", mapOf("template_id" to templateId))
 
 
     /* 离职管理 */
@@ -221,7 +221,7 @@ object ExternalContactsApi : WorkBaseApi() {
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/92124
      * */
-    fun getLeaveList(page: Int? = null, pageSize: Int? = null) = doPost(
+    fun getLeaveList(page: Int? = null, pageSize: Int? = null) = doPost3(
             "get_unassigned_list",
         mapOf("page_id" to page, "page_size" to pageSize))
     /**
@@ -231,7 +231,7 @@ object ExternalContactsApi : WorkBaseApi() {
      *  handover_userid	是	离职成员的userid
      *  takeover_userid	是	接替成员的userid
      * */
-    fun transferExternalUsers(externalUserId:String, handoverUserId: String, takeoverUserId: String) = doPost(
+    fun transferExternalUsers(externalUserId:String, handoverUserId: String, takeoverUserId: String) = doPost3(
             "transfer", mapOf("external_userid" to externalUserId, "handover_userid" to handoverUserId, "takeover_userid" to takeoverUserId))
 
     /**
@@ -244,7 +244,7 @@ object ExternalContactsApi : WorkBaseApi() {
      * 继承给的新群主，必须有设置实名
      * 继承给的新群主，必须有激活企业微信
      * */
-    fun transferGroupChat(chatIdList: List<String>, newOwner: String)= doPost(
+    fun transferGroupChat(chatIdList: List<String>, newOwner: String)= doPost3(
             "groupchat/transfer",
         mapOf("chat_id_list" to chatIdList, "new_owner" to newOwner))
 
@@ -269,7 +269,7 @@ object ExternalContactsApi : WorkBaseApi() {
      * https://work.weixin.qq.com/api/doc/90000/90135/92132
      * */
     fun getStatUserBehaviour(startTime: Long, endTime: Long, userIds: List<String>?, partIds: List<String>?)
-            = doPost("get_user_behavior_data", mapOf("start_time" to startTime, "end_time" to endTime, "userid" to userIds, "partyid" to partIds))
+            = doPost3("get_user_behavior_data", mapOf("start_time" to startTime, "end_time" to endTime, "userid" to userIds, "partyid" to partIds))
 
 
     /**
@@ -278,5 +278,5 @@ object ExternalContactsApi : WorkBaseApi() {
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/92133
      * */
-    fun getStatGroupChat(body: Map<String, Any?>) = doPost("groupchat/statistic", body)
+    fun getStatGroupChat(body: Map<String, Any?>) = doPost3("groupchat/statistic", body)
 }

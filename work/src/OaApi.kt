@@ -38,7 +38,7 @@ class CheckinApi: WorkBaseApi(){
      * useridlist	是	需要获取打卡记录的用户列表
      * */
     fun getCheckInData(openCheckInDataType: CheckInDataType, startTime: Long, endTime: Long, userIdList: List<String>)
-            = doPost(
+            = doPost3(
             "getcheckindata", mapOf("opencheckindatatype" to openCheckInDataType.value, "" to startTime,
         "endtime" to endTime, "useridlist" to userIdList))
 
@@ -48,7 +48,7 @@ class CheckinApi: WorkBaseApi(){
      * datetime	是	需要获取规则的日期当天0点的Unix时间戳
      * useridlist	是	需要获取打卡规则的用户列表
      * */
-    fun getCheckInRule(datetime: Long, userIdList: List<String>) = doPost(
+    fun getCheckInRule(datetime: Long, userIdList: List<String>) = doPost3(
             "getcheckinoption",
         mapOf("datetime" to datetime, "useridlist" to userIdList))
  }

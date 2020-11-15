@@ -32,7 +32,7 @@ object MediaApi : OABaseApi(){
      * 上传临时素材
      * 媒体文件在微信后台保存时间为3天，即3天后media_id失效。
      * */
-    fun uploadTmp(file: String, type: MediaType): ResponseUploadMedia = doUpload2("upload",file, mapOf("type" to type.value))
+    fun uploadTmp(file: String, type: MediaType): ResponseUploadMedia = doUpload("upload",file, mapOf("type" to type.value))
 
     /**
      * 上传图文消息内的图片,返回其URL,可放置图文消息中使用
@@ -43,12 +43,12 @@ object MediaApi : OABaseApi(){
      * @param file 文件路径
      * @return 上传图片的URL，可用于后续群发中，放置到图文消息中。错误时微信会返回错误码等信息，请根据错误码查询错误信息
      * */
-    fun uploadNewsImage(file: String): ResponseUploadNewsImg = doUpload2("uploadimg", file)
+    fun uploadNewsImage(file: String): ResponseUploadNewsImg = doUpload("uploadimg", file)
 
     /**
      * 下载视频
      * */
-    fun downVideo(mediaId: String): ResponseDownVideo = doGet2("get", mapOf("media_id" to mediaId))
+    fun downVideo(mediaId: String): ResponseDownVideo = doGet("get", mapOf("media_id" to mediaId))
 
     /**
      * 返回一个网址自行在浏览器中下载

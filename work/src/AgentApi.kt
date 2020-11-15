@@ -31,17 +31,17 @@ object AgentApi : WorkBaseApi(){
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/90227
      * */
-    fun list() = doGet("list", null)
+    fun list() = doGet3("list", null)
 
     /**
      * 获取指定的应用详情
      * */
-    fun detail(id: String) = doGet("get", mapOf("agentid" to id))
+    fun detail(id: String) = doGet3("get", mapOf("agentid" to id))
 
     /**
      * 设置应用
      * https://work.weixin.qq.com/api/doc/90000/90135/90228
      * */
-    fun setAgent(body: Map<String, Any?>) = doPost("set",body)
+    fun setAgent(body: Map<String, Any?>) = doPost3("set",body)
 }
 

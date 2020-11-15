@@ -53,7 +53,7 @@ object MsgApi : OABaseApi() {
     /**
      * 发送模板消息
      * */
-    fun sendTemplateMsg(msg: TemplateMsg): ResponseSendTemplateMsg = doPost2("template/send", msg)
+    fun sendTemplateMsg(msg: TemplateMsg): ResponseSendTemplateMsg = doPost("template/send", msg)
 
 
     /**
@@ -62,7 +62,7 @@ object MsgApi : OABaseApi() {
      * https://developers.weixin.qq.com/doc/offiaccount/Message_Management/One-time_subscription_info.html
      * TODO: 跳转重定向entry point的处理
      * */
-    fun sendSubscribeMsg(msg: OneTimeTemplateMsg): Response = doPost2("template/subscribe", msg)
+    fun sendSubscribeMsg(msg: OneTimeTemplateMsg): Response = doPost("template/subscribe", msg)
     
     
     /**
@@ -70,14 +70,14 @@ object MsgApi : OABaseApi() {
      *
      * ReceiverType使用Tag类型
      * */
-    fun massSendByTag(msg: IMassMsg): ResponseMassSend = doPost2("mass/sendall", msg)
+    fun massSendByTag(msg: IMassMsg): ResponseMassSend = doPost("mass/sendall", msg)
 
     /**
      * 根据OpenID列表群发【订阅号不可用，服务号认证后可用】
      *
      * ReceiverType使用OpenIds类型
      * */
-    fun massSendByOpenIds(msg: IMassMsg): ResponseMassSend = doPost2("mass/send", msg)
+    fun massSendByOpenIds(msg: IMassMsg): ResponseMassSend = doPost("mass/send", msg)
 
     /**
      * 预览接口【订阅号与服务号认证后均可用】
@@ -86,7 +86,7 @@ object MsgApi : OABaseApi() {
      * 开发者可通过该接口发送消息给指定用户，在手机端查看消息的样式和排版。
      * 在保留对openID预览能力的同时，增加了对指定微信号发送预览的能力，但该能力每日调用次数有限制（100次）
      * */
-    fun preview(msg: IMassMsg): ResponseMassSend = doPost2("mass/preview", msg)
+    fun preview(msg: IMassMsg): ResponseMassSend = doPost("mass/preview", msg)
 
     /**
      * 删除群发【订阅号与服务号认证后均可用】
@@ -99,7 +99,7 @@ object MsgApi : OABaseApi() {
      * @param msgId    是	msg_id 发送出去的消息ID，来自massSendByTag 或 massSendByOpenIds
      * @param articleId article_idx	否	要删除的文章在图文消息中的位置，第一篇编号为1，该字段不填或填0会删除全部文章
      * */
-    fun deleteMass(msgId: Long, articleId: Int? = null): Response = doPost2("mass/delete", mapOf("msg_id" to msgId, "article_idx" to articleId))
+    fun deleteMass(msgId: Long, articleId: Int? = null): Response = doPost("mass/delete", mapOf("msg_id" to msgId, "article_idx" to articleId))
 
     /**
      * 查询群发消息发送状态【订阅号与服务号认证后均可用】
@@ -107,7 +107,7 @@ object MsgApi : OABaseApi() {
      * @param msgId msg_id	群发消息后返回的消息id
      * @return    消息发送后的状态，SEND_SUCCESS表示发送成功，SENDING表示发送中，SEND_FAIL表示发送失败，DELETE表示已删除
      * */
-    fun getStatus(msgId: Long): String = doPost("mass/get", mapOf("msg_id" to msgId))["msg_status"].toString()
+    fun getStatus(msgId: Long): String = doPost3("mass/get", mapOf("msg_id" to msgId))["msg_status"].toString()
 
 
     /**
@@ -119,12 +119,12 @@ object MsgApi : OABaseApi() {
      * 3	30w/分钟
      * 4	10w/分钟
      * */
-    fun setSpeed(speed: Int): String = doPost2("speed/set", mapOf("speed" to speed))
+    fun setSpeed(speed: Int): String = doPost("speed/set", mapOf("speed" to speed))
 
     /**
      * 获取群发速度
      * */
-    fun getSpeed(): ResponseSpeed = doPost2("speed/get", null)
+    fun getSpeed(): ResponseSpeed = doPost("speed/get", null)
 
 
 
@@ -138,7 +138,7 @@ object MsgApi : OABaseApi() {
      * 扫描二维码
      * 支付成功
      * */
-    fun sendCustomerServiceMsg(msg: ICustomerMsg):Response = doPost2("custom/send",msg)
+    fun sendCustomerServiceMsg(msg: ICustomerMsg):Response = doPost("custom/send",msg)
 
     /**
      * 下发客服输入状态
@@ -150,7 +150,7 @@ object MsgApi : OABaseApi() {
      * 在输入状态中（持续15s），不可重复下发输入态。
      * 在输入状态中，如果向用户下发消息，会同时取消输入状态。
      */
-    fun sendInputState(customerOpenId: String, isTyping: Boolean): Response = doPost2("custom/typing", mapOf("touser" to customerOpenId,
+    fun sendInputState(customerOpenId: String, isTyping: Boolean): Response = doPost("custom/typing", mapOf("touser" to customerOpenId,
             "command" to if(isTyping)"Typing" else "CancelTyping"))
 }
 

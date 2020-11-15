@@ -32,22 +32,22 @@ object TemplateApi: OABaseApi(){
     /**
      * 获取帐号下所有模板信息,即自己公众号下添加的模板
      * */
-    fun getAllTemplates(): ResponseTemplateList = doGet2("get_all_private_template")
+    fun getAllTemplates(): ResponseTemplateList = doGet("get_all_private_template")
 
     /**
      * 根据模板库中模板编号，获取自己的模板消息id
      * @param code 模板库中模板的编号，有“TM**”和“OPENTMTM**”等形式
      * */
-    fun getTemplateMsgId(code: String): ResponseTemplateMsgId = doPost2("api_add_template", mapOf("template_id_short" to code))
+    fun getTemplateMsgId(code: String): ResponseTemplateMsgId = doPost("api_add_template", mapOf("template_id_short" to code))
 
     /**
      * @param templateId 	公众帐号下模板消息ID, 参见Template
      * */
-    fun delTemplate(templateId: String): Response = doPost2("del_private_template", mapOf("template_id" to templateId))
+    fun delTemplate(templateId: String): Response = doPost("del_private_template", mapOf("template_id" to templateId))
     /**
      * 获取帐号所设置的行业信息
      * */
-    fun getIndustry(): ResponseIndustry = doGet2("get_industry")
+    fun getIndustry(): ResponseIndustry = doGet("get_industry")
     /**
      * 修改账号所属行业
      * @param industryId1	是	公众号模板消息所属行业编号
@@ -95,7 +95,7 @@ object TemplateApi: OABaseApi(){
     印刷	印刷	40
     其它	其它	41
      * */
-    fun setIndustry(industryId1: String, industryId2: String): Response = doPost2("api_set_industry", mapOf("industry_id1" to industryId1, "industry_id2" to industryId2))
+    fun setIndustry(industryId1: String, industryId2: String): Response = doPost("api_set_industry", mapOf("industry_id1" to industryId1, "industry_id2" to industryId2))
 }
 
 

@@ -34,7 +34,7 @@ object MaterialApi: OABaseApi() {
      * 新增永久图文素材
      *
      * */
-    fun addNews(list: List<Article>): ResponseAddMaterial = doPost2("add_news",list)
+    fun addNews(list: List<Article>): ResponseAddMaterial = doPost("add_news",list)
 
     /**
      * 新增其他类型永久素材
@@ -42,34 +42,34 @@ object MaterialApi: OABaseApi() {
      *
      * 媒体文件类型，分别有图片（image）、语音（voice）和缩略图（thumb）
      * */
-    fun addMedia(file: String, type: MediaType): ResponseAddMaterial = doUpload2("add_material",file, mapOf("type" to type.value))
+    fun addMedia(file: String, type: MediaType): ResponseAddMaterial = doUpload("add_material",file, mapOf("type" to type.value))
 
     /**
      * @param title	是	视频素材的标题
      * @param introduction	是	视频素材的描述
      * */
-    fun addVideo(file: String, title: String, introduction: String): ResponseAddMaterial = doUpload2("add_material",file,null,
+    fun addVideo(file: String, title: String, introduction: String): ResponseAddMaterial = doUpload("add_material",file,null,
             mapOf("description" to apiJson.encodeToString(VideoDescription(title, introduction))))
 
 
     /**
      * 删除不再需要的永久素材，节省空间
      * */
-    fun del(mediaId: String): Response = doPost2("del_material", mapOf("media_id" to mediaId))
+    fun del(mediaId: String): Response = doPost("del_material", mapOf("media_id" to mediaId))
 
-    fun updateArticle(mediaId: String, index: Int, article: Article): Response = doPost2("update_news", mapOf("media_id" to mediaId, "index" to index, "articles" to article))
+    fun updateArticle(mediaId: String, index: Int, article: Article): Response = doPost("update_news", mapOf("media_id" to mediaId, "index" to index, "articles" to article))
 
 
     /**
      * 1.永久素材的总数，也会计算公众平台官网素材管理中的素材
      * 2.图片和图文消息素材（包括单图文和多图文）的总数上限为5000，其他素材的总数上限为1000
      * */
-    fun getCount(): ResponseMaterialCount = doGet2("get_materialcount")
+    fun getCount(): ResponseMaterialCount = doGet("get_materialcount")
 
 
-    fun getNews(mediaId: String): ResponseNews = doPost2("get_material", mapOf("media_id" to mediaId))
+    fun getNews(mediaId: String): ResponseNews = doPost("get_material", mapOf("media_id" to mediaId))
 
-    fun getVideo(mediaId: String): ResponseDownVideoMaterial = doPost2("get_material", mapOf("media_id" to mediaId))
+    fun getVideo(mediaId: String): ResponseDownVideoMaterial = doPost("get_material", mapOf("media_id" to mediaId))
 
     /**
      * 返回一个网址自行在浏览器中下载
@@ -82,13 +82,13 @@ object MaterialApi: OABaseApi() {
      * @param offset	是	从全部素材的该偏移位置开始返回，0表示从第一个素材 返回
      * @param count	是	返回素材的数量，取值在1到20之间
      * */
-    fun getNewsList(offset: Int, count: Int): ResponseNewsList = doPost2("batchget_material",
+    fun getNewsList(offset: Int, count: Int): ResponseNewsList = doPost("batchget_material",
             mapOf("type" to "news", "offset" to offset.toString(), "count" to count.toString()))
 
     /**
      * 除了图文（news）之外的：图片（image）、视频（video）、语音 （voice）
      * */
-    fun getMediaList(type: MediaType, offset: Int, count: Int): ResponseMediaList = doPost2("batchget_material",
+    fun getMediaList(type: MediaType, offset: Int, count: Int): ResponseMediaList = doPost("batchget_material",
             mapOf("type" to type.value, "offset" to offset.toString(), "count" to count.toString()))
 }
 

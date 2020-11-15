@@ -47,25 +47,25 @@ data class Calendar(
 object CalendarApi : WorkBaseApi(){
     override val group = "oa/calendar"
 
-    fun add(calendar: Calendar) = doPost("add", mapOf("calendar" to calendar))
+    fun add(calendar: Calendar) = doPost3("add", mapOf("calendar" to calendar))
 
     /**
      * 更新日历
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/92619
      * */
-    fun update(calendar: Calendar) = doPost("update", mapOf("calendar" to calendar))
+    fun update(calendar: Calendar) = doPost3("update", mapOf("calendar" to calendar))
 
 
     /**
      * 获取日历
      * */
-    fun getList(idList: List<String>) = doPost("get", mapOf("cal_id_list" to idList))
+    fun getList(idList: List<String>) = doPost3("get", mapOf("cal_id_list" to idList))
 
     /**
      * 删除日历
      * */
-    fun delete(id: String) = doPost("del", mapOf("cal_id" to  id))
+    fun delete(id: String) = doPost3("del", mapOf("cal_id" to  id))
 }
 
 class Schedule: WorkBaseApi(){
@@ -78,27 +78,27 @@ class Schedule: WorkBaseApi(){
         const val GET_BY_CALENDAR = "get_by_calendar"
     }
 
-    fun add(body: Map<String, Any?>) = doPost(ADD, mapOf("schedule" to body))
+    fun add(body: Map<String, Any?>) = doPost3(ADD, mapOf("schedule" to body))
 
     /**
      * 更新日程
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/92619
      * */
-    fun update(body: Map<String, Any?>) = doPost(UPDATE, mapOf("schedule" to body))
+    fun update(body: Map<String, Any?>) = doPost3(UPDATE, mapOf("schedule" to body))
 
 
     /**
      * 获取日程
      * */
-    fun getList(idList: List<String>) = doPost(GET_LIST, mapOf("schedule_id_list" to idList))
+    fun getList(idList: List<String>) = doPost3(GET_LIST, mapOf("schedule_id_list" to idList))
 
     /**
      * 删除日程
      * */
-    fun delete(id: String) = doPost(DELETE, mapOf("schedule_id" to  id))
+    fun delete(id: String) = doPost3(DELETE, mapOf("schedule_id" to  id))
 
-    fun getByCalendar(catId: String, offset: Int, limit: Int) = doPost(
+    fun getByCalendar(catId: String, offset: Int, limit: Int) = doPost3(
         GET_BY_CALENDAR,
         mapOf("cal_id" to  catId, "offset" to offset, "limit" to limit))
 }

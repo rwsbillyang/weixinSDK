@@ -46,11 +46,11 @@ object QrCodeApi: OABaseApi() {
     /**
      *  获取带参数的二维码的过程包括两步，首先创建二维码ticket，然后凭借ticket到指定URL换取二维码。
      * */
-    fun createTmp(id: Int, expire: Long = 2592000L): ResponseCreate = doPost2("create",  QrCodeInfo(ActionName.QR_SCENE, Scene(id),expire))
-    fun createTmp(str: String, expire: Long = 2592000L): ResponseCreate = doPost2("create",  QrCodeInfo(ActionName.QR_STR_SCENE, Scene(str = str),expire))
+    fun createTmp(id: Int, expire: Long = 2592000L): ResponseCreate = doPost("create",  QrCodeInfo(ActionName.QR_SCENE, Scene(id),expire))
+    fun createTmp(str: String, expire: Long = 2592000L): ResponseCreate = doPost("create",  QrCodeInfo(ActionName.QR_STR_SCENE, Scene(str = str),expire))
 
-    fun create(id: Int, expire: Long = 2592000L): ResponseCreate = doPost2("create", QrCodeInfo(ActionName.QR_LIMIT_SCENE, Scene(id),expire))
-    fun create(str: String, expire: Long = 2592000L): ResponseCreate = doPost2("create", QrCodeInfo(ActionName.QR_LIMIT_STR_SCENE, Scene(str = str),expire))
+    fun create(id: Int, expire: Long = 2592000L): ResponseCreate = doPost("create", QrCodeInfo(ActionName.QR_LIMIT_SCENE, Scene(id),expire))
+    fun create(str: String, expire: Long = 2592000L): ResponseCreate = doPost("create", QrCodeInfo(ActionName.QR_LIMIT_STR_SCENE, Scene(str = str),expire))
 
     /**
      * 通过ticket换取二维码
@@ -66,7 +66,7 @@ object QrCodeApi: OABaseApi() {
      * 主要使用场景： 开发者用于生成二维码的原链接（商品、支付二维码等）太长导致扫码速度和成功率下降，
      * 将原长链接通过此接口转成短链接再生成二维码将大大提升扫码速度和成功率。
      * */
-    fun shortUrl(url: String):String? = doPost(mapOf("action" to "long2short", "long_url" to url)){
+    fun shortUrl(url: String):String? = doPost4(mapOf("action" to "long2short", "long_url" to url)){
         "https://api.weixin.qq.com/cgi-bin/shorturl?access_token=${accessToken()}"}["short_url"]?.toString()
 }
 

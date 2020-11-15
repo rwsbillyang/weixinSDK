@@ -56,8 +56,8 @@ dependencies {
     //testImplementation('junit:junit:4.12')
     testCompile "io.ktor:ktor-server-tests:$ktor_version"
 
-    implementation ("com.github.rwsbillyang:wxSDK:0.0.1")
-    //implementation project(":common")
+    //implementation ("com.github.rwsbillyang:wxSDK:0.0.1")
+    implementation project(":common")
 }
 
 

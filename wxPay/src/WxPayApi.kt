@@ -36,15 +36,15 @@ object WxPayApi: WxApi() {
         TODO("Not yet implemented")
     }
 
-    fun orderByApp(transaction: Transaction): ResponseOrder = doPost2("app", transaction)
-    fun orderByJs(transaction: Transaction): ResponseOrder = doPost2("jsapi", transaction)
-    fun orderByNative(transaction: Transaction): ResponseOrderNative = doPost2("native", transaction)
-    fun orderByH5(transaction: Transaction): ResponseOrderH5 = doPost2("h5", transaction)
+    fun orderByApp(transaction: Transaction): ResponseOrder = doPost("app", transaction)
+    fun orderByJs(transaction: Transaction): ResponseOrder = doPost("jsapi", transaction)
+    fun orderByNative(transaction: Transaction): ResponseOrderNative = doPost("native", transaction)
+    fun orderByH5(transaction: Transaction): ResponseOrderH5 = doPost("h5", transaction)
 
     fun queryOrderByTransactionId(transactionId: String): OrderPayDetail
-            = doGet2("id/${transactionId}", mapOf("mchid" to WxPay.context.mchId))
+            = doGet("id/${transactionId}", mapOf("mchid" to WxPay.context.mchId))
     fun queryOrderByOrderId(orderId: String): OrderPayDetail
-            = doGet2("out-trade-no/${orderId}", mapOf("mchid" to WxPay.context.mchId))
+            = doGet("out-trade-no/${orderId}", mapOf("mchid" to WxPay.context.mchId))
 
     /**
      * 商户订单支付失败需要生成新单号重新发起支付，要对原订单号调用关单，避免重复支付；
@@ -53,7 +53,7 @@ object WxPayApi: WxApi() {
      * 订单生成后不能马上调用关单接口，最短调用时间间隔为5分钟。
      * */
     fun closeOrder(orderId: String): ResponseClose
-            = doPost2("out-trade-no/${orderId}/close", mapOf("mchid" to WxPay.context.mchId))
+            = doPost("out-trade-no/${orderId}/close", mapOf("mchid" to WxPay.context.mchId))
 
     //https://wechatpay-api.gitbook.io/wechatpay-api-v3/jie-kou-wen-dang/ping-tai-zheng-shu
     internal fun downloadPlatformCerts(): ResponseCertificates

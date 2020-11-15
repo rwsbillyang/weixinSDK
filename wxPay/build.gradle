@@ -53,8 +53,8 @@ dependencies {
     //implementation 'com.github.wechatpay-apiv3:wechatpay-apache-httpclient:0.2.1'
     implementation "org.apache.httpcomponents:httpmime:4.5.12"
 
-    implementation ("com.github.rwsbillyang:wxSDK:0.0.1")
-    //implementation project(":common")
+    //implementation ("com.github.rwsbillyang:wxSDK:0.0.1")
+    implementation project(":common")
 }
 
 
