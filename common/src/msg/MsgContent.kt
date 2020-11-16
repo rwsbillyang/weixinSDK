@@ -4,34 +4,13 @@ package com.github.rwsbillyang.wxSDK.msg
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * 主动发的消息，包括群发消息、模板消息、客服消息，不是推送消息后然后立即回复给用户的消息，它们完全不同
- *
- * @property msgType 消息类型
- * */
-interface IMsg {
-    val msgType: String
-    companion object {
-        const val TEXT = "text"
-        const val IMAGE = "image"
-        const val VOICE = "voice"
-        const val MPVIDEO = "mpvideo"
-        const val MPNEWS = "mpnews"
-        const val CARD = "wxcard"
-
-        const val MUSIC = "music"
-        const val MENU = "msgmenu"
-        const val NEWS = "news"
-        const val MINI_PROGRAM = "miniprogrampage"
-    }
-}
 
 
 /**
  * 消息所使用的场景
  * @property RE 被动回复消息
  * @property MASS 群发消息
- * @property KF 客服消息
+ * @property KF 公众号客服消息
  * */
 @Serializable
 sealed class MsgBody(val flag: Byte) {
@@ -48,11 +27,11 @@ sealed class MsgBody(val flag: Byte) {
 }
 
 @Serializable
-@SerialName(InMsgType.TEXT)
+@SerialName(MsgType.TEXT)
 data class TextContent(val content: String) : MsgBody(ALL)
 
 @Serializable
-@SerialName(InMsgType.VOICE)
+@SerialName(MsgType.VOICE)
 data class VoiceContent(
         @SerialName("media_id")
         val mediaId: String
@@ -64,7 +43,7 @@ data class VoiceContent(
  * 图片消息 （被动回复消息、客服消息）
  * */
 @Serializable
-@SerialName(InMsgType.IMAGE)
+@SerialName(MsgType.IMAGE)
 data class ImageContent(
         @SerialName("media_id")
         val mediaId: String
@@ -95,7 +74,7 @@ data class ImagesContent(
  * 视频消息（被动回复, 群发）
  * */
 @Serializable
-@SerialName(InMsgType.VIDEO)
+@SerialName(MsgType.VIDEO)
 data class VideoContent(
         @SerialName("media_id")
         val mediaId: String,
@@ -132,7 +111,7 @@ data class VideoKfContent(
  * ThumbMediaId	是	缩略图的媒体id，通过素材管理中的接口上传多媒体文件，得到的id
  * */
 @Serializable
-@SerialName(InMsgType.MUSIC)
+@SerialName(MsgType.MUSIC)
 data class MusicContent(
         @SerialName("thumb_media_id")
         val thumbMediaId: String,
@@ -172,7 +151,7 @@ class ArticleItem(
  * 发送图文客服消息（点击跳转到外链） 图文消息条数限制在1条以内，注意，如果图文数超过1，则将会返回错误码45008。
  * */
 @Serializable
-@SerialName(InMsgType.NEWS)
+@SerialName(MsgType.NEWS)
 data class NewsContent(
         val articles: List<ArticleItem>
 ) : MsgBody(RE_KF)
@@ -182,7 +161,7 @@ data class NewsContent(
  * 发送图文消息（点击跳转到图文消息页面） 图文消息条数限制在1条以内，注意，如果图文数超过1，则将会返回错误码45008。
  * */
 @Serializable
-@SerialName(IMsg.MPNEWS)
+@SerialName(MsgType.MPNEWS)
 data class MpNewsContent(
         @SerialName("media_id")
         val mediaId: String
@@ -194,7 +173,7 @@ data class MpNewsContent(
  * 特别注意客服消息接口投放卡券仅支持非自定义Code码和导入code模式的卡券的卡券
  * */
 @Serializable
-@SerialName(IMsg.CARD)
+@SerialName(MsgType.CARD)
 class CardContent(@SerialName("card_id") val cardId: String): MsgBody(MASS_KF)
 
 
@@ -209,7 +188,7 @@ class CardContent(@SerialName("card_id") val cardId: String): MsgBody(MASS_KF)
  * 其中，“满意”和“不满意”是可点击的，当用户点击后，微信会发送一条XML消息到开发者服务器
  * */
 @Serializable
-@SerialName(IMsg.MENU)
+@SerialName(MsgType.MENU)
 class MenuContent(
     @SerialName("head_content")
         val headContent: String,
@@ -237,7 +216,7 @@ class IdContent(
  * @param pagePath pagepath	是	小程序的页面路径，跟app.json对齐，支持参数，比如pages/index/index?foo=bar
  * */
 @Serializable
-@SerialName(IMsg.MINI_PROGRAM)
+@SerialName(MsgType.MINI_PROGRAM)
 class MiniProgramContent(
         @SerialName("appid")
         val appId: String,

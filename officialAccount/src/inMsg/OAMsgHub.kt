@@ -11,7 +11,7 @@ class OAMsgHub(
 ):WxMsgHub(wxBizMsgCrypt) {
     override fun dispatchMsg(reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
         return when(base.msgType){
-            InMsgType.TEXT -> {
+            MsgType.TEXT -> {
                 val msg = OACustomerClickMenuMsg(base).apply { read(reader) }
                 if(msg.menuId.isNullOrBlank())
                     msgHandler.onOATextMsg(msg)
@@ -19,22 +19,22 @@ class OAMsgHub(
                     msgHandler.onOACustomerClickMenuMsg(msg)
                 }
             }
-            InMsgType.IMAGE -> msgHandler.onOAImgMsg(
+            MsgType.IMAGE -> msgHandler.onOAImgMsg(
                 OAImgMSg(base).apply { read(reader) }
             )
-            InMsgType.VOICE -> msgHandler.onOAVoiceMsg(
+            MsgType.VOICE -> msgHandler.onOAVoiceMsg(
                 OAVoiceMsg(base).apply { read(reader) }
             )
-            InMsgType.VIDEO -> msgHandler.onOAVideoMsg(
+            MsgType.VIDEO -> msgHandler.onOAVideoMsg(
                 OAVideoMsg(base).apply { read(reader) }
             )
-            InMsgType.SHORT_VIDEO -> msgHandler.onOAShortVideoMsg(
+            MsgType.SHORT_VIDEO -> msgHandler.onOAShortVideoMsg(
                 OAShortVideoMsg(base).apply { read(reader) }
             )
-            InMsgType.LOCATION -> msgHandler.onOALocationMsg(
+            MsgType.LOCATION -> msgHandler.onOALocationMsg(
                 OALocationMsg(base).apply { read(reader) }
             )
-            InMsgType.LINK -> msgHandler.onOALinkMsg(
+            MsgType.LINK -> msgHandler.onOALinkMsg(
                 OALinkMsg(base).apply { read(reader) }
             )
             else -> msgHandler.onDispatch(reader, base)?: msgHandler.onDefault(WxBaseMsg(base).apply { read(reader) })

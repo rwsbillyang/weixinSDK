@@ -12,23 +12,23 @@ class WorkMsgHub(
 ): WxMsgHub(wxBizMsgCrypt) {
     override fun dispatchMsg(reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
         return when(base.msgType){
-            InMsgType.TEXT -> msgHandler.onWorkTextMsg(
+            MsgType.TEXT -> msgHandler.onWorkTextMsg(
                 WorkTextMsg(base).apply { read(reader) }
             )
-            InMsgType.IMAGE -> msgHandler.onWorkImgMsg(
+            MsgType.IMAGE -> msgHandler.onWorkImgMsg(
                 WorkImgMSg(base).apply { read(reader) }
             )
-            InMsgType.VOICE -> msgHandler.onWorkVoiceMsg(
+            MsgType.VOICE -> msgHandler.onWorkVoiceMsg(
                 WorkVoiceMsg(base).apply { read(reader) }
             )
-            InMsgType.VIDEO -> msgHandler.onWorkVideoMsg(
+            MsgType.VIDEO -> msgHandler.onWorkVideoMsg(
                 WorkVideoMsg(base).apply { read(reader) }
             )
 
-            InMsgType.LOCATION -> msgHandler.onWorkLocationMsg(
+            MsgType.LOCATION -> msgHandler.onWorkLocationMsg(
                 WorkLocationMsg(base).apply { read(reader) }
             )
-            InMsgType.LINK -> msgHandler.onWorkLinkMsg(
+            MsgType.LINK -> msgHandler.onWorkLinkMsg(
                 WorkLinkMsg(base).apply { read(reader) }
             )
             else -> msgHandler.onDispatch(reader, base)?: msgHandler.onDefault(WorkBaseMsg(base).apply { read(reader) })

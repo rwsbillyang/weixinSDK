@@ -40,7 +40,7 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
             val base = BaseInfo.fromXml(xmlText, reader)
 
             val reMsg = when(base.msgType){
-                InMsgType.EVENT -> dispatchEvent(reader,base)
+                MsgType.EVENT -> dispatchEvent(reader,base)
                 else -> dispatchMsg(reader,base)
             }
 

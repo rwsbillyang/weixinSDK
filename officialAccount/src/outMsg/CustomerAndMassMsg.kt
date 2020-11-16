@@ -83,7 +83,7 @@ class TextMsg(
         override val customService: KfAccountName? = null,
         override val clientMsgId: String? = null
 ) : ICustomerAndMassMsg {
-    override val msgType: String = IMsg.TEXT
+    override val msgType: String = MsgType.TEXT
     /**
      * convenience constructor
      * @param content  文本内容
@@ -128,7 +128,7 @@ class VoiceMsg(
         override val customService: KfAccountName? = null,
         override val clientMsgId: String? = null
 ) : ICustomerAndMassMsg {
-    override val msgType: String = IMsg.VOICE
+    override val msgType: String = MsgType.VOICE
     /**
      * convenience constructor
      * @param receivers 消息接收者
@@ -162,7 +162,7 @@ class CardMsg(
         override val customService: KfAccountName? = null,
         override val clientMsgId: String? = null
 ) : ICustomerAndMassMsg {
-    override val msgType: String = IMsg.CARD
+    override val msgType: String = MsgType.CARD
     /**
      * convenience constructor
      * @param receivers 消息接收者
@@ -195,7 +195,7 @@ class MpNewsMsg(
         @SerialName("customservice")
         override val customService: KfAccountName? = null,
         override val clientMsgId: String? = null,
-        override val msgType: String = IMsg.MPNEWS
+        override val msgType: String = MsgType.MPNEWS
 ) : ICustomerAndMassMsg {
     /**
      * 群发消息

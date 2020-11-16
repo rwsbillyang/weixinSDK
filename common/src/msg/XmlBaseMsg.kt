@@ -6,41 +6,6 @@ import org.slf4j.LoggerFactory
 import javax.xml.stream.XMLEventReader
 import javax.xml.stream.XMLStreamException
 
-object InMsgType{
-       const val TEXT = "text"
-        const val IMAGE = "image"
-        const val VOICE = "voice"
-        const val VIDEO = "video"
-        const val SHORT_VIDEO = "shortvideo"
-        const val LOCATION = "location"
-        const val LINK = "link"
-        const val EVENT = "event"
-
-        const val MUSIC = "music"
-        const val NEWS = "news"
-        const val TRANSFER_TO_CUSTOMER_SERVICE = "transfer_customer_service"
-
-        const val DEFAULT = "defaultMsg" //官方API中无此类型，为了方便对消息默认处理而添加
-}
-
-object InEventType{
-    const val SUBSCRIBE = "subscribe"
-    const val UNSUBSCRIBE = "unsubscribe"
-    const val SCAN = "SCAN"
-    const val LOCATION = "LOCATION"
-    const val CLICK = "CLICK"
-    const val VIEW = "VIEW"
-    const val SCAN_CODE_PUSH = "scancode_push"
-    const val SCAN_CODE_WAIT_MSG = "scancode_waitmsg"
-    const val PIC_SYS_PHOTO = "pic_sysphoto"
-    const val PIC_PHOTO_OR_ALBUM = "pic_photo_or_album"
-    const val PIC_WEIXIN = "pic_weixin"
-    const val LOCATION_SELECT = "location_select"
-    const val VIEW_MINI_PROGRAM = "view_miniprogram"
-    const val MASS_SEND_JOB_FINISH = "MASSSENDJOBFINISH"
-    const val TEMPLATE_SEND_JOB_FINISH = "TEMPLATESENDJOBFINISH"
-    const val DEFAULT = "defaultEvent" //官方API中无此类型，为了方便对消息默认处理而添加
-}
 
 
 /**

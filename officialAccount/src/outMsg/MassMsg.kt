@@ -2,9 +2,7 @@ package com.github.rwsbillyang.wxSDK.officialAccount.outMsg
 
 
 
-import com.github.rwsbillyang.wxSDK.msg.IMsg
-import com.github.rwsbillyang.wxSDK.msg.ImagesContent
-import com.github.rwsbillyang.wxSDK.msg.VideoContent
+import com.github.rwsbillyang.wxSDK.msg.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -45,7 +43,7 @@ class ImgsMsg(
     override val receivers: MsgReceivers,
     override val clientMsgId: String? = null
 ) : IMassMsg {
-    override val msgType: String = IMsg.IMAGE
+    override val msgType: String = MsgType.IMAGE
     /**
      * convenience constructor
      * @param recommend 推荐语，不填则默认为“分享图片”
@@ -78,7 +76,7 @@ class VideoMsg(
     override val receivers: MsgReceivers,
     override val clientMsgId: String? = null
 ) : IMassMsg{
-    override val msgType: String = IMsg.MPVIDEO
+    override val msgType: String = MsgType.MPVIDEO
 }
 
 object VideoMsgSerializer : MassMsgSerializer<VideoMsg>() {

@@ -1,8 +1,7 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.outMsg
 
-import com.github.rwsbillyang.wxSDK.msg.InMsgType
-import com.github.rwsbillyang.wxSDK.msg.XmlMsgBuilder
-import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
+import com.github.rwsbillyang.wxSDK.msg.*
+
 
 
 //============================= 公众号支持，企业微信未提及支持 被动回复 消息 =============================//
@@ -27,7 +26,7 @@ class ReMusicMsg(
         fromUserName: String?,
         createTime: Long = System.currentTimeMillis()
 
-) : ReBaseMSg(toUserName, fromUserName, createTime, InMsgType.MUSIC) {
+) : ReBaseMSg(toUserName, fromUserName, createTime, MsgType.MUSIC) {
     override fun addMsgContent(builderXml: XmlMsgBuilder) {
         builderXml.append("<Music>\n")
         builderXml.addData("Title", title)
@@ -74,7 +73,7 @@ class ReTransferMsg(
         fromUserName: String?,
         createTime: Long = System.currentTimeMillis(),
         val kfAccount: String? = null
-) : ReBaseMSg(toUserName, fromUserName, createTime, InMsgType.TRANSFER_TO_CUSTOMER_SERVICE) {
+) : ReBaseMSg(toUserName, fromUserName, createTime, MsgType.TRANSFER_TO_CUSTOMER_SERVICE) {
     override fun addMsgContent(builderXml: XmlMsgBuilder) {
         if (!kfAccount.isNullOrBlank()) {
             builderXml.append("<TransInfo>\n")

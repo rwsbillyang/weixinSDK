@@ -32,7 +32,7 @@ class CustomerImgMsg(
         @SerialName("customservice")
         override val customService: KfAccountName? = null
 ) : ICustomerMsg {
-    override val msgType: String = IMsg.IMAGE
+    override val msgType: String = MsgType.IMAGE
 }
 
 
@@ -45,7 +45,7 @@ class CustomerVideoMsg(
         @SerialName("customservice")
         override val customService: KfAccountName? = null
 ) : ICustomerMsg{
-    override val msgType: String = InMsgType.VIDEO
+    override val msgType: String = MsgType.VIDEO
 }
 
 
@@ -63,7 +63,7 @@ class CustomerNewsMsg(
         @SerialName("customservice")
         override val customService: KfAccountName? = null
 ) : ICustomerMsg {
-    override val msgType: String = IMsg.NEWS
+    override val msgType: String = MsgType.NEWS
     /**
      * convenience constructor
      * */
@@ -88,7 +88,7 @@ class CustomerMusicMsg(
         override val customService: KfAccountName? = null
 ) : ICustomerMsg
 {
-    override val msgType: String = IMsg.MUSIC
+    override val msgType: String = MsgType.MUSIC
 }
 
 
@@ -108,7 +108,7 @@ class CustomerMenuMsg(
         @SerialName("customservice")
         override val customService: KfAccountName? = null
 ) : ICustomerMsg{
-    override val msgType: String = IMsg.MENU
+    override val msgType: String = MsgType.MENU
 }
 
 
@@ -127,5 +127,5 @@ class CustomerMiniProgramMsg(
         @SerialName("customservice")
         override val customService: KfAccountName? = null
 ) : ICustomerMsg{
-    override val msgType: String = IMsg.MINI_PROGRAM
+    override val msgType: String = MsgType.MINI_PROGRAM
 }
