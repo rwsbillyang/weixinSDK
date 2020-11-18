@@ -18,7 +18,7 @@
 
 package com.github.rwsbillyang.wxSDK.work
 
-import com.github.rwsbillyang.wxSDK.aes.AesException
+import com.github.rwsbillyang.wxSDK.security.AesException
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
@@ -142,7 +142,7 @@ fun Routing.workApi(path: String = Work.callbackPath) {
             val msgSignature = call.request.queryParameters["msg_signature"]
             val timeStamp = call.request.queryParameters["timeStamp"]
             val nonce = call.request.queryParameters["nonce"]
-            val encryptType = call.request.queryParameters["encrypt_type"]?:"aes"
+            val encryptType = call.request.queryParameters["encrypt_type"]?:"security"
 
             val reXml = Work.WORK.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
 

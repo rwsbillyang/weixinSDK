@@ -1,4 +1,4 @@
-package com.github.rwsbillyang.wxSDK.aes
+package com.github.rwsbillyang.wxSDK.security
 
 /**
  * @copyright Copyright (c) 1998-2014 Tencent Inc.

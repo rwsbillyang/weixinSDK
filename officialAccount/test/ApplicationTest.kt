@@ -18,9 +18,9 @@
 
 package com.github.rwsbillyang.wxSDK.officialAccount.test
 
-import com.github.rwsbillyang.wxSDK.aes.SHA1
-import com.github.rwsbillyang.wxSDK.aes.SignUtil
-import com.github.rwsbillyang.wxSDK.aes.XmlUtil
+import com.github.rwsbillyang.wxSDK.security.SHA1
+import com.github.rwsbillyang.wxSDK.security.SignUtil
+import com.github.rwsbillyang.wxSDK.security.XmlUtil
 import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
 import io.ktor.http.*
 import io.ktor.server.testing.*

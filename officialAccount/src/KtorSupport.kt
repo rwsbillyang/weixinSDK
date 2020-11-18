@@ -19,7 +19,7 @@
 package com.github.rwsbillyang.wxSDK.officialAccount
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.github.rwsbillyang.wxSDK.aes.SignUtil
+import com.github.rwsbillyang.wxSDK.security.SignUtil
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
@@ -115,7 +115,7 @@ fun Routing.officialAccountApi(path: String = OfficialAccount.wxEntryPoint) {
             val msgSignature = call.request.queryParameters["msg_signature"]
             val timeStamp = call.request.queryParameters["timestamp"]
             val nonce = call.request.queryParameters["nonce"]
-            val encryptType = call.request.queryParameters["encrypt_type"]?:"aes"
+            val encryptType = call.request.queryParameters["encrypt_type"]?:"security"
 
             val reXml = OfficialAccount.OA.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
 

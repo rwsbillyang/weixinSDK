@@ -19,7 +19,7 @@
 package com.github.rwsbillyang.wxSDK.wxPay.auth
 
 import com.github.rwsbillyang.wxSDK.wxPay.WxPayApi
-import com.github.rwsbillyang.wxSDK.wxPay.util.AesUtil
+import com.github.rwsbillyang.wxSDK.security.AesUtil
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.IOException

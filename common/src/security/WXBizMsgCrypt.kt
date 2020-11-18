@@ -1,10 +1,8 @@
-package com.github.rwsbillyang.wxSDK.aes
+package com.github.rwsbillyang.wxSDK.security
 
 
-import com.github.rwsbillyang.wxSDK.aes.PKCS7Encoder.decode
-import com.github.rwsbillyang.wxSDK.aes.PKCS7Encoder.encode
-import com.github.rwsbillyang.wxSDK.aes.SHA1.getSHA1
-//import org.apache.commons.codec.binary.Base64
+
+
 import java.nio.charset.Charset
 import java.util.*
 import javax.crypto.Cipher
@@ -79,7 +77,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
             nonce: String,
             echoStr: String
     ): String {
-        val signature = getSHA1(token, timeStamp, nonce, echoStr)
+        val signature = SHA1.getSHA1(token, timeStamp, nonce, echoStr)
         if (signature != msgSignature) {
             println("verifyUrl: original signature: $msgSignature, generated signature: $signature")
             throw AesException(AesException.ValidateSignatureError)
@@ -112,7 +110,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
             timeStamp: String,
             nonce: String,
             postData: String,
-            encryptType: String? = "aes"
+            encryptType: String? = "security"
     ): String {
 
         // 密钥，公众账号的app secret
@@ -121,7 +119,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
 
         val encryptText = map["Encrypt"].toString()
         //生成自己的安全签名
-        val signature = getSHA1(token, timeStamp, nonce, encryptText)
+        val signature = SHA1.getSHA1(token, timeStamp, nonce, encryptText)
 
         // 和URL中的签名比较是否相等
         // println("第三方收到URL中的签名：" + msg_sign);
@@ -165,7 +163,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
                    agentId: Int? = null
     ): Pair<String, String> {
         val encrypt = encrypt(replyMsg)
-        val signature = getSHA1(token, timeStamp, nonce, encrypt)
+        val signature = SHA1.getSHA1(token, timeStamp, nonce, encrypt)
 
         // println("发送给平台的签名是: " + signature[1].toString());
         // 生成回复发送的xml
@@ -228,7 +226,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
         byteCollector.addBytes(appidBytes)
 
         // ... + pad: 使用自定义的填充方式对明文进行补位填充
-        val padBytes = encode(byteCollector.size())
+        val padBytes = PKCS7Encoder.encode(byteCollector.size())
         byteCollector.addBytes(padBytes)
 
         // 获得最终的字节流, 未加密
@@ -282,7 +280,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
         val from_appid: String
         try {
             // 去除补位字符
-            val bytes = decode(original)
+            val bytes = PKCS7Encoder.decode(original)
 
             // 分离16位随机字符串,网络字节序和AppId
             val networkOrder = Arrays.copyOfRange(bytes, 16, 20)

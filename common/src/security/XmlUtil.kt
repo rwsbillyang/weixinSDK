@@ -1,4 +1,4 @@
-package com.github.rwsbillyang.wxSDK.aes
+package com.github.rwsbillyang.wxSDK.security
 
 import com.github.rwsbillyang.wxSDK.msg.XmlMsgBuilder
 import org.xml.sax.InputSource

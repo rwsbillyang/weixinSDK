@@ -20,7 +20,8 @@ package com.github.rwsbillyang.wxSDK.work
 
 
 import com.github.rwsbillyang.wxSDK.accessToken.*
-import com.github.rwsbillyang.wxSDK.aes.WXBizMsgCrypt
+import com.github.rwsbillyang.wxSDK.security.PemUtil
+import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.work.inMsg.*
 
 object Work {

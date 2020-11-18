@@ -1,7 +1,7 @@
 /*
  * Copyright © 2020 rwsbillyang@qq.com
  *
- * Written by rwsbillyang@qq.com at Beijing Time: 2020-11-01 12:06
+ * Written by rwsbillyang@qq.com at Beijing Time: 2020-11-18 22:49
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.wxSDK.wxPay.util
+package com.github.rwsbillyang.wxSDK.security
 
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -29,7 +29,11 @@ import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.*
 
-//https://github.com/wechatpay-apiv3/wechatpay-apache-httpclient/blob/master/src/main/java/com/wechat/pay/contrib/apache/httpclient/util/PemUtil.java
+/**
+ * 用于微信支付
+ * 证书工具，生成PrivateKey
+ * https://github.com/wechatpay-apiv3/wechatpay-apache-httpclient/blob/master/src/main/java/com/wechat/pay/contrib/apache/httpclient/util/PemUtil.java
+ * */
 object PemUtil {
     fun loadPrivateKey(inputStream: InputStream): PrivateKey {
         return try {

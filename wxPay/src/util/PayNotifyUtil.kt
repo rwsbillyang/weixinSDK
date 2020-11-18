@@ -18,6 +18,7 @@
 
 package com.github.rwsbillyang.wxSDK.wxPay.util
 
+import com.github.rwsbillyang.wxSDK.security.AesUtil
 import com.github.rwsbillyang.wxSDK.wxPay.EncryptData
 import com.github.rwsbillyang.wxSDK.wxPay.OrderPayDetail
 import com.github.rwsbillyang.wxSDK.wxPay.WxPay

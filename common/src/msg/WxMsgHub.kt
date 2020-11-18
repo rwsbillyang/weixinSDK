@@ -1,7 +1,7 @@
 package com.github.rwsbillyang.wxSDK.msg
 
-import com.github.rwsbillyang.wxSDK.aes.AesException
-import com.github.rwsbillyang.wxSDK.aes.WXBizMsgCrypt
+import com.github.rwsbillyang.wxSDK.security.AesException
+import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

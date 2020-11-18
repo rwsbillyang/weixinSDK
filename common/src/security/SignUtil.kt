@@ -1,4 +1,4 @@
-package com.github.rwsbillyang.wxSDK.aes
+package com.github.rwsbillyang.wxSDK.security
 
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.Logger

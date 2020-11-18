@@ -1,7 +1,7 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
 import com.github.rwsbillyang.wxSDK.msg.*
-import com.github.rwsbillyang.wxSDK.aes.WXBizMsgCrypt
+import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import javax.xml.stream.XMLEventReader
 
 class OAMsgHub(

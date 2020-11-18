@@ -1,7 +1,7 @@
 /*
  * Copyright © 2020 rwsbillyang@qq.com
  *
- * Written by rwsbillyang@qq.com at Beijing Time: 2020-11-01 12:02
+ * Written by rwsbillyang@qq.com at Beijing Time: 2020-11-18 22:48
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.wxSDK.wxPay.util
+package com.github.rwsbillyang.wxSDK.security
 
 import java.io.IOException
 import java.nio.charset.Charset
@@ -31,6 +31,7 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 /**
+ * 用于微信支付
  * 用于 微信回调通知和平台证书下载时，对部分关键信息进行解密
  *
  * 为了保证安全性，微信支付在回调通知和平台证书下载接口中，对关键信息进行了AES-256-GCM加密。

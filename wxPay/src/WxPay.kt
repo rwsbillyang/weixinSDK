@@ -20,7 +20,7 @@ package com.github.rwsbillyang.wxSDK.wxPay
 
 
 import com.github.rwsbillyang.wxSDK.wxPay.auth.*
-import com.github.rwsbillyang.wxSDK.wxPay.util.PemUtil
+import com.github.rwsbillyang.wxSDK.security.PemUtil
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
 import io.ktor.client.features.*
@@ -44,7 +44,7 @@ object WxPay {
             return _context!!
         }
 
-    fun isInited() = _context != null
+    fun isInit() = _context != null
 
     /**
      * 非ktor平台可以使用此函数进行配置
@@ -193,7 +193,7 @@ fun HttpClientConfig<ApacheEngineConfig>.wxPayClientConfig() {
             val userAgent = "WechatPay-Apache-HttpAsyncClient/com.github.rwsbillyang.wxSDK.wxPay ($os) Java/$ver"
             setUserAgent(userAgent)
 
-            if (WxPay.isInited())
+            if (WxPay.isInit())
                 configWechat(WxPay.context)
         }
         customizeRequest {

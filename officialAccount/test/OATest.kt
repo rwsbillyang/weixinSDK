@@ -18,8 +18,8 @@
 
 package com.github.rwsbillyang.wxSDK.officialAccount.test
 
-import com.github.rwsbillyang.wxSDK.aes.AesException
-import com.github.rwsbillyang.wxSDK.aes.WXBizMsgCrypt
+import com.github.rwsbillyang.wxSDK.security.AesException
+import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import org.junit.Assert
 import org.junit.Test
 import org.xml.sax.InputSource
@@ -70,7 +70,7 @@ class OATest {
             val fromXML = String.format(xmlFormat, encrypt)
 
             // 第三方收到公众号平台发送的消息
-            val afterDecrpt = pc.decryptWxMsg(msgSignature, timestamp, nonce, fromXML,"aes")
+            val afterDecrpt = pc.decryptWxMsg(msgSignature, timestamp, nonce, fromXML,"security")
             Assert.assertEquals(replyMsg, afterDecrpt)
         } catch (e: AesException) {
             Assert.fail("正常流程，怎么就抛出异常了？？？？？？")

@@ -18,7 +18,7 @@
 
 package com.github.rwsbillyang.wxSDK.officialAccount
 
-import com.github.rwsbillyang.wxSDK.aes.SignUtil
+import com.github.rwsbillyang.wxSDK.security.SignUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*

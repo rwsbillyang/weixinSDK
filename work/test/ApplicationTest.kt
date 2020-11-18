@@ -18,8 +18,8 @@
 
 package com.github.rwsbillyang.wxSDK.work.test
 
-import com.github.rwsbillyang.wxSDK.aes.SHA1
-import com.github.rwsbillyang.wxSDK.aes.XmlUtil
+import com.github.rwsbillyang.wxSDK.security.SHA1
+import com.github.rwsbillyang.wxSDK.security.XmlUtil
 import com.github.rwsbillyang.wxSDK.work.Work
 
 
@@ -50,8 +50,7 @@ class ApplicationTest {
         }
     }
 
-
-   @Test
+    //@Test
     fun testWorkUrl(){
         withTestApplication({ WorkTestableModule(testing = true) }) {
             //TODO: how to get the encryptEchoStr from "1616140317555161061"

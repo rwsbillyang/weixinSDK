@@ -20,7 +20,7 @@ package com.github.rwsbillyang.wxSDK.officialAccount
 
 
 import com.github.rwsbillyang.wxSDK.accessToken.*
-import com.github.rwsbillyang.wxSDK.aes.WXBizMsgCrypt
+import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.*
 
 

@@ -1,7 +1,7 @@
 /*
  * Copyright © 2020 rwsbillyang@qq.com
  *
- * Written by rwsbillyang@qq.com at Beijing Time: 2020-11-01 12:08
+ * Written by rwsbillyang@qq.com at Beijing Time: 2020-11-18 22:51
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.wxSDK.wxPay.util
+package com.github.rwsbillyang.wxSDK.security
 
 import java.nio.charset.StandardCharsets
 import java.security.InvalidKeyException
@@ -40,6 +40,10 @@ import javax.crypto.NoSuchPaddingException
  * https://github.com/wechatpay-apiv3/wechatpay-apache-httpclient
  * */
 object RsaCryptoUtil {
+
+    /**
+     * 用于微信支付
+     * */
     @Throws(IllegalBlockSizeException::class)
     fun encryptOAEP(message: String, certificate: X509Certificate): String {
         return try {
@@ -60,11 +64,35 @@ object RsaCryptoUtil {
             throw IllegalBlockSizeException("加密原串的长度不能超过214字节")
         }
     }
-
+    /**
+     * 用于微信支付
+     * */
     @Throws(BadPaddingException::class)
     fun decryptOAEP(ciphertext: String, privateKey: PrivateKey): String {
         return try {
             val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-1AndMGF1Padding")
+            cipher.init(Cipher.DECRYPT_MODE, privateKey)
+            val data = Base64.getDecoder().decode(ciphertext)
+            String(cipher.doFinal(data), StandardCharsets.UTF_8)
+        } catch (e: NoSuchPaddingException) {
+            throw RuntimeException("当前Java环境不支持RSA v1.5/OAEP", e)
+        } catch (e: NoSuchAlgorithmException) {
+            throw RuntimeException("当前Java环境不支持RSA v1.5/OAEP", e)
+        } catch (e: InvalidKeyException) {
+            throw IllegalArgumentException("无效的私钥", e)
+        } catch (e: BadPaddingException) {
+            throw BadPaddingException("解密失败")
+        } catch (e: IllegalBlockSizeException) {
+            throw BadPaddingException("解密失败")
+        }
+    }
+    /**
+     * 用于企业微信对聊天消息的解密
+     * */
+    @Throws(BadPaddingException::class)
+    fun decryptPKCS1(ciphertext: String, privateKey: PrivateKey): String{
+        return try {
+            val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
             cipher.init(Cipher.DECRYPT_MODE, privateKey)
             val data = Base64.getDecoder().decode(ciphertext)
             String(cipher.doFinal(data), StandardCharsets.UTF_8)
