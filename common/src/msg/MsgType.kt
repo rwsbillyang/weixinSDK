@@ -27,7 +27,7 @@ object MsgType{
     const val VOICE = "voice"
     const val MPVIDEO = "mpvideo"
     const val MPNEWS = "mpnews"
-    const val CARD = "wxcard"
+    const val WXCARD = "wxcard"
 
     const val MUSIC = "music"
     const val MENU = "msgmenu"

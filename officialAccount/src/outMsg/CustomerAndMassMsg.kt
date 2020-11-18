@@ -162,7 +162,7 @@ class CardMsg(
         override val customService: KfAccountName? = null,
         override val clientMsgId: String? = null
 ) : ICustomerAndMassMsg {
-    override val msgType: String = MsgType.CARD
+    override val msgType: String = MsgType.WXCARD
     /**
      * convenience constructor
      * @param receivers 消息接收者

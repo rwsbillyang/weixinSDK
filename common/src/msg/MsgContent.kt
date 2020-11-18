@@ -173,7 +173,7 @@ data class MpNewsContent(
  * 特别注意客服消息接口投放卡券仅支持非自定义Code码和导入code模式的卡券的卡券
  * */
 @Serializable
-@SerialName(MsgType.CARD)
+@SerialName(MsgType.WXCARD)
 class CardContent(@SerialName("card_id") val cardId: String): MsgBody(MASS_KF)
 
 
