@@ -23,6 +23,7 @@ import com.github.rwsbillyang.wxSDK.accessToken.*
 import com.github.rwsbillyang.wxSDK.security.PemUtil
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.work.inMsg.*
+import java.security.PrivateKey
 
 object Work {
     private  var _WORK: WorkContext? = null
@@ -38,6 +39,11 @@ object Work {
 
     /**
      * 非ktor平台可以使用此函数进行配置企业微信参数
+     * corpid信息在企业微信管理端—我的企业—企业信息查看，
+     * secret在企业微信管理端—管理工具—会话内容存档查看
+     *
+     * 企业微信会对ip地址的访问进行限制。对于使用方而言，需要设置其公网ip，
+     * 企业微信后台收到的请求，会校验调用方的ip与管理端填写的ip是否匹配。
      * */
     fun config(block: WorkConfiguration.() -> Unit) {
         val config = WorkConfiguration().apply(block)
@@ -46,8 +52,7 @@ object Work {
                 config.secret,
                 config.token,
                 config.encodingAESKey,
-                config.wechatId,
-                config.wechatName,
+                PemUtil.loadPrivateKey(config.chatMsgPrivateKey.byteInputStream()),
                 config.msgHandler,
                 config.eventHandler,
                 config.accessToken
@@ -85,8 +90,16 @@ class WorkConfiguration {
 
     var encodingAESKey = "your_encodingAESKey"
 
-    var wechatId: String? = null
-    var wechatName: String? = null
+    //encrypt_random_key内容解密说明：
+    // encrypt_random_key是使用企业在管理端填写的公钥（使用模值为2048bit的秘钥），采用RSA加密算法进
+    // 行加密处理后base64 encode的内容，加密内容为企业微信产生。RSA使用PKCS1。
+    //genrsa -out app_private_key.pem 2048 # 私钥的生成
+    //利用私钥生成公钥：
+    //rsa -in app_private_key.pem -pubout -out app_public_key.pem #导出公钥
+    //此处为私钥
+    var chatMsgPrivateKey: String = ""
+//    var wechatId: String? = null
+//    var wechatName: String? = null
 
     var msgHandler: IWorkMsgHandler? = null
     var eventHandler: IWorkEventHandler? = null
@@ -122,8 +135,9 @@ class WorkContext(
         var secret: String,
         var token: String,
         var encodingAESKey: String,
-        var wechatId: String? = null,
-        var wechatName: String? = null,
+        var chatMsgPrivateKey: PrivateKey,
+//        var wechatId: String? = null,
+//        var wechatName: String? = null,
 
         customMsgHandler: IWorkMsgHandler?,
         customEventHandler: IWorkEventHandler?,
