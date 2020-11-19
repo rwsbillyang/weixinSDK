@@ -44,7 +44,7 @@ dependencies {
     implementation "io.ktor:ktor-client-serialization-jvm:$ktor_version"
     implementation("io.ktor:ktor-client-logging-jvm:$ktor_version")
 
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-core:1.0.0-RC" // JVM dependency
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinx_serialization_version" // JVM dependency
 
     // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
