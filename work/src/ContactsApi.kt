@@ -18,9 +18,22 @@
 
 package com.github.rwsbillyang.wxSDK.work
 
+import com.github.rwsbillyang.wxSDK.IBase
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PolymorphicKind
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.buildSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.*
 
-object UserApi: WorkBaseApi(){
+
+object UserApi : WorkBaseApi() {
     override val group = "user"
+
     /**
      * 获取访问用户身份
      *
@@ -31,23 +44,23 @@ object UserApi: WorkBaseApi(){
      * */
     fun getUserInfo(code: String) = doGet3("getuserinfo", mapOf("code" to code))
 
-    fun create(body: Map<String, Any?>)= doPost3("create", body)
+    fun create(body: Map<String, Any?>) = doPost3("create", body)
 
-    fun detail(userId: String) = doGet3("get", mapOf("userid" to userId))
+    fun detail(userId: String):ResponseUserDetail = doGet("get", mapOf("userid" to userId))
 
     fun update(body: Map<String, Any?>) = doPost3("update", body)
 
     fun delete(userId: String) = doGet3("delete", mapOf("userid" to userId))
 
-    fun batchDelete(userIdList: List<String>) = doPost3("batchdelete",userIdList)
+    fun batchDelete(userIdList: List<String>) = doPost3("batchdelete", userIdList)
 
     fun simpleList(departmentId: Int, fetchChild: Int) = doGet3(
             "simplelist",
-        mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString()))
+            mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString()))
 
     fun list(departmentId: Int, fetchChild: Int) = doGet3(
             "list",
-        mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString()))
+            mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString()))
 
     fun convertToOpenId(userId: String) = doPost3("convert_to_openid", mapOf("userid" to userId))
 
@@ -66,21 +79,23 @@ object UserApi: WorkBaseApi(){
      *  https://work.weixin.qq.com/api/doc/90000/90135/91714
      * */
     fun getJoinQrCode(sizeType: Int) = doGet()
-    { "$base/corp/get_join_qrcode?access_token=${accessToken()}&size_type=$sizeType"}
+    { "$base/corp/get_join_qrcode?access_token=${accessToken()}&size_type=$sizeType" }
+
     /**
      * 获取手机号随机串
      * 支持企业获取手机号随机串，该随机串可直接在企业微信终端搜索手机号对应的微信用户。
      * */
     fun getMobileHashCode(mobile: String, state: String) = doPost3(
             "get_mobile_hashcode",
-        mapOf("mobile" to mobile, "state" to state))
+            mapOf("mobile" to mobile, "state" to state))
 
 }
 
 
-class DepartmentApi: WorkBaseApi(){
+class DepartmentApi : WorkBaseApi() {
     override val group = "department"
-    companion object{
+
+    companion object {
         const val CREATE = "create"
         const val UPDATE = "update"
         const val DELETE = "delete"
@@ -91,11 +106,12 @@ class DepartmentApi: WorkBaseApi(){
      * 创建部门
      * https://work.weixin.qq.com/api/doc/90000/90135/90204
      * */
-    fun create(body: Map<String, Any?>) = doPost3(CREATE,body)
+    fun create(body: Map<String, Any?>) = doPost3(CREATE, body)
+
     /**
      * https://work.weixin.qq.com/api/doc/90000/90135/90206
      * */
-    fun update(body: Map<String, Any?>) = doPost3(UPDATE,body)
+    fun update(body: Map<String, Any?>) = doPost3(UPDATE, body)
 
     /**
      *  @param id 部门id。（注：不能删除根部门；不能删除含有子部门、成员的部门）
@@ -113,9 +129,10 @@ class DepartmentApi: WorkBaseApi(){
 
 }
 
-class TagApi: WorkBaseApi(){
+class TagApi : WorkBaseApi() {
     override val group = "tag"
-    companion object{
+
+    companion object {
         const val CREATE = "create"
         const val UPDATE = "update"
         const val DELETE = "delete"
@@ -153,8 +170,8 @@ class TagApi: WorkBaseApi(){
      * https://work.weixin.qq.com/api/doc/90000/90135/90214
      * */
     fun addTagUsers(id: Int, userlist: List<String>?, partylist: List<Int>?) = doPost3(
-        ADD_TAG_USERS,
-        mapOf("tagid" to id, "userlist" to userlist, "partylist" to partylist))
+            ADD_TAG_USERS,
+            mapOf("tagid" to id, "userlist" to userlist, "partylist" to partylist))
 
 
     /**
@@ -163,8 +180,8 @@ class TagApi: WorkBaseApi(){
      * https://work.weixin.qq.com/api/doc/90000/90135/90214
      * */
     fun delTagUsers(id: Int, userlist: List<String>?, partylist: List<Int>?) = doPost3(
-        DEL_TAG_USERS,
-        mapOf("tagid" to id, "userlist" to userlist, "partylist" to partylist))
+            DEL_TAG_USERS,
+            mapOf("tagid" to id, "userlist" to userlist, "partylist" to partylist))
 
     fun list() = doGet3(LIST, null)
 }
@@ -175,9 +192,10 @@ class BatchUserCallback(val url: String?,
 
 class BatchUserBody(val mediaId: String, toInvite: Boolean?, callback: BatchUserCallback?)
 
-class UserBatchApi: WorkBaseApi(){
+class UserBatchApi : WorkBaseApi() {
     override val group = "batch"
-    companion object{
+
+    companion object {
         const val INVITE = "invite"
         const val SYNC_USER = "syncuser"
         const val REPLACE_USER = "replaceuser"
@@ -195,28 +213,213 @@ class UserBatchApi: WorkBaseApi(){
      * 因为邀请频率是异步检查的，所以调用接口返回成功，并不代表接收者一定能收到邀请消息（可能受上述频率限制无法接收）。
      * */
     fun invite(user: List<Int>?, party: List<Int>?, tag: List<Int>?) = doPost3(
-        INVITE,
-        mapOf("user" to user, "party" to party, "tag" to tag))
+            INVITE,
+            mapOf("user" to user, "party" to party, "tag" to tag))
 
-    fun syncUser(mediaId: String, toInvite: Boolean = true, callback: BatchUserCallback?=null)
-            = doPost3(
-        SYNC_USER,
-        BatchUserBody(mediaId, toInvite, callback)
+    fun syncUser(mediaId: String, toInvite: Boolean = true, callback: BatchUserCallback? = null) = doPost3(
+            SYNC_USER,
+            BatchUserBody(mediaId, toInvite, callback)
     )
 
-    fun replaceUser(mediaId: String, toInvite: Boolean = true, callback: BatchUserCallback?=null)
-            = doPost3(
-        REPLACE_USER,
-        BatchUserBody(mediaId, toInvite, callback)
+    fun replaceUser(mediaId: String, toInvite: Boolean = true, callback: BatchUserCallback? = null) = doPost3(
+            REPLACE_USER,
+            BatchUserBody(mediaId, toInvite, callback)
     )
 
-    fun replaceParty(mediaId: String, callback: BatchUserCallback?=null)
-            = doPost3(
-        REPLACE_PARTY,
-        BatchUserBody(mediaId, null, callback)
+    fun replaceParty(mediaId: String, callback: BatchUserCallback? = null) = doPost3(
+            REPLACE_PARTY,
+            BatchUserBody(mediaId, null, callback)
     )
 
-    fun getResult(jobId: String)
-            = doPost3(GET_RESULT, mapOf("jobid" to jobId))
+    fun getResult(jobId: String) = doPost3(GET_RESULT, mapOf("jobid" to jobId))
 
+}
+
+/**
+{
+"errcode": 0,
+"errmsg": "ok",
+"userid": "zhangsan",
+"name": "李四",
+"department": [1, 2],
+"order": [1, 2],
+"position": "后台工程师",
+"mobile": "13800000000",
+"gender": "1",
+"email": "zhangsan@gzdev.com",
+"is_leader_in_dept": [1, 0],
+"avatar": "http://wx.qlogo.cn/mmopen/ajNVdqHZLLA3WJ6DSZUfiakYe37PKnQhBIeOQBO4czqrnZDS79FH5Wm5m4X69TBicnHFlhiafvDwklOpZeXYQQ2icg/0",
+"thumb_avatar": "http://wx.qlogo.cn/mmopen/ajNVdqHZLLA3WJ6DSZUfiakYe37PKnQhBIeOQBO4czqrnZDS79FH5Wm5m4X69TBicnHFlhiafvDwklOpZeXYQQ2icg/100",
+"telephone": "020-123456",
+"alias": "jackzhang",
+"address": "广州市海珠区新港中路",
+"open_userid": "xxxxxx",
+"main_department": 1,
+"extattr": {
+"attrs": [
+{
+"type": 0,
+"name": "文本名称",
+"text": {
+"value": "文本"
+}
+},
+{
+"type": 1,
+"name": "网页名称",
+"web": {
+"url": "http://www.test.com",
+"title": "标题"
+}
+}
+]
+},
+"status": 1,
+"qr_code": "https://open.work.weixin.qq.com/wwopen/userQRCode?vcode=xxx",
+"external_position": "产品经理",
+"external_profile": {
+"external_corp_name": "企业简称",
+"external_attr": [{
+"type": 0,
+"name": "文本名称",
+"text": {
+"value": "文本"
+}
+},
+{
+"type": 1,
+"name": "网页名称",
+"web": {
+"url": "http://www.test.com",
+"title": "标题"
+}
+},
+{
+"type": 2,
+"name": "测试app",
+"miniprogram": {
+"appid": "wx8bd80126147dFAKE",
+"pagepath": "/index",
+"title": "my miniprogram"
+}
+}
+]
+}
+}
+参数说明：
+
+参数	说明
+errcode	返回码
+errmsg	对返回码的文本描述内容
+userid	成员UserID。对应管理端的帐号，企业内必须唯一。不区分大小写，长度为1~64个字节
+name	成员名称，此字段从2019年12月30日起，对新创建第三方应用不再返回真实name，使用userid代替name，
+2020年6月30日起，对所有历史第三方应用不再返回真实name，使用userid代替name，后续第三方仅通讯录应用可获取，
+第三方页面需要通过通讯录展示组件来展示名字
+mobile	手机号码，第三方仅通讯录应用可获取
+department	成员所属部门id列表，仅返回该应用有查看权限的部门id
+order	部门内的排序值，默认为0。数量必须和department一致，数值越大排序越前面。值范围是[0, 2^32)
+position	职务信息；第三方仅通讯录应用可获取
+gender	性别。0表示未定义，1表示男性，2表示女性
+email	邮箱，第三方仅通讯录应用可获取
+is_leader_in_dept	表示在所在的部门内是否为上级。；第三方仅通讯录应用可获取
+avatar	头像url。 第三方仅通讯录应用可获取
+thumb_avatar	头像缩略图url。第三方仅通讯录应用可获取
+telephone	座机。第三方仅通讯录应用可获取
+alias	别名；第三方仅通讯录应用可获取
+extattr	扩展属性，第三方仅通讯录应用可获取
+status	激活状态: 1=已激活，2=已禁用，4=未激活，5=退出企业。
+已激活代表已激活企业微信或已关注微工作台（原企业号）。未激活代表既未激活企业微信又未关注微工作台（原企业号）。
+qr_code	员工个人二维码，扫描可添加为外部联系人(注意返回的是一个url，可在浏览器上打开该url以展示二维码)；第三方仅通讯录应用可获取
+external_profile	成员对外属性，字段详情见对外属性；第三方仅通讯录应用可获取
+external_position	对外职务，如果设置了该值，则以此作为对外展示的职务，否则以position来展示。第三方仅通讯录应用可获取
+address	地址。第三方仅通讯录应用可获取
+open_userid	全局唯一。对于同一个服务商，不同应用获取到企业内同一个成员的open_userid是相同的，最多64个字节。仅第三方应用可获取
+main_department	主部门
+ * */
+@Serializable
+class ResponseUserDetail(
+        @SerialName("errcode")
+        override val errCode: Int = 0,
+        @SerialName("errmsg")
+        override val errMsg: String? = null,
+
+        val userid: String,
+        val name: String? = null,
+        val mobile: String? = null,
+        val avatar: String? = null,
+        val thumb_avatar: String? = null,
+        val telephone: String? = null,    //座机。第三方仅通讯录应用可获取
+        val alias: String? = null,
+        val status: Int? = null,//激活状态: 1=已激活，2=已禁用，4=未激活，5=退出企业。
+        val gender: String, //0表示未定义，1表示男性，2表示女性
+        val email: String? = null,
+        val address: String? = null,
+        val extattr: List<Attr>? = null,
+
+        val department: List<Int>? = null,
+        val main_department: Int? = null,
+        val is_leader_in_dept: Int? = null,
+        val order: List<Int>? = null,
+        val position: String? = null,
+
+        val qr_code: String? = null,
+        val external_position: String? = null,
+        val external_profile: ExternalProfile? = null,
+
+        val open_userid: String? = null
+): IBase
+
+@Serializable
+class ExternalProfile(
+        val external_corp_name: String? = null,
+        val external_attr: List<Attr>? = null
+)
+
+@Serializable
+class Text(val value: String)
+@Serializable
+class Web(val url: String, val title: String)
+@Serializable
+class MiniProgram(val appid: String, val pagepath: String, val title: String)
+@Serializable(with = AttrSerializer::class)
+sealed class Attr {
+    abstract val type: Int
+    abstract val name: String
+}
+@Serializable
+class TextAttr(override val type: Int, override val name: String, val text: Text) : Attr()
+@Serializable
+class WebAttr(override val type: Int, override val name: String, val web: Web) : Attr()
+@Serializable
+class MiniProgramAttr(override val type: Int, override val name: String, val miniprogram: MiniProgram) : Attr()
+
+class AttrSerializer : KSerializer<Attr> {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Attr")
+    override fun deserialize(decoder: Decoder): Attr {
+        // Decoder -> JsonDecoder
+        require(decoder is JsonDecoder) // this class can be decoded only by Json
+        // JsonDecoder -> JsonElement
+        val element = decoder.decodeJsonElement()
+        // JsonElement -> value
+        require(element is JsonObject)
+        return when (val type = element.getValue("type").jsonPrimitive.int) {
+            0 -> decoder.json.decodeFromJsonElement(TextAttr.serializer(), element)
+            1 -> decoder.json.decodeFromJsonElement(WebAttr.serializer(), element)
+            2 -> decoder.json.decodeFromJsonElement(MiniProgramAttr.serializer(), element)
+            else -> error("not support type=$type")
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: Attr) {
+        // Encoder -> JsonEncoder
+        require(encoder is JsonEncoder) // This class can be encoded only by Json
+        // value -> JsonElement
+        val element = when (value) {
+            is TextAttr -> encoder.json.encodeToJsonElement(TextAttr.serializer(), value)
+            is WebAttr -> encoder.json.encodeToJsonElement(WebAttr.serializer(), value)
+            is MiniProgramAttr -> encoder.json.encodeToJsonElement(MiniProgramAttr.serializer(), value)
+        }
+        // JsonElement -> JsonEncoder
+        encoder.encodeJsonElement(element)
+    }
 }
