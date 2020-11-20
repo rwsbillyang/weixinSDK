@@ -1,7 +1,7 @@
 /*
  * Copyright © 2020 rwsbillyang@qq.com
  *
- * Written by rwsbillyang@qq.com at Beijing Time: 2020-11-17 16:51
+ * Written by rwsbillyang@qq.com at Beijing Time: 2020-11-19 21:12
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.wxSDK.work.chatMsg
+package com.github.rwsbillyang.wxSDK.work.test
 
 
+import com.github.rwsbillyang.wxSDK.work.chatMsg.ChatMsgSdk
 import java.io.File
 import java.io.FileOutputStream
 
@@ -94,7 +95,7 @@ object SdkDemo {
                     return
                 }
                 System.out.printf("getmediadata outindex len:%d, data_len:%d, is_finis:%d\n", ChatMsgSdk.GetIndexLen(media_data),
-                    ChatMsgSdk.GetDataLen(media_data), ChatMsgSdk.IsMediaDataFinish(media_data))
+                        ChatMsgSdk.GetDataLen(media_data), ChatMsgSdk.IsMediaDataFinish(media_data))
                 try {
                     val outputStream = FileOutputStream(File(args[5]))
                     outputStream.write(ChatMsgSdk.GetData(media_data))

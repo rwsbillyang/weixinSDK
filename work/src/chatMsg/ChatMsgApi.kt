@@ -68,11 +68,12 @@ object ChatMsgApi : WorkBaseApi() {
 
 
 
+    const val CHAT_MSG_MAX_LIMIT = 1000
     /**
      * 获取聊天记录
      * 调用者首先负责newSDK和init，之后负责释放
      * */
-    fun getChatMsgList(sdk: Long, seq: Long = 0L, limit: Int = 1000, proxy: String? = null, pwd: String? = null, timeout: Long = 30L): List<IChatMsg>?
+    fun getChatMsgList(sdk: Long, seq: Long = 0L, limit: Int = CHAT_MSG_MAX_LIMIT, proxy: String? = null, pwd: String? = null, timeout: Long = 30L): List<IChatMsg>?
     {
         val slice: Long = ChatMsgSdk.NewSlice()
         val ret = ChatMsgSdk.GetChatData(sdk, seq, limit, proxy, pwd, timeout, slice)
@@ -103,7 +104,7 @@ object ChatMsgApi : WorkBaseApi() {
                     }else{
                         val chatRecordJsonStr = ChatMsgSdk.GetContentFromSlice(msg)
                         if(!chatRecordJsonStr.isNullOrBlank()){
-                            list.add(Json.decodeFromString(ChatMsgSerializer,chatRecordJsonStr))
+                            list.add(Json.decodeFromString(ChatMsgSerializer,chatRecordJsonStr).apply { this.seq = it.seq })
                         }else{
                             println("chatRecordJsonStr isNullOrBlank, msgId=${it.msgId}, seq=${it.seq}")
                         }
