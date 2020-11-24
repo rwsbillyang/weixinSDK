@@ -40,11 +40,83 @@ enum class MsgAction { send, recall, switch }
  * 器人与外部联系人的账号都是external_userid，其中机器人的external_userid是以”wb”开头，
  * 例如：”wbjc7bDwAAJVylUKpSA3Z5U11tDO4AAA”，外部联系人的external_userid以”wo”或”wm”开头
  * */
-object ContactType{
-    const val Internal = 0
-    const val External = 1
-    const val Bot = 2
+object MsgDirection{
+    const val FROM_IN = 1
+    const val FROM_OUT = 2
+    const val FROM_BOT = 3
+
+    const val TO_IN = 1
+    const val TO_OUT = 2
+    const val TO_BOT = 3
+
+
+    const val DIRECTION_FROM_IN_TO_IN = 11
+    const val DIRECTION_FROM_IN_TO_OUT = 12
+    const val DIRECTION_FROM_IN_TO_BOT = 13
+
+    const val DIRECTION_FROM_OUT_TO_IN = 21
+    const val DIRECTION_FROM_OUT_TO_OUT = 22
+    const val DIRECTION_FROM_OUT_TO_BOT = 23
+
+    const val DIRECTION_FROM_BOT_TO_IN = 31
+    const val DIRECTION_FROM_BOT_TO_OUT = 32
+    const val DIRECTION_FROM_BOT_TO_BOT = 33
+
+    const val DIRECTION_UNKNOWN = 0
+    const val DIRECTION_NO_TO = -1
+    const val DIRECTION_NOT_SUPPORT = -100
+    const val DIRECTION_NOT_ERROR = -1000
+
+    const val DIRECTION_ROOM = 99
+
+    fun direction(from: String, toList: List<String>?): Int{
+        if(toList.isNullOrEmpty()) return DIRECTION_NO_TO
+        if(toList.size > 1) return DIRECTION_ROOM
+        val fromType = if(from.startsWith("wo")||from.startsWith("wm"))
+            FROM_OUT
+        else if(from.startsWith("wb"))
+            FROM_BOT
+        else FROM_IN
+
+        if(toList.isEmpty()) return DIRECTION_UNKNOWN
+        val to = toList[0]
+        val toType = if(to.startsWith("wo") || to.startsWith("wm"))
+            TO_OUT
+        else if(to.startsWith("wb"))
+            TO_BOT
+        else TO_IN
+
+        return direction(fromType, toType)
+    }
+    fun direction(fromType: Int, toType: Int) = when(fromType){
+        FROM_IN ->{
+            when(toType){
+                TO_IN ->  DIRECTION_FROM_IN_TO_IN
+                TO_OUT -> DIRECTION_FROM_IN_TO_OUT
+                TO_BOT -> DIRECTION_FROM_IN_TO_BOT
+                else -> DIRECTION_UNKNOWN
+            }
+        }
+        FROM_OUT -> {
+            when(toType){
+                TO_IN ->  DIRECTION_FROM_OUT_TO_IN
+                TO_OUT -> DIRECTION_FROM_OUT_TO_OUT
+                TO_BOT -> DIRECTION_FROM_OUT_TO_BOT
+                else -> DIRECTION_UNKNOWN
+            }
+        }
+        FROM_BOT -> {
+            when(toType){
+                TO_IN ->  DIRECTION_FROM_BOT_TO_IN
+                TO_OUT -> DIRECTION_FROM_BOT_TO_OUT
+                TO_BOT -> DIRECTION_FROM_BOT_TO_BOT
+                else -> DIRECTION_UNKNOWN
+            }
+        }
+        else -> DIRECTION_UNKNOWN
+    }
 }
+
 
 interface IChatMsg {
     var seq: Long
