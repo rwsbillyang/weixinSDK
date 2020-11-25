@@ -18,7 +18,7 @@
 
 package com.github.rwsbillyang.wxSDK.work
 
-class MaterialApi : WorkBaseApi(){
+class MaterialApi : WorkBaseApi(AN_Material){
     override val group = "media"
 
     /**

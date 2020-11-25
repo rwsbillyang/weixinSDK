@@ -39,6 +39,25 @@ class WorkFeature {
     }
 }
 
+class WorkMsgFeature {
+    companion object Feature : ApplicationFeature<ApplicationCallPipeline, WorkMsgConfiguration, WorkMsgFeature> {
+        override val key = AttributeKey<WorkMsgFeature>("WorkMsgFeature")
+        override fun install(pipeline: ApplicationCallPipeline, configure: WorkMsgConfiguration.() -> Unit): WorkMsgFeature {
+            Work.configWorkMsg(configure)
+            return WorkMsgFeature()
+        }
+    }
+}
+class WorkChatArchiveFeature {
+    companion object Feature : ApplicationFeature<ApplicationCallPipeline, WorkChatArchiveConfiguration, WorkChatArchiveFeature> {
+        override val key = AttributeKey<WorkChatArchiveFeature>("WorkChatArchiveFeature")
+        override fun install(pipeline: ApplicationCallPipeline, configure: WorkChatArchiveConfiguration.() -> Unit): WorkChatArchiveFeature {
+            Work.configChatArchive(configure)
+            return WorkChatArchiveFeature()
+        }
+    }
+}
+
 
 
 fun Routing.workApi(path: String = Work.callbackPath) {
@@ -96,7 +115,7 @@ fun Routing.workApi(path: String = Work.callbackPath) {
             val nonce = call.request.queryParameters["nonce"]
             val echostr = call.request.queryParameters["echostr"]
 
-            val token = Work.WORK.token
+            val token = Work.WORK_MSG.token
 
             //if (StringUtils.isAnyBlank(token, signature, timestamp, nonce,echostr)) {
             if(token.isNullOrBlank() || signature.isNullOrBlank() || timestamp.isNullOrBlank()
@@ -105,7 +124,7 @@ fun Routing.workApi(path: String = Work.callbackPath) {
                 call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
             } else {
                 try{
-                    val str = Work.WORK.wxBizMsgCrypt.verifyUrl(signature!!,timestamp!!,nonce!!,echostr!!)
+                    val str = Work.WORK_MSG.wxBizMsgCrypt.verifyUrl(signature,timestamp,nonce,echostr)
                     call.respondText(str, ContentType.Text.Plain, HttpStatusCode.OK)
                 }catch (e: AesException){
                     log.warn("AesException: ${e.message}")
@@ -144,7 +163,7 @@ fun Routing.workApi(path: String = Work.callbackPath) {
             val nonce = call.request.queryParameters["nonce"]
             val encryptType = call.request.queryParameters["encrypt_type"]?:"security"
 
-            val reXml = Work.WORK.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
+            val reXml = Work.WORK_MSG.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
 
             if(reXml.isNullOrBlank())
                 call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)

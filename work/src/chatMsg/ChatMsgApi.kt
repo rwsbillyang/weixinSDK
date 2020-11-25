@@ -29,7 +29,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 
-object ChatMsgApi : WorkBaseApi() {
+object ChatMsgApi : WorkBaseApi(AN_ChatArchive) {
     override val group = "msgaudit"
 
     /**
@@ -95,7 +95,7 @@ object ChatMsgApi : WorkBaseApi() {
                 //    b) 使用publickey_ver指定版本的私钥，使用RSA PKCS1算法对str1进行解密，得到解密内容str2.
                 //    c) 得到str2与对应消息的encrypt_chat_msg，调用下方描述的DecryptData接口，即可获得消息明文。
                 json.chatList?.forEach {
-                    val str2 = RsaCryptoUtil.decryptPKCS1(it.encryptRandomKey, Work.WORK.chatMsgPrivateKey)
+                    val str2 = RsaCryptoUtil.decryptPKCS1(it.encryptRandomKey, Work.WORK_CHAT_ARCHIVE.chatMsgPrivateKey)
 
                     val msg: Long = ChatMsgSdk.NewSlice()
                     val ret2 = ChatMsgSdk.DecryptData(sdk, str2, it.encryptChatMsg,msg)

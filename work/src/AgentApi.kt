@@ -22,8 +22,9 @@ package com.github.rwsbillyang.wxSDK.work
 /**
  * 企业应用API
  * https://work.weixin.qq.com/api/doc/90000/90135/90226
+ *
  * */
-object AgentApi : WorkBaseApi(){
+object AgentApi : WorkBaseApi(AN_AgentMgt){
     override val group = "agent"
     
     /**

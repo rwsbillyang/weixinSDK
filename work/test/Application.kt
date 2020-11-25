@@ -19,14 +19,13 @@
 package com.github.rwsbillyang.wxSDK.work.test
 
 
-import com.github.rwsbillyang.wxSDK.work.WorkFeature
 import com.github.rwsbillyang.wxSDK.accessToken.ITimelyRefreshValue
 import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.msg.ReTextMsg
+import com.github.rwsbillyang.wxSDK.work.*
 import com.github.rwsbillyang.wxSDK.work.inMsg.DefaultWorkMsgHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.WorkBaseMsg
 import com.github.rwsbillyang.wxSDK.work.inMsg.WorkTextMsg
-import com.github.rwsbillyang.wxSDK.work.workApi
 
 import io.ktor.application.*
 import io.ktor.response.*
@@ -71,14 +70,20 @@ fun Application.WorkTestableModule(testing: Boolean = false) {
 
     install(WorkFeature) {
         corpId = "wx5823bf96d3bd56c7"
-        secret = "your_app_secret_key"
+        accessToken = TestAccessTokenValue()
+        add(WorkBaseApi.AN_Base, "the_secret")
+        add(WorkBaseApi.AN_ChatArchive, "the_secret")
+        add(WorkBaseApi.AN_Contact, "the_secret")
+        add(WorkBaseApi.AN_Customer, "the_secret")
+    }
+    install(WorkMsgFeature) {
         encodingAESKey = "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C"
         token = "QDG6eK"
-
         msgHandler = TestWorkMsgHandler()
-
-        accessToken = TestAccessTokenValue()
     }
+//    install(WorkChatArchiveFeature) {
+//        chatMsgPrivateKey = ""
+//    }
 
 
     routing {

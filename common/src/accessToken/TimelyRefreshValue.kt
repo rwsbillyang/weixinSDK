@@ -17,11 +17,15 @@ interface ITimelyRefreshValue {
  * 通过提供一个refresher并在一定得间隔时间内进行刷新获取某个值
  *
  * 值更新后会发出更新通知
+ *
+ * @param appId appID or corpId
+ * @param extra extra info such as agentName in wxwork
  * */
 open class TimelyRefreshValue @JvmOverloads constructor(
     val appId: String,
     private val refresher: IRefresher,
-    private var refreshIntervalTime: Long
+    private var refreshIntervalTime: Long,
+    protected val extra: String? = null
 ) : Observable() {
     init {
         if (refreshIntervalTime > 7200000 && refreshIntervalTime <= 0) refreshIntervalTime = 7100000
@@ -66,7 +70,7 @@ open class TimelyRefreshValue @JvmOverloads constructor(
                         appId,
                         updateType,
                         timelyValue.value,
-                        timelyValue.time
+                        timelyValue.time, extra
                     )
                 )
             }
@@ -93,13 +97,14 @@ open class TimelyRefreshValue @JvmOverloads constructor(
  * @param appId       公众号或企业微信等申请的app id
  * @param refresher      刷新器
  * @param refreshIntervalTime 刷新时间间隔，默认7100s
- *
+ * @param extra extra info such as agentName in wxwork
  */
 class TimelyRefreshAccessToken @JvmOverloads constructor(
     appId: String,
     refresher: IRefresher,
-    refreshIntervalTime: Long = 7100000
-) : TimelyRefreshValue(appId, refresher, refreshIntervalTime), ITimelyRefreshValue {
+    refreshIntervalTime: Long = 7100000,
+    extra: String? = null
+) : TimelyRefreshValue(appId, refresher, refreshIntervalTime, extra), ITimelyRefreshValue {
     init {
         get() //第一次加载
     }
@@ -115,13 +120,14 @@ class TimelyRefreshAccessToken @JvmOverloads constructor(
  * @param appId       公众号或企业微信等申请的app id
  * @param refresher      刷新器
  * @param refreshIntervalTime 刷新时间间隔，默认7100s
- *
+ * @param extra extra info such as agentName in wxwork
  */
 class TimelyRefreshTicket(
     appId: String,
     refresher: IRefresher,
-    refreshIntervalTime: Long = 7100000
-) : TimelyRefreshValue(appId, refresher, refreshIntervalTime), ITimelyRefreshValue {
+    refreshIntervalTime: Long = 7100000,
+    extra: String? = null
+) : TimelyRefreshValue(appId, refresher, refreshIntervalTime, extra), ITimelyRefreshValue {
 
     init {
         get() //第一次加载

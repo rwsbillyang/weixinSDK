@@ -56,7 +56,7 @@ class ApplicationTest {
             //TODO: how to get the encryptEchoStr from "1616140317555161061"
             val encryptEcho = "P9nAzCzyDtyTWESHep1vC5X9xho/qYX3Zpb4yKa9SKld1DsH3Iyt3tP3zNdtp+4RPcs8TgAE7OaBO+FZXvnaqQ=="
             //val encryptEcho = _WORK.wxBizMsgCrypt.encrypt(sVerifyEchoStr)
-            val signature =  SHA1.getSHA1(Work.WORK.token, timestamp, nonce, encryptEcho)
+            val signature =  SHA1.getSHA1(Work.WORK_MSG.token, timestamp, nonce, encryptEcho)
             val getUrl  = "${Work.callbackPath}?msg_signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$encryptEcho"
 
 //            handleRequest(HttpMethod.Get, getUrl).apply {
@@ -70,7 +70,7 @@ class ApplicationTest {
             val originalTextMsg = "<xml><ToUserName><![CDATA[$toUser]]></ToUserName><FromUserName><![CDATA[${Work.WORK.corpId}]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[$content]]></Content><MsgId>$msgId</MsgId><AgentID>128</AgentID></xml>"
 
             //将原始文本用timestamp和nonce拼接后，用sha1加密，得到加密消息，再置于post data中的Encrypt的标签中
-            val (xml, msgSignature) = Work.WORK.wxBizMsgCrypt.encryptMsg(originalTextMsg,timestamp, nonce, toUser,128)
+            val (xml, msgSignature) = Work.WORK_MSG.wxBizMsgCrypt.encryptMsg(originalTextMsg,timestamp, nonce, toUser,128)
 
 
             val postUrl = "${Work.callbackPath}?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce"
@@ -86,8 +86,8 @@ class ApplicationTest {
                         val reTimeStamp =  map["TimeStamp"]?:""
                         val reNonce = map["Nonce"]?:""
                         val reEcrypt = map["Encrypt"]?:""
-                        val signature2 = SHA1.getSHA1(Work.WORK.token, reTimeStamp, reNonce, reEcrypt)
-                        val msg = Work.WORK.wxBizMsgCrypt.decryptWxMsg(signature2,reTimeStamp,reNonce,response.content!!)
+                        val signature2 = SHA1.getSHA1(Work.WORK_MSG.token, reTimeStamp, reNonce, reEcrypt)
+                        val msg = Work.WORK_MSG.wxBizMsgCrypt.decryptWxMsg(signature2,reTimeStamp,reNonce,response.content!!)
                         println("Got wx work reply: $msg")
                     }else{
                         println("in wx work post, got response: ${response.content}")

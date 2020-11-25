@@ -32,4 +32,4 @@ enum class UpdateType {
  * @param type 是哪种值变化
  * */
 @Serializable
-data class UpdateMsg(var appId: String, var type: UpdateType, var value: String?, var time: Long )
+data class UpdateMsg(var appId: String, var type: UpdateType, var value: String?, var time: Long, val extra: String?)

@@ -22,7 +22,7 @@ import com.github.rwsbillyang.wxSDK.IBase
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-object ExternalContactsApi : WorkBaseApi() {
+object ExternalContactsApi : WorkBaseApi(AN_Customer) {
     override val group = "externalcontact"
 
     /* 企业服务人员（客服），「联系我」 */

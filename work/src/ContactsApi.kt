@@ -22,16 +22,14 @@ import com.github.rwsbillyang.wxSDK.IBase
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 
 
-object UserApi : WorkBaseApi() {
+object UserApi : WorkBaseApi(AN_Contact) {
     override val group = "user"
 
     /**
@@ -92,7 +90,7 @@ object UserApi : WorkBaseApi() {
 }
 
 
-class DepartmentApi : WorkBaseApi() {
+class DepartmentApi : WorkBaseApi(AN_Contact) {
     override val group = "department"
 
     companion object {
@@ -129,7 +127,7 @@ class DepartmentApi : WorkBaseApi() {
 
 }
 
-class TagApi : WorkBaseApi() {
+class TagApi : WorkBaseApi(AN_Contact) {
     override val group = "tag"
 
     companion object {
@@ -192,7 +190,7 @@ class BatchUserCallback(val url: String?,
 
 class BatchUserBody(val mediaId: String, toInvite: Boolean?, callback: BatchUserCallback?)
 
-class UserBatchApi : WorkBaseApi() {
+class UserBatchApi : WorkBaseApi(AN_Contact) {
     override val group = "batch"
 
     companion object {
