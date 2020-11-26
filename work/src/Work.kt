@@ -34,25 +34,6 @@ object Work {
     }
     fun isInit() = _WORK != null
 
-    private  var _WORK_MSG: WorkMsgContext? = null
-    val WORK_MSG: WorkMsgContext
-        get() {
-            requireNotNull(_WORK_MSG)
-            return _WORK_MSG!!
-        }
-    fun isMsgInit() = _WORK_MSG != null
-
-    private  var _WORK_CHAT_ARCHIVE: WorkChatArchiveContext? = null
-    val WORK_CHAT_ARCHIVE: WorkChatArchiveContext
-        get() {
-            requireNotNull(_WORK_CHAT_ARCHIVE)
-            return _WORK_CHAT_ARCHIVE!!
-        }
-    fun isChatArchiveInit() = _WORK_CHAT_ARCHIVE != null
-
-
-    var callbackPath: String = "/api/wx/work"
-
     /**
      * 非ktor平台可以使用此函数进行配置企业微信参数
      * corpid信息在企业微信管理端—我的企业—企业信息查看，
@@ -62,26 +43,14 @@ object Work {
      * */
     fun config(block: WorkConfiguration.() -> Unit) {
         val config = WorkConfiguration().apply(block)
-        _WORK = WorkContext(
-                config.corpId,
-                config.agentSecretMap,
-                config.accessToken
-        )
+        _WORK = WorkContext(config.corpId, config.agentMap)
     }
-    fun configWorkMsg(block: WorkMsgConfiguration.() -> Unit) {
-        val config = WorkMsgConfiguration().apply(block)
-        _WORK_MSG = WorkMsgContext(
-                config.token,
-                config.encodingAESKey,
-                config.msgHandler,
-                config.eventHandler
-        )
-    }
-    fun configChatArchive(block: WorkChatArchiveConfiguration.() -> Unit) {
-        val config = WorkChatArchiveConfiguration().apply(block)
-        _WORK_CHAT_ARCHIVE = WorkChatArchiveContext(
-                PemUtil.loadPrivateKey(config.chatMsgPrivateKey.byteInputStream())
-        )
+
+    /**
+     * 当更新配置后，先重置，然后再调用上面的configXXX函数重新配置
+     * */
+    fun reset(){
+        _WORK = null
     }
 }
 
@@ -100,20 +69,29 @@ object Work {
  * */
 open class WorkConfiguration {
     var corpId = "your_app_id"
-    var accessToken: ITimelyRefreshValue? = null
-    //var ticket: IRefreshableValue? = null
 
+    //var ticket: IRefreshableValue? = null
 
     /**
      * @param agentName WorkBaseApi.AN_*
      * */
-    fun add(agentName: String, secret: String) {
-        agentSecretMap[agentName] = secret
+    fun add(agentId: Long?,
+            agentName: String,
+            secret: String,
+
+            enableMsg: Boolean = false,
+            token: String? = null,
+            encodingAESKey: String? = null,
+
+            customAccessToken: ITimelyRefreshValue? = null,
+            customCallbackPath: String? = null,
+            private: String? = null,
+            ) {
+        agentMap[agentName] = WorkAgentContext(corpId, agentName, agentId,secret,enableMsg,
+                token, encodingAESKey,customAccessToken, customCallbackPath, private)
     }
-    internal val agentSecretMap = HashMap<String, String>()
+    internal val agentMap = HashMap<String, WorkAgentContext>()
 }
-
-
 
 
 
@@ -121,7 +99,7 @@ open class WorkConfiguration {
  * 调用API时可能需要用到的配置
  *
  * @param corpId       企业微信等申请的app id
- * @param secretMap secret map, about key refer to WorkBaseApi.AN_*
+ * @param agentMap secret map,  key refer to WorkBaseApi.AN_*
  * 登录微信公众平台官网后，在公众平台官网的开发-基本设置页面，勾选协议成为开发者，点击“修改配置”按钮，
  * 填写服务器地址（URL）、Token和EncodingAESKey，其中URL是开发者用来接收微信消息和事件的接口URL。
  * 。https://work.weixin.qq.com/api/doc/90000/90135/90930
@@ -129,24 +107,10 @@ open class WorkConfiguration {
  * */
 class WorkContext(
         var corpId: String,
-        val secretMap: HashMap<String, String>,
-        customAccessToken: ITimelyRefreshValue?,
-) {
-    //不同的agentId对应不同的accessToken
-    val accessTokenMap = HashMap<String, ITimelyRefreshValue>()
-
-    init {
-        secretMap.forEach{
-            accessTokenMap[it.key] = customAccessToken?:
-                    TimelyRefreshAccessToken(corpId,
-                    AccessTokenRefresher(AccessTokenUrl(corpId, it.value)),extra = it.key)
-        }
-    }
-}
-
-
+        val agentMap: HashMap<String, WorkAgentContext>
+)
 /**
- * 具备消息能力时，需要的配置
+ * agent的配置
  *
  * @property token       Token可由开发者可以任意填写，用作生成签名（该Token会和接口URL中包含的Token进行比对，从而验证安全性）
  * @property encodingAESKey  安全模式需要需要  43个字符，EncodingAESKey由开发者手动填写或随机生成，将用作消息体加解密密钥。
@@ -154,70 +118,74 @@ class WorkContext(
  * @property eventHandler 自定义的处理微信推送过来的消息处理器，不提供的话使用默认的，即什么都不处理，需要处理事件如用户关注和取消关注的话建议提供
  * //@property ticket 自定义的jsTicket刷新器，不提供的话使用默认的，通常情况下无需即可
 
- *
+ * @param private 调用会话存档时用的配置：私钥配置
+ * encrypt_random_key内容解密说明：encrypt_random_key是使用企业在管理端填写的公钥（使用模值为2048bit的秘钥），
+ * 采用RSA加密算法进行加密处理后base64 encode的内容，加密内容为企业微信产生。RSA使用PKCS1。
+ * genrsa -out app_private_key.pem 2048 # 私钥的生成
+ * 利用私钥生成公钥：rsa -in app_private_key.pem -pubout -out app_public_key.pem #导出公钥
  * 登录微信公众平台官网后，在公众平台官网的开发-基本设置页面，勾选协议成为开发者，点击“修改配置”按钮，
  * 填写服务器地址（URL）、Token和EncodingAESKey，其中URL是开发者用来接收微信消息和事件的接口URL。
  * 。https://work.weixin.qq.com/api/doc/90000/90135/90930
  *  https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Access_Overview.html
  * */
-class WorkMsgConfiguration: WorkConfiguration() {
-    var token = "your_token"
-    var encodingAESKey = "your_encodingAESKey"
+class WorkAgentContext(
+        corpId: String,
+        val name: String,
+        val agentId: Long?,
+        val secret: String,
+        val enableMsg: Boolean = false,
+        val token: String? = null,
+        val encodingAESKey: String? = null,
+        customAccessToken: ITimelyRefreshValue? = null,
+        customCallbackPath: String? = null,
+        private: String? = null
+){
+    var accessToken: ITimelyRefreshValue
+    var callbackPath: String = if(customCallbackPath.isNullOrBlank())
+    {
+        if(agentId != null){
+            "/api/wx/work/${corpId}/${agentId}"
+        }else{
+            "/api/wx/work/${corpId}/${name}"
+        }
+    }else
+        customCallbackPath
+
     var msgHandler: IWorkMsgHandler? = null
     var eventHandler: IWorkEventHandler? = null
+    var msgHub: WorkMsgHub? = null
+    var wxBizMsgCrypt: WXBizMsgCrypt? = null
 
-    var callbackPath = "/api/wx/work"
-}
+    var privateKey: PrivateKey? = null
 
-/**
- * 消息及事件处理用到的 api context
- *
- * @param token       Token可由开发者可以任意填写，用作生成签名（该Token会和接口URL中包含的Token进行比对，从而验证安全性）
- * @param encodingAESKey  43个字符，EncodingAESKey由开发者手动填写或随机生成，将用作消息体加解密密钥。
- * @param customMsgHandler 自定义的处理微信推送过来的消息处理器，不提供的话使用默认的，只发送"欢迎关注"，需要处理用户消息的话建议提供
- * @param customEventHandler 自定义的处理微信推送过来的消息处理器，不提供的话使用默认的，即什么都不处理，需要处理事件如用户关注和取消关注的话建议提供
- * //@param customTicket 自定义的jsTicket刷新器，不提供的话使用默认的，通常情况下无需即可
-
- *
- * 登录微信公众平台官网后，在公众平台官网的开发-基本设置页面，勾选协议成为开发者，点击“修改配置”按钮，
- * 填写服务器地址（URL）、Token和EncodingAESKey，其中URL是开发者用来接收微信消息和事件的接口URL。
- * 。https://work.weixin.qq.com/api/doc/90000/90135/90930
- *  https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Access_Overview.html
- * */
-class WorkMsgContext(
-        var token: String,
-        var encodingAESKey: String,
-        customMsgHandler: IWorkMsgHandler?,
-        customEventHandler: IWorkEventHandler?
-){
-    var wxBizMsgCrypt = WXBizMsgCrypt(token, encodingAESKey, Work.WORK.corpId)
-    var msgHub: WorkMsgHub
     init {
-        val msgHandler = customMsgHandler ?: DefaultWorkMsgHandler()
-        val eventHandler = customEventHandler ?: DefaultWorkEventHandler()
-        msgHub = WorkMsgHub(msgHandler, eventHandler, wxBizMsgCrypt)
+        accessToken = customAccessToken?:TimelyRefreshAccessToken(corpId,
+                AccessTokenRefresher(AccessTokenUrl(corpId, secret)),extra = agentId?.toString())
+
+        if(enableMsg){
+            if(!token.isNullOrBlank() && !encodingAESKey.isNullOrBlank())
+            {
+                wxBizMsgCrypt = WXBizMsgCrypt(token, encodingAESKey, corpId)
+
+                if(msgHandler == null) msgHandler = DefaultWorkMsgHandler()
+                if(eventHandler == null) eventHandler = DefaultWorkEventHandler()
+
+                msgHub = WorkMsgHub(msgHandler!!, eventHandler!!, wxBizMsgCrypt!!)
+            }else{
+                println("enableMsg=true, but not config token and encodingAESKey")
+            }
+        }
+
+        if(!private.isNullOrBlank()){
+            privateKey = PemUtil.loadPrivateKey(private.byteInputStream())
+        }
+
     }
 }
 
 
 
 
-/**
- * 调用会话存档时用的配置：私钥配置
- * encrypt_random_key内容解密说明：encrypt_random_key是使用企业在管理端填写的公钥（使用模值为2048bit的秘钥），
- * 采用RSA加密算法进行加密处理后base64 encode的内容，加密内容为企业微信产生。RSA使用PKCS1。
- * genrsa -out app_private_key.pem 2048 # 私钥的生成
- * 利用私钥生成公钥：rsa -in app_private_key.pem -pubout -out app_public_key.pem #导出公钥
- * */
-class WorkChatArchiveConfiguration: WorkConfiguration()  {
-    var chatMsgPrivateKey: String = ""
-}
-/**
- * 会话存档用到的api context
- * */
-class WorkChatArchiveContext(
-        var chatMsgPrivateKey: PrivateKey
-)
 
 internal class AccessTokenUrl(private val corpId: String, private val secret: String) : IUrlProvider {
     override fun url() = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"

@@ -68,26 +68,21 @@ fun Application.WorkTestableModule(testing: Boolean = false) {
 
     testableModule(testing)
 
-    install(WorkFeature) {
+    Work.config {
         corpId = "wx5823bf96d3bd56c7"
-        accessToken = TestAccessTokenValue()
-        add(WorkBaseApi.AN_Base, "the_secret")
-        add(WorkBaseApi.AN_ChatArchive, "the_secret")
-        add(WorkBaseApi.AN_Contact, "the_secret")
-        add(WorkBaseApi.AN_Customer, "the_secret")
+        add(null, WorkBaseApi.AN_Base, "the_secret", true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",customAccessToken = TestAccessTokenValue())
+        add(null, WorkBaseApi.AN_ChatArchive, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C", customAccessToken = TestAccessTokenValue())
+        add(null, WorkBaseApi.AN_Contact, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",  customAccessToken = TestAccessTokenValue())
+        add(null, WorkBaseApi.AN_Customer, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C", customAccessToken = TestAccessTokenValue())
     }
-    install(WorkMsgFeature) {
-        encodingAESKey = "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C"
-        token = "QDG6eK"
-        msgHandler = TestWorkMsgHandler()
-    }
-//    install(WorkChatArchiveFeature) {
-//        chatMsgPrivateKey = ""
-//    }
+
 
 
     routing {
-        workApi()
+        wxWorkAgentApi(WorkBaseApi.AN_Base)
+        wxWorkAgentApi(WorkBaseApi.AN_ChatArchive)
+        wxWorkAgentApi(WorkBaseApi.AN_Contact)
+        wxWorkAgentApi(WorkBaseApi.AN_Customer)
     }
 }
 

@@ -24,46 +24,34 @@ import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.util.*
 
 import org.slf4j.LoggerFactory
 
 
-class WorkFeature {
-    companion object Feature : ApplicationFeature<ApplicationCallPipeline, WorkConfiguration, WorkFeature> {
-        override val key = AttributeKey<WorkFeature>("WorkFeature")
-        override fun install(pipeline: ApplicationCallPipeline, configure: WorkConfiguration.() -> Unit): WorkFeature {
-            Work.config(configure)
-            return WorkFeature()
-        }
-    }
-}
-
-class WorkMsgFeature {
-    companion object Feature : ApplicationFeature<ApplicationCallPipeline, WorkMsgConfiguration, WorkMsgFeature> {
-        override val key = AttributeKey<WorkMsgFeature>("WorkMsgFeature")
-        override fun install(pipeline: ApplicationCallPipeline, configure: WorkMsgConfiguration.() -> Unit): WorkMsgFeature {
-            Work.configWorkMsg(configure)
-            return WorkMsgFeature()
-        }
-    }
-}
-class WorkChatArchiveFeature {
-    companion object Feature : ApplicationFeature<ApplicationCallPipeline, WorkChatArchiveConfiguration, WorkChatArchiveFeature> {
-        override val key = AttributeKey<WorkChatArchiveFeature>("WorkChatArchiveFeature")
-        override fun install(pipeline: ApplicationCallPipeline, configure: WorkChatArchiveConfiguration.() -> Unit): WorkChatArchiveFeature {
-            Work.configChatArchive(configure)
-            return WorkChatArchiveFeature()
-        }
-    }
-}
 
 
-
-fun Routing.workApi(path: String = Work.callbackPath) {
+fun Routing.wxWorkAgentApi(agentName: String) {
     val log = LoggerFactory.getLogger("workApi")
 
-    route(path) {
+    if(!Work.isInit()){
+        log.warn("not init wx work: $agentName, please  init wx work first")
+        return
+    }
+    val ctx = Work.WORK.agentMap[agentName]
+    if(ctx == null){
+        log.warn("not add the agent: $agentName, please call Work.add(...) first")
+        return
+    }
+    if(!ctx.enableMsg){
+        log.warn("not enableMsg: $agentName, ignore")
+        return
+    }
+    if(ctx.wxBizMsgCrypt == null || ctx.msgHub == null){
+        log.warn("wxBizMsgCrypt or msgHub is null, please init them correctly")
+        return
+    }
+
+    route(ctx.callbackPath) {
         /**
          *
          *
@@ -115,7 +103,7 @@ fun Routing.workApi(path: String = Work.callbackPath) {
             val nonce = call.request.queryParameters["nonce"]
             val echostr = call.request.queryParameters["echostr"]
 
-            val token = Work.WORK_MSG.token
+            val token = ctx.token
 
             //if (StringUtils.isAnyBlank(token, signature, timestamp, nonce,echostr)) {
             if(token.isNullOrBlank() || signature.isNullOrBlank() || timestamp.isNullOrBlank()
@@ -124,7 +112,7 @@ fun Routing.workApi(path: String = Work.callbackPath) {
                 call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
             } else {
                 try{
-                    val str = Work.WORK_MSG.wxBizMsgCrypt.verifyUrl(signature,timestamp,nonce,echostr)
+                    val str = ctx.wxBizMsgCrypt!!.verifyUrl(signature,timestamp,nonce,echostr)
                     call.respondText(str, ContentType.Text.Plain, HttpStatusCode.OK)
                 }catch (e: AesException){
                     log.warn("AesException: ${e.message}")
@@ -163,7 +151,7 @@ fun Routing.workApi(path: String = Work.callbackPath) {
             val nonce = call.request.queryParameters["nonce"]
             val encryptType = call.request.queryParameters["encrypt_type"]?:"security"
 
-            val reXml = Work.WORK_MSG.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
+            val reXml = ctx.msgHub!!.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
 
             if(reXml.isNullOrBlank())
                 call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
