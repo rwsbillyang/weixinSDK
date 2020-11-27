@@ -94,7 +94,7 @@ object ChatMsgApi : WorkBaseApi(AN_ChatArchive) {
                 //    a) 需首先对每条消息的encrypt_random_key内容进行base64 decode,得到字符串str1.
                 //    b) 使用publickey_ver指定版本的私钥，使用RSA PKCS1算法对str1进行解密，得到解密内容str2.
                 //    c) 得到str2与对应消息的encrypt_chat_msg，调用下方描述的DecryptData接口，即可获得消息明文。
-                val privateKey = Work.WORK.agentMap[agentName]?.privateKey
+                val privateKey = Work.WORK.agentMap[anName]?.privateKey
                 if(privateKey == null){
                     println("ChatMsgSdk.GetChatData privateKey is null, please config it first")
                     return null

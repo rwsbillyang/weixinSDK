@@ -18,13 +18,16 @@
 
 package com.github.rwsbillyang.wxSDK.work
 
+import com.github.rwsbillyang.wxSDK.IBase
+import kotlinx.serialization.SerialName
+
 
 /**
  * 企业应用API
  * https://work.weixin.qq.com/api/doc/90000/90135/90226
  *
  * */
-object AgentApi : WorkBaseApi(AN_AgentMgt){
+class AgentApi(agentName: String) : WorkBaseApi(agentName){
     override val group = "agent"
     
     /**
@@ -37,7 +40,7 @@ object AgentApi : WorkBaseApi(AN_AgentMgt){
     /**
      * 获取指定的应用详情
      * */
-    fun detail(id: String) = doGet3("get", mapOf("agentid" to id))
+    fun detail(id: Int):ResponseAgentDetail = doGet("get", mapOf("agentid" to id.toString()))
 
     /**
      * 设置应用
@@ -46,3 +49,46 @@ object AgentApi : WorkBaseApi(AN_AgentMgt){
     fun setAgent(body: Map<String, Any?>) = doPost3("set",body)
 }
 
+/**
+errcode	出错返回码，为0表示成功，非0表示调用失败
+errmsg	返回码提示语
+agentid	企业应用id
+name	企业应用名称
+square_logo_url	企业应用方形头像
+description	企业应用详情
+allow_userinfos	企业应用可见范围（人员），其中包括userid
+allow_partys	企业应用可见范围（部门）
+allow_tags	企业应用可见范围（标签）
+close	企业应用是否被停用
+redirect_domain	企业应用可信域名
+report_location_flag	企业应用是否打开地理位置上报 0：不上报；1：进入会话上报；
+isreportenter	是否上报用户进入应用事件。0：不接收；1：接收
+home_url	应用主页url
+ * */
+class ResponseAgentDetail(
+        @SerialName("errcode")
+        override val errCode: Int = 0,
+        @SerialName("errmsg")
+        override val errMsg: String? = null,
+        @SerialName("agentid")
+        val agentId: Int? = null,
+        val name: String? = null,
+        @SerialName("square_logo_url")
+        val logo: String? = null,
+        val description: String? = null,
+        @SerialName("allow_userinfos")
+        val allowUserInfos: List<String>? = null,
+        @SerialName("allow_partys")
+        val allowPartys: List<Int>? = null,
+        @SerialName("allow_tags")
+        val allowTags: List<Int>? = null,
+        val close: Int? = null,
+        @SerialName("redirect_domain")
+        val redirectDomain: String? = null,
+        @SerialName("report_location_flag")
+        val reportLocationFlag: Int? = null,
+        @SerialName("isreportenter")
+        val isReportEnter: Int? = null,
+        @SerialName("home_url")
+        val homeUrl: String? = null
+): IBase

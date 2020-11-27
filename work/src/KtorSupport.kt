@@ -162,33 +162,47 @@ fun Routing.wxWorkAgentApi(agentName: String) {
 }
 
 
+class OAuthResult(
+        val agentId: Int,
+        val userId: String?,
+        val externalUserId: String?,
+        val openId: String?,
+        val deviceId: String?
+)
 
-
+/**
+ *
+ * */
 fun Routing.oAuthApi(
         oauthInfoPath: String = Work.oauthInfoPath,
         notifyPath: String = Work.notifyPath,
-        notifyWebAppUrl: String = Work.notifyWebAppUrl
+        notifyWebAppUrl: String = Work.notifyWebAppUrl,
+        hasPermission: (OAuthResult)-> Boolean
 ) {
-    //val log = LoggerFactory.getLogger("oAuthApi")
+    val log = LoggerFactory.getLogger("workOAuthApi")
     val stateCache = Caffeine.newBuilder()
             .maximumSize(Long.MAX_VALUE)
-            .expireAfterWrite(5, TimeUnit.MINUTES)
-            .expireAfterAccess(0, TimeUnit.SECONDS)
-            .build<String, Boolean>()
+            .expireAfterWrite(10, TimeUnit.MINUTES)
+            .expireAfterAccess(1, TimeUnit.SECONDS)
+            .build<String, Int>()
     /**
      * 前端webapp请求该api获取appid，state等信息，然后重定向到腾讯的授权页面，用户授权之后将重定向到下面的notify
-     * @param userInfo 0或1分别表示是否需要获取用户信息，优先使用前端提供的参数, 没有提供的话使用needUserInfo(host, uri)进行判断（用于从某个用户设置中获取），再没有的话则默认为0
+     * @param agentId 要登录的agentID
      * @param host 跳转host，如："https：//www.example.com"
      * 前端重定向地址：https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect" 然后重定向到该url
      *
      * */
     get(oauthInfoPath){
-        val userInfo = call.request.queryParameters["userInfo"]?.toInt()?:0
+        val agentId = call.request.queryParameters["agentId"]?.toInt()?:-1
         val host = call.request.queryParameters["host"]?:call.request.host()
-
-        val oAuthInfo = OAuthApi.prepareOAuthInfo(host + notifyPath, userInfo==1)
-
-        call.respond(oAuthInfo)
+        if(agentId < 0)
+        {
+            call.respond(HttpStatusCode.BadRequest, "no agentId")
+        }else{
+            val oAuthInfo = OAuthApi.prepareOAuthInfo(host + notifyPath, false)
+            stateCache.put(oAuthInfo.state, agentId)
+            call.respond(oAuthInfo)
+        }
     }
     /**
      * 腾讯在用户授权之后，将调用下面的api通知code，并附带上原state。
@@ -200,21 +214,35 @@ fun Routing.oAuthApi(
      * code作为换取access_token的票据，每次用户授权带上的code将不一样，code只能使用一次，5分钟未被使用自动过期。
      *
      * */
-    get(notifyPath){
+    get(notifyPath) {
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]
 
-        if(code.isNullOrBlank() || state.isNullOrBlank()){
+        val url = if (code.isNullOrBlank() || state.isNullOrBlank()) {
             //notify webapp fail
-            call.respondRedirect("$notifyWebAppUrl?state=$state&code=KO&msg=nullCodeOrState", permanent = false)
-        }else{
-            val res = OAuthApi.getUserInfo(code)
+            log.warn("code or state is null, code=$code, state=$state")
+            "$notifyWebAppUrl?state=$state&code=KO&msg=nullCodeOrState"
+        } else {
+            val agentId = stateCache.getIfPresent(state) ?: -2
             stateCache.invalidate(state)
-
-            val url = "$notifyWebAppUrl?state=$state&code=OK&openId=${res.openId}&userId=${res.userId}&externalUserId=${res.externalUserId}"
-            //notify webapp OK
-            call.respondRedirect(url, permanent = false)
+            if (agentId == -2) {
+                log.warn("not found agentId in cache, code=$code, state=$state")
+                "$notifyWebAppUrl?state=$state&code=KO&msg=NotFoundAgentIdInCache"
+            } else {
+                val res = OAuthApi.getUserInfo(code)
+                if (res.isOK()) {
+                    val isAllow = hasPermission(OAuthResult(agentId, res.userId, res.externalUserId, res.openId, res.deviceId))
+                    if (isAllow) {
+                        "$notifyWebAppUrl?state=$state&code=OK&openId=${res.openId}&userId=${res.userId}&externalUserId=${res.externalUserId}"
+                    } else {
+                        "$notifyWebAppUrl?state=$state&code=KO&msg=Forbidden"
+                    }
+                } else {
+                    "$notifyWebAppUrl?state=$state&code=KO&msg=${res.errCode}:${res.errMsg}"
+                }
+            }
         }
+        call.respondRedirect(url, permanent = false)
     }
-
 }
+

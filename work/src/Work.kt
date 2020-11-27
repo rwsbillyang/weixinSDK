@@ -85,10 +85,10 @@ open class WorkConfiguration {
 
     //var ticket: IRefreshableValue? = null
     /**
-     * @param agentName WorkBaseApi.AN_*
+     * @param agentMgtName WorkBaseApi.AN_*
      * */
-    fun add(agentId: Long?,
-            agentName: String,
+    fun add(agentId: Int?,
+            agentMgtName: String,
             secret: String,
 
             enableMsg: Boolean = false,
@@ -99,7 +99,7 @@ open class WorkConfiguration {
             customCallbackPath: String? = null,
             private: String? = null,
             ) {
-        agentMap[agentName] = WorkAgentContext(corpId, agentName, agentId,secret,enableMsg,
+        agentMap[agentMgtName] = WorkAgentContext(corpId, agentMgtName, agentId,secret,enableMsg,
                 token, encodingAESKey,customAccessToken, customCallbackPath, private)
     }
     internal val agentMap = HashMap<String, WorkAgentContext>()
@@ -142,8 +142,8 @@ class WorkContext(
  * */
 class WorkAgentContext(
         corpId: String,
-        val name: String,
-        val agentId: Long?,
+        val mgtName: String,
+        val agentId: Int?,
         val secret: String,
         val enableMsg: Boolean = false,
         val token: String? = null,
@@ -152,13 +152,15 @@ class WorkAgentContext(
         customCallbackPath: String? = null,
         private: String? = null
 ){
-    var accessToken: ITimelyRefreshValue
+    var accessToken: ITimelyRefreshValue = customAccessToken?:TimelyRefreshAccessToken(corpId,
+            AccessTokenRefresher(AccessTokenUrl(corpId, secret)),extra = agentId?.toString())
+
     var callbackPath: String = if(customCallbackPath.isNullOrBlank())
     {
         if(agentId != null){
             "/api/wx/work/${corpId}/${agentId}"
         }else{
-            "/api/wx/work/${corpId}/${name}"
+            "/api/wx/work/${corpId}/${mgtName}"
         }
     }else
         customCallbackPath
@@ -171,9 +173,6 @@ class WorkAgentContext(
     var privateKey: PrivateKey? = null
 
     init {
-        accessToken = customAccessToken?:TimelyRefreshAccessToken(corpId,
-                AccessTokenRefresher(AccessTokenUrl(corpId, secret)),extra = agentId?.toString())
-
         if(enableMsg){
             if(!token.isNullOrBlank() && !encodingAESKey.isNullOrBlank())
             {

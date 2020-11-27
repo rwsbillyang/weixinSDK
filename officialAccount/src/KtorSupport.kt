@@ -138,8 +138,8 @@ fun Routing.oAuthApi(
     val log = LoggerFactory.getLogger("oAuthApi")
     val stateCache = Caffeine.newBuilder()
             .maximumSize(Long.MAX_VALUE)
-            .expireAfterWrite(5, TimeUnit.MINUTES)
-            .expireAfterAccess(0, TimeUnit.SECONDS)
+            .expireAfterWrite(10, TimeUnit.MINUTES)
+            .expireAfterAccess(1, TimeUnit.SECONDS)
             .build<String, Boolean>()
     /**
      * 前端webapp请求该api获取appid，state等信息，然后重定向到腾讯的授权页面，用户授权之后将重定向到下面的notify
