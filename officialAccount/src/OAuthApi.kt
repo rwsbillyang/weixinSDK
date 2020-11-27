@@ -21,6 +21,7 @@ package com.github.rwsbillyang.wxSDK.officialAccount
 
 import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.Response
+import com.github.rwsbillyang.wxSDK.bean.OAuthInfo
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.apache.commons.lang3.RandomStringUtils
@@ -38,7 +39,7 @@ object OAuthApi: OABaseApi() {
      *
      * 前端webapp根据本地缓存信息，判断用户是否已有登录信息；
      * 没有的话，就发送一个请求，获取appId、state，redirect_uri等信息，自行拼接url：
-     * "https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirec"
+     * "https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect"
      * 然后重定向到该url
      *
      * scope为snsapi_base，snsapi_userinfo
@@ -89,19 +90,7 @@ object OAuthApi: OABaseApi() {
     fun isValid(accessToken: String, openId: String): Response = doGet("auth", mapOf("access_token" to accessToken, "openid" to openId))
 }
 
-/**
- * @param appId	appid 是	公众号的唯一标识
- * @param redirectUri	redirect_uri 是	授权后重定向的回调链接地址， 使用 urlEncode 链接进行处理过
- * @param scope	是	应用授权作用域，snsapi_base （不弹出授权页面，直接跳转，只能获取用户openid），snsapi_userinfo （弹出授权页面，可通过openid拿到昵称、性别、所在地。并且， 即使在未关注的情况下，只要用户授权，也能获取其信息 ）
- * @param state	否	重定向后会带上state参数，开发者可以填写a-zA-Z0-9的参数值，最多128字节
- * */
-@Serializable
-class OAuthInfo(
-        val appId: String,
-        val redirectUri: String,
-        val scope: String,
-        val state: String
-)
+
 
 /**
  * @param accessToken access_token	网页授权接口调用凭证,注意：此access_token与基础支持的access_token不同

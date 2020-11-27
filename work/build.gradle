@@ -53,6 +53,8 @@ dependencies {
 
     compileOnly "io.ktor:ktor-server-netty:$ktor_version"
 
+    compileOnly "com.github.ben-manes.caffeine:caffeine:2.7.0+"
+
     //testImplementation('junit:junit:4.12')
     testCompile "io.ktor:ktor-server-tests:$ktor_version"
 

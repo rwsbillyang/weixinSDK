@@ -37,19 +37,19 @@ object OfficialAccount {
     /**
      * 微信接入点
      * */
-    var wxEntryPoint = "/api/wx/oa"
+    var wxEntryPoint = "/api/wx/oa/ep"
     /**
-     * 前端获取api签名信息，冲定向到请求腾讯授权页面
+     * 前端获取api签名信息，重定向到请求腾讯授权页面
      * */
-    var oauthInfoPath: String = "/api/wx/oauth/info"
+    var oauthInfoPath: String = "/api/wx/oa/oauth/info"
     /**
      * 用户授权后的通知路径
      * */
-    var notifyPath: String = "/api/wx/oauth/notify"
+    var notifyPath: String = "/api/wx/oa/oauth/notify"
     /**
-     * 通知前端的授权结果路径
+     * 授权后通知前端的授权结果路径
      * */
-    var notifyWebAppUrl: String = "/wx/auth"
+    var notifyWebAppUrl: String = "/wx/oaAuth"
 
     /**
      * 非ktor平台可以使用此函数进行配置公众号参数

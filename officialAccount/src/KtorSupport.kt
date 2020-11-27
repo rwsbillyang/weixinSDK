@@ -25,22 +25,21 @@ import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.util.*
 import kotlinx.coroutines.async
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
 
-class OfficialAccountFeature {
-    companion object Feature : ApplicationFeature<ApplicationCallPipeline, OAConfiguration, OfficialAccountFeature> {
-        override val key = AttributeKey<OfficialAccountFeature>("OfficialAccountFeature")
-        override fun install(pipeline: ApplicationCallPipeline, configure: OAConfiguration.() -> Unit): OfficialAccountFeature {
-            OfficialAccount.config(configure)
-            return OfficialAccountFeature()
-        }
-    }
-}
+//class OfficialAccountFeature {
+//    companion object Feature : ApplicationFeature<ApplicationCallPipeline, OAConfiguration, OfficialAccountFeature> {
+//        override val key = AttributeKey<OfficialAccountFeature>("OfficialAccountFeature")
+//        override fun install(pipeline: ApplicationCallPipeline, configure: OAConfiguration.() -> Unit): OfficialAccountFeature {
+//            OfficialAccount.config(configure)
+//            return OfficialAccountFeature()
+//        }
+//    }
+//}
 
 
 

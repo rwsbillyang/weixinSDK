@@ -29,18 +29,9 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 
 
-object UserApi : WorkBaseApi(AN_Contact) {
-    override val group = "user"
 
-    /**
-     * 获取访问用户身份
-     *
-     * 根据code获取成员信息，用于网页授权后的身份信息获取
-     * 跳转的域名须完全匹配access_token对应应用的可信域名，否则会返回50001错误。
-     *
-     * https://work.weixin.qq.com/api/doc/90000/90135/91023
-     * */
-    fun getUserInfo(code: String) = doGet3("getuserinfo", mapOf("code" to code))
+object ContactsApi : WorkBaseApi(AN_Contact) {
+    override val group = "user"
 
     fun create(body: Map<String, Any?>) = doPost3("create", body)
 

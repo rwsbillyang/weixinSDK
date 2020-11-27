@@ -24,7 +24,7 @@ import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.msg.ReTextMsg
 import com.github.rwsbillyang.wxSDK.msg.WxBaseEvent
 import com.github.rwsbillyang.wxSDK.msg.WxBaseMsg
-import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccountFeature
+import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.DefaultOAEventHandler
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.DefaultOAMsgHandler
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.OATextMsg
@@ -66,7 +66,7 @@ fun Application.testableModule(testing: Boolean = false) {
 @kotlin.jvm.JvmOverloads
 fun Application.apiTest(testing: Boolean = false){
     testableModule(testing)
-    install(OfficialAccountFeature) {
+    OfficialAccount.config {
         appId = "wx2ea341a3b3871d23"
         secret = "89d147ef8e83c4cd097e96992127f0bc"
         encodingAESKey = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG"

@@ -35,6 +35,19 @@ object Work {
     fun isInit() = _WORK != null
 
     /**
+     * 前端获取api签名信息，重定向到请求腾讯授权页面
+     * */
+    var oauthInfoPath: String = "/api/wx/work/oauth/info"
+    /**
+     * 用户授权后的通知路径
+     * */
+    var notifyPath: String = "/api/wx/work/oauth/notify"
+    /**
+     * 授权后通知前端的授权结果路径
+     * */
+    var notifyWebAppUrl: String = "/wx/workAuth"
+
+    /**
      * 非ktor平台可以使用此函数进行配置企业微信参数
      * corpid信息在企业微信管理端—我的企业—企业信息查看，
      *
@@ -71,7 +84,6 @@ open class WorkConfiguration {
     var corpId = "your_app_id"
 
     //var ticket: IRefreshableValue? = null
-
     /**
      * @param agentName WorkBaseApi.AN_*
      * */

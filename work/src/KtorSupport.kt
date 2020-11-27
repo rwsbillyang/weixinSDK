@@ -18,6 +18,7 @@
 
 package com.github.rwsbillyang.wxSDK.work
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.rwsbillyang.wxSDK.security.AesException
 import io.ktor.application.*
 import io.ktor.http.*
@@ -26,8 +27,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 
 import org.slf4j.LoggerFactory
-
-
+import java.util.concurrent.TimeUnit
 
 
 fun Routing.wxWorkAgentApi(agentName: String) {
@@ -159,6 +159,62 @@ fun Routing.wxWorkAgentApi(agentName: String) {
                 call.respondText(reXml, ContentType.Text.Xml, HttpStatusCode.OK)
         }
     }
-
 }
 
+
+
+
+fun Routing.oAuthApi(
+        oauthInfoPath: String = Work.oauthInfoPath,
+        notifyPath: String = Work.notifyPath,
+        notifyWebAppUrl: String = Work.notifyWebAppUrl
+) {
+    //val log = LoggerFactory.getLogger("oAuthApi")
+    val stateCache = Caffeine.newBuilder()
+            .maximumSize(Long.MAX_VALUE)
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .expireAfterAccess(0, TimeUnit.SECONDS)
+            .build<String, Boolean>()
+    /**
+     * 前端webapp请求该api获取appid，state等信息，然后重定向到腾讯的授权页面，用户授权之后将重定向到下面的notify
+     * @param userInfo 0或1分别表示是否需要获取用户信息，优先使用前端提供的参数, 没有提供的话使用needUserInfo(host, uri)进行判断（用于从某个用户设置中获取），再没有的话则默认为0
+     * @param host 跳转host，如："https：//www.example.com"
+     * 前端重定向地址：https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect" 然后重定向到该url
+     *
+     * */
+    get(oauthInfoPath){
+        val userInfo = call.request.queryParameters["userInfo"]?.toInt()?:0
+        val host = call.request.queryParameters["host"]?:call.request.host()
+
+        val oAuthInfo = OAuthApi.prepareOAuthInfo(host + notifyPath, userInfo==1)
+
+        call.respond(oAuthInfo)
+    }
+    /**
+     * 腾讯在用户授权之后，将调用下面的api通知code，并附带上原state。
+     *
+     * 第二步：通过code换取网页授权access_token，然后必要的话获取用户信息。
+     * 然后将一些登录信息通知到前端（调用前端提供的url）
+     *
+     * 用户同意授权后, 如果用户同意授权，页面将跳转至此处的redirect_uri/?code=CODE&state=STATE。
+     * code作为换取access_token的票据，每次用户授权带上的code将不一样，code只能使用一次，5分钟未被使用自动过期。
+     *
+     * */
+    get(notifyPath){
+        val code = call.request.queryParameters["code"]
+        val state = call.request.queryParameters["state"]
+
+        if(code.isNullOrBlank() || state.isNullOrBlank()){
+            //notify webapp fail
+            call.respondRedirect("$notifyWebAppUrl?state=$state&code=KO&msg=nullCodeOrState", permanent = false)
+        }else{
+            val res = OAuthApi.getUserInfo(code)
+            stateCache.invalidate(state)
+
+            val url = "$notifyWebAppUrl?state=$state&code=OK&openId=${res.openId}&userId=${res.userId}&externalUserId=${res.externalUserId}"
+            //notify webapp OK
+            call.respondRedirect(url, permanent = false)
+        }
+    }
+
+}
