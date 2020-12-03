@@ -22,6 +22,7 @@ import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.security.RsaCryptoUtil
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.WorkBaseApi
+import com.tencent.wework.ChatMsgSdk
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

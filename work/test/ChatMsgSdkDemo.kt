@@ -19,7 +19,7 @@
 package com.github.rwsbillyang.wxSDK.work.test
 
 
-import com.github.rwsbillyang.wxSDK.work.chatMsg.ChatMsgSdk
+import com.tencent.wework.ChatMsgSdk
 import java.io.File
 import java.io.FileOutputStream
 

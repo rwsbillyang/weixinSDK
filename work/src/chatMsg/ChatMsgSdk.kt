@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.wxSDK.work.chatMsg
-//package com.tencent.wework;
+//package com.github.rwsbillyang.wxSDK.work.chatMsg
+package com.tencent.wework;
 
 /* sdk返回数据
 typedef struct Slice_t {

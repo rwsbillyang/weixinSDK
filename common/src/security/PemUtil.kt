@@ -18,6 +18,7 @@
 
 package com.github.rwsbillyang.wxSDK.security
 
+
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -29,6 +30,7 @@ import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.*
 
+
 /**
  * 用于微信支付
  * 证书工具，生成PrivateKey
@@ -36,20 +38,24 @@ import java.util.*
  * */
 object PemUtil {
     fun loadPrivateKey(inputStream: InputStream): PrivateKey {
-        return try {
             val array = ByteArrayOutputStream()
             val buffer = ByteArray(1024)
             var length: Int
             while (inputStream.read(buffer).also { length = it } != -1) {
                 array.write(buffer, 0, length)
             }
-            val privateKey = array.toString("utf-8")
-                .replace("-----BEGIN PRIVATE KEY-----", "")
-                .replace("-----END PRIVATE KEY-----", "")
-                .replace("\\s+".toRegex(), "")
+
+            return loadPrivateKey(array.toString("utf-8"))
+    }
+    fun loadPrivateKey(key: String): PrivateKey {
+        return try {
+            val privateKey = key
+                    .replace("-----BEGIN PRIVATE KEY-----", "")
+                    .replace("-----END PRIVATE KEY-----", "")
+                    .replace("\\s+".toRegex(), "")
             val kf = KeyFactory.getInstance("RSA")
             kf.generatePrivate(
-                PKCS8EncodedKeySpec(Base64.getDecoder().decode(privateKey))
+                    PKCS8EncodedKeySpec(Base64.getDecoder().decode(privateKey))
             )
         } catch (e: NoSuchAlgorithmException) {
             throw RuntimeException("当前Java环境不支持RSA", e)
@@ -59,7 +65,6 @@ object PemUtil {
             throw RuntimeException("无效的密钥")
         }
     }
-
     fun loadCertificate(inputStream: InputStream?): X509Certificate {
         return try {
             val cf = CertificateFactory.getInstance("X509")

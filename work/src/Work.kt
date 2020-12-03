@@ -23,6 +23,10 @@ import com.github.rwsbillyang.wxSDK.accessToken.*
 import com.github.rwsbillyang.wxSDK.security.PemUtil
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.work.inMsg.*
+import org.slf4j.LoggerFactory
+import java.io.File
+import java.io.FileInputStream
+import java.io.InputStream
 import java.security.PrivateKey
 
 object Work {
@@ -45,7 +49,7 @@ object Work {
     /**
      * 授权后通知前端的授权结果路径
      * */
-    var notifyWebAppUrl: String = "/wx/workAuth"
+    var notifyWebAppUrl: String = "/wx/work/authNotify"
 
     /**
      * 非ktor平台可以使用此函数进行配置企业微信参数
@@ -97,10 +101,10 @@ open class WorkConfiguration {
 
             customAccessToken: ITimelyRefreshValue? = null,
             customCallbackPath: String? = null,
-            private: String? = null,
+            privateKeyFilePath: String? = null,
             ) {
         agentMap[agentMgtName] = WorkAgentContext(corpId, agentMgtName, agentId,secret,enableMsg,
-                token, encodingAESKey,customAccessToken, customCallbackPath, private)
+                token, encodingAESKey,customAccessToken, customCallbackPath, privateKeyFilePath)
     }
     internal val agentMap = HashMap<String, WorkAgentContext>()
 }
@@ -133,8 +137,8 @@ class WorkContext(
  * @param private 调用会话存档时用的配置：私钥配置
  * encrypt_random_key内容解密说明：encrypt_random_key是使用企业在管理端填写的公钥（使用模值为2048bit的秘钥），
  * 采用RSA加密算法进行加密处理后base64 encode的内容，加密内容为企业微信产生。RSA使用PKCS1。
- * genrsa -out app_private_key.pem 2048 # 私钥的生成
- * 利用私钥生成公钥：rsa -in app_private_key.pem -pubout -out app_public_key.pem #导出公钥
+ * openssl genrsa -out app_private_key.pem 2048 # 私钥的生成
+ * 利用私钥生成公钥：openssl rsa -in app_private_key.pem -pubout -out app_public_key.pem #导出公钥
  * 登录微信公众平台官网后，在公众平台官网的开发-基本设置页面，勾选协议成为开发者，点击“修改配置”按钮，
  * 填写服务器地址（URL）、Token和EncodingAESKey，其中URL是开发者用来接收微信消息和事件的接口URL。
  * 。https://work.weixin.qq.com/api/doc/90000/90135/90930
@@ -150,8 +154,10 @@ class WorkAgentContext(
         val encodingAESKey: String? = null,
         customAccessToken: ITimelyRefreshValue? = null,
         customCallbackPath: String? = null,
-        private: String? = null
+        privateKeyFilePath: String? = null
 ){
+    val log = LoggerFactory.getLogger("workApi")
+
     var accessToken: ITimelyRefreshValue = customAccessToken?:TimelyRefreshAccessToken(corpId,
             AccessTokenRefresher(AccessTokenUrl(corpId, secret)),extra = agentId?.toString())
 
@@ -187,10 +193,14 @@ class WorkAgentContext(
             }
         }
 
-        if(!private.isNullOrBlank()){
-            privateKey = PemUtil.loadPrivateKey(private.byteInputStream())
+        if(!privateKeyFilePath.isNullOrBlank()){
+            val file = File(privateKeyFilePath)
+            if(!file.exists()){
+                privateKey = PemUtil.loadPrivateKey(FileInputStream(privateKeyFilePath))
+            }else{
+                log.warn("Not exists: $privateKeyFilePath ")
+            }
         }
-
     }
 }
 
