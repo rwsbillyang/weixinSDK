@@ -20,6 +20,7 @@ package com.github.rwsbillyang.wxSDK.work
 
 import com.github.rwsbillyang.wxSDK.IBase
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 
 /**
@@ -65,6 +66,7 @@ report_location_flag	企业应用是否打开地理位置上报 0：不上报；
 isreportenter	是否上报用户进入应用事件。0：不接收；1：接收
 home_url	应用主页url
  * */
+@Serializable
 class ResponseAgentDetail(
         @SerialName("errcode")
         override val errCode: Int = 0,
@@ -77,11 +79,11 @@ class ResponseAgentDetail(
         val logo: String? = null,
         val description: String? = null,
         @SerialName("allow_userinfos")
-        val allowUserInfos: List<String>? = null,
+        val allowUsers: AllowUsers? = null,
         @SerialName("allow_partys")
-        val allowPartys: List<Int>? = null,
+        val allowDepartment: AllowDepartment? = null,
         @SerialName("allow_tags")
-        val allowTags: List<Int>? = null,
+        val allowTags: AllowTags? = null,
         val close: Int? = null,
         @SerialName("redirect_domain")
         val redirectDomain: String? = null,
@@ -92,3 +94,15 @@ class ResponseAgentDetail(
         @SerialName("home_url")
         val homeUrl: String? = null
 ): IBase
+
+@Serializable
+class AllowUsers(@SerialName("user") val list: List<UserId>? = null)
+
+@Serializable
+class UserId(@SerialName("userid") val id: String)
+
+@Serializable
+class AllowDepartment(@SerialName("partyid") val list: List<Int>? = null)
+
+@Serializable
+class AllowTags(@SerialName("tagid") val list: List<Int>? = null)
