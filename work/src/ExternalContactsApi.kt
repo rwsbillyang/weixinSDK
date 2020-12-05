@@ -22,7 +22,26 @@ import com.github.rwsbillyang.wxSDK.IBase
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-object ExternalContactsApi : WorkBaseApi(AN_Customer) {
+/**
+ * 企业内的员工可以添加外部企业的联系人进行工作沟通，外部联系人分为企业微信联系人和微信联系人两种类型。
+ * 配置了客户联系功能的成员所添加的外部联系人为企业客户。
+ *
+ * 配置可使用客户联系功能的成员
+ * 进入“客户联系”-“权限配置”-“使用范围”页面，管理员设置哪些人可使用联系客户功能，如未配置，则无法调用后文提到的相关接口。
+ *
+ * 配置可使用客户联系接口的应用
+ * 管理员进入企业微信管理后台后点击“客户联系”-“客户”页面。点开“API”小按钮，可以看到secret，此为外部联系
+ * 人secret。如需使用自建应用调用外部联系人相关的接口，需要在“可调用应用”中进行配置。
+ *
+ * 使用客户联系相关接口
+ * 企业通过配置过权限的应用调用外部联系人选人相关接口，如：获取成员选择的外部联系人的userid以及通过
+ * 该userid获取外部联系人详情。（ 外部联系人选人接口 | 获取外部联系人详情）
+ *
+ * 企业需要使用系统应用“客户联系”或配置到“可调用应用”列表中的自建应用的secret所获取的accesstoken来
+ * 调用（accesstoken如何获取？）；第三方/自建应用调用时，返回的跟进人follow_user仅包含应用可见范围之
+ * 内的成员。
+ * */
+class ExternalContactsApi(secretKey: String) : WorkBaseApi(secretKey){
     override val group = "externalcontact"
 
     /* 企业服务人员（客服），「联系我」 */

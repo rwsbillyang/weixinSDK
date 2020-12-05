@@ -44,20 +44,21 @@ import kotlinx.serialization.Serializable
  * 所有接口在通信时都需要携带此信息用于验证接口的访问权限
  *
  * */
-abstract class WorkBaseApi(val anName: String): WxApi() {
+abstract class WorkBaseApi(val secretKey: String): WxApi() {
     companion object{
-        const val AN_Base = "Base"
-        const val AN_AgentMgt = "AgentMgt"
-        const val AN_Contact = "Contact"
-        const val AN_Customer = "Customer"
-        const val AN_Calendar = "Calendar"
-        const val AN_Invoice = "Invoice"
-        const val AN_Material = "Material"
-        const val AN_OA = "OfficeAuto"
-        const val AN_ChatArchive = "ChatArchive"
+        const val KeyChatArchive = "ChatArchive"
+        const val KeyContact = "Contact"
+        const val KeyCustomer = "Customer"
+
+        const val KeyBase = "Base"
+        const val KeyAgentMgt = "AgentMgt"
+        const val KeyCalendar = "Calendar"
+        const val KeyInvoice = "Invoice"
+        const val KeyMaterial = "Material"
+        const val KeyOA = "OfficeAuto"
     }
     override val base = "https://qyapi.weixin.qq.com/cgi-bin"
-    override fun accessToken() = Work.WORK.agentMap[anName]?.accessToken?.get()
+    override fun accessToken() = Work.WORK.agentMap[secretKey]?.accessToken?.get()
 
     /**
      * 企业微信在回调企业指定的URL时，是通过特定的IP发送出去的。如果企业需要做防火墙配置，那么可以通过这个接口获取到所有相关的IP段。

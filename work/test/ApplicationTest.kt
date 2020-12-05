@@ -57,7 +57,7 @@ class ApplicationTest {
             //TODO: how to get the encryptEchoStr from "1616140317555161061"
             val encryptEcho = "P9nAzCzyDtyTWESHep1vC5X9xho/qYX3Zpb4yKa9SKld1DsH3Iyt3tP3zNdtp+4RPcs8TgAE7OaBO+FZXvnaqQ=="
             //val encryptEcho = _WORK.wxBizMsgCrypt.encrypt(sVerifyEchoStr)
-            val agentName = WorkBaseApi.AN_Base
+            val agentName = WorkBaseApi.KeyBase
             val ctx = Work.WORK.agentMap[agentName]!!
 
             val signature =  SHA1.getSHA1(ctx.token!!, timestamp, nonce, encryptEcho)

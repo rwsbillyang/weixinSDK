@@ -29,8 +29,17 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 
 
-
-object ContactsApi : WorkBaseApi(AN_Contact) {
+/**
+ * 通讯录同步相关接口，可以对部门、成员、标签等通讯录信息进行查询、添加、修改、删除等操作。
+ * https://open.work.weixin.qq.com/api/doc/90000/90135/90193
+ *
+ * 使用通讯录管理接口，原则上需要使用 通讯录管理secret，也可以使用 应用secret。
+ * 但是使用应用secret只能进行“查询”、“邀请”等非写操作，而且只能操作应用可见范围内的通讯录。
+ *
+ * 获取通讯录管理secret的方法如下：
+1、进入企业微信管理后台，在“管理工具” — “通讯录同步助手”开启“API接口同步”
+ * */
+class ContactsApi(secretKey: String) : WorkBaseApi(secretKey){
     override val group = "user"
 
     fun create(body: Map<String, Any?>) = doPost3("create", body)
@@ -81,7 +90,7 @@ object ContactsApi : WorkBaseApi(AN_Contact) {
 }
 
 
-class DepartmentApi : WorkBaseApi(AN_Contact) {
+class DepartmentApi(secretKey: String) : WorkBaseApi(secretKey){
     override val group = "department"
 
     companion object {
@@ -118,7 +127,7 @@ class DepartmentApi : WorkBaseApi(AN_Contact) {
 
 }
 
-class TagApi : WorkBaseApi(AN_Contact) {
+class TagApi(secretKey: String) : WorkBaseApi(secretKey){
     override val group = "tag"
 
     companion object {
@@ -181,7 +190,7 @@ class BatchUserCallback(val url: String?,
 
 class BatchUserBody(val mediaId: String, toInvite: Boolean?, callback: BatchUserCallback?)
 
-class UserBatchApi : WorkBaseApi(AN_Contact) {
+class UserBatchApi(secretKey: String) : WorkBaseApi(secretKey){
     override val group = "batch"
 
     companion object {

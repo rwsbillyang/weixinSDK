@@ -26,7 +26,6 @@ import com.github.rwsbillyang.wxSDK.work.inMsg.*
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
-import java.io.InputStream
 import java.security.PrivateKey
 
 object Work {
@@ -103,7 +102,7 @@ open class WorkConfiguration {
             customCallbackPath: String? = null,
             privateKeyFilePath: String? = null,
             ) {
-        agentMap[agentMgtName] = WorkAgentContext(corpId, agentMgtName, agentId,secret,enableMsg,
+        agentMap[agentId?.let { it.toString() }?:agentMgtName] = WorkAgentContext(corpId, agentMgtName, agentId,secret,enableMsg,
                 token, encodingAESKey,customAccessToken, customCallbackPath, privateKeyFilePath)
     }
     internal val agentMap = HashMap<String, WorkAgentContext>()
@@ -134,7 +133,7 @@ class WorkContext(
  * @property eventHandler 自定义的处理微信推送过来的消息处理器，不提供的话使用默认的，即什么都不处理，需要处理事件如用户关注和取消关注的话建议提供
  * //@property ticket 自定义的jsTicket刷新器，不提供的话使用默认的，通常情况下无需即可
 
- * @param private 调用会话存档时用的配置：私钥配置
+ * @param privateKeyFilePath 调用会话存档时用的配置：私钥配置
  * encrypt_random_key内容解密说明：encrypt_random_key是使用企业在管理端填写的公钥（使用模值为2048bit的秘钥），
  * 采用RSA加密算法进行加密处理后base64 encode的内容，加密内容为企业微信产生。RSA使用PKCS1。
  * openssl genrsa -out app_private_key.pem 2048 # 私钥的生成

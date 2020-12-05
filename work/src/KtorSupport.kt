@@ -199,7 +199,7 @@ fun Routing.oAuthApi(
         {
             call.respond(HttpStatusCode.BadRequest, "no agentId")
         }else{
-            val oAuthInfo = OAuthApi.prepareOAuthInfo(host + notifyPath, false)
+            val oAuthInfo = OAuthApi(agentId.toString()).prepareOAuthInfo(host + notifyPath, false)
             stateCache.put(oAuthInfo.state, agentId)
             call.respond(oAuthInfo)
         }
@@ -229,7 +229,7 @@ fun Routing.oAuthApi(
                 log.warn("not found agentId in cache, code=$code, state=$state")
                 "$notifyWebAppUrl?state=$state&code=KO&msg=NotFoundAgentIdInCache"
             } else {
-                val res = OAuthApi.getUserInfo(code)
+                val res = OAuthApi(agentId.toString()).getUserInfo(code)
                 if (res.isOK()) {
                     val isAllow = hasPermission(OAuthResult(agentId, res.userId, res.externalUserId, res.openId, res.deviceId))
                     if (isAllow) {

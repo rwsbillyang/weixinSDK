@@ -25,7 +25,7 @@ import kotlinx.serialization.Serializable
 import org.apache.commons.lang3.RandomStringUtils
 import java.net.URLEncoder
 
-object OAuthApi : WorkBaseApi(AN_Contact) {
+class OAuthApi(secretKey: String) : WorkBaseApi(secretKey){
     override val group = "user"
     /**
      * 第一步：用户同意授权，获取code

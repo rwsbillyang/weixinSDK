@@ -44,7 +44,7 @@ data class Calendar(
     @SerialName("cal_id") val id: String? = null
 )
 
-object CalendarApi : WorkBaseApi(AN_Calendar){
+class CalendarApi(secretKey: String) : WorkBaseApi(secretKey){
     override val group = "oa/calendar"
 
     fun add(calendar: Calendar) = doPost3("add", mapOf("calendar" to calendar))
@@ -68,7 +68,7 @@ object CalendarApi : WorkBaseApi(AN_Calendar){
     fun delete(id: String) = doPost3("del", mapOf("cal_id" to  id))
 }
 
-class Schedule: WorkBaseApi(AN_Calendar){
+class Schedule(secretKey: String) : WorkBaseApi(secretKey){
     override val group = "oa/schedule"
     companion object{
         const val ADD = "add"
