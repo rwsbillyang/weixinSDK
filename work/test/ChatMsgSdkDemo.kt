@@ -19,7 +19,7 @@
 package com.github.rwsbillyang.wxSDK.work.test
 
 
-import com.tencent.wework.ChatMsgSdk
+import com.tencent.wework.Finance
 import java.io.File
 import java.io.FileOutputStream
 
@@ -38,8 +38,8 @@ return -1;
 object SdkDemo {
     @JvmStatic
     fun main(args: Array<String>) {
-        val sdk: Long = ChatMsgSdk.NewSdk()
-        println(ChatMsgSdk.Init(sdk, "wwd08c8e7c775ab44d", "zJ6k0naVVQ--gt9PUSSEvs03zW_nlDVmjLCTOTAfrew"))
+        val sdk: Long = Finance.NewSdk()
+        println(Finance.Init(sdk, "wwd08c8e7c775ab44d", "zJ6k0naVVQ--gt9PUSSEvs03zW_nlDVmjLCTOTAfrew"))
         val priKey = """
             -----BEGIN RSA PRIVATE KEY-----
             MIIEowIBAAKCAQEAjzJfnYgy8gI/UdR9OMzMh2/Svtz6ynPJdgqWX0qCm7361g04
@@ -76,55 +76,55 @@ object SdkDemo {
             //1 seq limit proxy passwd timeout
             val seq = args[1].toLong()
             val limit = args[2].toInt()
-            val slice: Long = ChatMsgSdk.NewSlice()
-            ret = ChatMsgSdk.GetChatData(sdk, seq, limit, args[3], args[4], args[5].toLong(), slice)
+            val slice: Long = Finance.NewSlice()
+            ret = Finance.GetChatData(sdk, seq, limit, args[3], args[4], args[5].toLong(), slice)
             if (ret != 0) {
                 println("getchatdata ret $ret")
                 return
             }
-            println("getchatdata :" + ChatMsgSdk.GetContentFromSlice(slice))
-            ChatMsgSdk.FreeSlice(slice)
+            println("getchatdata :" + Finance.GetContentFromSlice(slice))
+            Finance.FreeSlice(slice)
         } else if (args[0] == "2") {
             //2 sdkField proxy passwd timeout file
             var indexbuf = ""
             while (true) {
-                val media_data: Long = ChatMsgSdk.NewMediaData()
-                ret = ChatMsgSdk.GetMediaData(sdk, indexbuf, args[1], args[2], args[3], args[4].toLong(), media_data)
+                val media_data: Long = Finance.NewMediaData()
+                ret = Finance.GetMediaData(sdk, indexbuf, args[1], args[2], args[3], args[4].toLong(), media_data)
                 println("getmediadata ret:$ret")
                 if (ret != 0) {
                     return
                 }
-                System.out.printf("getmediadata outindex len:%d, data_len:%d, is_finis:%d\n", ChatMsgSdk.GetIndexLen(media_data),
-                        ChatMsgSdk.GetDataLen(media_data), ChatMsgSdk.IsMediaDataFinish(media_data))
+                System.out.printf("getmediadata outindex len:%d, data_len:%d, is_finis:%d\n", Finance.GetIndexLen(media_data),
+                        Finance.GetDataLen(media_data), Finance.IsMediaDataFinish(media_data))
                 try {
                     val outputStream = FileOutputStream(File(args[5]))
-                    outputStream.write(ChatMsgSdk.GetData(media_data))
+                    outputStream.write(Finance.GetData(media_data))
                     outputStream.close()
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-                if (ChatMsgSdk.IsMediaDataFinish(media_data) === 1) {
-                    ChatMsgSdk.FreeMediaData(media_data)
+                if (Finance.IsMediaDataFinish(media_data) === 1) {
+                    Finance.FreeMediaData(media_data)
                     break
                 } else {
-                    indexbuf = ChatMsgSdk.GetOutIndexBuf(media_data)
-                    ChatMsgSdk.FreeMediaData(media_data)
+                    indexbuf = Finance.GetOutIndexBuf(media_data)
+                    Finance.FreeMediaData(media_data)
                 }
             }
         } else if (args[0] == "3") {
             //3 encrypt_key encrypt_msg
             // notice!  use prikey to decrpyt get args[1]
-            val msg: Long = ChatMsgSdk.NewSlice()
-            ret = ChatMsgSdk.DecryptData(sdk, args[1], args[2], msg)
+            val msg: Long = Finance.NewSlice()
+            ret = Finance.DecryptData(sdk, args[1], args[2], msg)
             if (ret != 0) {
                 println("getchatdata ret $ret")
                 return
             }
-            println("decrypt ret:" + ret + " msg:" + ChatMsgSdk.GetContentFromSlice(msg))
-            ChatMsgSdk.FreeSlice(msg)
+            println("decrypt ret:" + ret + " msg:" + Finance.GetContentFromSlice(msg))
+            Finance.FreeSlice(msg)
         } else {
             println("wrong args " + args[0])
         }
-        ChatMsgSdk.DestroySdk(sdk)
+        Finance.DestroySdk(sdk)
     }
 }

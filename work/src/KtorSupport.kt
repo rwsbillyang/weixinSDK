@@ -233,7 +233,10 @@ fun Routing.oAuthApi(
                 if (res.isOK()) {
                     val isAllow = hasPermission(OAuthResult(agentId, res.userId, res.externalUserId, res.openId, res.deviceId))
                     if (isAllow) {
-                        "$notifyWebAppUrl?state=$state&code=OK&openId=${res.openId}&userId=${res.userId}&externalUserId=${res.externalUserId}"
+                        var param = if(!res.userId.isNullOrBlank()) "&userId=${res.userId}" else ""
+                        if(!res.externalUserId.isNullOrBlank()) param += "&externalUserId=${res.externalUserId}"
+                        if(!res.openId.isNullOrBlank())param += "&openId=${res.openId}"
+                        "$notifyWebAppUrl?state=$state&code=OK${param}"
                     } else {
                         "$notifyWebAppUrl?state=$state&code=KO&msg=Forbidden"
                     }

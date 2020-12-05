@@ -34,7 +34,7 @@ typedef struct MediaData {
 } MediaData_t;
 */
 
-object ChatMsgSdk {
+object Finance {
     external fun NewSdk(): Long
 
     /**

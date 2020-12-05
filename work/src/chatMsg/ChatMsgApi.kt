@@ -22,7 +22,7 @@ import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.security.RsaCryptoUtil
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.WorkBaseApi
-import com.tencent.wework.ChatMsgSdk
+import com.tencent.wework.Finance
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -79,14 +79,14 @@ class ChatMsgApi(secretKey: String) : WorkBaseApi(secretKey){
      * */
     fun getChatMsgList(sdk: Long, seq: Long = 0L, limit: Int = CHAT_MSG_MAX_LIMIT, proxy: String? = null, pwd: String? = null, timeout: Long = 30L): List<IChatMsg>?
     {
-        val slice: Long = ChatMsgSdk.NewSlice()
-        val ret = ChatMsgSdk.GetChatData(sdk, seq, limit, proxy, pwd, timeout, slice)
+        val slice: Long = Finance.NewSlice()
+        val ret = Finance.GetChatData(sdk, seq, limit, proxy, pwd, timeout, slice)
         if (ret != 0) {
-            println("ChatMsgSdk.GetChatData ret=$ret")
+            println("Finance.GetChatData ret=$ret")
             return null
         }
         val list = mutableListOf<IChatMsg>()
-        val jsonStr = ChatMsgSdk.GetContentFromSlice(slice)
+        val jsonStr = Finance.GetContentFromSlice(slice)
         if(jsonStr != null){
             val json = Json.decodeFromString(ResponseChatList.serializer(), jsonStr)
             if(json.isOK()){
@@ -100,32 +100,32 @@ class ChatMsgApi(secretKey: String) : WorkBaseApi(secretKey){
                 //    c) 得到str2与对应消息的encrypt_chat_msg，调用下方描述的DecryptData接口，即可获得消息明文。
                 val privateKey = Work.WORK.agentMap[secretKey]?.privateKey
                 if(privateKey == null){
-                    println("ChatMsgSdk.GetChatData privateKey is null, please config it first")
+                    println("Finance.GetChatData privateKey is null, please config it first")
                     return null
                 }
                 json.chatList?.forEach {
                     val str2 = RsaCryptoUtil.decryptPKCS1(it.encryptRandomKey, privateKey)
 
-                    val msg: Long = ChatMsgSdk.NewSlice()
-                    val ret2 = ChatMsgSdk.DecryptData(sdk, str2, it.encryptChatMsg,msg)
+                    val msg: Long = Finance.NewSlice()
+                    val ret2 = Finance.DecryptData(sdk, str2, it.encryptChatMsg,msg)
                     if (ret2 != 0) {
-                        println("ChatMsgSdk.DecryptData=$ret2, msgId=${it.msgId}, seq=${it.seq}")
+                        println("Finance.DecryptData=$ret2, msgId=${it.msgId}, seq=${it.seq}")
                     }else{
-                        val chatRecordJsonStr = ChatMsgSdk.GetContentFromSlice(msg)
+                        val chatRecordJsonStr = Finance.GetContentFromSlice(msg)
                         if(!chatRecordJsonStr.isNullOrBlank()){
                             list.add(Json.decodeFromString(ChatMsgSerializer,chatRecordJsonStr).apply { this.seq = it.seq })
                         }else{
                             println("chatRecordJsonStr isNullOrBlank, msgId=${it.msgId}, seq=${it.seq}")
                         }
                     }
-                    ChatMsgSdk.FreeSlice(msg)
+                    Finance.FreeSlice(msg)
                 }
             }else{
                 println("Fail: jsonStr=$jsonStr")
             }
         }
 
-        ChatMsgSdk.FreeSlice(slice)
+        Finance.FreeSlice(slice)
         return list
     }
 
@@ -140,24 +140,24 @@ class ChatMsgApi(secretKey: String) : WorkBaseApi(secretKey){
         val outputStream = FileOutputStream(File(saveFile))
         var indexBuf = ""
         while (true) {
-            val mediaData: Long = ChatMsgSdk.NewMediaData()
-            val ret = ChatMsgSdk.GetMediaData(sdk, indexBuf, fileId, proxy, pwd, timeout, mediaData)
+            val mediaData: Long = Finance.NewMediaData()
+            val ret = Finance.GetMediaData(sdk, indexBuf, fileId, proxy, pwd, timeout, mediaData)
             if (ret != 0) {
-                println("ChatMsgSdk.GetMediaData ret=$ret")
+                println("Finance.GetMediaData ret=$ret")
                 return
             }
             try {
-                outputStream.write(ChatMsgSdk.GetData(mediaData))
+                outputStream.write(Finance.GetData(mediaData))
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            if (ChatMsgSdk.IsMediaDataFinish(mediaData) == 1) {
+            if (Finance.IsMediaDataFinish(mediaData) == 1) {
                 outputStream.close()
-                ChatMsgSdk.FreeMediaData(mediaData)
+                Finance.FreeMediaData(mediaData)
                 break
             } else {
-                indexBuf = ChatMsgSdk.GetOutIndexBuf(mediaData)
-                ChatMsgSdk.FreeMediaData(mediaData)
+                indexBuf = Finance.GetOutIndexBuf(mediaData)
+                Finance.FreeMediaData(mediaData)
             }
         }
     }
