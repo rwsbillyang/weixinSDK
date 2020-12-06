@@ -194,10 +194,10 @@ class WorkAgentContext(
 
         if(!privateKeyFilePath.isNullOrBlank()){
             val file = File(privateKeyFilePath)
-            if(!file.exists()){
+            if(file.exists()){
                 privateKey = PemUtil.loadPrivateKey(FileInputStream(privateKeyFilePath))
             }else{
-                log.warn("Not exists: $privateKeyFilePath ")
+                log.warn("Not exists: $privateKeyFilePath")
             }
         }
     }

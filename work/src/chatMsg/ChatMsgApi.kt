@@ -26,11 +26,13 @@ import com.tencent.wework.Finance
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileOutputStream
 
 
 class ChatMsgApi(secretKey: String) : WorkBaseApi(secretKey){
+    val log = LoggerFactory.getLogger("ChatMsgApi")
     companion object{
         const val CHAT_MSG_MAX_LIMIT = 1000
     }
@@ -77,12 +79,14 @@ class ChatMsgApi(secretKey: String) : WorkBaseApi(secretKey){
      * 获取聊天记录
      * 调用者首先负责newSDK和init，之后负责释放
      * */
-    fun getChatMsgList(sdk: Long, seq: Long = 0L, limit: Int = CHAT_MSG_MAX_LIMIT, proxy: String? = null, pwd: String? = null, timeout: Long = 30L): List<IChatMsg>?
+    fun getChatMsgList(sdk: Long, seq: Long = 0L, limit: Int = CHAT_MSG_MAX_LIMIT,
+                       proxy: String? = null, pwd: String? = null, timeout: Long = 30L)
+            : List<IChatMsg>?
     {
         val slice: Long = Finance.NewSlice()
         val ret = Finance.GetChatData(sdk, seq, limit, proxy, pwd, timeout, slice)
         if (ret != 0) {
-            println("Finance.GetChatData ret=$ret")
+            log.warn("Finance.GetChatData ret=$ret")
             return null
         }
         val list = mutableListOf<IChatMsg>()
@@ -100,7 +104,7 @@ class ChatMsgApi(secretKey: String) : WorkBaseApi(secretKey){
                 //    c) 得到str2与对应消息的encrypt_chat_msg，调用下方描述的DecryptData接口，即可获得消息明文。
                 val privateKey = Work.WORK.agentMap[secretKey]?.privateKey
                 if(privateKey == null){
-                    println("Finance.GetChatData privateKey is null, please config it first")
+                    log.warn("Finance.GetChatData privateKey is null, please config it first")
                     return null
                 }
                 json.chatList?.forEach {
@@ -109,19 +113,19 @@ class ChatMsgApi(secretKey: String) : WorkBaseApi(secretKey){
                     val msg: Long = Finance.NewSlice()
                     val ret2 = Finance.DecryptData(sdk, str2, it.encryptChatMsg,msg)
                     if (ret2 != 0) {
-                        println("Finance.DecryptData=$ret2, msgId=${it.msgId}, seq=${it.seq}")
+                        log.warn("Finance.DecryptData=$ret2, msgId=${it.msgId}, seq=${it.seq}")
                     }else{
                         val chatRecordJsonStr = Finance.GetContentFromSlice(msg)
                         if(!chatRecordJsonStr.isNullOrBlank()){
-                            list.add(Json.decodeFromString(ChatMsgSerializer,chatRecordJsonStr).apply { this.seq = it.seq })
+                            list.add(apiJson.decodeFromString(ChatMsgSerializer,chatRecordJsonStr).apply { this.seq = it.seq })
                         }else{
-                            println("chatRecordJsonStr isNullOrBlank, msgId=${it.msgId}, seq=${it.seq}")
+                            log.warn("chatRecordJsonStr isNullOrBlank, msgId=${it.msgId}, seq=${it.seq}")
                         }
                     }
                     Finance.FreeSlice(msg)
                 }
             }else{
-                println("Fail: jsonStr=$jsonStr")
+                log.warn("Fail: jsonStr=$jsonStr")
             }
         }
 
@@ -143,7 +147,7 @@ class ChatMsgApi(secretKey: String) : WorkBaseApi(secretKey){
             val mediaData: Long = Finance.NewMediaData()
             val ret = Finance.GetMediaData(sdk, indexBuf, fileId, proxy, pwd, timeout, mediaData)
             if (ret != 0) {
-                println("Finance.GetMediaData ret=$ret")
+                log.warn("Finance.GetMediaData ret=$ret")
                 return
             }
             try {
@@ -188,7 +192,7 @@ class ChatData(
         @SerialName("msgid")
         val msgId: String,
         @SerialName("publickey_ver")
-        val publicKeyVer: String,
+        val publicKeyVer: Int,
         @SerialName("encrypt_random_key")
         val encryptRandomKey: String,
         @SerialName("encrypt_chat_msg")

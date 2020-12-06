@@ -124,8 +124,33 @@ interface IChatMsg {
     val action: MsgAction
     val type: String
 }
+//kotlinx.serialization.SerializationException: Class 'TextContent' is not registered for polymorphic serialization in the scope of 'IChatMsgContent'.
+//Mark the base class as 'sealed' or register the serializer explicitly.
+@Serializable
+sealed class BaseChatMsgContent
+/**
+ * 业务层用于保存消息内容
+ * 因为腾讯官方接口中，未将VoipContent中的两个字段放到一个object里面，此处将其放到一起，保存于数据库中。
+ * 本应放在业务代码中，但因为sealed类的要求，而放置于同一个文件中
+ * */
+@Serializable
+@SerialName(MsgType.VOIP_DOC_SHARE)
+class VoipContent(
+        val voipId: String,
+        val voipDocShare: VoipDocShare
+): BaseChatMsgContent()
 
-interface IChatMsgContent
+/**
+ * 业务层用于保存消息内容
+ * 因为腾讯官方接口中，未将MeetingVoiceCallContent中的两个字段放到一个object里面，此处将其放到一起，保存于数据库中。
+ * 本应放在业务代码中，但因为sealed类的要求，而放置于同一个文件中
+ * */
+@Serializable
+@SerialName(MsgType.MEETING_VOICE_CALL)
+class MeetingVoiceCallContent(
+        val voiceId: String,
+        val voiceCall: VoiceCall
+): BaseChatMsgContent()
 
 /**
  *
@@ -176,7 +201,7 @@ abstract class AbstractChatMsg : IChatMsg {
 
 @Serializable
 @SerialName(MsgType.TEXT)
-class TextContent(val content: String) : IChatMsgContent
+class TextContent(val content: String) : BaseChatMsgContent()
 
 @Serializable
 class TextMsg(override val base: ChatMsgCommonInfo, val text: TextContent) : AbstractChatMsg()
@@ -196,7 +221,7 @@ class ImgContent(
         val md5: String,
         @SerialName("filesize")
         val size: Int
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class ImgMsg(override val base: ChatMsgCommonInfo, val image: ImgContent) : AbstractChatMsg()
@@ -210,7 +235,7 @@ class ImgMsg(override val base: ChatMsgCommonInfo, val image: ImgContent) : Abst
 class RevokeContent(
         @SerialName("pre_msgid")
         val pre: String
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class RevokeMsg(override val base: ChatMsgCommonInfo, val revoke: RevokeContent) : AbstractChatMsg()
@@ -227,7 +252,7 @@ class AgreeContent(
         val userId: String,
         @SerialName("agree_time")
         val time: Long
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 /**
  * userid	同意/不同意协议者的userid，外部企业默认为external_userid。String类型
@@ -240,7 +265,7 @@ class DisAgreeContent(
         val userId: String,
         @SerialName("disagree_time")
         val time: Long
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class DisAgreeMsg(override val base: ChatMsgCommonInfo, val disagree: DisAgreeContent) : AbstractChatMsg()
@@ -266,7 +291,7 @@ class VoiceContent(
         val size: Int,
         @SerialName("play_length")
         val length: Int
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class VoiceMsg(override val base: ChatMsgCommonInfo, val voice: VoiceContent) : AbstractChatMsg()
@@ -288,7 +313,7 @@ class VideoContent(
         val size: Int,
         @SerialName("play_length")
         val length: Int
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class VideoMsg(override val base: ChatMsgCommonInfo, val video: VideoContent) : AbstractChatMsg()
@@ -304,7 +329,7 @@ class CardContent(
         val name: String,
         @SerialName("userid")
         val userId: String
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class CardMsg(override val base: ChatMsgCommonInfo, val card: CardContent) : AbstractChatMsg()
@@ -323,7 +348,7 @@ class LocationContent(
         val latitude: Double,
         val title: String,
         val zoom: Int
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class LocationMsg(override val base: ChatMsgCommonInfo, val location: LocationContent) : AbstractChatMsg()
@@ -349,7 +374,7 @@ class EmotionContent(
         val md5: String,
         @SerialName("imagesize")
         val size: Int
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class EmotionMsg(override val base: ChatMsgCommonInfo, val emotion: EmotionContent) : AbstractChatMsg()
@@ -374,7 +399,7 @@ class FileContent(
         val name: String,
         @SerialName("fileext")
         val ext: String
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class FileMsg(override val base: ChatMsgCommonInfo, val file: FileContent) : AbstractChatMsg()
@@ -394,7 +419,7 @@ class LinkContent(
         val link: String,
         @SerialName("image_url")
         val image: String
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class LinkMsg(override val base: ChatMsgCommonInfo, val link: LinkContent) : AbstractChatMsg()
@@ -414,7 +439,7 @@ class WeappContent(
         val username: String,
         @SerialName("displayname")
         val name: String
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class WeappMsg(override val base: ChatMsgCommonInfo, val weapp: WeappContent) : AbstractChatMsg()
@@ -442,7 +467,7 @@ class ChatItem(
 class ChatRecord(
         val title: String,
         val item: List<ChatItem>
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class ChatRecordMsg(override val base: ChatMsgCommonInfo, val chatrecord: ChatRecord) : AbstractChatMsg()
@@ -453,7 +478,7 @@ class ChatRecordMsg(override val base: ChatMsgCommonInfo, val chatrecord: ChatRe
  */
 @Serializable
 @SerialName(MsgType.TODO)
-class TodoContent(val title: String, val content: String) : IChatMsgContent
+class TodoContent(val title: String, val content: String) : BaseChatMsgContent()
 
 @Serializable
 class TodoMsg(override val base: ChatMsgCommonInfo, val todo: TodoContent) : AbstractChatMsg()
@@ -476,7 +501,7 @@ class VoteContent(
         val type: Int,
         @SerialName("voteid")
         val id: String
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class VoteMsg(override val base: ChatMsgCommonInfo, val vote: VoteContent) : AbstractChatMsg()
@@ -502,7 +527,7 @@ class CollectContent(
         val time: String,
         val title: String,
         val details: List<CollectItem>
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 enum class InputType { Text, Number, Date, Time }
@@ -538,7 +563,7 @@ open class RedPacketContent(
         val count: Int,
         @SerialName("totalamount")
         val amount: Int
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class RedPacketMsg(override val base: ChatMsgCommonInfo, val redpacket: RedPacketContent) : AbstractChatMsg()
@@ -574,7 +599,7 @@ class MeetingContent(
         @SerialName("meetingid")
         val id: Long,
         val status: Int? = null
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class MeetingMsg(override val base: ChatMsgCommonInfo, val meeting: MeetingContent) : AbstractChatMsg()
@@ -613,7 +638,7 @@ class DocContent(
         val url: String,
         @SerialName("doc_creator")
         val creator: String
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class DocMsg(override val base: ChatMsgCommonInfo, val doc: DocContent) : AbstractChatMsg()
@@ -625,7 +650,7 @@ class MarkdownMsg(override val base: ChatMsgCommonInfo, val info: TextContent) :
 
 @Serializable
 @SerialName(MsgType.NEWS)
-class NewsContent(val item: List<ArticleItem>) : IChatMsgContent
+class NewsContent(val item: List<ArticleItem>) : BaseChatMsgContent()
 
 @Serializable
 class NewsMsg(override val base: ChatMsgCommonInfo, val info: NewsContent) : AbstractChatMsg()
@@ -654,7 +679,7 @@ class CalendarContent(
         val end: Long,
         val place: String,
         val remarks: String? = null
-) : IChatMsgContent
+) : BaseChatMsgContent()
 
 @Serializable
 class CalendarMsg(override val base: ChatMsgCommonInfo, val calendar: CalendarContent) : AbstractChatMsg()
@@ -669,7 +694,7 @@ class MixMsgItem(val type: String, val content: String)
 
 @Serializable
 @SerialName(MsgType.MIXED)
-class MixContent(val item: List<MixMsgItem>) : IChatMsgContent
+class MixContent(val item: List<MixMsgItem>) : BaseChatMsgContent()
 
 @Serializable
 class MixMsg(override val base: ChatMsgCommonInfo, val mixed: MixContent) : AbstractChatMsg()

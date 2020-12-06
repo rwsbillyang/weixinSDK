@@ -233,6 +233,7 @@ fun Routing.oAuthApi(
                 if (res.isOK()) {
                     val isAllow = hasPermission(OAuthResult(agentId, res.userId, res.externalUserId, res.openId, res.deviceId))
                     if (isAllow) {
+                        log.info("res=$res")
                         var param = if(!res.userId.isNullOrBlank()) "&userId=${res.userId}" else ""
                         if(!res.externalUserId.isNullOrBlank()) param += "&externalUserId=${res.externalUserId}"
                         if(!res.openId.isNullOrBlank())param += "&openId=${res.openId}"

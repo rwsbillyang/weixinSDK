@@ -352,11 +352,15 @@ class ResponseUserDetail(
         val gender: String, //0表示未定义，1表示男性，2表示女性
         val email: String? = null,
         val address: String? = null,
-        val extattr: List<Attr>? = null,
+        val extattr: ExtAttr? = null,
 
         val department: List<Int>? = null,
         val main_department: Int? = null,
-        val is_leader_in_dept: Int? = null,
+        /**
+         * TODO:官方文档里没有此字段，但返回结果有此字段
+         * */
+        val isleader: Int? = null,
+        val is_leader_in_dept: List<Int>? = null,
         val order: List<Int>? = null,
         val position: String? = null,
 
@@ -369,7 +373,7 @@ class ResponseUserDetail(
 
 @Serializable
 class ExternalProfile(
-        val external_corp_name: String? = null,
+        val external_corp_name: String? = null, //内部联系人拥有该属性,外部联系人无此属性
         val external_attr: List<Attr>? = null
 )
 
@@ -390,6 +394,8 @@ class TextAttr(override val type: Int, override val name: String, val text: Text
 class WebAttr(override val type: Int, override val name: String, val web: Web) : Attr()
 @Serializable
 class MiniProgramAttr(override val type: Int, override val name: String, val miniprogram: MiniProgram) : Attr()
+@Serializable
+class ExtAttr(val attrs: List<Attr>? = null)
 
 class AttrSerializer : KSerializer<Attr> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Attr")

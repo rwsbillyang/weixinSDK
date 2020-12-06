@@ -37,6 +37,7 @@ open class ClientWrapper{
     open val apiJson = Json {
         encodeDefaults = true
         useArrayPolymorphism = false
+        ignoreUnknownKeys = true
     }
 
 
