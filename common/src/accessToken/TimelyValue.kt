@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 /**
  * 有时间期限的值
  * @param value 值
- * @param time 生效时间，在某个时间之后可能过期
+ * @param time 生效起始utc时间，在time+expireTime之后过期
  * */
 @Serializable
 open class TimelyValue(
