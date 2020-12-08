@@ -39,7 +39,7 @@ import kotlinx.serialization.json.*
  * 获取通讯录管理secret的方法如下：
 1、进入企业微信管理后台，在“管理工具” — “通讯录同步助手”开启“API接口同步”
  * */
-class ContactsApi(secretKey: String) : WorkBaseApi(secretKey){
+class ContactsApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
     override val group = "user"
 
     fun create(body: Map<String, Any?>) = doPost3("create", body)
@@ -90,7 +90,7 @@ class ContactsApi(secretKey: String) : WorkBaseApi(secretKey){
 }
 
 
-class DepartmentApi(secretKey: String) : WorkBaseApi(secretKey){
+class DepartmentApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
     override val group = "department"
 
     companion object {
@@ -127,7 +127,7 @@ class DepartmentApi(secretKey: String) : WorkBaseApi(secretKey){
 
 }
 
-class TagApi(secretKey: String) : WorkBaseApi(secretKey){
+class TagApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
     override val group = "tag"
 
     companion object {
@@ -190,7 +190,7 @@ class BatchUserCallback(val url: String?,
 
 class BatchUserBody(val mediaId: String, toInvite: Boolean?, callback: BatchUserCallback?)
 
-class UserBatchApi(secretKey: String) : WorkBaseApi(secretKey){
+class UserBatchApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
     override val group = "batch"
 
     companion object {

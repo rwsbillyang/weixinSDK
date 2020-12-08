@@ -61,28 +61,23 @@ fun Application.testableModule(testing: Boolean = false) {
 
 
 
-
+val corpId = "wx5823bf96d3bd56c7"
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.WorkTestableModule(testing: Boolean = false) {
 
     testableModule(testing)
 
-    Work.config {
-        corpId = "wx5823bf96d3bd56c7"
-        add(null, WorkBaseApi.KeyBase, "the_secret", true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",customAccessToken = TestAccessTokenValue())
-        add(null, WorkBaseApi.KeyChatArchive, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C", customAccessToken = TestAccessTokenValue())
-        add(null, WorkBaseApi.KeyContact, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",  customAccessToken = TestAccessTokenValue())
-        add(null, WorkBaseApi.KeyCustomer, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C", customAccessToken = TestAccessTokenValue())
-    }
-
-
+    Work.config(corpId, WorkBaseApi.KeyBase, "the_secret", true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",customAccessToken = TestAccessTokenValue())
+    Work.config(corpId, WorkBaseApi.KeyChatArchive, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C", customAccessToken = TestAccessTokenValue())
+    Work.config(corpId, WorkBaseApi.KeyContact, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",  customAccessToken = TestAccessTokenValue())
+    Work.config(corpId, WorkBaseApi.KeyCustomer, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C", customAccessToken = TestAccessTokenValue())
 
     routing {
-        wxWorkAgentApi(WorkBaseApi.KeyBase)
-        wxWorkAgentApi(WorkBaseApi.KeyChatArchive)
-        wxWorkAgentApi(WorkBaseApi.KeyContact)
-        wxWorkAgentApi(WorkBaseApi.KeyCustomer)
+        agentMsgApi(corpId, WorkBaseApi.KeyBase)
+        agentMsgApi(corpId, WorkBaseApi.KeyChatArchive)
+        agentMsgApi(corpId, WorkBaseApi.KeyContact)
+        agentMsgApi(corpId, WorkBaseApi.KeyCustomer)
     }
 }
 

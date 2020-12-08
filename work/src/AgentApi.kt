@@ -28,7 +28,7 @@ import kotlinx.serialization.Serializable
  * https://work.weixin.qq.com/api/doc/90000/90135/90226
  *
  * */
-class AgentApi(secretKey: String) : WorkBaseApi(secretKey){
+class AgentApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
     override val group = "agent"
     
     /**

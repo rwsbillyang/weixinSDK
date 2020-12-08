@@ -30,20 +30,21 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
 
-fun Routing.wxWorkAgentApi(agentName: String) {
-    val log = LoggerFactory.getLogger("workApi")
+fun Routing.agentMsgApi(corpId: String, agentId: Int) {
+    val log = LoggerFactory.getLogger("agentMsgApi")
 
-    if(!Work.isInit()){
-        log.warn("not init wx work: $agentName, please  init wx work first")
+    val workBaseApi = Work.ApiContextMap[corpId]
+    if(workBaseApi == null){
+        log.warn("not init WorkApiContext for: corpId=$corpId")
         return
     }
-    val ctx = Work.WORK.agentMap[agentName]
+    val ctx = workBaseApi.agentMap[agentId]
     if(ctx == null){
-        log.warn("not add the agent: $agentName, please call Work.add(...) first")
+        log.warn("not add agentId=$agentId,corpId=$corpId. please call Work.add(...) first")
         return
     }
     if(!ctx.enableMsg){
-        log.warn("not enableMsg: $agentName, ignore")
+        log.warn("not enableMsg: agentId=$agentId,corpId=$corpId, ignore")
         return
     }
     if(ctx.wxBizMsgCrypt == null || ctx.msgHub == null){
@@ -51,7 +52,7 @@ fun Routing.wxWorkAgentApi(agentName: String) {
         return
     }
 
-    route(ctx.callbackPath) {
+    route(ctx.msgNotifyUri) {
         /**
          *
          *
@@ -163,6 +164,7 @@ fun Routing.wxWorkAgentApi(agentName: String) {
 
 
 class OAuthResult(
+        val corpId: String,
         val agentId: Int,
         val userId: String?,
         val externalUserId: String?,
@@ -175,8 +177,8 @@ class OAuthResult(
  * */
 fun Routing.oAuthApi(
         oauthInfoPath: String = Work.oauthInfoPath,
-        notifyPath: String = Work.notifyPath,
-        notifyWebAppUrl: String = Work.notifyWebAppUrl,
+        oauthNotifyPath: String = Work.oauthNotifyPath,
+        oauthNotifyWebAppUrl: String = Work.oauthNotifyWebAppUrl,
         hasPermission: (OAuthResult)-> Boolean
 ) {
     val log = LoggerFactory.getLogger("workOAuthApi")
@@ -184,23 +186,25 @@ fun Routing.oAuthApi(
             .maximumSize(Long.MAX_VALUE)
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .expireAfterAccess(1, TimeUnit.SECONDS)
-            .build<String, Int>()
+            .build<String, Pair<String, Int>>()
     /**
      * 前端webapp请求该api获取appid，state等信息，然后重定向到腾讯的授权页面，用户授权之后将重定向到下面的notify
+     * @param corpId
      * @param agentId 要登录的agentID
      * @param host 跳转host，如："https：//www.example.com"
      * 前端重定向地址：https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect" 然后重定向到该url
      *
      * */
     get(oauthInfoPath){
+        val corpId = call.request.queryParameters["corpId"]
         val agentId = call.request.queryParameters["agentId"]?.toInt()?:-1
         val host = call.request.queryParameters["host"]?:call.request.host()
-        if(agentId < 0)
+        if(corpId.isNullOrBlank() || agentId < 0)
         {
-            call.respond(HttpStatusCode.BadRequest, "no agentId")
+            call.respond(HttpStatusCode.BadRequest, "no corpId or agentId")
         }else{
-            val oAuthInfo = OAuthApi(agentId.toString()).prepareOAuthInfo(host + notifyPath, false)
-            stateCache.put(oAuthInfo.state, agentId)
+            val oAuthInfo = OAuthApi(corpId, agentId).prepareOAuthInfo(host + oauthNotifyPath, false)
+            stateCache.put(oAuthInfo.state, Pair(corpId, agentId))
             call.respond(oAuthInfo)
         }
     }
@@ -214,36 +218,37 @@ fun Routing.oAuthApi(
      * code作为换取access_token的票据，每次用户授权带上的code将不一样，code只能使用一次，5分钟未被使用自动过期。
      *
      * */
-    get(notifyPath) {
+    get(oauthNotifyPath) {
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]
 
         val url = if (code.isNullOrBlank() || state.isNullOrBlank()) {
             //notify webapp fail
             log.warn("code or state is null, code=$code, state=$state")
-            "$notifyWebAppUrl?state=$state&code=KO&msg=nullCodeOrState"
+            "$oauthNotifyWebAppUrl?state=$state&code=KO&msg=nullCodeOrState"
         } else {
-            val agentId = stateCache.getIfPresent(state) ?: -2
+            val pair = stateCache.getIfPresent(state)
             stateCache.invalidate(state)
-            if (agentId == -2) {
-                log.warn("not found agentId in cache, code=$code, state=$state")
-                "$notifyWebAppUrl?state=$state&code=KO&msg=NotFoundAgentIdInCache"
+            if (pair == null) {
+                log.warn("not found corpId&agentId pair in cache, code=$code, state=$state")
+                "$oauthNotifyWebAppUrl?state=$state&code=KO&msg=NotFoundAgentIdInCache"
             } else {
-                val res = OAuthApi(agentId.toString()).getUserInfo(code)
-                if (res.isOK()) {
-                    val isAllow = hasPermission(OAuthResult(agentId, res.userId, res.externalUserId, res.openId, res.deviceId))
+                val res = OAuthApi(pair.first, pair.second).getUserInfo(code)
+                val part = if (res.isOK()) {
+                    val isAllow = hasPermission(OAuthResult(pair.first, pair.second, res.userId, res.externalUserId, res.openId, res.deviceId))
                     if (isAllow) {
-                        log.info("res=$res")
+                        //log.info("res=$res")
                         var param = if(!res.userId.isNullOrBlank()) "&userId=${res.userId}" else ""
                         if(!res.externalUserId.isNullOrBlank()) param += "&externalUserId=${res.externalUserId}"
                         if(!res.openId.isNullOrBlank())param += "&openId=${res.openId}"
-                        "$notifyWebAppUrl?state=$state&code=OK${param}"
+                        "$oauthNotifyWebAppUrl?state=$state&code=OK${param}"
                     } else {
-                        "$notifyWebAppUrl?state=$state&code=KO&msg=Forbidden"
+                        "$oauthNotifyWebAppUrl?state=$state&code=KO&msg=Forbidden"
                     }
                 } else {
-                    "$notifyWebAppUrl?state=$state&code=KO&msg=${res.errCode}:${res.errMsg}"
+                    "$oauthNotifyWebAppUrl?state=$state&code=KO&msg=${res.errCode}:${res.errMsg}"
                 }
+                "$part&corpId=${pair.first}&agentId=${pair.second}"
             }
         }
         call.respondRedirect(url, permanent = false)

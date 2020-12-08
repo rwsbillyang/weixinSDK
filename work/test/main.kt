@@ -18,7 +18,7 @@
 
 package com.github.rwsbillyang.wxSDK.work.test
 
-import java.util.*
+
 
 fun main(args: Array<String>) {
     val workTest = WorkTest()

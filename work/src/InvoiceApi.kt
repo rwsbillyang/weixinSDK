@@ -26,7 +26,7 @@ class Invoice(
     @SerialName("card_id")val cardId: String,
     @SerialName("encrypt_code")val encryptCode: String)
 
-class InvoiceApi(secretKey: String) : WorkBaseApi(secretKey){
+class InvoiceApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
     override val group = "card/invoice/reimburse"
 
     /**

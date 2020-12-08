@@ -31,7 +31,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 
-class ChatMsgApi(secretKey: String) : WorkBaseApi(secretKey){
+class ChatMsgApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
     val log = LoggerFactory.getLogger("ChatMsgApi")
     companion object{
         const val CHAT_MSG_MAX_LIMIT = 1000
@@ -102,7 +102,7 @@ class ChatMsgApi(secretKey: String) : WorkBaseApi(secretKey){
                 //    a) 需首先对每条消息的encrypt_random_key内容进行base64 decode,得到字符串str1.
                 //    b) 使用publickey_ver指定版本的私钥，使用RSA PKCS1算法对str1进行解密，得到解密内容str2.
                 //    c) 得到str2与对应消息的encrypt_chat_msg，调用下方描述的DecryptData接口，即可获得消息明文。
-                val privateKey = Work.WORK.agentMap[secretKey]?.privateKey
+                val privateKey = Work.ApiContextMap[corpId]?.agentMap?.get(agentId)?.privateKey
                 if(privateKey == null){
                     log.warn("Finance.GetChatData privateKey is null, please config it first")
                     return null

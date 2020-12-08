@@ -25,7 +25,7 @@ import com.github.rwsbillyang.wxSDK.bean.Menus
 
 
 
-class MenuApi(secretKey: String) : WorkBaseApi(secretKey){
+class MenuApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
     override val group = "menu"
     /**
      * 创建菜单

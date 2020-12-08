@@ -58,10 +58,10 @@ class ApplicationTest {
             val encryptEcho = "P9nAzCzyDtyTWESHep1vC5X9xho/qYX3Zpb4yKa9SKld1DsH3Iyt3tP3zNdtp+4RPcs8TgAE7OaBO+FZXvnaqQ=="
             //val encryptEcho = _WORK.wxBizMsgCrypt.encrypt(sVerifyEchoStr)
             val agentName = WorkBaseApi.KeyBase
-            val ctx = Work.WORK.agentMap[agentName]!!
+            val ctx = Work.ApiContextMap[corpId]!!.agentMap[agentName]!!
 
             val signature =  SHA1.getSHA1(ctx.token!!, timestamp, nonce, encryptEcho)
-            val getUrl  = "${ctx.callbackPath}?msg_signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$encryptEcho"
+            val getUrl  = "${ctx.msgNotifyUri}?msg_signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$encryptEcho"
 
 //            handleRequest(HttpMethod.Get, getUrl).apply {
 //                assertEquals(HttpStatusCode.OK, response.status())
@@ -71,13 +71,13 @@ class ApplicationTest {
 
 
             //原始消息文本
-            val originalTextMsg = "<xml><ToUserName><![CDATA[$toUser]]></ToUserName><FromUserName><![CDATA[${Work.WORK.corpId}]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[$content]]></Content><MsgId>$msgId</MsgId><AgentID>128</AgentID></xml>"
+            val originalTextMsg = "<xml><ToUserName><![CDATA[$toUser]]></ToUserName><FromUserName><![CDATA[${corpId}]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[$content]]></Content><MsgId>$msgId</MsgId><AgentID>128</AgentID></xml>"
 
             //将原始文本用timestamp和nonce拼接后，用sha1加密，得到加密消息，再置于post data中的Encrypt的标签中
             val (xml, msgSignature) = ctx.wxBizMsgCrypt!!.encryptMsg(originalTextMsg,timestamp, nonce, toUser,128)
 
 
-            val postUrl = "${ctx.callbackPath}?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce"
+            val postUrl = "${ctx.msgNotifyUri}?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce"
             handleRequest(HttpMethod.Post,postUrl){
                 setBody(xml)
             }.apply {

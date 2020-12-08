@@ -16,7 +16,7 @@ apply plugin: 'java-library'
 apply plugin: 'maven-publish'
 
 group 'com.github.rwsbillyang.wxSDK'
-version '0.0.1'
+version '0.2.0'
 //mainClassName = "io.ktor.server.netty.EngineMain"
 
 sourceSets {
