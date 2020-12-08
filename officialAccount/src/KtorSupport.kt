@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit
 
 
 
-fun Routing.officialAccountApi(path: String = OfficialAccount.wxEntryPoint) {
+fun Routing.officialAccountApi(path: String = OfficialAccount.msgUri) {
     val log = LoggerFactory.getLogger("officialAccountApi")
 
     route(path) {
@@ -67,22 +67,37 @@ fun Routing.officialAccountApi(path: String = OfficialAccount.wxEntryPoint) {
          * 2）将三个参数字符串拼接成一个字符串进行sha1加密
          * 3）开发者获得加密后的字符串可与signature对比，标识该请求来源于微信
          * */
-        get {
-            val signature = call.request.queryParameters["signature"]
-            val timestamp = call.request.queryParameters["timestamp"]
-            val nonce = call.request.queryParameters["nonce"]
-            val echostr = call.request.queryParameters["echostr"]
+        get("/{appId}") {
+            val appId = call.parameters["appId"]
+            var msg = ""
+            if(appId.isNullOrBlank()){
+                msg = "no appId, wrong uri"
+                log.warn(msg)
+            }else{
+                val signature = call.request.queryParameters["signature"]
+                val timestamp = call.request.queryParameters["timestamp"]
+                val nonce = call.request.queryParameters["nonce"]
+                val echostr = call.request.queryParameters["echostr"]
 
-            val token = OfficialAccount.OA.token
 
-            if (StringUtils.isAnyBlank(token, signature, timestamp, nonce,echostr)) {
-                log.warn("invalid parameters: token=$token, signature=$signature, timestamp=$timestamp, nonce=$nonce,echostr=$echostr")
-            } else {
-                if (!SignUtil.checkSignature(token, signature!!, timestamp!!, nonce!!)) {
-                    log.warn("fail to check signature")
+                val token = OfficialAccount.ApiContextMap[appId]?.token
+                if(token.isNullOrBlank()){
+                    msg = "not config token"
+                    log.warn(msg)
+                }else{
+                    msg = echostr?:""
+                    if (StringUtils.isAnyBlank(token, signature, timestamp, nonce,echostr)) {
+                        log.warn("invalid parameters: token=$token, signature=$signature, timestamp=$timestamp, nonce=$nonce,echostr=$echostr")
+                    } else {
+                        if (!SignUtil.checkSignature(token, signature!!, timestamp!!, nonce!!))
+                        {
+                            msg = "fail to check signature"
+                            log.warn(msg)
+                        }
+                    }
                 }
             }
-            call.respondText(echostr?:"", ContentType.Text.Plain, HttpStatusCode.OK)
+            call.respondText(msg, ContentType.Text.Plain, HttpStatusCode.OK)
         }
 
         /**
@@ -108,29 +123,43 @@ fun Routing.officialAccountApi(path: String = OfficialAccount.wxEntryPoint) {
          *
          *   开发者安全模式（推荐）：公众平台发送消息体的内容只含有密文，公众账号回复的消息体也为密文。但开发者通过客服接口等API调用形式向用户发送消息，则不受影响。
          * */
-        post {
-            val body: String = call.receiveText()
-
-            val msgSignature = call.request.queryParameters["msg_signature"]
-            val timeStamp = call.request.queryParameters["timestamp"]
-            val nonce = call.request.queryParameters["nonce"]
-            val encryptType = call.request.queryParameters["encrypt_type"]?:"security"
-
-            val reXml = OfficialAccount.OA.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
-
-            if(reXml.isNullOrBlank())
+        post("/{appId}") {
+            val appId = call.parameters["appId"]
+            if(appId.isNullOrBlank()){
+                log.warn("no appId, wrong uri")
                 call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
-            else
-                call.respondText(reXml, ContentType.Text.Xml, HttpStatusCode.OK)
+            }else{
+                val apiCtx = OfficialAccount.ApiContextMap[appId]
+                if(apiCtx == null){
+                    log.warn("not config officialAccount: appId=$appId")
+                }else{
+                    val body: String = call.receiveText()
 
+                    val msgSignature = call.request.queryParameters["msg_signature"]
+                    val timeStamp = call.request.queryParameters["timestamp"]
+                    val nonce = call.request.queryParameters["nonce"]
+                    val encryptType = call.request.queryParameters["encrypt_type"]?:"security"
+
+                    val reXml = apiCtx?.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
+
+                    if(reXml.isNullOrBlank())
+                        call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
+                    else
+                        call.respondText(reXml, ContentType.Text.Xml, HttpStatusCode.OK)
+                }
+            }
         }
     }
 }
 
+class QueryInfo(
+    val appId: String,
+    val needUserInfo: Boolean
+)
 fun Routing.oAuthApi(
         oauthInfoPath: String = OfficialAccount.oauthInfoPath,
-        notifyPath: String = OfficialAccount.notifyPath,
-        notifyWebAppUrl: String = OfficialAccount.notifyWebAppUrl,
+        notifyPath: String = OfficialAccount.oauthNotifyPath,
+        notifyWebAppUrl: String = OfficialAccount.oauthNotifyWebAppUrl,
         needUserInfo: ((String, String) -> Int)? = null,
         onGetOauthAccessToken: ((ResponseOauthAccessToken)-> Unit)? = null,
         onGetUserInfo: ((info: ResponseUserInfo) -> Unit)? = null
@@ -140,7 +169,7 @@ fun Routing.oAuthApi(
             .maximumSize(Long.MAX_VALUE)
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .expireAfterAccess(1, TimeUnit.SECONDS)
-            .build<String, Boolean>()
+            .build<String, QueryInfo>()
     /**
      * 前端webapp请求该api获取appid，state等信息，然后重定向到腾讯的授权页面，用户授权之后将重定向到下面的notify
      * @param userInfo 0或1分别表示是否需要获取用户信息，优先使用前端提供的参数, 没有提供的话使用needUserInfo(host, uri)进行判断（用于从某个用户设置中获取），再没有的话则默认为0
@@ -149,12 +178,20 @@ fun Routing.oAuthApi(
      *
      * */
     get(oauthInfoPath){
-        val userInfo = (call.request.queryParameters["userInfo"]?.toInt()?:(needUserInfo?.let { it(call.request.host(), call.request.uri) })?:0) == 1
-        val host = call.request.queryParameters["host"]?:call.request.host()
+        val appId = call.request.queryParameters["appId"]
+        if(appId.isNullOrBlank())
+        {
+            log.warn("no appId in query parameters for oauth")
+            call.respond(HttpStatusCode.BadRequest, "no appId in query parameters")
+        }else{
+            val userInfo = (call.request.queryParameters["userInfo"]?.toInt()?:(needUserInfo?.let { it(call.request.host(), call.request.uri) })?:0) == 1
+            val host = call.request.queryParameters["host"]?:call.request.host()
 
-        val oAuthInfo = OAuthApi.prepareOAuthInfo(host + notifyPath, userInfo)
-        stateCache.put(oAuthInfo.state, userInfo)
-        call.respond(oAuthInfo)
+            val oAuthInfo = OAuthApi(appId).prepareOAuthInfo(host + notifyPath, userInfo)
+            stateCache.put(oAuthInfo.state, QueryInfo(appId, userInfo))
+            call.respond(oAuthInfo)
+        }
+
     }
     /**
      * 腾讯在用户授权之后，将调用下面的api通知code，并附带上原state。
@@ -174,28 +211,35 @@ fun Routing.oAuthApi(
             //notify webapp fail
             call.respondRedirect("$notifyWebAppUrl?state=$state&code=KO&msg=nullCodeOrState", permanent = false)
         }else{
-            val res = OAuthApi.getAccessToken(code)
-            if(res.isOK()  && res.openId != null){
-                onGetOauthAccessToken?.let { async { it.invoke(res) } }
+            val queryInfo = stateCache.getIfPresent(state)
+            stateCache.invalidate(state)
+            var url = "$notifyWebAppUrl?state=$state"
+            if(queryInfo == null){
+                log.warn("not found queryInfo in cache, code=$code, state=$state")
+                url += "&code=KO&msg=NotFoundAppIdInCache"
+            }else{
+                val oauthAi = OAuthApi(queryInfo.appId)
+                val res = oauthAi.getAccessToken(code)
+                if(res.isOK()  && res.openId != null){
+                    onGetOauthAccessToken?.let { async { it.invoke(res) } }
+                    url +=  "&code=OK&openId=${res.openId}"
 
-                var url = "$notifyWebAppUrl?state=$state&code=OK&openId=${res.openId}"
-                val needUserInfo = stateCache.getIfPresent(state)?:false
-                stateCache.invalidate(state)
-                if(needUserInfo && res.accessToken != null){
-                    val resUserInfo = OAuthApi.getUserInfo(res.accessToken, res.openId)
-                    if(resUserInfo.isOK())
-                    {
-                        if(resUserInfo.unionId != null){
-                            url += "&unionId=${resUserInfo.unionId}"
+                    if(queryInfo.needUserInfo && res.accessToken != null){
+                        val resUserInfo = oauthAi.getUserInfo(res.accessToken, res.openId)
+                        if(resUserInfo.isOK())
+                        {
+                            if(resUserInfo.unionId != null){
+                                url += "&unionId=${resUserInfo.unionId}"
+                            }
+                            //async save fan user info
+                            onGetUserInfo?.let { async { it.invoke(resUserInfo)} }
+                        }else{
+                            log.warn("fail getUserInfo: $resUserInfo")
                         }
-                        //async save fan user info
-                        onGetUserInfo?.let { async { it.invoke(resUserInfo)} }
-                    }else{
-                        log.warn("fail getUserInfo: $resUserInfo")
                     }
+                    //notify webapp OK
+                    call.respondRedirect(url, permanent = false)
                 }
-                //notify webapp OK
-                call.respondRedirect(url, permanent = false)
             }
         }
     }

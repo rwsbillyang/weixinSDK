@@ -12,7 +12,7 @@ class ApiTest {
     @Test
     fun testCustomerServiceApi() {
         withTestApplication({ apiTest(testing = true) }) {
-            val res = CustomerServiceApi.getAccountList()
+            val res = CustomerServiceApi(AppIdForTest).getAccountList()
             println(Json.encodeToString(res))
             //assert(res.isOK())
         }

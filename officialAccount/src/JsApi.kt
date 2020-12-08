@@ -41,13 +41,13 @@ object JsAPI {
      *
      * @return 签名以及相关参数
      */
-    fun getSignature(url: String, nonceStr: String? = null, timestamp: Long? = null): JsApiSignature? {
+    fun getSignature(appId: String, url: String, nonceStr: String? = null, timestamp: Long? = null): JsApiSignature? {
         if(url.contains("#"))
         {
             log.error("cannot include # in url")
             return null
         }
-        val jsApiTicket = OfficialAccount.OA.ticket.get()
+        val jsApiTicket = OfficialAccount.ApiContextMap[appId]?.ticket?.get()
         if(jsApiTicket == null){
             log.error("jsApiTicket is null, does you config correctly?")
             return null

@@ -38,6 +38,7 @@ import io.ktor.http.*
 
 //fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
+val AppIdForTest = "wx2ea341a3b3871d23"
 
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
@@ -67,7 +68,7 @@ fun Application.testableModule(testing: Boolean = false) {
 fun Application.apiTest(testing: Boolean = false){
     testableModule(testing)
     OfficialAccount.config {
-        appId = "wx2ea341a3b3871d23"
+        appId = AppIdForTest
         secret = "89d147ef8e83c4cd097e96992127f0bc"
         encodingAESKey = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG"
         token = "com.github.rwsbillyang.wxSDK.test.testToken"

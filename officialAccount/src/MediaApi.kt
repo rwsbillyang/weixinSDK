@@ -25,7 +25,7 @@ import kotlinx.serialization.Serializable
 /**
  * 临时素材管理
  * */
-object MediaApi : OABaseApi(){
+class MediaApi(appId: String) : OABaseApi(appId){
     override val group: String = "media"
 
     /**

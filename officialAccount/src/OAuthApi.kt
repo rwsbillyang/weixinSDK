@@ -30,7 +30,7 @@ import java.net.URLEncoder
 /**
  * https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
  * */
-object OAuthApi: OABaseApi() {
+class OAuthApi(appId: String) : OABaseApi(appId){
     override val base = "https://api.weixin.qq.com/sns"
     override val group: String = "oauth2"
 
@@ -46,7 +46,7 @@ object OAuthApi: OABaseApi() {
      * */
     fun prepareOAuthInfo(redirectUri: String, needUserInfo: Boolean = false): OAuthInfo {
         val state = RandomStringUtils.randomAlphanumeric(16)
-        return OAuthInfo(OfficialAccount.OA.appId, URLEncoder.encode(redirectUri,"UTF-8") ,if(needUserInfo) "snsapi_userinfo" else "snsapi_base",state)
+        return OAuthInfo(appId, URLEncoder.encode(redirectUri,"UTF-8") ,if(needUserInfo) "snsapi_userinfo" else "snsapi_base",state)
     }
 
     /**
@@ -56,13 +56,13 @@ object OAuthApi: OABaseApi() {
      *
      * "https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code"
      * */
-    fun getAccessToken(code: String): ResponseOauthAccessToken = doGet("access_token", mapOf("appid" to OfficialAccount.OA.appId, "secret" to OfficialAccount.OA.secret, "code" to code, "grant_type" to "authorization_code"))
+    fun getAccessToken(code: String): ResponseOauthAccessToken = doGet("access_token", mapOf("appid" to appId, "secret" to OfficialAccount.ApiContextMap[appId]?.secret, "code" to code, "grant_type" to "authorization_code"))
 
     /**
      * 第三步：刷新access_token（如果需要）
      * https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=APPID&grant_type=refresh_token&refresh_token=REFRESH_TOKEN
      * */
-    fun refreshAccessToken(refreshToken: String): ResponseOauthAccessToken = doGet("refresh_token", mapOf("appid" to OfficialAccount.OA.appId, "secret" to OfficialAccount.OA.secret, "refresh_token" to refreshToken, "grant_type" to "refresh_token"))
+    fun refreshAccessToken(refreshToken: String): ResponseOauthAccessToken = doGet("refresh_token", mapOf("appid" to appId, "secret" to OfficialAccount.ApiContextMap[appId]?.secret, "refresh_token" to refreshToken, "grant_type" to "refresh_token"))
 
 
     /**

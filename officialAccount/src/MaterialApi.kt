@@ -27,7 +27,7 @@ import kotlinx.serialization.encodeToString
 /**
  * 永久素材管理
  * */
-object MaterialApi: OABaseApi() {
+class MaterialApi(appId: String) : OABaseApi(appId){
     override val group: String = "material"
 
     /**

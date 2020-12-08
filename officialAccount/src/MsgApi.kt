@@ -47,7 +47,7 @@ import kotlinx.serialization.Serializable
  * 设置is_to_all为false时是可以多次群发的，但每个用户只会收到最多4条，且这些群发不会进入历史消息列表。
  * 另外，请开发者注意，本接口中所有使用到media_id的地方，现在都可以使用素材管理中的永久素材media_id了。请但注意，使用同一个素材群发出去的链接是一样的，这意味着，删除某一次群发，会导致整个链接失效。
  * */
-object MsgApi : OABaseApi() {
+class MsgApi(appId: String) : OABaseApi(appId){
     override val group: String = "message"
 
     /**

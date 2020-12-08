@@ -26,7 +26,7 @@ import kotlinx.serialization.Serializable
 /**
  * 管理模板之用
  * */
-object TemplateApi: OABaseApi(){
+class TemplateApi(appId: String) : OABaseApi(appId){
     override val group: String = "template"
 
     /**

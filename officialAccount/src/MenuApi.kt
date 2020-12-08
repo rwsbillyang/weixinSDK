@@ -33,7 +33,7 @@ import kotlinx.serialization.Serializable
  * 如果发现上一次拉取菜单的请求在5分钟以前，就会拉取一下菜单，如果菜单有更新，就会刷新客户端的菜单。
  * 测试时可以尝试取消关注公众账号后再次关注，则可以看到创建后的效果.
  * */
-object MenuApi: OABaseApi() {
+class MenuApi(appId: String) : OABaseApi(appId){
     override val group = "menu"
 
     /**

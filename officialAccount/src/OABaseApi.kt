@@ -20,7 +20,7 @@ package com.github.rwsbillyang.wxSDK.officialAccount
 
 import com.github.rwsbillyang.wxSDK.WxApi
 
-abstract class OABaseApi : WxApi(){
+abstract class OABaseApi(val appId: String) : WxApi(){
     override val base = "https://api.weixin.qq.com/cgi-bin"
-    override fun accessToken() = OfficialAccount.OA.accessToken.get()
+    override fun accessToken() = OfficialAccount.ApiContextMap[appId]?.accessToken?.get()
 }

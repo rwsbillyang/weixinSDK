@@ -25,19 +25,10 @@ import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.*
 
 
 object OfficialAccount {
-    private var _OA: OAContext? = null
-    val OA: OAContext
-        get() {
-            requireNotNull(_OA)
-            return _OA!!
-        }
-    fun isInit() = _OA != null
-
-
     /**
      * 微信接入点
      * */
-    var wxEntryPoint = "/api/wx/oa/ep"
+    var msgUri = "/api/wx/oa/app"
     /**
      * 前端获取api签名信息，重定向到请求腾讯授权页面
      * */
@@ -45,18 +36,20 @@ object OfficialAccount {
     /**
      * 用户授权后的通知路径
      * */
-    var notifyPath: String = "/api/wx/oa/oauth/notify"
+    var oauthNotifyPath: String = "/api/wx/oa/oauth/notify"
     /**
      * 授权后通知前端的授权结果路径
      * */
-    var notifyWebAppUrl: String = "/wx/oaAuth"
+    var oauthNotifyWebAppUrl: String = "/wx/oaAuth"
 
     /**
-     * 非ktor平台可以使用此函数进行配置公众号参数
+     * 配置公众号参数
      * */
     fun config(block: OAConfiguration.() -> Unit) {
         val config = OAConfiguration().apply(block)
-        _OA = OAContext(
+        val old = ApiContextMap[config.appId]
+        if(old == null){
+            ApiContextMap[config.appId] = ApiContext(
                 config.appId,
                 config.secret,
                 config.token,
@@ -67,19 +60,14 @@ object OfficialAccount {
                 config.eventHandler,
                 config.accessToken,
                 config.ticket
-        )
-    }
-
-    /**
-     * 更新配置，通常用于管理后台修改配置, 若自定义了msgHandler/eventHandler，需要再次指定它们
-     * */
-    fun update(block: OAConfiguration.() -> Unit) {
-        if(_OA != null){
-            _OA!!.onChange(OAConfiguration().apply(block))
+            )
         }else{
-            config(block)
+            old.onChange(config)
         }
     }
+
+    val ApiContextMap = hashMapOf<String, ApiContext>()
+
 }
 /**
  * 调用API时可能需要用到的配置
@@ -135,7 +123,7 @@ class OAConfiguration {
  * 。https://work.weixin.qq.com/api/doc/90000/90135/90930
  *  https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Access_Overview.html
  * */
-class OAContext(
+class ApiContext(
         var appId: String,
         var secret: String,
         var token: String,
@@ -158,9 +146,9 @@ class OAContext(
         msgHub = OAMsgHub(msgHandler, eventHandler, wxBizMsgCrypt)
 
         accessToken = customAccessToken
-                ?: TimelyRefreshAccessToken(appId, AccessTokenRefresher(AccessTokenUrl(appId, secret)))
+                ?: TimelyRefreshAccessToken(appId, AccessTokenRefresher(accessTokenUrl(appId, secret)))
 
-        ticket = customTicket ?: TimelyRefreshTicket(appId, TicketRefresher(TicketUrl(accessToken)))
+        ticket = customTicket ?: TimelyRefreshTicket(appId, TicketRefresher(ticketUrl(accessToken)))
     }
     fun onChange(config: OAConfiguration){
         var dirty1 = false
@@ -210,26 +198,26 @@ class OAContext(
        if(config.accessToken != null)
            accessToken = config.accessToken!!
         else if(dirty1 || dirty2){
-           accessToken = TimelyRefreshAccessToken(appId, AccessTokenRefresher(AccessTokenUrl(appId, secret)))
+           accessToken = TimelyRefreshAccessToken(appId, AccessTokenRefresher(accessTokenUrl(appId, secret)))
        }
 
        if(config.ticket != null)
            ticket = config.ticket!!
         else if(dirty1 || dirty2){
-           ticket = TimelyRefreshTicket(appId, TicketRefresher(TicketUrl(accessToken)))
+           ticket = TimelyRefreshTicket(appId, TicketRefresher(ticketUrl(accessToken)))
        }
 
     }
 }
 
 
+internal fun accessTokenUrl(appId: String, secret: String) = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$appId&secret=$secret"
+//internal class AccessTokenUrl(private val appId: String, private val secret: String) : IUrlProvider {
+//    override fun url() = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$appId&secret=$secret"
+//}
 
-internal class AccessTokenUrl(private val appId: String, private val secret: String) : IUrlProvider {
-    override fun url() = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$appId&secret=$secret"
-}
-
-internal class TicketUrl(private val accessToken: ITimelyRefreshValue) : IUrlProvider {
-    override fun url() = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
-
-}
+internal fun ticketUrl(accessToken: ITimelyRefreshValue) = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
+//internal class TicketUrl(private val accessToken: ITimelyRefreshValue) : IUrlProvider {
+//    override fun url() = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
+//}
 

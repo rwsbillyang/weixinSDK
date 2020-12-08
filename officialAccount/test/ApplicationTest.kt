@@ -53,8 +53,8 @@ class ApplicationTest {
     fun testOAUrl(){
         withTestApplication({ apiTest(testing = true) }) {
 
-            val signature = SignUtil.getSignature(OfficialAccount.OA.token,timestamp, nonce)
-            val getUrl  = "${OfficialAccount.wxEntryPoint}?signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$echoStr"
+            val signature = SignUtil.getSignature(OfficialAccount.ApiContextMap[AppIdForTest]?.token!!,timestamp, nonce)
+            val getUrl  = "${OfficialAccount.msgUri}/$AppIdForTest?signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$echoStr"
 
             handleRequest(HttpMethod.Get,getUrl).apply {
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -63,11 +63,11 @@ class ApplicationTest {
 
 
             //原始消息文本
-            val originalTextMsg = "<xml><ToUserName><![CDATA[$toUser]]></ToUserName><FromUserName><![CDATA[${OfficialAccount.OA.appId}]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[$content]]></Content><MsgId>${msgId}</MsgId></xml>"
+            val originalTextMsg = "<xml><ToUserName><![CDATA[$toUser]]></ToUserName><FromUserName><![CDATA[${OfficialAccount.ApiContextMap[AppIdForTest]?.appId}]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[$content]]></Content><MsgId>${msgId}</MsgId></xml>"
             //将原始文本用timestamp和nonce拼接后，用sha1加密，得到加密消息，再置于post data
-            val (xml, msgSignature) = OfficialAccount.OA.wxBizMsgCrypt!!.encryptMsg(originalTextMsg, timestamp, nonce,toUser)
+            val (xml, msgSignature) = OfficialAccount.ApiContextMap[AppIdForTest]?.wxBizMsgCrypt!!.encryptMsg(originalTextMsg, timestamp, nonce,toUser)
 
-            val postUrl = "${OfficialAccount.wxEntryPoint}?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce&encrypt_type=aes"
+            val postUrl = "${OfficialAccount.msgUri}/$AppIdForTest?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce&encrypt_type=aes"
             handleRequest(HttpMethod.Post,postUrl){
                 setBody(xml)
             }.apply {
@@ -80,8 +80,8 @@ class ApplicationTest {
                         val reTimeStamp =  map["TimeStamp"]?:""
                         val reNonce = map["Nonce"]?:""
                         val reEcrypt = map["Encrypt"]?:""
-                        val signature2 = SHA1.getSHA1(OfficialAccount.OA.token, reTimeStamp, reNonce, reEcrypt)
-                        val msg = OfficialAccount.OA.wxBizMsgCrypt!!.decryptWxMsg(signature2,reTimeStamp,reNonce,response.content!!)
+                        val signature2 = SHA1.getSHA1(OfficialAccount.ApiContextMap[AppIdForTest]?.token!!, reTimeStamp, reNonce, reEcrypt)
+                        val msg = OfficialAccount.ApiContextMap[AppIdForTest]?.wxBizMsgCrypt!!.decryptWxMsg(signature2,reTimeStamp,reNonce,response.content!!)
                         println("Got OA reply: $msg")
                     }else{
                         println("in OA post, got response: ${response.content}")
