@@ -57,8 +57,8 @@ dependencies {
 
     compileOnly "com.github.ben-manes.caffeine:caffeine:2.7.0+"
 
-    //implementation ("com.github.rwsbillyang:wxSDK:0.0.1")
-    implementation project(":common")
+    implementation ("com.github.rwsbillyang:wxSDK:0.2.0")
+    //implementation project(":common")
 }
 
 

@@ -161,8 +161,8 @@ fun Routing.oAuthApi(
         notifyPath: String = OfficialAccount.oauthNotifyPath,
         notifyWebAppUrl: String = OfficialAccount.oauthNotifyWebAppUrl,
         needUserInfo: ((String, String) -> Int)? = null,
-        onGetOauthAccessToken: ((ResponseOauthAccessToken)-> Unit)? = null,
-        onGetUserInfo: ((info: ResponseUserInfo) -> Unit)? = null
+        onGetOauthAccessToken: ((ResponseOauthAccessToken, appId: String)-> Unit)? = null,
+        onGetUserInfo: ((info: ResponseUserInfo, appId: String) -> Unit)? = null
 ) {
     val log = LoggerFactory.getLogger("oAuthApi")
     val stateCache = Caffeine.newBuilder()
@@ -221,7 +221,7 @@ fun Routing.oAuthApi(
                 val oauthAi = OAuthApi(queryInfo.appId)
                 val res = oauthAi.getAccessToken(code)
                 if(res.isOK()  && res.openId != null){
-                    onGetOauthAccessToken?.let { async { it.invoke(res) } }
+                    onGetOauthAccessToken?.let { async { it.invoke(res, queryInfo.appId) } }
                     url +=  "&code=OK&openId=${res.openId}"
 
                     if(queryInfo.needUserInfo && res.accessToken != null){
@@ -232,7 +232,7 @@ fun Routing.oAuthApi(
                                 url += "&unionId=${resUserInfo.unionId}"
                             }
                             //async save fan user info
-                            onGetUserInfo?.let { async { it.invoke(resUserInfo)} }
+                            onGetUserInfo?.let { async { it.invoke(resUserInfo, queryInfo.appId)} }
                         }else{
                             log.warn("fail getUserInfo: $resUserInfo")
                         }

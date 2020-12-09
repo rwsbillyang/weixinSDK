@@ -35,14 +35,17 @@ object Work {
      * TODO: 大量的corp之后，此map可能很大
      * */
     val ApiContextMap = hashMapOf<String, CorpApiContext>()
+
     /**
      * 前端获取api签名信息，重定向到请求腾讯授权页面
      * */
     var oauthInfoPath: String = "/api/wx/work/oauth/info"
+
     /**
      * 用户授权后的通知路径
      * */
     var oauthNotifyPath: String = "/api/wx/work/oauth/notify"
+
     /**
      * 授权后通知前端的授权结果路径
      * */
@@ -52,36 +55,37 @@ object Work {
     /**
      * 当更新配置后，重置
      * */
-    fun reset(corpId: String){
+    fun reset(corpId: String) {
         ApiContextMap.remove(corpId)
     }
-    fun reset(corpId: String, agentId: Int){
+
+    fun reset(corpId: String, agentId: Int) {
         ApiContextMap[corpId]?.agentMap?.remove(agentId)
     }
 
     fun config(corpId: String,
-            agentId: Int,
-            secret: String,
+               agentId: Int,
+               secret: String,
 
-            enableMsg: Boolean = false,
-            token: String? = null,
-            encodingAESKey: String? = null,
+               enableMsg: Boolean = false,
+               token: String? = null,
+               encodingAESKey: String? = null,
 
-            customAccessToken: ITimelyRefreshValue? = null,
-            customCallbackPath: String? = null,
-            privateKeyFilePath: String? = null,
+               privateKeyFilePath: String? = null,
+               customMsgUrl: String? = null,
+               customAccessToken: ITimelyRefreshValue? = null
+
     ) {
         var corpApiCtx = ApiContextMap[corpId]
-        if(corpApiCtx == null){
+        if (corpApiCtx == null) {
             corpApiCtx = CorpApiContext(corpId)
             ApiContextMap[corpId] = corpApiCtx
         }
 
-        corpApiCtx.agentMap[agentId] = AgentContext(corpId, agentId,secret,enableMsg,
-            token, encodingAESKey,customAccessToken, customCallbackPath, privateKeyFilePath)
+        corpApiCtx.agentMap[agentId] = AgentContext(corpId, agentId, secret, enableMsg,
+                token, encodingAESKey, customAccessToken, customMsgUrl, privateKeyFilePath)
     }
 }
-
 
 
 /**
@@ -101,6 +105,7 @@ class CorpApiContext(
          * */
         val agentMap: HashMap<Int, AgentContext> = hashMapOf()
 )
+
 /**
  * agent的配置
  *
@@ -122,7 +127,7 @@ class CorpApiContext(
  * */
 class AgentContext(
         corpId: String,
-        val agentId: Int?,
+        val agentId: Int,
         val secret: String,
         val enableMsg: Boolean = false,
         val token: String? = null,
@@ -130,19 +135,18 @@ class AgentContext(
         customAccessToken: ITimelyRefreshValue? = null,
         customMsgNotifyUri: String? = null,
         privateKeyFilePath: String? = null
-){
+) {
     private val log = LoggerFactory.getLogger("workApi")
 
-    var accessToken: ITimelyRefreshValue = customAccessToken?:TimelyRefreshAccessToken(corpId,
-            AccessTokenRefresher(accessTokenUrl(corpId, secret)),extra = agentId?.toString())
+    var accessToken: ITimelyRefreshValue = customAccessToken ?: TimelyRefreshAccessToken(corpId,
+            AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = agentId?.toString())
 
     /**
      * 微信消息接入， 微信消息通知URI
      * */
-    var msgNotifyUri: String = if(customMsgNotifyUri.isNullOrBlank())
-    {
+    var msgNotifyUri: String = if (customMsgNotifyUri.isNullOrBlank()) {
         "/api/wx/work/${corpId}/${agentId}"
-    }else
+    } else
         customMsgNotifyUri
 
     var msgHandler: IWorkMsgHandler? = null
@@ -153,25 +157,24 @@ class AgentContext(
     var privateKey: PrivateKey? = null
 
     init {
-        if(enableMsg){
-            if(!token.isNullOrBlank() && !encodingAESKey.isNullOrBlank())
-            {
+        if (enableMsg) {
+            if (!token.isNullOrBlank() && !encodingAESKey.isNullOrBlank()) {
                 wxBizMsgCrypt = WXBizMsgCrypt(token, encodingAESKey, corpId)
 
-                if(msgHandler == null) msgHandler = DefaultWorkMsgHandler()
-                if(eventHandler == null) eventHandler = DefaultWorkEventHandler()
+                if (msgHandler == null) msgHandler = DefaultWorkMsgHandler()
+                if (eventHandler == null) eventHandler = DefaultWorkEventHandler()
 
                 msgHub = WorkMsgHub(msgHandler!!, eventHandler!!, wxBizMsgCrypt!!)
-            }else{
+            } else {
                 println("enableMsg=true, but not config token and encodingAESKey")
             }
         }
 
-        if(!privateKeyFilePath.isNullOrBlank()){
+        if (!privateKeyFilePath.isNullOrBlank()) {
             val file = File(privateKeyFilePath)
-            if(file.exists()){
+            if (file.exists()) {
                 privateKey = PemUtil.loadPrivateKey(FileInputStream(privateKeyFilePath))
-            }else{
+            } else {
                 log.warn("Not exists: $privateKeyFilePath")
             }
         }
@@ -179,9 +182,7 @@ class AgentContext(
 }
 
 
-
-
-internal fun accessTokenUrl(corpId: String,  secret: String) = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"
+internal fun accessTokenUrl(corpId: String, secret: String) = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"
 //internal class AccessTokenUrl(private val corpId: String, private val secret: String) : IUrlProvider {
 //    override fun url() = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"
 //}
