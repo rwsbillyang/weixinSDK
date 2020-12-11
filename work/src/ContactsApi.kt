@@ -304,6 +304,29 @@ class UserBatchApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
 ]
 }
 }
+
+{"errcode":0,"errmsg":"ok",
+"userid":"YangShaoWen",
+"name":"杨绍文",
+"department":[1],
+"position":"",
+"mobile":"17503715758",
+"gender":"1",
+"email":"",
+"avatar":"https://wework.qpic.cn/wwhead/duc2TvpEgSTPk74IwG7Bs3icnQHhUYvPg1WJyp97g81ibrPcj7kTjA00Nv8h9bVCeRZLGDYeHaNk4/0",
+"status":1,
+"isleader":0,
+"extattr":{"attrs":[]},
+"telephone":"",
+"enable":1,
+"hide_mobile":0,
+"order":[0],
+"main_department":1,
+"qr_code":"https://open.work.weixin.qq.com/wwopen/userQRCode?vcode=vc18885293950e8b25",
+"alias":"文文",
+"is_leader_in_dept":[0],
+"thumb_avatar":"https://wework.qpic.cn/wwhead/duc2TvpEgSTPk74IwG7Bs3icnQHhUYvPg1WJyp97g81ibrPcj7kTjA00Nv8h9bVCeRZLGDYeHaNk4/100"
+}
 参数说明：
 
 参数	说明
@@ -353,6 +376,9 @@ class ResponseUserDetail(
         val email: String? = null,
         val address: String? = null,
         val extattr: ExtAttr? = null,
+
+        val enable:Int? = null, //根据返回结果添加，文档中没有此字段说明
+        val hide_mobile: Int? =null, //根据返回结果添加，文档中没有此字段说明
 
         val department: List<Int>? = null,
         val main_department: Int? = null,

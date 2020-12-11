@@ -309,7 +309,8 @@ class ResponseExternalContactDetail(
         override val errCode: Int = 0,
         @SerialName("errmsg")
         override val errMsg: String? = null,
-        val external_contact: ExternalContact? = null
+        val external_contact: ExternalContact? = null,
+        val follow_user: List<FollowUser>? = null
 ): IBase
 /**
 "external_userid":"woAJ2GCAAAXtWyujaWJHDDGi0mACHAAA",
@@ -343,8 +344,8 @@ class ExternalContact(
         val corp_name: String? = null,
         val corp_full_name: String? = null,
         val unionid: String? = null,
-        val external_profile: ExternalProfile? = null,
-        val follow_user: List<FollowUser>? = null
+        val external_profile: ExternalProfile? = null
+
 )
 
 /**
@@ -366,7 +367,7 @@ class FollowUser(
         val add_way: Int,
         val remark: String? = null,
         val description: String? = null,
-        val createtime: String? = null,
+        val createtime: Long? = null,
         val remark_corp_name: String? = null,
         val remark_mobiles: List<String>? = null,
         val oper_userid: String? = null,

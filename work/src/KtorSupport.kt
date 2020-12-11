@@ -175,7 +175,7 @@ class OAuthResult(
 /**
  *
  * */
-fun Routing.oAuthApi(
+fun Routing.wxWorkOAuthApi(
         oauthInfoPath: String = Work.oauthInfoPath,
         oauthNotifyPath: String = Work.oauthNotifyPath,
         oauthNotifyWebAppUrl: String = Work.oauthNotifyWebAppUrl,
