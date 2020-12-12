@@ -20,14 +20,23 @@ package com.github.rwsbillyang.wxSDK.work
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.rwsbillyang.wxSDK.security.AesException
+import com.github.rwsbillyang.wxSDK.security.JsAPI
+import com.github.rwsbillyang.wxSDK.security.JsApiSignature
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import kotlinx.serialization.Serializable
 
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
+
+@Serializable
+data class DataBox(
+        val code: String,
+        val msg: String? = null,
+        val data: JsApiSignature? = null)
 
 
 fun Routing.agentMsgApi(corpId: String, agentId: Int) {
@@ -255,3 +264,30 @@ fun Routing.wxWorkOAuthApi(
     }
 }
 
+
+
+fun Routing.workJsSdkSignature(path: String = Work.jsSdkSignaturePath){
+    get(path){
+        val corpId = call.request.queryParameters["corpId"]
+        val agentId = call.request.queryParameters["agentId"]?.toInt()
+        val msg = if(corpId == null || agentId == null){
+            "invalid parameters: corpId and agentId could not be null"
+        }else{
+            val ticket =  Work.ApiContextMap[corpId]?.agentMap?.get(agentId)?.jsTicket?.get()
+            if(ticket == null){
+                "corpId=$corpId,agentId=$agentId is configured?"
+            }else{
+                val url = call.request.headers["Referer"]
+                if(url == null){
+                    "request Referer is null"
+                }else{
+                    call.respond(DataBox("OK",null,JsAPI.getSignature(corpId,ticket, url)))
+                    null
+                }
+            }
+        }
+        if(msg != null){
+            call.respond(DataBox("KO", msg))
+        }
+    }
+}

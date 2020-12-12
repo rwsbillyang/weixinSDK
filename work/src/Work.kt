@@ -51,7 +51,7 @@ object Work {
      * */
     var oauthNotifyWebAppUrl: String = "/wxwork/authNotify"
 
-
+    var jsSdkSignaturePath: String =  "/api/wx/admin/work/jssdk/signature"
     /**
      * 当更新配置后，重置
      * */
