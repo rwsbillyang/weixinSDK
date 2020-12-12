@@ -148,7 +148,9 @@ class ApiContext(
         accessToken = customAccessToken
                 ?: TimelyRefreshAccessToken(appId, AccessTokenRefresher(accessTokenUrl(appId, secret)))
 
-        ticket = customTicket ?: TimelyRefreshTicket(appId, TicketRefresher(ticketUrl(accessToken)))
+        ticket = customTicket ?: TimelyRefreshTicket(appId, TicketRefresher{
+            "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
+        })
     }
     fun onChange(config: OAConfiguration){
         var dirty1 = false
@@ -204,7 +206,9 @@ class ApiContext(
        if(config.ticket != null)
            ticket = config.ticket!!
         else if(dirty1 || dirty2){
-           ticket = TimelyRefreshTicket(appId, TicketRefresher(ticketUrl(accessToken)))
+           ticket = TimelyRefreshTicket(appId, TicketRefresher{
+               "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
+           })
        }
 
     }
@@ -216,7 +220,7 @@ internal fun accessTokenUrl(appId: String, secret: String) = "https://api.weixin
 //    override fun url() = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$appId&secret=$secret"
 //}
 
-internal fun ticketUrl(accessToken: ITimelyRefreshValue) = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
+//internal fun ticketUrl(accessToken: ITimelyRefreshValue) = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
 //internal class TicketUrl(private val accessToken: ITimelyRefreshValue) : IUrlProvider {
 //    override fun url() = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
 //}

@@ -31,22 +31,28 @@ interface IRefresher{
  *  @param url 提供刷新的url
  *  @param key 提取结果的key 如： access_token，ticket 等
  * */
-open class Refresher(private val url: String, private val key: String): IRefresher
+open class Refresher( private val key: String, private val url: String? = null,
+                      private val urlBlock: (() -> String)? = null): IRefresher
 {
     companion object {
         private val log: Logger = LoggerFactory.getLogger("Refresher")
     }
     val wrapper = ClientWrapper()
+    init {
+        require(url != null || urlBlock != null){
+            "one of url or urlBlock should not null"
+        }
+    }
 
     /**
      * 向远程发出请求，获取最新值然后返回
      */
     override  fun refresh(): String {
-        log.debug("to refresh for key=$key...,url=$url")
-
+        log.info("to refresh for key=$key...,url=$url")
+        val url2 = url?: urlBlock?.invoke()
         return runBlocking {
-            val text: String = wrapper.client.get<HttpResponse>(url).readText()
-            log.debug("got text: $text")
+            val text: String = wrapper.client.get<HttpResponse>(url2!!).readText()
+            //log.info("got text: $text")
             val jsonElement = wrapper.apiJson.parseToJsonElement(text)
             if(jsonElement is JsonObject){
                 val valueElement = jsonElement[key]
@@ -56,7 +62,7 @@ open class Refresher(private val url: String, private val key: String): IRefresh
                     throw WxException("fail refresh key=$key")
                 }else{
                     val value = valueElement.jsonPrimitive.content
-                    log.debug("got value=$value for key=$key")
+                    //log.info("got value=$value for key=$key")
                     value
                 }
             }else{
@@ -70,9 +76,9 @@ open class Refresher(private val url: String, private val key: String): IRefresh
 /**
  *  请求刷新accessToken，如用于公众号、企业微信等获取accessToken
  * */
-class AccessTokenRefresher(url: String): Refresher(url,"access_token")
+class AccessTokenRefresher(url: String): Refresher("access_token",url)
 
 /**
  * 请求刷新Ticket，如用于公众号获取jsTicket
  * */
-class TicketRefresher(url: String): Refresher(url,"ticket")
+class TicketRefresher(url: () -> String): Refresher("ticket", null, url)

@@ -1,7 +1,7 @@
 /*
  * Copyright © 2020 rwsbillyang@qq.com
  *
- * Written by rwsbillyang@qq.com at Beijing Time: 2020-11-02 14:37
+ * Written by rwsbillyang@qq.com at Beijing Time: 2020-12-12 13:14
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,47 +16,40 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.wxSDK.officialAccount
+package com.github.rwsbillyang.wxSDK.security
 
-import com.github.rwsbillyang.wxSDK.security.SignUtil
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import kotlinx.serialization.Serializable
 import java.util.*
 
+@Serializable
 data class JsApiSignature(
-    val noncestr: String? = null,
-    val timestamp: Long = 0,
-    val url: String? = null,
-    val signature: String? = null
+    val appId: String,
+    val nonceStr: String,
+    val timestamp: Long,
+    val signature: String
 )
 
 object JsAPI {
-    private val log: Logger = LoggerFactory.getLogger("JsAPI")
+    //private val log: Logger = LoggerFactory.getLogger("JsAPI")
 
     /**
      * 获取js-sdk所需的签名JsApiSignature
+     * @param appId 公众号appId或企业corpId
+     * @param jsApiTicket 通过appId或corpId与secret获取的js ticket
      * @param url 当前网页的URL，不包含#及其后面部分
-     * @param nonceStr 随机字符串
-     * @param timestamp 时间戳
+     * @param nonceStr 随机字符串，可不提供
+     * @param timestamp 时间戳， 可不提供
      *
      * @return 签名以及相关参数
      */
-    fun getSignature(appId: String, url: String, nonceStr: String? = null, timestamp: Long? = null): JsApiSignature? {
-        if(url.contains("#"))
-        {
-            log.error("cannot include # in url")
-            return null
-        }
-        val jsApiTicket = OfficialAccount.ApiContextMap[appId]?.ticket?.get()
-        if(jsApiTicket == null){
-            log.error("jsApiTicket is null, does you config correctly?")
-            return null
-        }
+    fun getSignature(appId: String, jsApiTicket: String, url: String, nonceStr: String? = null, timestamp: Long? = null): JsApiSignature {
+        require(!url.contains("#")){"url cannot contains #"}
 
         val nonce = nonceStr?:UUID.randomUUID().toString().replace("-".toRegex(), "")
+        //val nonce: String = nonceStr?:RandomStringUtils.randomAlphanumeric(32)
         val time = timestamp?:System.currentTimeMillis() / 1000
         val signature = SignUtil.jsApiSignature(jsApiTicket, nonce, time, url)
 
-        return JsApiSignature(nonceStr, time,url, signature)
+        return JsApiSignature(appId, nonce, time, signature)
     }
 }

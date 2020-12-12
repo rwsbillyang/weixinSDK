@@ -73,8 +73,9 @@ object Work {
 
                privateKeyFilePath: String? = null,
                customMsgUrl: String? = null,
-               customAccessToken: ITimelyRefreshValue? = null
-
+               customAccessToken: ITimelyRefreshValue? = null,
+               enableJsSdk: Boolean = false,
+               customJsTicket: ITimelyRefreshValue? = null
     ) {
         var corpApiCtx = ApiContextMap[corpId]
         if (corpApiCtx == null) {
@@ -83,7 +84,7 @@ object Work {
         }
 
         corpApiCtx.agentMap[agentId] = AgentContext(corpId, agentId, secret, enableMsg,
-                token, encodingAESKey, customAccessToken, customMsgUrl, privateKeyFilePath)
+                token, encodingAESKey, customAccessToken, customMsgUrl, privateKeyFilePath, enableJsSdk, customJsTicket)
     }
 }
 
@@ -134,13 +135,15 @@ class AgentContext(
         val encodingAESKey: String? = null,
         customAccessToken: ITimelyRefreshValue? = null,
         customMsgNotifyUri: String? = null,
-        privateKeyFilePath: String? = null
+        privateKeyFilePath: String? = null,
+        enableJsSdk: Boolean,
+        customJsTicket: ITimelyRefreshValue? = null
 ) {
     private val log = LoggerFactory.getLogger("workApi")
 
     var accessToken: ITimelyRefreshValue = customAccessToken ?: TimelyRefreshAccessToken(corpId,
-            AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = agentId?.toString())
-
+            AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = agentId.toString())
+    var jsTicket: ITimelyRefreshValue? = null
     /**
      * 微信消息接入， 微信消息通知URI
      * */
@@ -169,6 +172,12 @@ class AgentContext(
                 println("enableMsg=true, but not config token and encodingAESKey")
             }
         }
+        if(enableJsSdk){
+            jsTicket = customJsTicket?:TimelyRefreshTicket(corpId,
+                    TicketRefresher{
+                        "https://qyapi.weixin.qq.com/cgi-bin/ticket/get?access_token=${accessToken.get()}&type=agent_config"
+                    }, extra = agentId.toString())
+        }
 
         if (!privateKeyFilePath.isNullOrBlank()) {
             val file = File(privateKeyFilePath)
@@ -187,8 +196,11 @@ internal fun accessTokenUrl(corpId: String, secret: String) = "https://qyapi.wei
 //    override fun url() = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"
 //}
 
-//internal class TicketUrl(private val accessToken: IRefreshableValue): IUrlProvider{
+//https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=ACCESS_TOKEN
+//internal class TicketUrl(private val accessToken: ITimelyRefreshValue): IUrlProvider{
 //    override fun url() = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
 //
 //}
+
+
 

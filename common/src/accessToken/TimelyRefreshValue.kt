@@ -46,37 +46,52 @@ open class TimelyRefreshValue @JvmOverloads constructor(
      */
     private val refreshingFlag: AtomicBoolean = AtomicBoolean(false)
 
+    private fun doRefresh(now: Long, updateType: UpdateType){
+        try {
+            timelyValue.value = refresher.refresh()
+            timelyValue.time = now
 
+            refreshingFlag.set(false)
+            setChanged()
+            notifyObservers(
+                    UpdateMsg(
+                            appId,
+                            updateType,
+                            timelyValue.value,
+                            timelyValue.time, extra
+                    )
+            )
+        } catch (e: Exception) {
+            refreshingFlag.set(false)
+            log.error("fail to refresh: ${e.message}")
+        }
+    }
     /**
      *
      * 判断优先顺序：
      * 1.官方给出的超时时间是7200秒，这里用refreshIntervalTime秒来做，防止出现已经过期的情况
      * 2.刷新标识判断，如果正在刷新，则也直接跳过，避免多次重复刷新；如果没有正在刷新且已过期，则开始刷新
      */
-    fun tryRefreshValue(updateType: UpdateType): String? {
+    fun getRefreshedValue(updateType: UpdateType): String? {
+
         val now = System.currentTimeMillis()
         val delta: Long = now - timelyValue.time
-        try {
-            if (delta > refreshIntervalTime
-                && refreshingFlag.compareAndSet(false, true)
-            ) {
-                timelyValue.value = refresher.refresh()
-                timelyValue.time = System.currentTimeMillis()
-
-                refreshingFlag.set(false)
-                setChanged()
-                notifyObservers(
-                    UpdateMsg(
-                        appId,
-                        updateType,
-                        timelyValue.value,
-                        timelyValue.time, extra
-                    )
-                )
+        if (timelyValue.value != null){
+            if(delta <= refreshIntervalTime)
+            {
+                return timelyValue.value
+            }else if(delta < refreshIntervalTime+90)
+            {
+                //临近有效期，第一个请求者触发刷新
+                if(refreshingFlag.compareAndSet(false, true))
+                    doRefresh(now, updateType)
+                return timelyValue.value
             }
-        } catch (e: Exception) {
-            log.error("fail to refresh: ${e.message}")
-            refreshingFlag.set(false)
+        }
+        //空值，或失效期过长，都触发刷新并且阻塞
+        synchronized(timelyValue){
+            refreshingFlag.set(true)
+            doRefresh(now, updateType)
         }
         return timelyValue.value
     }
@@ -111,7 +126,7 @@ class TimelyRefreshAccessToken @JvmOverloads constructor(
     /**
      * 获取accessToken，若过期则会自动刷新
      */
-    override fun get() = tryRefreshValue(UpdateType.ACCESS_TOKEN)
+    override fun get() = getRefreshedValue(UpdateType.ACCESS_TOKEN)
 }
 
 /**
@@ -135,6 +150,6 @@ class TimelyRefreshTicket(
     /**
      * 获取ticket，若过期则会自动刷新
      */
-    override fun get() = tryRefreshValue(UpdateType.TICKET)
+    override fun get() = getRefreshedValue(UpdateType.TICKET)
 
 }
