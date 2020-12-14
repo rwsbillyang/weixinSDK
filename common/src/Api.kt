@@ -33,24 +33,31 @@ import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileInputStream
 
+
+
 open class ClientWrapper{
-    open val apiJson = Json {
-        encodeDefaults = true
-        useArrayPolymorphism = false
-        ignoreUnknownKeys = true
-    }
-
-
-    open val client = HttpClient(Apache) {
-        install(HttpTimeout) {}
-        install(JsonFeature) {
-            serializer = KotlinxSerializer(apiJson)
+    companion object{
+         val apiJson = Json {
+            encodeDefaults = true
+            useArrayPolymorphism = false
+            ignoreUnknownKeys = true
         }
-        install(Logging) {
-            logger = Logger.DEFAULT
-            level = LogLevel.ALL
+
+         val DefaultClient = HttpClient(Apache) {
+            install(HttpTimeout) {}
+            install(JsonFeature) {
+                serializer = KotlinxSerializer(apiJson)
+            }
+            install(Logging) {
+                logger = Logger.DEFAULT
+                level = LogLevel.ALL
+            }
         }
     }
+    /**
+     * 多数情况下使用默认的client即可，特殊情况如wxPay，需要使用自己的client
+     * */
+    open val client = DefaultClient
 
     inline fun <reified R> doGetByUrl(url: String): R = runBlocking {
         CoroutineScope(Dispatchers.IO).async {
@@ -68,8 +75,6 @@ open class ClientWrapper{
     }
 }
 abstract class Api: ClientWrapper(){
-
-
     abstract fun url(name: String, requestParams: Map<String, String?>?, needAccessToken: Boolean = true): String
 
     /**
@@ -168,9 +173,6 @@ abstract class Api: ClientWrapper(){
             }
         }.await()
     }
-
-
-
 
 }
 

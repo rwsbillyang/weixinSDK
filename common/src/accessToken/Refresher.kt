@@ -37,7 +37,6 @@ open class Refresher( private val key: String, private val url: String? = null,
     companion object {
         private val log: Logger = LoggerFactory.getLogger("Refresher")
     }
-    val wrapper = ClientWrapper()
     init {
         require(url != null || urlBlock != null){
             "one of url or urlBlock should not null"
@@ -51,9 +50,9 @@ open class Refresher( private val key: String, private val url: String? = null,
         log.info("to refresh for key=$key...,url=$url")
         val url2 = url?: urlBlock?.invoke()
         return runBlocking {
-            val text: String = wrapper.client.get<HttpResponse>(url2!!).readText()
+            val text: String = ClientWrapper.DefaultClient.get<HttpResponse>(url2!!).readText()
             //log.info("got text: $text")
-            val jsonElement = wrapper.apiJson.parseToJsonElement(text)
+            val jsonElement = ClientWrapper.apiJson.parseToJsonElement(text)
             if(jsonElement is JsonObject){
                 val valueElement = jsonElement[key]
                 if(valueElement == null || valueElement is JsonNull)

@@ -188,7 +188,7 @@ fun Routing.wxWorkOAuthApi(
         oauthInfoPath: String = Work.oauthInfoPath,
         oauthNotifyPath: String = Work.oauthNotifyPath,
         oauthNotifyWebAppUrl: String = Work.oauthNotifyWebAppUrl,
-        hasPermission: (OAuthResult)-> Boolean
+        hasPermission: (ApplicationCall, OAuthResult)-> Boolean
 ) {
     val log = LoggerFactory.getLogger("workOAuthApi")
     val stateCache = Caffeine.newBuilder()
@@ -244,7 +244,7 @@ fun Routing.wxWorkOAuthApi(
             } else {
                 val res = OAuthApi(pair.first, pair.second).getUserInfo(code)
                 val part = if (res.isOK()) {
-                    val isAllow = hasPermission(OAuthResult(pair.first, pair.second, res.userId, res.externalUserId, res.openId, res.deviceId))
+                    val isAllow = hasPermission(call, OAuthResult(pair.first, pair.second, res.userId, res.externalUserId, res.openId, res.deviceId))
                     if (isAllow) {
                         //log.info("res=$res")
                         var param = if(!res.userId.isNullOrBlank()) "&userId=${res.userId}" else ""
