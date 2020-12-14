@@ -38,16 +38,17 @@ class JsPaySignature(
     var paySign: String? = null,
     val signType: String = "RSA" //need encodeDefaults = true
 ){
-    constructor(prepayId: String): this(
-        WxPay.context.appId, (System.currentTimeMillis()/1000).toString(),
+    constructor(appId: String, prepayId: String): this(
+        appId, (System.currentTimeMillis()/1000).toString(),
         RandomStringUtils.randomAlphanumeric(32), "prepay_id=$prepayId")
 
     init {
         //签名串一共有四行，每一行为一个参数。行尾以\n（换行符，ASCII编码值为0x0A）结束，包括最后一行。如果参数本身以\n结束，也需要附加一个\n
         //公众号id\n时间戳\n随机字符串\n订单详情扩展字符串\n
         val original = "$appId\n$timeStamp\n$nonceStr\n${`package`}\n"
-
-        val signResult: Signer.SignatureResult = WxPay.context.signer.sign(original.toByteArray())
+        val ctx = WxPay.ApiContextMap[appId]
+        requireNotNull(ctx){"no config in WxPay.ApiContextMap for appId=$appId"}
+        val signResult: Signer.SignatureResult = ctx.signer.sign(original.toByteArray())
 
         paySign = signResult.sign
     }

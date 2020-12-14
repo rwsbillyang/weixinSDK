@@ -19,6 +19,7 @@
 package com.github.rwsbillyang.wxSDK.wxPay
 
 
+import com.github.rwsbillyang.wxSDK.ClientWrapper
 import com.github.rwsbillyang.wxSDK.wxPay.auth.*
 import com.github.rwsbillyang.wxSDK.security.PemUtil
 import io.ktor.client.*
@@ -34,38 +35,61 @@ import org.apache.http.StatusLine
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpRequestWrapper
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder
+import java.io.FileInputStream
 
 
 object WxPay {
-    private var _context: WxPayContext? = null
-    val context: WxPayContext
-        get() {
-            requireNotNull(_context)
-            return _context!!
-        }
-
-    fun isInit() = _context != null
-
+    val ApiContextMap = hashMapOf<String, WxPayContext>()
     /**
-     * 非ktor平台可以使用此函数进行配置
+     * 配置参数
      * */
     fun config(block: WxPayConfiguration.() -> Unit) {
         val config = WxPayConfiguration().apply(block)
-        _context = WxPayContext(
-            config.appId,
-            config.mchId,
-            config.serialNo,
-            config.privateKey,
-            config.apiV3Key.toByteArray(),
-                config.payNotifyUrl,
-            //config.useAutoUpdateCertificatesVerifier,
-            config.certificate
+
+        ApiContextMap[config.appId] = WxPayContext(
+                config.appId,
+                config.mchId,
+                config.serialNo,
+                config.privateKeyFilePath,
+                config.apiV3Key.toByteArray(),
+                config.certificate
         )
     }
-
-    internal fun client() = HttpClient(Apache) { wxPayClientConfig() }
+    var payNotifyUrlPrefix: String = "/api/sale/wx/payNotify/"
+    fun payNotifyPath(appId: String) = payNotifyUrlPrefix + appId
 }
 
+
+class WxPayContext(
+    val appId: String,
+    val mchId: String,
+    val serialNo: String,
+    val privateKeyFilePath: String,
+    val apiV3Key: ByteArray,
+    //val useAutoUpdateCertificatesVerifier: Boolean = true,
+    val certificate: String? = null
+) {
+    val signer = PrivateKeySigner(
+        serialNo,
+            PemUtil.loadPrivateKey(FileInputStream(privateKeyFilePath))
+    )
+
+    val credentials = WechatPayCredentials(mchId, signer)
+
+    val verifier =
+    //if(useAutoUpdateCertificatesVerifier)
+        //不需要传入微信支付证书，将会自动更新
+        AutoUpdateCertificatesVerifier(appId,
+            //credentials,
+            apiV3Key
+        )
+//    else {
+//        requireNotNull(certificate){"please config certificate of wechat platform"}
+//        CertificatesVerifier(arrayListOf(PemUtil.loadCertificate(certificate.byteInputStream())))
+//    }
+
+    val validator = WechatPayValidator(verifier)
+}
 /**
  * @property appId 公众号或小程序appId
  * @property mchId 商户号
@@ -92,62 +116,19 @@ class WxPayConfiguration {
 
     var serialNo: String = "your_serialNo" // 商户证书序列号
 
-    var payNotifyUrl: String = "/api/sale/wx/payNotify"
-
     // 你的商户私钥
-    var privateKey: String = """
-        -----BEGIN PRIVATE KEY-----
-        -----END PRIVATE KEY-----
-        """.trimIndent()
+    var privateKeyFilePath: String = "pkcs8 private file path"
 
     //var useAutoUpdateCertificatesVerifier: Boolean = true
 
     // 你的微信支付平台证书
     var certificate: String? = null
-//        """
-//        -----BEGIN CERTIFICATE-----
-//        -----END CERTIFICATE-----
-//        """.trimIndent()
 }
 
-class WxPayContext(
-    val appId: String,
-    val mchId: String,
-    val serialNo: String,
-    val privateKey: String,
-    val apiV3Key: ByteArray,
-    val payNotifyUrl: String,
-    //val useAutoUpdateCertificatesVerifier: Boolean = true,
-    val certificate: String? = null
-) {
-    val signer = PrivateKeySigner(
-        serialNo,
-        PemUtil.loadPrivateKey(privateKey.byteInputStream())
-    )
 
-    val credentials = WechatPayCredentials(mchId, signer)
-
-    val verifier =
-    //if(useAutoUpdateCertificatesVerifier)
-        //不需要传入微信支付证书，将会自动更新
-        AutoUpdateCertificatesVerifier(
-            //credentials,
-            apiV3Key
-        )
-//    else {
-//        requireNotNull(certificate){"please config certificate of wechat platform"}
-//        CertificatesVerifier(arrayListOf(PemUtil.loadCertificate(certificate.byteInputStream())))
-//    }
-
-    val validator = WechatPayValidator(verifier)
-
-    fun onChanged() {
-        WxPayApi.client = WxPay.client()
-    }
-}
 
 //https://github.com/wechatpay-apiv3/wechatpay-apache-httpclient
-fun HttpAsyncClientBuilder.configWechat(ctx: WxPayContext) {
+fun HttpAsyncClientBuilder.configNetIOInterceptors(ctx: WxPayContext) {
     // 添加认证信息
     val requestInterceptor = HttpRequestInterceptor { request, _ ->
         request.addHeader(
@@ -171,10 +152,10 @@ fun HttpAsyncClientBuilder.configWechat(ctx: WxPayContext) {
     addInterceptorFirst(responseInterceptor)
 }
 
-fun HttpClientConfig<ApacheEngineConfig>.wxPayClientConfig() {
+fun HttpClientConfig<ApacheEngineConfig>.wxPayClientConfig(appId: String) {
     install(HttpTimeout) {}
     install(JsonFeature) {
-        serializer = KotlinxSerializer(WxPayApi.apiJson)
+        serializer = KotlinxSerializer(ClientWrapper.apiJson)
     }
     install(Logging) {
         logger = Logger.DEFAULT
@@ -193,8 +174,8 @@ fun HttpClientConfig<ApacheEngineConfig>.wxPayClientConfig() {
             val userAgent = "WechatPay-Apache-HttpAsyncClient/com.github.rwsbillyang.wxSDK.wxPay ($os) Java/$ver"
             setUserAgent(userAgent)
 
-            if (WxPay.isInit())
-                configWechat(WxPay.context)
+            WxPay.ApiContextMap[appId]?.let { configNetIOInterceptors(it) }
+
         }
         customizeRequest {
             // this: RequestConfig.Builder from Apache.

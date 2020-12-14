@@ -62,11 +62,15 @@ class Transaction(
         val goodsTags: String? = null,
         val detail: OrderDetail? = null
 ) {
-    constructor(orderId: String, description: String, total: Int, openId: String,
-                ip: String, notifyUrl: String,
-                attach: String? = null,
-                appId: String = WxPay.context.appId,
-                mchId: String = WxPay.context.mchId)
+    constructor(appId: String,
+                mchId: String,
+                orderId: String,
+                description: String,
+                total: Int,
+                openId: String,
+                ip: String,
+                notifyUrl: String,
+                attach: String? = null)
             : this(appId, mchId, description, orderId, notifyUrl, OrderAmount(total), Payer(openId), SceneInfo(ip), attach = attach)
 }
 

@@ -16,7 +16,7 @@ apply plugin: 'java-library'
 apply plugin: 'maven-publish'
 
 group 'com.github.rwsbillyang.wxSDK'
-version '0.0.1'
+version '0.2.0'
 //mainClassName = "io.ktor.server.netty.EngineMain"
 
 sourceSets {
@@ -43,6 +43,7 @@ dependencies {
     implementation "io.ktor:ktor-client-json-jvm:$ktor_version"
     implementation "io.ktor:ktor-client-serialization-jvm:$ktor_version"
     implementation("io.ktor:ktor-client-logging-jvm:$ktor_version")
+    compileOnly "io.ktor:ktor-server-netty:$ktor_version"
 
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinx_serialization_version" // JVM dependency
 
@@ -53,8 +54,8 @@ dependencies {
     //implementation 'com.github.wechatpay-apiv3:wechatpay-apache-httpclient:0.2.1'
     implementation "org.apache.httpcomponents:httpmime:4.5.12"
 
-    //implementation ("com.github.rwsbillyang:wxSDK:0.0.1")
-    implementation project(":common")
+    implementation ("com.github.rwsbillyang:wxSDK:0.2.0")
+    //implementation project(":common")
 }
 
 

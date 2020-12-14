@@ -48,6 +48,7 @@ import java.util.concurrent.locks.ReentrantLock
  * https://wechatpay-api.gitbook.io/wechatpay-api-v3/qian-ming-zhi-nan-1/wei-xin-zhi-fu-ping-tai-zheng-shu-geng-xin-zhi-yin
  */
 class AutoUpdateCertificatesVerifier @JvmOverloads constructor(
+    private val appId: String,
     //private val credentials: Credentials,
     private val apiV3Key: ByteArray,
     //证书更新间隔时间，单位为分钟
@@ -123,7 +124,7 @@ class AutoUpdateCertificatesVerifier @JvmOverloads constructor(
      * 第一次因verifier为空，而使用一个独立的总返回true的verifier
      * */
     private fun autoUpdateCert(){
-        val bean = WxPayApi.downloadPlatformCerts()
+        val bean = WxPayApi(appId).downloadPlatformCerts()
         //以下代码将在verify通过后执行
         val decryptor = AesUtil(apiV3Key)
         val cf = CertificateFactory.getInstance("X509")

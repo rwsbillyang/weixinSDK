@@ -105,6 +105,7 @@ object PayNotifyUtil {
      * https://pay.weixin.qq.com/wiki/doc/apiv3/wxpay/pay/transactions/chapter3_11.shtml
      * */
     fun handleNotify(
+        appId: String,
         parameters: RequestParameters,
         block: (
             notifyBean: PayNotifyBean?,
@@ -117,14 +118,18 @@ object PayNotifyUtil {
             log.warn("Json.decodeFromString fail? RequestParameters=$RequestParameters")
             return block(null, null, WxPayNotifyErrorType.EmptyRequestBody)
         }
-
-        if (!WxPay.context.validator.validate(parameters)) {
+        val ctx = WxPay.ApiContextMap[appId]
+        if(ctx == null){
+            log.warn("no wxPay config for appId=$appId")
+            return block(null, null, WxPayNotifyErrorType.EmptyRequestBody)
+        }
+        if (!ctx.validator.validate(parameters)) {
             log.warn("fake notify? body: RequestParameters=$RequestParameters")
             return block(notifyBean, null, WxPayNotifyErrorType.ValidateFail)
         }
 
         return if (notifyBean.type == "TRANSACTION.SUCCESS") {
-            val decryptor = AesUtil(WxPay.context.apiV3Key)
+            val decryptor = AesUtil(ctx.apiV3Key)
             val res = notifyBean.resource
             val json = decryptor.decryptToString(
                 res.associatedData?.toByteArray(),

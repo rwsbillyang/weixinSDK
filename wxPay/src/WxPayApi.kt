@@ -19,18 +19,21 @@
 package com.github.rwsbillyang.wxSDK.wxPay
 
 import com.github.rwsbillyang.wxSDK.WxApi
+import io.ktor.client.*
+import io.ktor.client.engine.apache.*
 
 
 /**
  * https://pay.weixin.qq.com/wiki/doc/apiv3/wxpay/pages/Overview.shtml
  * */
-object WxPayApi: WxApi() {
+class WxPayApi(private val appId: String): WxApi() {
     override val base = "https://api.mch.weixin.qq.com/v3/pay"
     override val group ="transactions"
     override fun url(name: String, requestParams: Map<String, String?>?, needAccessToken: Boolean)
             = super.url(name, requestParams, false)
 
-    override var client = WxPay.client()
+    //需要使用自己的client
+    override val client = HttpClient(Apache) { wxPayClientConfig(appId) }
 
     override fun accessToken(): String? {
         TODO("Not yet implemented")
@@ -42,9 +45,9 @@ object WxPayApi: WxApi() {
     fun orderByH5(transaction: Transaction): ResponseOrderH5 = doPost("h5", transaction)
 
     fun queryOrderByTransactionId(transactionId: String): OrderPayDetail
-            = doGet("id/${transactionId}", mapOf("mchid" to WxPay.context.mchId))
+            = doGet("id/${transactionId}", mapOf("mchid" to WxPay.ApiContextMap[appId]?.mchId))
     fun queryOrderByOrderId(orderId: String): OrderPayDetail
-            = doGet("out-trade-no/${orderId}", mapOf("mchid" to WxPay.context.mchId))
+            = doGet("out-trade-no/${orderId}", mapOf("mchid" to WxPay.ApiContextMap[appId]?.mchId))
 
     /**
      * 商户订单支付失败需要生成新单号重新发起支付，要对原订单号调用关单，避免重复支付；
@@ -53,7 +56,7 @@ object WxPayApi: WxApi() {
      * 订单生成后不能马上调用关单接口，最短调用时间间隔为5分钟。
      * */
     fun closeOrder(orderId: String): ResponseClose
-            = doPost("out-trade-no/${orderId}/close", mapOf("mchid" to WxPay.context.mchId))
+            = doPost("out-trade-no/${orderId}/close", mapOf("mchid" to WxPay.ApiContextMap[appId]?.mchId))
 
     //https://wechatpay-api.gitbook.io/wechatpay-api-v3/jie-kou-wen-dang/ping-tai-zheng-shu
     internal fun downloadPlatformCerts(): ResponseCertificates
