@@ -28,7 +28,7 @@ import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.DefaultOAEventHandler
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.DefaultOAMsgHandler
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.OATextMsg
-import com.github.rwsbillyang.wxSDK.officialAccount.officialAccountApi
+import com.github.rwsbillyang.wxSDK.officialAccount.officialAccountMsgApi
 
 import io.ktor.application.*
 import io.ktor.response.*
@@ -81,7 +81,7 @@ fun Application.apiTest(testing: Boolean = false){
         ticket = TestJsTicketValue()
     }
     routing {
-        officialAccountApi()
+        officialAccountMsgApi()
     }
 }
 

@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit
 
 
 
-fun Routing.officialAccountApi(path: String = OfficialAccount.msgUri) {
+fun Routing.officialAccountMsgApi(path: String = OfficialAccount.msgUri) {
     val log = LoggerFactory.getLogger("officialAccountApi")
 
     route(path) {
@@ -178,11 +178,11 @@ fun Routing.oAuthApi(
      *
      * */
     get(oauthInfoPath){
-        val appId = call.request.queryParameters["appId"]
+        val appId = call.request.queryParameters["appId"]?:OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
         if(appId.isNullOrBlank())
         {
-            log.warn("no appId in query parameters for oauth")
-            call.respond(HttpStatusCode.BadRequest, "no appId in query parameters")
+            log.warn("no appId in query parameters for oauth and no config oa")
+            call.respond(HttpStatusCode.BadRequest, "no appId in query parameters and no config oa")
         }else{
             val userInfo = (call.request.queryParameters["userInfo"]?.toInt()?:(needUserInfo?.let { it(call.request.host(), call.request.uri) })?:0) == 1
             val host = call.request.queryParameters["host"]?:call.request.host()
@@ -222,7 +222,7 @@ fun Routing.oAuthApi(
                 val res = oauthAi.getAccessToken(code)
                 if(res.isOK()  && res.openId != null){
                     onGetOauthAccessToken?.let { async { it.invoke(res, queryInfo.appId) } }
-                    url +=  "&code=OK&openId=${res.openId}"
+                    url +=  "&code=OK&openId=${res.openId}&appId=${queryInfo.appId}"
 
                     if(queryInfo.needUserInfo && res.accessToken != null){
                         val resUserInfo = oauthAi.getUserInfo(res.accessToken, res.openId)

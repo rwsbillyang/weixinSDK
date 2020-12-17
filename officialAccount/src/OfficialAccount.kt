@@ -26,7 +26,7 @@ import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.*
 
 object OfficialAccount {
     /**
-     * 微信接入点
+     * 微信消息接入点"/api/wx/oa/app/{appId}"
      * */
     var msgUri = "/api/wx/oa/app"
     /**
@@ -40,7 +40,7 @@ object OfficialAccount {
     /**
      * 授权后通知前端的授权结果路径
      * */
-    var oauthNotifyWebAppUrl: String = "/wx/oaAuth"
+    var oauthNotifyWebAppUrl: String = "/wxoa/authNotify"
 
     /**
      * 配置公众号参数
