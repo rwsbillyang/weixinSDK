@@ -19,24 +19,20 @@
 package com.github.rwsbillyang.wxSDK.work
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.rwsbillyang.wxSDK.bean.DataBox
 import com.github.rwsbillyang.wxSDK.security.AesException
 import com.github.rwsbillyang.wxSDK.security.JsAPI
-import com.github.rwsbillyang.wxSDK.security.JsApiSignature
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import kotlinx.serialization.Serializable
+
 
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
-@Serializable
-data class DataBox(
-        val code: String,
-        val msg: String? = null,
-        val data: JsApiSignature? = null)
+
 
 
 fun Routing.agentMsgApi(corpId: String, agentId: Int) {

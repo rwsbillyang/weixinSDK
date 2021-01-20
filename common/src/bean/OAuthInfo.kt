@@ -18,6 +18,7 @@
 
 package com.github.rwsbillyang.wxSDK.bean
 
+
 import kotlinx.serialization.Serializable
 
 /**

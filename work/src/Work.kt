@@ -42,16 +42,16 @@ object Work {
     var oauthInfoPath: String = "/api/wx/work/oauth/info"
 
     /**
-     * 用户授权后的通知路径
+     * 用户授权后的通知微信服务器通知到后端的路径
      * */
     var oauthNotifyPath: String = "/api/wx/work/oauth/notify"
 
     /**
-     * 授权后通知前端的授权结果路径
+     * 授权后经过后端再跳转到前端，前端记录下授权结果路径
      * */
     var oauthNotifyWebAppUrl: String = "/wxwork/authNotify"
 
-    var jsSdkSignaturePath: String =  "/api/wx/admin/work/jssdk/signature"
+    var jsSdkSignaturePath: String =  "/api/wx/work/jssdk/signature"
     /**
      * 当更新配置后，重置
      * */

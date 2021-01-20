@@ -19,14 +19,19 @@
 package com.github.rwsbillyang.wxSDK.security
 
 import kotlinx.serialization.Serializable
+import org.bson.types.ObjectId
 import java.util.*
 
+/**
+ * @param objectId 用于做share或relay的id,不需要时可以忽略
+ * */
 @Serializable
 data class JsApiSignature(
     val appId: String,
     val nonceStr: String,
     val timestamp: Long,
-    val signature: String
+    val signature: String,
+    val objectId: String, //通常在需要OAuthInfo的时候，是因为需要分享，顺便给其一个分享id，无需再请求获取
 )
 
 object JsAPI {
@@ -42,7 +47,7 @@ object JsAPI {
      *
      * @return 签名以及相关参数
      */
-    fun getSignature(appId: String, jsApiTicket: String, url: String, nonceStr: String? = null, timestamp: Long? = null): JsApiSignature {
+    fun getSignature(appId: String, jsApiTicket: String, url: String,  nonceStr: String? = null, timestamp: Long? = null): JsApiSignature {
         require(!url.contains("#")){"url cannot contains #"}
 
         val nonce = nonceStr?:UUID.randomUUID().toString().replace("-".toRegex(), "")
@@ -50,6 +55,6 @@ object JsAPI {
         val time = timestamp?:System.currentTimeMillis() / 1000
         val signature = SignUtil.jsApiSignature(jsApiTicket, nonce, time, url)
 
-        return JsApiSignature(appId, nonce, time, signature)
+        return JsApiSignature(appId, nonce, time, signature, Base64.getUrlEncoder().encodeToString(ObjectId().toByteArray()))
     }
 }

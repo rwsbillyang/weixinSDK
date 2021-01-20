@@ -32,15 +32,16 @@ import org.apache.commons.lang3.RandomStringUtils
  * */
 class JsPaySignature(
     val appId: String,
-    val timeStamp: String,
+    val timeStamp: Long,
     val nonceStr: String,
     val `package`: String,
-    var paySign: String? = null,
-    val signType: String = "RSA" //need encodeDefaults = true
+    val signType: String, //need encodeDefaults = true
+    var paySign: String? = null
+
 ){
     constructor(appId: String, prepayId: String): this(
-        appId, (System.currentTimeMillis()/1000).toString(),
-        RandomStringUtils.randomAlphanumeric(32), "prepay_id=$prepayId")
+        appId, System.currentTimeMillis()/1000,
+        RandomStringUtils.randomAlphanumeric(32), "prepay_id=$prepayId", "RSA")
 
     init {
         //签名串一共有四行，每一行为一个参数。行尾以\n（换行符，ASCII编码值为0x0A）结束，包括最后一行。如果参数本身以\n结束，也需要附加一个\n

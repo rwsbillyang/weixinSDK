@@ -19,6 +19,8 @@
 package com.github.rwsbillyang.wxSDK.officialAccount
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.rwsbillyang.wxSDK.bean.DataBox
+import com.github.rwsbillyang.wxSDK.security.JsAPI
 import com.github.rwsbillyang.wxSDK.security.SignUtil
 import io.ktor.application.*
 import io.ktor.http.*
@@ -246,3 +248,32 @@ fun Routing.oAuthApi(
 }
 
 
+
+
+fun Routing.jsSdkSignature(path: String = OfficialAccount.jsSdkSignaturePath){
+    get(path){
+        val appId = call.request.queryParameters["appId"]?:OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
+
+        val msg = if(appId.isNullOrBlank())
+        {
+            //call.respond(HttpStatusCode.BadRequest, "no appId in query parameters and no config oa")
+            "no appId in query parameters and no config oa"
+        }else{
+            val ticket =  OfficialAccount.ApiContextMap[appId]?.ticket?.get()
+            if(ticket == null){
+                "appId=$appId is configured?"
+            }else{
+                val url = call.request.headers["Referer"]
+                if(url == null){
+                    "request Referer is null"
+                }else{
+                    call.respond(DataBox("OK",null, JsAPI.getSignature(appId,ticket, url)))
+                    null
+                }
+            }
+        }
+        if(msg != null){
+            call.respond(DataBox("KO", msg))
+        }
+    }
+}
