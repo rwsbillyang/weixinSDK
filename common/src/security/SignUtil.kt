@@ -53,8 +53,6 @@ object SignUtil {
             log.warn("fail to check weixin signature:token=$token,timestamp=$timestamp,nonce=$nonce, signature=$signature,original content=$content")
             false
         }
-
-        return false
     }
 
 

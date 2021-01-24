@@ -27,6 +27,7 @@ import io.ktor.client.features.json.serializer.*
 import io.ktor.client.features.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
+import io.ktor.http.*
 import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
@@ -47,6 +48,8 @@ open class ClientWrapper{
             install(HttpTimeout) {}
             install(JsonFeature) {
                 serializer = KotlinxSerializer(apiJson)
+                //OAuthApi.getAccessToken 返回的是：Content-Type: text/plain
+                accept(ContentType.Text.Any) //https://github.com/ktorio/ktor/issues/772
             }
             install(Logging) {
                 logger = Logger.DEFAULT

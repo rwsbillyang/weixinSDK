@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit
 
 
 fun Routing.officialAccountMsgApi(path: String = OfficialAccount.msgUri) {
-    val log = LoggerFactory.getLogger("officialAccountApi")
+    val log = LoggerFactory.getLogger("officialAccountMsgApi")
 
     route(path) {
         /**
@@ -81,10 +81,10 @@ fun Routing.officialAccountMsgApi(path: String = OfficialAccount.msgUri) {
                 val nonce = call.request.queryParameters["nonce"]
                 val echostr = call.request.queryParameters["echostr"]
 
-
-                val token = OfficialAccount.ApiContextMap[appId]?.token
+                val ctx = OfficialAccount.ApiContextMap[appId]
+                val token = ctx?.token
                 if(token.isNullOrBlank()){
-                    msg = "not config token"
+                    msg = "not config token, ctx=$ctx"
                     log.warn(msg)
                 }else{
                     msg = echostr?:""
@@ -142,7 +142,7 @@ fun Routing.officialAccountMsgApi(path: String = OfficialAccount.msgUri) {
                     val nonce = call.request.queryParameters["nonce"]
                     val encryptType = call.request.queryParameters["encrypt_type"]?:"security"
 
-                    val reXml = apiCtx?.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
+                    val reXml = apiCtx.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
 
                     if(reXml.isNullOrBlank())
                         call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)

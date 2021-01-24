@@ -110,7 +110,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
             timeStamp: String,
             nonce: String,
             postData: String,
-            encryptType: String? = "security"
+            encryptType: String? = "aes"
     ): String {
 
         // 密钥，公众账号的app secret

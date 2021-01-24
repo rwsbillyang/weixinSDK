@@ -103,7 +103,7 @@ object SdkDemo {
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-                if (Finance.IsMediaDataFinish(media_data) === 1) {
+                if (Finance.IsMediaDataFinish(media_data) == 1) {
                     Finance.FreeMediaData(media_data)
                     break
                 } else {

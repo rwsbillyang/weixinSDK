@@ -62,7 +62,7 @@ class MsgApi(appId: String) : OABaseApi(appId){
      * https://developers.weixin.qq.com/doc/offiaccount/Message_Management/One-time_subscription_info.html
      * TODO: 跳转重定向entry point的处理
      * */
-    fun sendSubscribeMsg(msg: OneTimeTemplateMsg): Response = doPost("template/subscribe", msg)
+    fun sendSubscribeMsg(msg: OnceTemplateMsg): Response = doPost("template/subscribe", msg)
     
     
     /**

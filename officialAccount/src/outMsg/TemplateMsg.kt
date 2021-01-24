@@ -47,7 +47,7 @@ class TemplateMsg(
  * 当用户的微信客户端版本不支持跳小程序时，将会跳转至url。
  * */
 @Serializable
-class OneTimeTemplateMsg(
+class OnceTemplateMsg(
         @SerialName("touser")
         val toUser: String,
         @SerialName("template_id")

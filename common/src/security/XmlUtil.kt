@@ -28,7 +28,7 @@ object XmlUtil {
     @Throws(AesException::class)
     fun extract(xmltext: String): Map<String, String?> {
        val map = mutableMapOf<String, String?>()
-        return try {
+        try {
             val dbf = DocumentBuilderFactory.newInstance()
 
             // This is the PRIMARY defense. If DTDs (doctypes) are disallowed, almost all XML entity attacks are prevented

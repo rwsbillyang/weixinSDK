@@ -14,7 +14,7 @@ interface IWorkEventHandler: IDispatcher {
     fun onWorkMenuClickEvent(e: WorkMenuClickEvent): ReBaseMSg?
     fun onWorkMenuViewEvent(e: WorkMenuViewEvent): ReBaseMSg?
     fun onWorkMenuScanCodePushEvent(e: WorkMenuScanCodePushEvent): ReBaseMSg?
-    fun onWorkMenuScanCodeWaitEvent(event: WorkMenuScanCodeWaitEvent): ReBaseMSg?
+    fun onWorkMenuScanCodeWaitEvent(e: WorkMenuScanCodeWaitEvent): ReBaseMSg?
     fun onWorkMenuPhotoEvent(e: WorkMenuPhotoEvent): ReBaseMSg?
     fun onWorkMenuPhotoOrAlbumEvent(e: WorkMenuPhotoOrAlbumEvent): ReBaseMSg?
     fun onWorkMenuWorkAlbumEvent(e: WorkMenuWorkAlbumEvent): ReBaseMSg?

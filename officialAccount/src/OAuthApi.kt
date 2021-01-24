@@ -54,7 +54,11 @@ class OAuthApi(appId: String) : OABaseApi(appId){
      * 如果网页授权的作用域为snsapi_base，则本步骤中获取到网页授权access_token的同时，也获取到了openid，
      * snsapi_base式的网页授权流程即到此为止。
      *
-     * "https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code"
+     *  注意：此API返回的响应头包含：Content-Type: text/plain
+     *  需特别处理，在install JsonFeature时添加accept(ContentType.Text.Any)
+     *  否则出现NoTransformationFoundException异常：io.ktor.client.call.NoTransformationFoundException: No transformation found: class io.ktor.utils.io.ByteBufferChannel -> class com.github.rwsbillyang.wxSDK.officialAccount.ResponseOauthAccessToken
+     *
+     * https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code"
      * */
     fun getAccessToken(code: String): ResponseOauthAccessToken = doGet("access_token", mapOf("appid" to appId, "secret" to OfficialAccount.ApiContextMap[appId]?.secret, "code" to code, "grant_type" to "authorization_code"))
 
