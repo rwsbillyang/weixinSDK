@@ -45,55 +45,55 @@ class OAMsgHub(
         val baseEvent = WxBaseEvent(base).apply { read(reader) }
         return when (baseEvent.event) {
             InEventType.SUBSCRIBE -> {
-                val subscribeEvent = OAScanSubscribeEvent(base).apply { read(reader) }
+                val subscribeEvent = OAScanSubscribeEvent(baseEvent).apply { read(reader) }
                 if (subscribeEvent.ticket.isNullOrBlank()) {
-                    eventHandler.onOASubscribeEvent(OASubscribeEvent(base))
+                    eventHandler.onOASubscribeEvent(OASubscribeEvent(baseEvent))
                 } else {
                     eventHandler.onOAScanSubscribeEvent(subscribeEvent)
                 }
             }
             InEventType.UNSUBSCRIBE -> eventHandler.onOAUnsubscribeEvent(
-                OAUnsubscribeEvent(base)
+                OAUnsubscribeEvent(baseEvent)
             )
             InEventType.SCAN -> eventHandler.onOAScanEvent(
-                OAScanEvent(base).apply { read(reader) }
+                OAScanEvent(baseEvent).apply { read(reader) }
             )
             InEventType.LOCATION -> eventHandler.onOALocationEvent(
-                OALocationEvent(base).apply { read(reader) }
+                OALocationEvent(baseEvent).apply { read(reader) }
             )
             InEventType.CLICK -> eventHandler.onOAMenuClickEvent(
-                OAMenuClickEvent(base).apply { read(reader) }
+                OAMenuClickEvent(baseEvent).apply { read(reader) }
             )
             InEventType.VIEW -> eventHandler.onOAMenuViewEvent(
-                OAMenuViewEvent(base).apply { read(reader) }
+                OAMenuViewEvent(baseEvent).apply { read(reader) }
             )
             InEventType.SCAN_CODE_PUSH ->
                 eventHandler.onOAMenuScanCodePushEvent(
-                    OAMenuScanCodePushEvent(base).apply { read(reader) }
+                    OAMenuScanCodePushEvent(baseEvent).apply { read(reader) }
                 )
             InEventType.SCAN_CODE_WAIT_MSG -> eventHandler.onOAMenuScanCodeWaitEvent(
-                OAMenuScanCodeWaitEvent(base).apply { read(reader) }
+                OAMenuScanCodeWaitEvent(baseEvent).apply { read(reader) }
             )
             InEventType.PIC_SYS_PHOTO -> eventHandler.onOAMenuPhotoEvent(
-                OAMenuPhotoEvent(base).apply { read(reader) }
+                OAMenuPhotoEvent(baseEvent).apply { read(reader) }
             )
             InEventType.PIC_PHOTO_OR_ALBUM -> eventHandler.onOAMenuPhotoOrAlbumEvent(
-                OAMenuPhotoOrAlbumEvent(base).apply { read(reader) }
+                OAMenuPhotoOrAlbumEvent(baseEvent).apply { read(reader) }
             )
             InEventType.PIC_WEIXIN -> eventHandler.onOAMenuOAAlbumEvent(
-                OAMenuOAAlbumEvent(base).apply { read(reader) }
+                OAMenuOAAlbumEvent(baseEvent).apply { read(reader) }
             )
             InEventType.LOCATION_SELECT -> eventHandler.onOAMenuLocationEvent(
-                OAMenuLocationEvent(base).apply { read(reader) }
+                OAMenuLocationEvent(baseEvent).apply { read(reader) }
             )
             InEventType.VIEW_MINI_PROGRAM -> eventHandler.onOAMenuMiniEvent(
-                OAMenuMiniEvent(base).apply { read(reader) }
+                OAMenuMiniEvent(baseEvent).apply { read(reader) }
             )
             InEventType.MASS_SEND_JOB_FINISH -> eventHandler.onOAMassSendFinishEvent(
-                OAMassSendFinishEvent(base).apply { read(reader) }
+                OAMassSendFinishEvent(baseEvent).apply { read(reader) }
             )
             InEventType.TEMPLATE_SEND_JOB_FINISH -> eventHandler.onOATemplateSendJobFinish(
-                OATemplateSendJobFinish(base).apply { read(reader) }
+                OATemplateSendJobFinish(baseEvent).apply { read(reader) }
             )
             else -> eventHandler.onDispatch(reader, base)?: eventHandler.onDefault(baseEvent)
         }

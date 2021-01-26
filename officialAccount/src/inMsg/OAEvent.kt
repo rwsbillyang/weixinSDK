@@ -1,6 +1,5 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
-import com.github.rwsbillyang.wxSDK.msg.BaseInfo
 import com.github.rwsbillyang.wxSDK.msg.SendPicsInfo
 import com.github.rwsbillyang.wxSDK.msg.WxBaseEvent
 import javax.xml.stream.XMLEventReader
@@ -14,7 +13,10 @@ import javax.xml.stream.XMLEventReader
  * 关于重试的消息排重，推荐使用FromUserName + CreateTime 排重。
  * 假如服务器无法保证在五秒内处理并回复，可以直接回复空串，微信服务器不会对此作任何处理，并且不会发起重试。
  * */
-class OASubscribeEvent(base: BaseInfo): WxBaseEvent(base)
+class OASubscribeEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
+{
+    init { event = baseEvent.event }
+}
 
 /**
  * 取消关注事件
@@ -24,8 +26,10 @@ class OASubscribeEvent(base: BaseInfo): WxBaseEvent(base)
  * 关于重试的消息排重，推荐使用FromUserName + CreateTime 排重。
  * 假如服务器无法保证在五秒内处理并回复，可以直接回复空串，微信服务器不会对此作任何处理，并且不会发起重试。
  * */
-class OAUnsubscribeEvent(base: BaseInfo): WxBaseEvent(base)
-
+class OAUnsubscribeEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
+{
+    init { event = baseEvent.event }
+}
 
 /**
  * 用户未关注时，扫码关注后的事件推送
@@ -33,11 +37,12 @@ class OAUnsubscribeEvent(base: BaseInfo): WxBaseEvent(base)
  * @property eventKey EventKey	事件KEY值，qrscene_为前缀，后面为二维码的参数值
  * @property ticket Ticket	二维码的ticket，可用来换取二维码图片
  * */
-class OAScanSubscribeEvent(base: BaseInfo): WxBaseEvent(base)
+class OAScanSubscribeEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
 {
+    init { event = baseEvent.event } //在hub中已读出event值，此处直接赋值过来，无需再在reader中读取
     var eventKey: String? = null
     var ticket: String? = null
-    override fun read(reader: XMLEventReader) {
+    override fun read(reader: XMLEventReader) {//无需再调用super.read(reader)
         var count = 0
         while (reader.hasNext() && count < 2) {
             val event = reader.nextEvent()
@@ -60,8 +65,9 @@ class OAScanSubscribeEvent(base: BaseInfo): WxBaseEvent(base)
  * @property eventKey EventKey	事件KEY值，事件KEY值，是一个32位无符号整数，即创建二维码时的二维码scene_id
  * @property ticket Ticket	二维码的ticket，可用来换取二维码图片
  * */
-class OAScanEvent(base: BaseInfo): WxBaseEvent(base)
+class OAScanEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
 {
+    init { event = baseEvent.event }
     var eventKey: String? = null
     var ticket: String? = null
     override fun read(reader: XMLEventReader) {
@@ -93,8 +99,9 @@ class OAScanEvent(base: BaseInfo): WxBaseEvent(base)
  * @property longitude    地理位置经度
  * @property precision Precision	地理位置精度
  * */
-open class OALocationEvent(base: BaseInfo): WxBaseEvent(base)
+open class OALocationEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
 {
+    init { event = baseEvent.event }
     var latitude: Float? = null
     var longitude: Float?= null
     var precision: Float?= null
@@ -127,8 +134,9 @@ open class OALocationEvent(base: BaseInfo): WxBaseEvent(base)
  *
  * @property eventKey EventKey 事件KEY值，与自定义菜单接口中KEY值对应
  * */
-class OAMenuClickEvent(base: BaseInfo): WxBaseEvent(base)
+class OAMenuClickEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
 {
+    init { event = baseEvent.event }
     var eventKey: String? = null
     override fun read(reader: XMLEventReader) {
         while (reader.hasNext()) {
@@ -151,8 +159,9 @@ class OAMenuClickEvent(base: BaseInfo): WxBaseEvent(base)
  * @property menuId MenuID	指菜单ID，如果是个性化菜单，则可以通过这个字段，知道是哪个规则的菜单被点击了
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  * */
-class OAMenuViewEvent(base: BaseInfo): WxBaseEvent(base)
+class OAMenuViewEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
 {
+    init { event = baseEvent.event }
     var eventKey: String? = null
     var menuId: String? = null
     override fun read(reader: XMLEventReader) {
@@ -181,8 +190,9 @@ class OAMenuViewEvent(base: BaseInfo): WxBaseEvent(base)
  * @property scanType ScanType	扫描类型，一般是qrcode
  * @property scanResult ScanResult	扫描结果，即二维码对应的字符串信息
  * */
-open class OAMenuScanCodePushEvent(base: BaseInfo): WxBaseEvent(base)
+open class OAMenuScanCodePushEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
 {
+    init { event = baseEvent.event }
     var eventKey: String? = null
     var scanType: String? = null
     var scanResult: String? = null
@@ -219,7 +229,7 @@ open class OAMenuScanCodePushEvent(base: BaseInfo): WxBaseEvent(base)
  *
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  * */
-class OAMenuScanCodeWaitEvent(base: BaseInfo): OAMenuScanCodePushEvent(base)
+class OAMenuScanCodeWaitEvent(baseEvent: WxBaseEvent): OAMenuScanCodePushEvent(baseEvent)
 
 
 
@@ -231,7 +241,9 @@ class OAMenuScanCodeWaitEvent(base: BaseInfo): OAMenuScanCodePushEvent(base)
  * @property eventKey EventKey	事件KEY值，由开发者在创建菜单时设定
  * @property picsInfo SendPicsInfo 图片的MD5值，开发者若需要，可用于验证接收到图片
  * */
-open class OAMenuPhotoEvent(base: BaseInfo): WxBaseEvent(base){
+open class OAMenuPhotoEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
+{
+    init { event = baseEvent.event }
     var eventKey: String? = null
     var sendPicsInfo: SendPicsInfo? = null
     override fun read(reader: XMLEventReader) {
@@ -259,7 +271,7 @@ open class OAMenuPhotoEvent(base: BaseInfo): WxBaseEvent(base){
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  *
  * */
-class OAMenuPhotoOrAlbumEvent(base: BaseInfo): OAMenuPhotoEvent(base)
+class OAMenuPhotoOrAlbumEvent(baseEvent: WxBaseEvent): OAMenuPhotoEvent(baseEvent)
 
 
 /**
@@ -268,7 +280,7 @@ class OAMenuPhotoOrAlbumEvent(base: BaseInfo): OAMenuPhotoEvent(base)
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  *
  * */
-class OAMenuOAAlbumEvent(base: BaseInfo): OAMenuPhotoEvent(base)
+class OAMenuOAAlbumEvent(baseEvent: WxBaseEvent): OAMenuPhotoEvent(baseEvent)
 
 
 /**
@@ -281,8 +293,9 @@ class OAMenuOAAlbumEvent(base: BaseInfo): OAMenuPhotoEvent(base)
  * @property label Label	地理位置的字符串信息
  * @property poiname Poiname	朋友圈POI的名字，可能为空
  * */
-class OAMenuLocationEvent(base: BaseInfo): WxBaseEvent(base)
+class OAMenuLocationEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
 {
+    init { event = baseEvent.event }
     var eventKey: String? = null
     var locationX: Float? = null
     var locationY: Float? = null
@@ -336,8 +349,9 @@ class OAMenuLocationEvent(base: BaseInfo): WxBaseEvent(base)
  * @param eventKey EventKey	事件KEY值，跳转的小程序路径
  * @param menuId MenuID	菜单ID，如果是个性化菜单，则可以通过这个字段，知道是哪个规则的菜单被点击了
  * */
-class OAMenuMiniEvent(base: BaseInfo): WxBaseEvent(base)
+class OAMenuMiniEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
 {
+    init { event = baseEvent.event }
     var eventKey: String? = null
     var menuId: String? = null
     override fun read(reader: XMLEventReader) {
@@ -371,8 +385,9 @@ class OAMenuMiniEvent(base: BaseInfo): WxBaseEvent(base)
  * failed:user block: 送达由于用户拒收（用户设置拒绝接收公众号消息）;
  * failed: system failed: 发送状态为发送失败（非用户拒绝）
  * */
-class OATemplateSendJobFinish(base: BaseInfo): WxBaseEvent(base)
+class OATemplateSendJobFinish(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
 {
+    init { event = baseEvent.event }
     var status: String? = null
     override fun read(reader: XMLEventReader) {
         while (reader.hasNext()) {
@@ -467,8 +482,9 @@ class OATemplateSendJobFinish(base: BaseInfo): WxBaseEvent(base)
     </ResultList>
     </ArticleUrlResult>
  * */
-class OAMassSendFinishEvent(base: BaseInfo): WxBaseEvent(base)
+class OAMassSendFinishEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
 {
+    init { event = baseEvent.event }
     var msgId: Long? = null
     var status: String? = null
     var totalCount: Int? = null

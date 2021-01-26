@@ -72,9 +72,8 @@ class OpenIdLang(@SerialName("openid")val openId: String, val lang: String = "zh
 @Serializable
 class UserInfo(
         val subscribe: Int? = null,
-        @SerialName("openId")
         val openid: String? = null,
-        val nickname: String,
+        val nickname: String? = null,
         val sex: Int? = null,
         val city: String? = null,
         val country: String? = null,
@@ -83,18 +82,18 @@ class UserInfo(
         @SerialName("headimgurl")
         val headImgUrl: String? = null,
         @SerialName("subscribe_time")
-        val subscribeTime: String? = null,
+        val subscribeTime: Long? = null,
         @SerialName("unionid")
         val unionId: String? = null,
         val remark: String? = null,
         @SerialName("groupid")
-        val groupId: String? = null,
+        val groupId: Int? = null,
         @SerialName("tagid_list")
-        val tagIdList: String? = null,
+        val tagIdList: List<Int>? = null,
         @SerialName("subscribe_scene")
         val subscribeScene: String? = null,
         @SerialName("qr_scene")
-        val qrScene: String? = null,
+        val qrScene: Int? = null,
         @SerialName("qr_scene_str")
         val qrSceneStr: String? = null
 )
@@ -107,9 +106,9 @@ class ResponseUserInfo(
         override val errMsg: String? = null,
 
 
-        @SerialName("openId")
+        val subscribe: Int? = null,
         val openid: String? = null,
-        val nickname: String,
+        val nickname: String? = null,
         val sex: Int? = null,
         val city: String? = null,
         val country: String? = null,
@@ -117,21 +116,19 @@ class ResponseUserInfo(
         val language: String? = null,
         @SerialName("headimgurl")
         val headImgUrl: String? = null,
+        @SerialName("subscribe_time")
+        val subscribeTime: Long? = null,
         @SerialName("unionid")
         val unionId: String? = null,
-
-        val subscribe: Int? = null,
-        @SerialName("subscribe_time")
-        val subscribeTime: String? = null,
         val remark: String? = null,
         @SerialName("groupid")
-        val groupId: String? = null,
+        val groupId: Int? = null,
         @SerialName("tagid_list")
-        val tagIdList: String? = null,
+        val tagIdList: List<Int>? = null,
         @SerialName("subscribe_scene")
         val subscribeScene: String? = null,
         @SerialName("qr_scene")
-        val qrScene: String? = null,
+        val qrScene: Int? = null,
         @SerialName("qr_scene_str")
         val qrSceneStr: String? = null
 ): IBase
