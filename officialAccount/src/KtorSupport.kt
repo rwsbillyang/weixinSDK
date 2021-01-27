@@ -23,11 +23,11 @@ import com.github.rwsbillyang.wxSDK.bean.DataBox
 import com.github.rwsbillyang.wxSDK.security.JsAPI
 import com.github.rwsbillyang.wxSDK.security.SignUtil
 import io.ktor.application.*
+import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import kotlinx.coroutines.async
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -154,46 +154,46 @@ fun Routing.officialAccountMsgApi(path: String = OfficialAccount.msgUri) {
     }
 }
 
-class QueryInfo(
-    val appId: String,
-    val needUserInfo: Boolean
-)
+
 fun Routing.oAuthApi(
         oauthInfoPath: String = OfficialAccount.oauthInfoPath,
-        notifyPath: String = OfficialAccount.oauthNotifyPath,
+        notifyPath1: String = OfficialAccount.oauthNotifyPath1,
+        notifyPath2: String = OfficialAccount.oauthNotifyPath2,
         notifyWebAppUrl: String = OfficialAccount.oauthNotifyWebAppUrl,
-        needUserInfo: ((String, String) -> Int)? = null,
+        needUserInfo: ((String?, String) -> Boolean?)? = null, //第一个参数时owner，系统注册用户id，用于查询用户设置，第二个参数是访客的openId
         onGetOauthAccessToken: ((ResponseOauthAccessToken, appId: String)-> Unit)? = null,
         onGetUserInfo: ((info: ResponseUserInfo, appId: String) -> Unit)? = null
 ) {
     val log = LoggerFactory.getLogger("oAuthApi")
-    val stateCache = Caffeine.newBuilder()
-            .maximumSize(Long.MAX_VALUE)
+    //保存state，用于校验非法请求,只是前端校验
+    val stateCache = Caffeine.newBuilder().maximumSize(Int.MAX_VALUE.toLong())
             .expireAfterWrite(10, TimeUnit.MINUTES)
-            .expireAfterAccess(1, TimeUnit.SECONDS)
-            .build<String, QueryInfo>()
+            .build<String, String>()
     /**
+     * 当不能明确需要是否获取用户信息时，调用此API，上传owner参数，用于与notify1中获取的openId决定是否需要获取用户信息
+     * owner用于获取用户设置，openId用于查询是否已经有值
+     *
      * 前端webapp请求该api获取appid，state等信息，然后重定向到腾讯的授权页面，用户授权之后将重定向到下面的notify
-     * @param userInfo 0或1分别表示是否需要获取用户信息，优先使用前端提供的参数, 没有提供的话使用needUserInfo(host, uri)进行判断（用于从某个用户设置中获取），再没有的话则默认为0
-     * @param host 跳转host，如："https：//www.example.com"
+     * @param owner 系统注册用户id，用于获取用户设置
+     * @param host 跳转host，如："https：//www.example.com"，用于构建跳转url
      * 前端重定向地址：https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect" 然后重定向到该url
      *
      * */
     get(oauthInfoPath){
         val appId = call.request.queryParameters["appId"]?:OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
+        val owner = call.request.queryParameters["owner"] //系统用户注册id，传递该参数，目的在于notify1中使用它确定是否获取用户信息，然后通知前端跳转
         if(appId.isNullOrBlank())
         {
             log.warn("no appId in query parameters for oauth and no config oa")
             call.respond(HttpStatusCode.BadRequest, "no appId in query parameters and no config oa")
         }else{
-            val userInfo = (call.request.queryParameters["userInfo"]?.toInt()?:(needUserInfo?.let { it(call.request.host(), call.request.uri) })?:0) == 1
-            val host = call.request.queryParameters["host"]?:call.request.host()
-
-            val oAuthInfo = OAuthApi(appId).prepareOAuthInfo(host + notifyPath, userInfo)
-            stateCache.put(oAuthInfo.state, QueryInfo(appId, userInfo))
+            val host = call.request.queryParameters["host"]
+            val url = host ?: (call.request.origin.scheme +"://"+ host)
+            //第一次只获取openId，不获取用户信息
+            val oAuthInfo = OAuthApi(appId).prepareOAuthInfo("$url$notifyPath1/$appId", false)
+            if(owner != null) stateCache.put(oAuthInfo.state,owner)
             call.respond(oAuthInfo)
         }
-
     }
     /**
      * 腾讯在用户授权之后，将调用下面的api通知code，并附带上原state。
@@ -205,45 +205,74 @@ fun Routing.oAuthApi(
      * code作为换取access_token的票据，每次用户授权带上的code将不一样，code只能使用一次，5分钟未被使用自动过期。
      *
      * */
-    get(notifyPath){
+    get("$notifyPath1/{appId}"){
+        val appId = call.parameters["appId"]?:OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]
 
-        if(code.isNullOrBlank() || state.isNullOrBlank()){
-            //notify webapp fail
-            call.respondRedirect("$notifyWebAppUrl?state=$state&code=KO&msg=nullCodeOrState", permanent = false)
-        }else{
-            val queryInfo = stateCache.getIfPresent(state)
-            stateCache.invalidate(state)
-            var url = "$notifyWebAppUrl?state=$state"
-            if(queryInfo == null){
-                log.warn("not found queryInfo in cache, code=$code, state=$state")
-                url += "&code=KO&msg=NotFoundAppIdInCache"
-            }else{
-                val oauthAi = OAuthApi(queryInfo.appId)
-                val res = oauthAi.getAccessToken(code)
-                if(res.isOK()  && res.openId != null){
-                    onGetOauthAccessToken?.let { async { it.invoke(res, queryInfo.appId) } }
-                    url +=  "&code=OK&openId=${res.openId}&appId=${queryInfo.appId}"
 
-                    if(queryInfo.needUserInfo && res.accessToken != null){
-                        val resUserInfo = oauthAi.getUserInfo(res.accessToken, res.openId)
-                        if(resUserInfo.isOK())
-                        {
-                            if(resUserInfo.unionId != null){
-                                url += "&unionId=${resUserInfo.unionId}"
-                            }
-                            //async save fan user info
-                            onGetUserInfo?.let { async { it.invoke(resUserInfo, queryInfo.appId)} }
-                        }else{
-                            log.warn("fail getUserInfo: $resUserInfo")
-                        }
-                    }
-                    //notify webapp OK
-                    call.respondRedirect(url, permanent = false)
+        var url = "$notifyWebAppUrl?state=$state&step=1&appId=${appId}"
+
+        url += if(appId== null || code.isNullOrBlank() || state.isNullOrBlank()){
+            "&code=KO&msg=null_appId_or_code_or_state"
+        }else{
+            val owner = stateCache.getIfPresent(state)
+            if(owner == null){
+                log.warn("state=$state for owner is not present in cache, ip=${call.request.origin.host},ua=${call.request.userAgent()}")
+            }
+            val oauthAi = OAuthApi(appId)
+            val res = oauthAi.getAccessToken(code)
+            if(res.isOK()  && res.openId != null){
+                val isNeedUserInfo = needUserInfo?.let { needUserInfo(owner, res.openId) }?:OfficialAccount.defaultGetUserInfo
+                if(!isNeedUserInfo){
+                    stateCache.invalidate(state)
                 }
+                val isNeedUserInfoInt = if(isNeedUserInfo) 1 else 0
+                "&code=OK&openId=${res.openId}&needUserInfo=$isNeedUserInfoInt"
+            }else{
+                "&code=KO&msg=${res.errMsg}"
             }
         }
+
+        call.respondRedirect(url, permanent = false)
+    }
+
+    get("$notifyPath2/{appId}"){
+        val appId = call.parameters["appId"]?:OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
+        val code = call.request.queryParameters["code"]
+        val state = call.request.queryParameters["state"]
+
+        var url = "$notifyWebAppUrl?state=$state&step=2&appId=$appId"
+
+        url += if(appId== null || code.isNullOrBlank() || state.isNullOrBlank()){
+            "&code=KO&msg=null_appId_or_code_or_state"
+        }else{
+            val owner = stateCache.getIfPresent(state)
+            stateCache.invalidate(state)
+            if(owner == null){
+                log.warn("state=$state for owner is not present in cache, ip=${call.request.origin.host},ua=${call.request.userAgent()}")
+            }
+
+            val oauthAi = OAuthApi(appId)
+            val res = oauthAi.getAccessToken(code)
+            if(res.isOK() && res.openId != null){
+                onGetOauthAccessToken?.let { run { it.invoke(res, appId) } }
+                if(res.accessToken != null){
+                    val resUserInfo = oauthAi.getUserInfo(res.accessToken, res.openId)
+                    if(resUserInfo.isOK())
+                    {
+                        onGetUserInfo?.let { run { it.invoke(resUserInfo, appId)} }//async save fan user info
+                    }else{
+                        log.warn("fail getUserInfo: $resUserInfo")
+                    }
+                }
+                url +=  "&code=OK&openId=${res.openId}"
+            }else{
+                url += "&code=KO&msg=${res.errMsg}"
+            }
+        }
+        //notify webapp
+        call.respondRedirect(url, permanent = false)
     }
 }
 

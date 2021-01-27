@@ -34,9 +34,14 @@ object OfficialAccount {
      * */
     var oauthInfoPath: String = "/api/wx/oa/oauth/info"
     /**
-     * 用户授权后的通知微信服务器通知到后端的路径
+     * 微信服务器通知到后端的路径（无需用户授权）, 最后面的参数为{appId}，用于通知openId
      * */
-    var oauthNotifyPath: String = "/api/wx/oa/oauth/notify"
+    var oauthNotifyPath1: String = "/api/wx/oa/oauth/notify1"
+    /**
+     * 获取用户信息用户授权后，微信服务器通知到后端的路径，最后面的参数为{appId}
+     * */
+    var oauthNotifyPath2: String = "/api/wx/oa/oauth/notify2"
+
     /**
      * 授权后经过后端再跳转到前端，前端记录下授权结果路径
      * */
@@ -44,6 +49,11 @@ object OfficialAccount {
 
     var jsSdkSignaturePath: String =  "/api/wx/oa/jssdk/signature"
 
+    /**
+     * 打开网页时，默认是否获取用户信息，也支持lambda中获取用户的设置
+     * 优先级：前端请求中指明的值 > 用户设置的值 > 默认值
+     * */
+    var defaultGetUserInfo = true
     /**
      * 配置公众号参数
      * */
