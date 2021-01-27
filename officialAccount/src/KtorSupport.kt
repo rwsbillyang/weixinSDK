@@ -244,8 +244,8 @@ fun Routing.oAuthApi(
 
         var url = "$notifyWebAppUrl?state=$state&step=2&appId=$appId"
 
-        url += if(appId== null || code.isNullOrBlank() || state.isNullOrBlank()){
-            "&code=KO&msg=null_appId_or_code_or_state"
+        if(appId== null || code.isNullOrBlank() || state.isNullOrBlank()){
+            url += "&code=KO&msg=null_appId_or_code_or_state"
         }else{
             val owner = stateCache.getIfPresent(state)
             stateCache.invalidate(state)
@@ -255,20 +255,19 @@ fun Routing.oAuthApi(
 
             val oauthAi = OAuthApi(appId)
             val res = oauthAi.getAccessToken(code)
-            if(res.isOK() && res.openId != null){
+            url += if(res.isOK() && res.openId != null){
                 onGetOauthAccessToken?.let { run { it.invoke(res, appId) } }
                 if(res.accessToken != null){
                     val resUserInfo = oauthAi.getUserInfo(res.accessToken, res.openId)
-                    if(resUserInfo.isOK())
-                    {
+                    if(resUserInfo.isOK()) {
                         onGetUserInfo?.let { run { it.invoke(resUserInfo, appId)} }//async save fan user info
                     }else{
                         log.warn("fail getUserInfo: $resUserInfo")
                     }
                 }
-                url +=  "&code=OK&openId=${res.openId}"
+                "&code=OK&openId=${res.openId}"
             }else{
-                url += "&code=KO&msg=${res.errMsg}"
+                "&code=KO&msg=${res.errMsg}"
             }
         }
         //notify webapp
