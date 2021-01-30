@@ -86,4 +86,4 @@ data class Menu(val name: String,
 }
 
 @Serializable
-class Menus(@SerialName("button") val menus: List<Menu>)
+data class Menus(@SerialName("button") val menus: List<Menu>)
