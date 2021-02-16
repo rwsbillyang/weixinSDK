@@ -30,8 +30,7 @@ data class JsApiSignature(
     val appId: String,
     val nonceStr: String,
     val timestamp: Long,
-    val signature: String,
-    val objectId: String, //通常在需要OAuthInfo的时候，是因为需要分享，顺便给其一个分享id，无需再请求获取
+    val signature: String
 )
 
 object JsAPI {
@@ -55,6 +54,6 @@ object JsAPI {
         val time = timestamp?:System.currentTimeMillis() / 1000
         val signature = SignUtil.jsApiSignature(jsApiTicket, nonce, time, url)
 
-        return JsApiSignature(appId, nonce, time, signature, Base64.getUrlEncoder().encodeToString(ObjectId().toByteArray()))
+        return JsApiSignature(appId, nonce, time, signature)
     }
 }

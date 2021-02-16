@@ -279,9 +279,10 @@ fun Routing.oAuthApi(
 
 
 fun Routing.jsSdkSignature(path: String = OfficialAccount.jsSdkSignaturePath){
+    val log = LoggerFactory.getLogger("jsSdkSignature")
     get(path){
         val appId = call.request.queryParameters["appId"]?:OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
-
+        val url = call.request.queryParameters["url"]
         val msg = if(appId.isNullOrBlank())
         {
             //call.respond(HttpStatusCode.BadRequest, "no appId in query parameters and no config oa")
@@ -291,11 +292,12 @@ fun Routing.jsSdkSignature(path: String = OfficialAccount.jsSdkSignaturePath){
             if(ticket == null){
                 "appId=$appId is configured?"
             }else{
-                val url = call.request.headers["Referer"]
-                if(url == null){
+                val referer = call.request.headers["Referer"]
+                if(referer == null){
                     "request Referer is null"
                 }else{
-                    call.respond(DataBox("OK",null, JsAPI.getSignature(appId,ticket, url)))
+                    //log.info("url=$url, referer=$referer")
+                    call.respond(DataBox("OK",null, JsAPI.getSignature(appId,ticket, (url?:referer).split('#')[0])))
                     null
                 }
             }
