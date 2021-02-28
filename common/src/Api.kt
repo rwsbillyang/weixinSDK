@@ -56,7 +56,7 @@ open class ClientWrapper{
             }
             install(Logging) {
                 logger = Logger.DEFAULT
-                level = LogLevel.ALL
+                level = LogLevel.INFO
             }
              defaultRequest { // this: HttpRequestBuilder ->
                  contentType(ContentType.Application.Json)
