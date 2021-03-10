@@ -20,13 +20,11 @@ package com.github.rwsbillyang.wxSDK.wxPay.auth
 
 
 
-import org.apache.http.HttpEntityEnclosingRequest
-import org.apache.http.client.methods.HttpRequestWrapper
-import org.apache.http.util.EntityUtils
+
 import org.slf4j.LoggerFactory
-import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
+
 
 /**
  * 用私钥及商户个体信息，生成一系列信息及签名，作为token，放置于请求头中：
@@ -46,25 +44,27 @@ class WechatPayCredentials(var merchantId: String,  var signer: Signer): Credent
     }
     override val schema = "WECHATPAY2-SHA256-RSA2048"
 
-    @Throws(IOException::class)
-    override fun getToken(request: HttpRequestWrapper): String {
+    /**
+     * @param method 如 GET, POST
+     * @param canonicalUrl 如：/v3/certificates
+     * @param body GET时为空
+     * */
+    override fun getToken(method: String, canonicalUrl: String, body: String): String {
         val nonceStr = generateNonceStr()
-        val timestamp = generateTimestamp()
-        val message = buildMessage(nonceStr, timestamp, request)
-        log.debug("authorization message=[$message]")
+        val timestamp = System.currentTimeMillis() / 1000
+        val message = buildMessage(method, canonicalUrl, timestamp, nonceStr, body)
+
+        log.info("authorization message=[$message]")
         val signature = signer.sign(message.toByteArray(StandardCharsets.UTF_8))
         val token = ("mchid=\"" + merchantId + "\","
                 + "nonce_str=\"" + nonceStr + "\","
                 + "timestamp=\"" + timestamp + "\","
                 + "serial_no=\"" + signature.certificateSerialNumber + "\","
                 + "signature=\"" + signature.sign + "\"")
-        log.debug("authorization token=[$token]")
+        log.info("message.length=${message.length}")
         return token
     }
 
-    private fun generateTimestamp(): Long {
-        return System.currentTimeMillis() / 1000
-    }
 
     private fun generateNonceStr(): String {
         val nonceChars = CharArray(32)
@@ -75,30 +75,25 @@ class WechatPayCredentials(var merchantId: String,  var signer: Signer): Credent
     }
 
 
-    @Throws(IOException::class)
-    private fun buildMessage(nonce: String, timestamp: Long, request: HttpRequestWrapper): String {
-        val uri = request.uri
-        var canonicalUrl = uri.rawPath
-        if (uri.query != null) {
-            canonicalUrl += "?" + uri.rawQuery
-        }
-        var body = ""
-        // PATCH,POST,PUT
-        if (request.original is WechatPayUploadHttpPost) {
-            body = (request.original as WechatPayUploadHttpPost).meta
-        } else if (request is HttpEntityEnclosingRequest) {
-            body = EntityUtils.toString((request as HttpEntityEnclosingRequest).entity)
-        }
-        return """
-            ${request.requestLine.method}
-            $canonicalUrl
-            $timestamp
-            $nonce
-            $body
-            
-            """.trimIndent()
-    }
-
-
+    /**
+     * https://pay.weixin.qq.com/wiki/doc/apiv3/wechatpay/wechatpay4_0.shtml
+     *
+     * @param method GET, POST
+     * @param canonicalUrl 包括？后面的查询参数
+     * @param timestamp 获取发起请求时的系统当前时间戳，即格林威治时间1970年01月01日00时00分00秒(北京时间1970年01月01日08时00分00秒)起至现在的总秒数，作为请求时间戳。微信支付会拒绝处理很久之前发起的请求，请商户保持自身系统的时间准确。
+     * @param nonceStr 生成一个请求随机串（我们推荐生成随机数算法如下：调用随机数函数生成，将得到的值转换为字符串）
+     * @param body 获取请求中的请求报文主体（request body）。
+     * 请求方法为GET时，报文主体为空。
+     * 当请求方法为POST或PUT时，请使用真实发送的JSON报文。
+     * 图片上传API，请使用meta对应的JSON报文。
+     * 对于下载证书的接口来说，请求报文主体是一个空串。
+    HTTP请求方法\n
+    URL\n
+    请求时间戳\n
+    请求随机串\n
+    请求报文主体\n
+     * */
+    private fun buildMessage(method: String, canonicalUrl: String, timestamp: Long, nonceStr: String,
+                             body: String) = "$method\n$canonicalUrl\n$timestamp\n$nonceStr\n$body\n"
 
 }

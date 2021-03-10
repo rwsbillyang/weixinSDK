@@ -41,7 +41,7 @@ dependencies {
     implementation "ch.qos.logback:logback-classic:$logback_version"
     //implementation "io.ktor:ktor-client-core:$ktor_version"
     implementation "io.ktor:ktor-client-core-jvm:$ktor_version"
-    implementation "io.ktor:ktor-client-apache:$ktor_version"
+    implementation "io.ktor:ktor-client-okhttp:$ktor_version"
     //implementation "io.ktor:ktor-client-http-timeout:$ktor_version"
     implementation "io.ktor:ktor-client-json-jvm:$ktor_version"
     implementation "io.ktor:ktor-client-serialization-jvm:$ktor_version"
@@ -55,7 +55,7 @@ dependencies {
 
 
     //implementation 'com.github.wechatpay-apiv3:wechatpay-apache-httpclient:0.2.1'
-    implementation "org.apache.httpcomponents:httpmime:4.5.12"
+    //implementation "org.apache.httpcomponents:httpmime:4.5.12"
 
     implementation ("com.github.rwsbillyang:wxSDK:0.2.0")
     //implementation project(":common")

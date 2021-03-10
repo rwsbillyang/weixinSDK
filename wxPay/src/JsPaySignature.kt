@@ -20,6 +20,7 @@ package com.github.rwsbillyang.wxSDK.wxPay
 
 
 import com.github.rwsbillyang.wxSDK.wxPay.auth.Signer
+import kotlinx.serialization.Serializable
 import org.apache.commons.lang3.RandomStringUtils
 
 /**
@@ -30,6 +31,7 @@ import org.apache.commons.lang3.RandomStringUtils
  * 签名方式	signType	string[1,32]	是	签名类型，默认为RSA，仅支持RSA。 示例值：RSA
  * 签名	paySign	string[1,256]	是	签名，使用字段appId、timeStamp、nonceStr、package按照签名生成算法计算得出的签名值 示例值：oR9d8PuhnIc+YZ8cBHFCwfgpaK9gd7vaRvkYD7rthRAZ\/X+QBhcCYL21N7cHCTUxbQ+EAt6Uy+lwSN22f5YZvI45MLko8Pfso0jm46v5hqcVwrk6uddkGuT+Cdvu4WBqDzaDjnNa5UK3GfE1Wfl2gHxIIY5lLdUgWFts17D4WuolLLkiFZV+JSHMvH7eaLdT9N5GBovBwu5yYKUR7skR8Fu+LozcSqQixnlEZUfyE55feLOQTUYzLmR9pNtPbPsu6WVhbNHMS3Ss2+AehHvz+n64GDmXxbX++IOBvm2olHu3PsOUGRwhudhVf7UcGcunXt8cqNjKNqZLhLw4jq\/xDg==
  * */
+@Serializable
 class JsPaySignature(
     val appId: String,
     val timeStamp: Long,

@@ -18,8 +18,9 @@
 
 package com.github.rwsbillyang.wxSDK.wxPay.auth
 
-import org.apache.http.client.methods.CloseableHttpResponse
-import org.apache.http.client.methods.HttpRequestWrapper
+
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import java.io.IOException
 import java.security.cert.X509Certificate
 
@@ -35,8 +36,10 @@ interface Verifier {
  * 用微信平台证书（动态更新）验证回复和回调是否真正来自微信支付
  * */
 interface Validator {
-    @Throws(IOException::class)
-    fun validate(response: CloseableHttpResponse): Boolean
+    /**
+     * 返回bodyText文本，出现任何错误都抛出异常
+     * */
+    fun validate(response: HttpResponse): String
 }
 
 /**
@@ -45,8 +48,19 @@ interface Validator {
 interface Credentials {
     val schema: String
 
+    /**
+     * https://pay.weixin.qq.com/wiki/doc/apiv3/wechatpay/wechatpay4_0.shtml
+     *
+     * @param method GET, POST
+     * @param canonicalUrl 包括？后面的查询参数
+     * @param body 获取请求中的请求报文主体（request body）。
+     * 请求方法为GET时，报文主体为空。
+     * 当请求方法为POST或PUT时，请使用真实发送的JSON报文。
+     * 图片上传API，请使用meta对应的JSON报文。
+     * 对于下载证书的接口来说，请求报文主体是一个空串。
+     * */
     @Throws(IOException::class)
-    fun getToken(request: HttpRequestWrapper): String
+    fun getToken(method: String, canonicalUrl: String, body: String): String
 }
 
 /**

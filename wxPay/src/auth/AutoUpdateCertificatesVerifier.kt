@@ -73,7 +73,7 @@ class AutoUpdateCertificatesVerifier @JvmOverloads constructor(
         get() = verifier!!.validCertificate
     private var firstlyUse = true
 
-    init {
+    fun startDownload() {
         //构造时更新证书
         instant = try {
             autoUpdateCert()

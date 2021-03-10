@@ -20,6 +20,7 @@ package com.github.rwsbillyang.wxSDK.security
 
 
 import java.io.ByteArrayOutputStream
+import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.security.KeyFactory
@@ -29,6 +30,9 @@ import java.security.cert.*
 import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.*
+
+
+
 
 
 /**
@@ -48,11 +52,12 @@ object PemUtil {
             return loadPrivateKey(array.toString("utf-8"))
     }
     fun loadPrivateKey(key: String): PrivateKey {
+        //println("key=$key")
         return try {
-            val privateKey = key
-                    .replace("-----BEGIN PRIVATE KEY-----", "")
-                    .replace("-----END PRIVATE KEY-----", "")
-                    .replace("\\s+".toRegex(), "")
+            val privateKey: String = key.replace("-----BEGIN PRIVATE KEY-----", "")
+                .replace("-----END PRIVATE KEY-----", "")
+                .replace("\\s+".toRegex(), "")
+            //println("after replace key=$privateKey")
             val kf = KeyFactory.getInstance("RSA")
             kf.generatePrivate(
                     PKCS8EncodedKeySpec(Base64.getDecoder().decode(privateKey))
@@ -79,4 +84,8 @@ object PemUtil {
             throw RuntimeException("无效的证书", e)
         }
     }
+}
+
+fun main(){
+    PemUtil.loadPrivateKey(FileInputStream("/Users/bill/Documents/private/company/cert/1290074401_20210308_cert/apiclient_key.pem"))
 }

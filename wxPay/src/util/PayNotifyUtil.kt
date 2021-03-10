@@ -28,13 +28,6 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 
-//val list = arrayListOf(
-//    "Request-ID",
-//    "Wechatpay-Serial",
-//    "Wechatpay-Signature",
-//    "Wechatpay-Timestamp",
-//    "Wechatpay-Nonce"
-//)
 
 /**
  * 微信支付会在回调的HTTP头部中包括回调报文的签名。商户必须验证回调的签名，以确保回调是由微信支付发送。
