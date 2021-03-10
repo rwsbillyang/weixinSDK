@@ -20,7 +20,9 @@ open class TimelyValue(
  */
 enum class UpdateType {
     ACCESS_TOKEN,
-    TICKET
+    TICKET,
+    WX_WORK_SUITE_TOKEN,
+    WX_WORK_PROVIDER_TOKEN //https://work.weixin.qq.com/api/doc/90001/90142/90593
 }
 
 /**

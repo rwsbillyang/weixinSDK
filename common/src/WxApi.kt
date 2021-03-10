@@ -19,7 +19,7 @@
 package com.github.rwsbillyang.wxSDK
 
 
-abstract class WxApi : Api() {
+abstract class WxApi(private val accessTokenKey: String = "access_token") : Api() {
     /**
      * API前面的公共部分，后面无斜杠，如：https://api.weixin.qq.com/cgi-bin
      * 公众号、企业微信等API在不同的域名下，故base不同
@@ -51,9 +51,9 @@ abstract class WxApi : Api() {
             val token = accessToken()
             requireNotNull(token){"accessToken should NOT null"}
             if (params.isNullOrBlank())
-                "$base/$group/$name?access_token=${token}"
+                "$base/$group/$name?$accessTokenKey=${token}"
             else
-                "$base/$group/$name?access_token=${token}&$params"
+                "$base/$group/$name?$accessTokenKey=${token}&$params"
         }else {
             if (params.isNullOrBlank())
                 "$base/$group/$name"
@@ -64,45 +64,3 @@ abstract class WxApi : Api() {
     }
 }
 
-//
-//
-///**
-// * 根据提供的参数自动拼凑一个带请求参数的GET请求url
-// * */
-//inline fun url(base:String, group: String, name: String, accessToken: String, requestParams: Map<String, String?>?): String{
-//    val params = requestParams?.entries?.filter { it.value != null }?.joinToString("&") { "${it.key}=${it.value}" }?:""
-//    return  "$base/$group/$name?access_token=$accessToken&$params"
-//}
-//
-///**
-// * 返回数据类型为T
-// * */
-//inline fun <reified R> get(base:String, group: String, name: String,  accessToken: String, parameters: Map<String, String?>? = null) = runBlocking {
-//    CoroutineScope(Dispatchers.IO).async {
-//        client.get<R>(url(base, group,name, accessToken, parameters))
-//    }.await()
-//}
-//
-///**
-// * 请求数据类型为T， 返回数据类型为R，指定url
-// * urlFunc 提供url的函数，如 "$base/corp/get_join_qrcode?access_token=ACCESS_TOKEN&size_type=$sizeType"
-// * */
-//inline fun <reified T, reified R> post(data: T, url: String) = runBlocking {
-//    CoroutineScope(Dispatchers.IO).async {
-//        client.post<R>(url){ data?.let { body = it  }}
-//    }.await()
-//}
-//
-///**
-// * 请求数据类型为T， 返回数据类型为R
-// * */
-//inline fun <reified T, reified R> post(base:String, group: String, name: String, accessToken: String,
-//                                        data: T?, parameters: Map<String, String?>? = null)
-//        = runBlocking {
-//    CoroutineScope(Dispatchers.IO).async {
-//        if(data != null)
-//            client.post<R>(url(base, group,name, accessToken, parameters)){ body = data }
-//        else
-//            client.post<R>(url(base, group,name, accessToken,  parameters))
-//    }.await()
-//}

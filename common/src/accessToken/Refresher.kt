@@ -1,13 +1,13 @@
 package com.github.rwsbillyang.wxSDK.accessToken
 
 
-import com.github.rwsbillyang.wxSDK.ClientWrapper
+
+import com.github.rwsbillyang.wxSDK.KtorHttpClient
 import com.github.rwsbillyang.wxSDK.WxException
-import io.ktor.client.request.get
+import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -27,12 +27,16 @@ interface IRefresher{
  *
  *  https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Get_access_token.html
  *  https://work.weixin.qq.com/api/doc/90000/90135/91039
+ *  https://work.weixin.qq.com/api/doc/90001/90142/90593
  *
+ *  @param key 默认解析的值 如：access_token，ticket 等
  *  @param url 提供刷新的url
- *  @param key 提取结果的key 如： access_token，ticket 等
+ *  @param urlBlock 返回url的函数
  * */
-open class Refresher( private val key: String, private val url: String? = null,
-                      private val urlBlock: (() -> String)? = null): IRefresher
+open class Refresher(
+    private val key: String,
+    private val url: String? = null,
+    private val urlBlock: (() -> String)? = null): IRefresher
 {
     companion object {
         private val log: Logger = LoggerFactory.getLogger("Refresher")
@@ -47,30 +51,31 @@ open class Refresher( private val key: String, private val url: String? = null,
      * 向远程发出请求，获取最新值然后返回
      */
     override  fun refresh(): String {
-        log.info("to refresh for key=$key...,url=$url")
         val url2 = url?: urlBlock?.invoke()
+        log.info("to refresh for key=$key...,url=$url2")
+
         return runBlocking {
-            val text: String = ClientWrapper.DefaultClient.get<HttpResponse>(url2!!).readText()
-            //log.info("got text: $text")
-            val jsonElement = ClientWrapper.apiJson.parseToJsonElement(text)
-            if(jsonElement is JsonObject){
-                val valueElement = jsonElement[key]
-                if(valueElement == null || valueElement is JsonNull)
-                {
-                    log.error("fail refresh key=$key, because: $text")
-                    throw WxException("fail refresh key=$key")
-                }else{
-                    val value = valueElement.jsonPrimitive.content
-                    //log.info("got value=$value for key=$key")
-                    value
-                }
-            }else{
-                throw WxException("fail refresh key=$key, not a jsonObject: $text")
-            }
+            val text: String = getResponse(url2!!).readText()
+
+            KtorHttpClient.apiJson
+                .parseToJsonElement(text)
+                .jsonObject[key]?.jsonPrimitive?.content
+                ?: throw WxException("fail refresh key=suite_access_token, not a jsonObject: $text")
         }
     }
+    open suspend fun getResponse(url: String) = KtorHttpClient.DefaultClient.get<HttpResponse>(url)
 }
 
+open class PostRefresher<T>(key: String,
+                    private val postData: T? = null,
+                    url: String? = null,
+                    urlBlock: (() -> String)? = null)
+:Refresher(key,url, urlBlock)
+{
+    override suspend fun getResponse(url: String) = KtorHttpClient.DefaultClient.post<HttpResponse>(url){
+        postData?.let { body = it }
+    }
+}
 
 /**
  *  请求刷新accessToken，如用于公众号、企业微信等获取accessToken

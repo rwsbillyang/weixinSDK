@@ -24,7 +24,7 @@ interface ITimelyRefreshValue {
 open class TimelyRefreshValue @JvmOverloads constructor(
     val appId: String,
     private val refresher: IRefresher,
-    private var refreshIntervalTime: Long,
+    private var refreshIntervalTime: Long = 7100000,
     protected val extra: String? = null
 ) : Observable() {
     init {
