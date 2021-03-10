@@ -41,7 +41,7 @@ import java.io.FileInputStream
 open class KtorHttpClient {
     companion object {
         val apiJson = Json {
-            encodeDefaults = false
+            encodeDefaults = false //变为false 会影响某些非空默认值，如模板消息颜色
             useArrayPolymorphism = false
             ignoreUnknownKeys = true
         }

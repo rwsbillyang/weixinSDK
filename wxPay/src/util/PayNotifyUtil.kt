@@ -18,6 +18,7 @@
 
 package com.github.rwsbillyang.wxSDK.wxPay.util
 
+import com.github.rwsbillyang.wxSDK.KtorHttpClient
 import com.github.rwsbillyang.wxSDK.security.AesUtil
 import com.github.rwsbillyang.wxSDK.wxPay.EncryptData
 import com.github.rwsbillyang.wxSDK.wxPay.OrderPayDetail
@@ -30,6 +31,7 @@ import org.slf4j.LoggerFactory
 
 
 /**
+ * 微信支付回调通知数据。
  * 微信支付会在回调的HTTP头部中包括回调报文的签名。商户必须验证回调的签名，以确保回调是由微信支付发送。
  * */
 @Serializable
@@ -129,7 +131,7 @@ object PayNotifyUtil {
                 res.nonce.toByteArray(),
                 res.ciphertext
             )
-            val orderPayDetail = Json.decodeFromString<OrderPayDetail>(json)
+            val orderPayDetail = KtorHttpClient.apiJson.decodeFromString<OrderPayDetail>(json)
             block(notifyBean, orderPayDetail, WxPayNotifyErrorType.SUCCESS)
         } else {
             log.warn("notifyBean.type is not TRANSACTION.SUCCESS, RequestParameters=$RequestParameters")

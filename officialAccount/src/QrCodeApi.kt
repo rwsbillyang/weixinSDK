@@ -40,17 +40,23 @@ import java.net.URLEncoder
  * 如果用户已经关注公众号，在用户扫描后会自动进入会话，微信也会将带场景值扫描事件推送给开发者。
  *
  * */
-class QrCodeApi(appId: String) : OABaseApi(appId){
+class QrCodeApi(appId: String) : OABaseApi(appId) {
     override val group: String = "qrcode"
 
     /**
      *  获取带参数的二维码的过程包括两步，首先创建二维码ticket，然后凭借ticket到指定URL换取二维码。
      * */
-    fun createTmp(id: Int, expire: Long = 2592000L): ResponseCreate = doPost("create",  QrCodeInfo(ActionName.QR_SCENE, Scene(id),expire))
-    fun createTmp(str: String, expire: Long = 2592000L): ResponseCreate = doPost("create",  QrCodeInfo(ActionName.QR_STR_SCENE, Scene(str = str),expire))
+    fun createTmp(id: Int, expire: Long = 2592000L): ResponseCreate =
+        doPost("create", QrCodeInfo(ActionName.QR_SCENE, Scene(id), expire))
 
-    fun create(id: Int, expire: Long = 2592000L): ResponseCreate = doPost("create", QrCodeInfo(ActionName.QR_LIMIT_SCENE, Scene(id),expire))
-    fun create(str: String, expire: Long = 2592000L): ResponseCreate = doPost("create", QrCodeInfo(ActionName.QR_LIMIT_STR_SCENE, Scene(str = str),expire))
+    fun createTmp(str: String, expire: Long = 2592000L): ResponseCreate =
+        doPost("create", QrCodeInfo(ActionName.QR_STR_SCENE, Scene(str = str), expire))
+
+    fun create(id: Int, expire: Long = 2592000L): ResponseCreate =
+        doPost("create", QrCodeInfo(ActionName.QR_LIMIT_SCENE, Scene(id), expire))
+
+    fun create(str: String, expire: Long = 2592000L): ResponseCreate =
+        doPost("create", QrCodeInfo(ActionName.QR_LIMIT_STR_SCENE, Scene(str = str), expire))
 
     /**
      * 通过ticket换取二维码
@@ -58,7 +64,8 @@ class QrCodeApi(appId: String) : OABaseApi(appId){
      * ticket正确情况下，http 返回码是200，是一张图片，可以直接展示或者下载
      * TICKET已进行UrlEncode
      * */
-    fun qrCodeUrl(ticket: String) = URLEncoder.encode("https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=$ticket","utf-8")
+    fun qrCodeUrl(ticket: String) =
+        URLEncoder.encode("https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=$ticket", "utf-8")
 
 
     /**
@@ -66,8 +73,9 @@ class QrCodeApi(appId: String) : OABaseApi(appId){
      * 主要使用场景： 开发者用于生成二维码的原链接（商品、支付二维码等）太长导致扫码速度和成功率下降，
      * 将原长链接通过此接口转成短链接再生成二维码将大大提升扫码速度和成功率。
      * */
-    fun shortUrl(url: String):String? = doPost4(mapOf("action" to "long2short", "long_url" to url)){
-        "https://api.weixin.qq.com/cgi-bin/shorturl?access_token=${accessToken()}"}["short_url"]?.toString()
+    fun shortUrl(url: String): String? = doPost4(mapOf("action" to "long2short", "long_url" to url)) {
+        "https://api.weixin.qq.com/cgi-bin/shorturl?access_token=${accessToken()}"
+    }["short_url"]?.toString()
 }
 
 /**
@@ -78,8 +86,8 @@ class QrCodeApi(appId: String) : OABaseApi(appId){
  * QR_LIMIT_STR_SCENE为永久的字符串参数值
  * */
 @Serializable
-enum class ActionName{
-    QR_SCENE, QR_STR_SCENE,QR_LIMIT_SCENE,QR_LIMIT_STR_SCENE
+enum class ActionName {
+    QR_SCENE, QR_STR_SCENE, QR_LIMIT_SCENE, QR_LIMIT_STR_SCENE
 }
 
 /**
@@ -88,23 +96,24 @@ enum class ActionName{
  * */
 @Serializable(with = SceneSerializer::class)
 class Scene(
-        @SerialName("scene_id")
-        val id: Int? = null,
-        @SerialName("scene_str")
-        val str: String? = null
+    @SerialName("scene_id")
+    val id: Int? = null,
+    @SerialName("scene_str")
+    val str: String? = null
 )
 
-object SceneSerializer: KSerializer<Scene> {
+object SceneSerializer : KSerializer<Scene> {
     override val descriptor: SerialDescriptor =
-            buildClassSerialDescriptor("Scene") {
-                element<String>("scene_id", isOptional = true)
-                element<String?>("scene_str", isOptional = true)
-            }
+        buildClassSerialDescriptor("Scene") {
+            element<String>("scene_id", isOptional = true)
+            element<String?>("scene_str", isOptional = true)
+        }
+
     override fun serialize(encoder: Encoder, value: Scene) =
-            encoder.encodeStructure(descriptor) {
-                value.id?.let{ encodeIntElement(descriptor, 0, it) }
-                value.str?.let{ encodeStringElement(descriptor, 1, it) }
-            }
+        encoder.encodeStructure(descriptor) {
+            value.id?.let { encodeIntElement(descriptor, 0, it) }
+            value.str?.let { encodeStringElement(descriptor, 1, it) }
+        }
 
     override fun deserialize(decoder: Decoder): Scene {
         TODO("Not implement")
@@ -117,25 +126,25 @@ object SceneSerializer: KSerializer<Scene> {
 @Serializable
 class QrCodeInfo(
     @SerialName("action_name")
-        val actionName: ActionName,
+    val actionName: ActionName,
     val scene: Scene,
     @SerialName("expire_seconds")
-        val expire: Long = 2592000L
+    val expire: Long // = 2592000L
 )
 
 /**
- * @param ticket	获取的二维码ticket，凭借此ticket可以在有效时间内换取二维码。
+ * @param ticket    获取的二维码ticket，凭借此ticket可以在有效时间内换取二维码。
  * @param expire expire_seconds	该二维码有效时间，以秒为单位。 最大不超过2592000（即30天）。
- * @param url	二维码图片解析后的地址，开发者可根据该地址自行生成需要的二维码图片
+ * @param url    二维码图片解析后的地址，开发者可根据该地址自行生成需要的二维码图片
  * */
 @Serializable
 class ResponseCreate(
-        @SerialName("errcode")
-        override val errCode: Int = 0,
-        @SerialName("errmsg")
-        override val errMsg: String? = null,
-        val ticket: String,
-        @SerialName("expire_seconds")
-        val expire: Long,
-        val url: String
-): IBase
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+    val ticket: String,
+    @SerialName("expire_seconds")
+    val expire: Long,
+    val url: String
+) : IBase

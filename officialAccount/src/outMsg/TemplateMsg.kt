@@ -106,6 +106,6 @@ class MiniProgram(
 @Serializable
 class ColoredValue(
         val value: String,
-        val color: String = "#173177",
+        val color: String? = null, //"#173177"
 )
 

@@ -26,7 +26,7 @@ import kotlinx.serialization.Serializable
 /**
  * 管理模板之用
  * */
-class TemplateApi(appId: String) : OABaseApi(appId){
+class TemplateApi(appId: String) : OABaseApi(appId) {
     override val group: String = "template"
 
     /**
@@ -38,19 +38,22 @@ class TemplateApi(appId: String) : OABaseApi(appId){
      * 根据模板库中模板编号，获取自己的模板消息id
      * @param code 模板库中模板的编号，有“TM**”和“OPENTMTM**”等形式
      * */
-    fun getTemplateMsgId(code: String): ResponseTemplateMsgId = doPost("api_add_template", mapOf("template_id_short" to code))
+    fun getTemplateMsgId(code: String): ResponseTemplateMsgId =
+        doPost("api_add_template", mapOf("template_id_short" to code))
 
     /**
-     * @param templateId 	公众帐号下模板消息ID, 参见Template
+     * @param templateId    公众帐号下模板消息ID, 参见Template
      * */
     fun delTemplate(templateId: String): Response = doPost("del_private_template", mapOf("template_id" to templateId))
+
     /**
      * 获取帐号所设置的行业信息
      * */
     fun getIndustry(): ResponseIndustry = doGet("get_industry")
+
     /**
      * 修改账号所属行业
-     * @param industryId1	是	公众号模板消息所属行业编号
+     * @param industryId1    是	公众号模板消息所属行业编号
      * @param industryId2 是	公众号模板消息所属行业编号
      *
     IT科技	互联网/电子商务	1
@@ -95,72 +98,73 @@ class TemplateApi(appId: String) : OABaseApi(appId){
     印刷	印刷	40
     其它	其它	41
      * */
-    fun setIndustry(industryId1: String, industryId2: String): Response = doPost("api_set_industry", mapOf("industry_id1" to industryId1, "industry_id2" to industryId2))
+    fun setIndustry(industryId1: String, industryId2: String): Response =
+        doPost("api_set_industry", mapOf("industry_id1" to industryId1, "industry_id2" to industryId2))
 }
 
 
-
 /**
- * @param primary	是	帐号设置的主营行业
- * @param secondary	是	帐号设置的副营行业
+ * @param primary    是	帐号设置的主营行业
+ * @param secondary    是	帐号设置的副营行业
 }
  * */
 @Serializable
 class ResponseIndustry(
     @SerialName("errcode")
-        override val errCode: Int = 0,
+    override val errCode: Int = 0,
     @SerialName("errmsg")
-        override val errMsg: String? = null,
+    override val errMsg: String? = null,
     @SerialName("primary_industry")
-        val primary: Industry,
+    val primary: Industry,
     @SerialName("secondary_industry")
-        val secondary: Industry
-): IBase
+    val secondary: Industry
+) : IBase
+
 @Serializable
 class Industry(
-        @SerialName("first_class")
-        val first: String,
-        @SerialName("second_class")
-        val second: String? = null
+    @SerialName("first_class")
+    val first: String,
+    @SerialName("second_class")
+    val second: String? = null
 )
 
 @Serializable
 class ResponseTemplateMsgId(
-        @SerialName("errcode")
-        override val errCode: Int = 0,
-        @SerialName("errmsg")
-        override val errMsg: String? = null,
-        @SerialName("template_id")
-        val templateId: String
-): IBase
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+    @SerialName("template_id")
+    val templateId: String
+) : IBase
 
 @Serializable
 class ResponseTemplateList(
-        @SerialName("errcode")
-        override val errCode: Int = 0,
-        @SerialName("errmsg")
-        override val errMsg: String? = null,
-        @SerialName("template_list")
-        val list: List<Template>
-): IBase
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+    @SerialName("template_list")
+    val list: List<Template>
+) : IBase
 
 /**
- * @param templateId	是	模板ID
- * @param title	是	模板标题
- * @param primary	是	模板所属行业的一级行业
- * @param deputy	是	模板所属行业的二级行业
- * @param content	是	模板内容
- * @param example	是	模板示例
+ * @param templateId    是	模板ID
+ * @param title    是	模板标题
+ * @param primary    是	模板所属行业的一级行业
+ * @param deputy    是	模板所属行业的二级行业
+ * @param content    是	模板内容
+ * @param example    是	模板示例
  * */
 @Serializable
 class Template(
-        @SerialName("template_id")
-         val templateId: String,
-        val title: String,
-        @SerialName("primary_industry")
-        val primary: String,
-        @SerialName("deputy_industry")
-        val deputy: String,
-         val content: String,
-        val example: String
+    @SerialName("template_id")
+    val templateId: String,
+    val title: String,
+    @SerialName("primary_industry")
+    val primary: String,
+    @SerialName("deputy_industry")
+    val deputy: String,
+    val content: String,
+    val example: String
 )

@@ -193,6 +193,7 @@ class Promotion(
         val scope: String? = null,
         val type: String? = null,
         val amount: Int,
+        @SerialName("stock_id")
         val stockId: String? = null,
         @SerialName("wechatpay_contribute")
         val contributeWechat: Int? = null,
@@ -243,7 +244,8 @@ class EncryptData(
         val ciphertext: String,
         @SerialName("associated_data")
         val associatedData: String? = null,
-        val algorithm: String = "AEAD_AES_256_GCM"
+        val algorithm: String = "AEAD_AES_256_GCM",
+        val original_type: String = "transaction"
 )
 
 /**
