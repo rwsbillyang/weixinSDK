@@ -38,7 +38,7 @@ object WxPay {
                 config.mchId,
                 config.serialNo,
                 config.apiKeyCertFilePath,
-                config.apiV3Key.toByteArray(),
+                config.apiV3Key,
                 config.notifyHost
         )
         ApiContextMap[config.appId] = ctx
@@ -94,12 +94,12 @@ class WxPayContext(
     val mchId: String,
     val serialNo: String,
     val privateKeyFilePath: String, //apiclient_key.pem
-    val apiV3Key: ByteArray,
+    val apiV3Key: String,
     val notifyHost: String
 ) {
     val signer = PrivateKeySigner(serialNo,PemUtil.loadPrivateKey(FileInputStream(privateKeyFilePath)))
     val credentials = WechatPayCredentials(mchId, signer)
-    val verifier =  AutoUpdateCertificatesVerifier(appId, apiV3Key)
+    val verifier =  AutoUpdateCertificatesVerifier(appId, apiV3Key.toByteArray())
     val validator = WechatPayValidator(verifier)
 }
 

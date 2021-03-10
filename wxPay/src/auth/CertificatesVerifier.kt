@@ -35,7 +35,7 @@ import kotlin.collections.HashMap
  * */
 class CertificatesVerifier(list: List<X509Certificate>) : Verifier {
     private val certificates = HashMap<BigInteger, X509Certificate>()
-    private fun verify(certificate: X509Certificate?, message: ByteArray?, signature: String?): Boolean {
+    private fun verify(certificate: X509Certificate?, message: ByteArray, signature: String): Boolean {
         return try {
             val sign = Signature.getInstance("SHA256withRSA")
             sign.initVerify(certificate)

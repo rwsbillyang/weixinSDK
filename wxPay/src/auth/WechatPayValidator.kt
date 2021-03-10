@@ -19,13 +19,19 @@
 package com.github.rwsbillyang.wxSDK.wxPay.auth
 
 
-import com.github.rwsbillyang.wxSDK.wxPay.util.RequestParameters
+
+import com.github.rwsbillyang.wxSDK.wxPay.WxPay
+import com.github.rwsbillyang.wxSDK.wxPay.util.Parameters
+import com.github.rwsbillyang.wxSDK.wxPay.util.PayNotifyUtil
+
 import io.ktor.client.statement.*
 import io.ktor.client.statement.HttpResponse
+
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 import org.slf4j.LoggerFactory
-import java.io.IOException
 import java.time.DateTimeException
 import java.time.Duration
 import java.time.Instant
@@ -41,146 +47,81 @@ import java.time.Instant
  * https://github.com/wechatpay-apiv3/wechatpay-apache-httpclient
  * */
 class WechatPayValidator(private val verifier: Verifier) : Validator {
-
-    fun validate(parameters: RequestParameters): Boolean {
-        try {
-            validateParameters(parameters)
-            val message = buildMessage(parameters.timestamp!!, parameters.nonce!!, parameters.body!!)
-
-            //微信支付签名使用微信支付平台私钥，证书序列号包含在应答HTTP头部的Wechatpay-Serial
-            //商户上送敏感信息时使用微信支付平台公钥加密，证书序列号包含在请求HTTP头部的Wechatpay-Serial
-            val serial = parameters.serial
-            val signature = parameters.signature
-            if (!verifier.verify(serial!!, message.toByteArray(charset("utf-8")), signature!!)) {
-                throw verifyFail(
-                    "serial=[%s] message=[%s] sign=[%s], request-id=[%s]",
-                    serial, message, signature, parameters.requestId
-                )
-            }
-        } catch (e: IllegalArgumentException) {
-            log.warn("validate RequestParameters, IllegalArgumentException: ${e.message}")
-            return false
-        } catch (e: IOException) {
-            log.warn("validate RequestParameters, IOException: ${e.message}")
-            return false
-        } catch (e: Exception) {
-            log.warn("validate RequestParameters, Exception: ${e.message}")
-            return false
-        }
-        return true
+    companion object{
+        private val log = LoggerFactory.getLogger("WechatPayValidator")
     }
 
-    private fun validateParameters(parameters: RequestParameters) {
-        val requestId = parameters.requestId
-        if (requestId.isNullOrBlank()) {
-            throw parameterError("empty Request-ID")
-        }
+    /**
+     * 向微信发出请求，对得到的回复的验证
+     * */
+    override fun validate(response: HttpResponse): String {
+        //log.info("validate response, response2Parameters...")
+        val parameters = response2Parameters(response)
 
-        if (parameters.serial.isNullOrBlank()) {
-            throw parameterError("empty Wechatpay-Serial, request-id=[%s]", requestId)
+        if(!validateParameters(parameters)) {
+            log.warn("validate HttpResponse fail")
+            throw IllegalArgumentException("has null value")
+        }
+        return parameters.body
+    }
+
+    /**
+     * 验证上面的回复中的参数，或验证微信回调通知中请求头中的参数
+     * */
+    fun validateParameters(parameters: Parameters): Boolean {
+        //log.info("validateParameters=${Json.encodeToString(parameters)}")
+
+        if(parameters.requestId.isNullOrBlank()){
+            log.warn ("empty Request-ID")
+            return false
+        }else if (parameters.serial.isNullOrBlank()) {
+            log.warn ("empty Wechatpay-Serial")
+            return false
         } else if (parameters.signature.isNullOrBlank()) {
-            throw parameterError("empty Wechatpay-Signature, request-id=[%s]", requestId)
+            log.warn("empty Wechatpay-Signature")
+            return false
         } else if (parameters.timestamp.isNullOrBlank()) {
-            throw parameterError("empty Wechatpay-Timestamp, request-id=[%s]", requestId)
+            log.warn("empty Wechatpay-Timestamp")
+            return false
         } else if (parameters.nonce.isNullOrBlank()) {
-            throw parameterError("empty Wechatpay-Nonce, request-id=[%s]", requestId)
+            log.warn("empty Wechatpay-Nonce")
+            return false
         } else {
             val timestamp = parameters.timestamp
             try {
                 val instant = Instant.ofEpochSecond(timestamp.toLong())
                 // 拒绝5分钟之外的应答
                 if (Duration.between(instant, Instant.now()).abs().toMinutes() >= 5) {
-                    throw parameterError(
-                        "timestamp=[%s] expires, request-id=[%s]",
-                        timestamp, requestId
-                    )
+                    log.warn("timestamp=$timestamp expires")
+                    return false
                 }
             } catch (e: DateTimeException) {
-                throw parameterError(
-                    "invalid timestamp=[%s], request-id=[%s]",
-                    timestamp, requestId
-                )
+                log.warn("invalid timestamp=$timestamp")
+                return false
             } catch (e: NumberFormatException) {
-                throw parameterError(
-                    "invalid timestamp=[%s], request-id=[%s]",
-                    timestamp, requestId
-                )
+                log.warn("invalid timestamp=$timestamp")
+                return false
             }
         }
+
+        val message = buildMessage(parameters.timestamp, parameters.nonce, parameters.body)
+        return verifier.verify(parameters.serial, message.toByteArray(charset("utf-8")), parameters.signature)
     }
 
 
-    //微信支付签名使用微信支付平台私钥，证书序列号包含在应答HTTP头部的Wechatpay-Serial
-    //商户上送敏感信息时使用微信支付平台公钥加密，证书序列号包含在请求HTTP头部的Wechatpay-Serial
-    override fun validate(response: HttpResponse): String {
-        val requestId = response.headers["Request-ID"] ?: throw parameterError("empty Request-ID")
-        val serial = response.headers["Wechatpay-Serial"] ?: throw parameterError(
-            "empty Wechatpay-Serial, request-id=[%s]",
-            requestId
-        )
-        val signature = response.headers["Wechatpay-Signature"]
-            ?: throw parameterError("empty Wechatpay-Signature, request-id=[%s]", requestId)
-        val nonce = response.headers["Wechatpay-Nonce"] ?: throw parameterError(
-            "empty Wechatpay-Nonce, request-id=[%s]",
-            requestId
-        )
-        val timestamp = response.headers["Wechatpay-Timestamp"]
-            ?: throw parameterError("empty Wechatpay-Timestamp, request-id=[%s]", requestId)
-
-        try {
-            val instant = Instant.ofEpochSecond(timestamp.toLong())
-            // 拒绝5分钟之外的应答
-            if (Duration.between(instant, Instant.now()).abs().toMinutes() >= 5) {
-                throw parameterError(
-                    "timestamp=[%s] expires, request-id=[%s]",
-                    timestamp, requestId
-                )
-            }
-        } catch (e: DateTimeException) {
-            throw parameterError(
-                "invalid timestamp=[%s], request-id=[%s]",
-                timestamp, requestId
-            )
-        } catch (e: NumberFormatException) {
-            throw parameterError(
-                "invalid timestamp=[%s], request-id=[%s]",
-                timestamp, requestId
-            )
-        }
-
-
+    private fun response2Parameters(response: HttpResponse): Parameters{
         val bodyText = runBlocking { response.readText() }
-        val message = buildMessage(timestamp, nonce, bodyText)
 
-        if (!verifier.verify(serial, message.toByteArray(charset("utf-8")), signature)) {
-            throw verifyFail(
-                "serial=[%s] message=[%s] sign=[%s], request-id=[%s]",
-                serial, message, signature,
-                response.headers["Request-ID"]
-            )
-        }
-        return bodyText
-
+        return Parameters(
+            response.headers["Request-ID"],
+            response.headers["Wechatpay-Serial"],
+            response.headers["Wechatpay-Signature"],
+            response.headers["Wechatpay-Timestamp"],
+            response.headers["Wechatpay-Nonce"],
+            bodyText
+        )
     }
-
 
     private fun buildMessage(timestamp: String, nonce: String, body: String) = "$timestamp\n$nonce\n$body\n"
-
-
-    companion object {
-        private val log = LoggerFactory.getLogger("WechatPayValidator")
-        fun parameterError(msg: String, vararg args: Any?): RuntimeException {
-            var message = msg
-            message = String.format(message, *args)
-            log.warn("parameterError: $message")
-            return IllegalArgumentException("parameter error: $message")
-        }
-
-        fun verifyFail(msg: String, vararg args: Any?): RuntimeException {
-            var message = msg
-            message = String.format(message, *args)
-            log.warn("signature verify fail:: $message")
-            return IllegalArgumentException("signature verify fail: $message")
-        }
-    }
 }
+

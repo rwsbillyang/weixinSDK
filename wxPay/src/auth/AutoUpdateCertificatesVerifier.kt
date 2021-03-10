@@ -158,7 +158,6 @@ class AutoUpdateCertificatesVerifier @JvmOverloads constructor(
         }else{
             verifier = CertificatesVerifier(newCertList)
         }
-
     }
 
 }

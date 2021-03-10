@@ -19,9 +19,8 @@
 package com.github.rwsbillyang.wxSDK.wxPay.auth
 
 
-import io.ktor.client.request.*
+
 import io.ktor.client.statement.*
-import java.io.IOException
 import java.security.cert.X509Certificate
 
 /**
@@ -59,7 +58,6 @@ interface Credentials {
      * 图片上传API，请使用meta对应的JSON报文。
      * 对于下载证书的接口来说，请求报文主体是一个空串。
      * */
-    @Throws(IOException::class)
     fun getToken(method: String, canonicalUrl: String, body: String): String
 }
 

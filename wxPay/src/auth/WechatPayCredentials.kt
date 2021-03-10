@@ -54,14 +54,14 @@ class WechatPayCredentials(var merchantId: String,  var signer: Signer): Credent
         val timestamp = System.currentTimeMillis() / 1000
         val message = buildMessage(method, canonicalUrl, timestamp, nonceStr, body)
 
-        log.info("authorization message=[$message]")
+        //log.info("authorization message=[$message]")
         val signature = signer.sign(message.toByteArray(StandardCharsets.UTF_8))
         val token = ("mchid=\"" + merchantId + "\","
                 + "nonce_str=\"" + nonceStr + "\","
                 + "timestamp=\"" + timestamp + "\","
                 + "serial_no=\"" + signature.certificateSerialNumber + "\","
                 + "signature=\"" + signature.sign + "\"")
-        log.info("message.length=${message.length}")
+        //log.info("message.length=${message.length}")
         return token
     }
 

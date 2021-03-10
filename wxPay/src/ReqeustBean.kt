@@ -81,8 +81,12 @@ class Transaction(
 @Serializable
 class OrderAmount(
         val total: Int,
-        val currency: String? = "CNY"
-)
+        var currency: String? = null
+){
+    init {
+        currency = "CNY"
+    }
+}
 
 /**
  * @param openId 用户标识	openid	string[1,128]	是	用户在直连商户appid下的唯一标识。示例值：oUpF8uMuAJO_M2pxb1Q9zNjWeS6o

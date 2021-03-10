@@ -21,7 +21,14 @@ package com.github.rwsbillyang.wxSDK.wxPay
 import com.github.rwsbillyang.wxSDK.wxPay.util.*
 import io.ktor.application.*
 import io.ktor.request.*
+import io.ktor.response.*
 import io.ktor.routing.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.nio.charset.StandardCharsets
 
 
 fun Routing.wxPayNotify(pathPrefix: String = WxPay.payNotifyUrlPrefix,
@@ -32,21 +39,45 @@ fun Routing.wxPayNotify(pathPrefix: String = WxPay.payNotifyUrlPrefix,
                         ) -> NotifyAnswer) {
     // "/api/sale/wx/payNotify"
     post("$pathPrefix{appId}") {
-        val params = RequestParameters(
-                call.request.headers["Request-ID"],
+
+        //https://pay.weixin.qq.com/wiki/doc/apiv3/wechatpay/wechatpay7_1.shtml
+        // 微信支付的回调，在HTTP头部包含了以下四个HTTP头：
+        //Wechatpay-Timestamp
+        //Wechatpay-Nonce
+        //Wechatpay-Signature
+        //Wechatpay-Serial
+
+        val params = Parameters(
+                "noRequest-ID",
                 call.request.headers["Wechatpay-Serial"],
                 call.request.headers["Wechatpay-Signature"],
                 call.request.headers["Wechatpay-Timestamp"],
                 call.request.headers["Wechatpay-Nonce"],
-                call.receiveText()
+                is2String(call) //直接用all.receiveText()导致签名验证错误
         )
         val appId = call.parameters["appId"]
         requireNotNull(appId) {
             "config wxPay notify wrong? no appId in notify path"
         }
 
-        PayNotifyUtil.handleNotify(appId, params) { payNotifyBean, orderPayDetail, errType ->
+        val answer = PayNotifyUtil.handleNotify(appId, params) { payNotifyBean, orderPayDetail, errType ->
             block(appId, payNotifyBean, orderPayDetail, errType)
         }
+
+        call.respond(answer)
     }
+}
+
+fun is2String(call: ApplicationCall) = runBlocking {
+        withContext(Dispatchers.IO) {
+            call.receive<InputStream>().use {
+                val result = ByteArrayOutputStream()
+                val buffer = ByteArray(1024)
+                var length: Int
+                while (it.read(buffer).also { length = it } != -1) {
+                    result.write(buffer, 0, length)
+                }
+                 result.toString(StandardCharsets.UTF_8.name())
+            }
+        }
 }

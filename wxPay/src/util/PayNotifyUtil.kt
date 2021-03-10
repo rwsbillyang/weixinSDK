@@ -26,7 +26,6 @@ import com.github.rwsbillyang.wxSDK.wxPay.WxPay
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 
 
@@ -35,13 +34,13 @@ import org.slf4j.LoggerFactory
  * 微信支付会在回调的HTTP头部中包括回调报文的签名。商户必须验证回调的签名，以确保回调是由微信支付发送。
  * */
 @Serializable
-class RequestParameters(
+data class Parameters(
     val requestId: String?,
     val serial: String?,
     val signature: String?,
     val timestamp: String?,
     val nonce: String?,
-    val body: String?
+    val body: String
 )
 
 /**
@@ -73,9 +72,12 @@ class PayNotifyBean(
  * */
 @Serializable
 class NotifyAnswer(
-    val code: String = "SUCCESS",
+    val code: String, // = "SUCCESS" //encodeDefaults=false
     val message: String? = null
 ){
+    companion object{
+        fun success() = NotifyAnswer("SUCCESS")
+    }
     fun isSuccess() = code == "SUCCESS"
 }
 
@@ -101,30 +103,30 @@ object PayNotifyUtil {
      * */
     fun handleNotify(
         appId: String,
-        parameters: RequestParameters,
+        parameters: Parameters,
         block: (
             notifyBean: PayNotifyBean?,
             orderPayDetail: OrderPayDetail?,
             errType: WxPayNotifyErrorType
         ) -> NotifyAnswer
     ):NotifyAnswer {
-        val notifyBean = parameters.body?.let { Json.decodeFromString<PayNotifyBean>(it) }
-        if(notifyBean == null){
-            log.warn("Json.decodeFromString fail? RequestParameters=$RequestParameters")
-            return block(null, null, WxPayNotifyErrorType.EmptyRequestBody)
-        }
         val ctx = WxPay.ApiContextMap[appId]
         if(ctx == null){
             log.warn("no wxPay config for appId=$appId")
             return block(null, null, WxPayNotifyErrorType.EmptyRequestBody)
         }
-        if (!ctx.validator.validate(parameters)) {
-            log.warn("fake notify? body: RequestParameters=$RequestParameters")
+
+        val notifyBean =  KtorHttpClient.apiJson.decodeFromString<PayNotifyBean>(parameters.body)
+
+        if (!ctx.validator.validateParameters(parameters)) {
+            // fix validateParameters fail
+            //log.warn("fix validateParameters fail, appId=$appId, apiV3Key=${ctx.apiV3Key}, serial=${parameters.serial}, signature=${parameters.signature}")
+            log.warn("validateParameters fail: ${parameters.timestamp}\n${parameters.nonce}\n${parameters.body}\n")
             return block(notifyBean, null, WxPayNotifyErrorType.ValidateFail)
         }
 
         return if (notifyBean.type == "TRANSACTION.SUCCESS") {
-            val decryptor = AesUtil(ctx.apiV3Key)
+            val decryptor = AesUtil(ctx.apiV3Key.toByteArray())
             val res = notifyBean.resource
             val json = decryptor.decryptToString(
                 res.associatedData?.toByteArray(),
@@ -134,7 +136,7 @@ object PayNotifyUtil {
             val orderPayDetail = KtorHttpClient.apiJson.decodeFromString<OrderPayDetail>(json)
             block(notifyBean, orderPayDetail, WxPayNotifyErrorType.SUCCESS)
         } else {
-            log.warn("notifyBean.type is not TRANSACTION.SUCCESS, RequestParameters=$RequestParameters")
+            log.warn("notifyBean.type is not TRANSACTION.SUCCESS, RequestParameters=$Parameters")
             block(notifyBean, null, WxPayNotifyErrorType.TransactionNotSuccess)
         }
     }
