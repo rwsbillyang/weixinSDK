@@ -20,7 +20,7 @@ package com.github.rwsbillyang.wxSDK
 
 
 import io.ktor.client.*
-import io.ktor.client.engine.apache.*
+import io.ktor.client.engine.okhttp.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
@@ -38,15 +38,15 @@ import java.io.File
 import java.io.FileInputStream
 
 
-open class ClientWrapper{
-    companion object{
-         val apiJson = Json {
-            encodeDefaults = true
+open class KtorHttpClient {
+    companion object {
+        val apiJson = Json {
+            encodeDefaults = false
             useArrayPolymorphism = false
             ignoreUnknownKeys = true
         }
 
-         val DefaultClient = HttpClient(Apache) {
+        val DefaultClient = HttpClient(OkHttp) {
             install(HttpTimeout) {}
             install(JsonFeature) {
                 serializer = KotlinxSerializer(apiJson)
@@ -58,41 +58,52 @@ open class ClientWrapper{
                 logger = Logger.DEFAULT
                 level = LogLevel.INFO
             }
-             defaultRequest { // this: HttpRequestBuilder ->
-                 contentType(ContentType.Application.Json)
-             }
+            defaultRequest { // this: HttpRequestBuilder ->
+                contentType(ContentType.Application.Json)
+            }
+
+            //https://ktor.io/docs/http-client-engines.html#jvm-and-android
+            engine {
+                config { // this: OkHttpClient.Builder ->
+                    followRedirects(true)
+                }
+
+                //preconfigured = okHttpClientInstance
+            }
         }
     }
+
     /**
-     * 多数情况下使用默认的client即可，特殊情况如wxPay，需要使用自己的client
+     * 多数情况下使用默认的client即可,亦可定制自己的client
      * */
     open val client = DefaultClient
 
     inline fun <reified R> doGetByUrl(url: String): R = runBlocking {
         withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
-            client.get<R>(url)
+            client.get(url)
         }
     }
 
     /**
      * 返回R泛型类型结果
      * */
-    inline fun <T, reified R> doPostByUrl(url: String, data: T? = null):R = runBlocking {
+    inline fun <T, reified R> doPostByUrl(url: String, data: T? = null): R = runBlocking {
         withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
-            client.post<R>(url) {
+            client.post(url) {
                 data?.let { body = data }
             }
         }
     }
 }
-abstract class Api: ClientWrapper(){
+
+abstract class Api : KtorHttpClient() {
     abstract fun url(name: String, requestParams: Map<String, String?>?, needAccessToken: Boolean = true): String
 
     /**
      * 返回R泛型类型结果
      * */
-    inline fun <reified R> doGet(name: String, parameters: Map<String, String?>? = null): R
-            = doGetByUrl(url(name, parameters))
+    inline fun <reified R> doGet(name: String, parameters: Map<String, String?>? = null): R =
+        doGetByUrl(url(name, parameters))
 
     /**
      * 返回Map<String, Any?>类型结果
@@ -100,7 +111,7 @@ abstract class Api: ClientWrapper(){
     inline fun doGet(crossinline urlFunc: () -> String): Map<String, Any?> = runBlocking {
         val url = urlFunc()
         withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
-            client.get<Map<String, Any?>>(url)
+            client.get(url)
         }
     }
 
@@ -108,31 +119,28 @@ abstract class Api: ClientWrapper(){
      * 返回R泛型类型结果
      * urlFunc 提供url的函数，如 "$base/corp/get_join_qrcode?access_token=ACCESS_TOKEN&size_type=$sizeType"
      * */
-    inline fun <reified R> doGet2(crossinline urlFunc: () -> String): R
-            = doGetByUrl(urlFunc())
+    inline fun <reified R> doGet2(crossinline urlFunc: () -> String): R = doGetByUrl(urlFunc())
 
     /**
      * 返回Map<String, Any?>类型结果
      * */
     fun doGet3(name: String, parameters: Map<String, String?>? = null): Map<String, Any?> = runBlocking {
         withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
-            client.get<Map<String, Any?>>(url(name, parameters))
+            client.get(url(name, parameters))
         }
     }
 
 
+    /**
+     * 返回R泛型类型结果
+     * */
+    inline fun <T, reified R> doPost(name: String, data: T?, parameters: Map<String, String?>? = null): R =
+        doPostByUrl(url(name, parameters), data)
 
     /**
      * 返回R泛型类型结果
      * */
-    inline fun <T, reified R> doPost(name: String, data: T?, parameters: Map<String, String?>? = null):R
-            = doPostByUrl(url(name, parameters), data)
-
-    /**
-     * 返回R泛型类型结果
-     * */
-    inline fun <T, reified R> doPost(data: T?, crossinline urlFunc: () -> String):R
-            = doPostByUrl(urlFunc(), data)
+    inline fun <T, reified R> doPost(data: T?, crossinline urlFunc: () -> String): R = doPostByUrl(urlFunc(), data)
 
 
     /**
@@ -145,25 +153,28 @@ abstract class Api: ClientWrapper(){
             }
         }
     }
+
     /**
      * 返回Map<String, Any?>类型结果
      * */
-    fun <T> doPost4(data: T?, urlFunc: () -> String):Map<String, Any?> = runBlocking {
+    fun <T> doPost4(data: T?, urlFunc: () -> String): Map<String, Any?> = runBlocking {
         withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             val url = urlFunc()
-            client.post<Map<String, Any?>>(url) {
-                data?.let{body = data}
+            client.post(url) {
+                data?.let { body = data }
             }
         }
     }
 
 
-    inline fun <reified R> doUpload(name: String, filePath: String,
-                                    parameters: Map<String, String?>? = null,
-                                    formData: Map<String, String>? = null) :R= runBlocking {
+    inline fun <reified R> doUpload(
+        name: String, filePath: String,
+        parameters: Map<String, String?>? = null,
+        formData: Map<String, String>? = null
+    ): R = runBlocking {
         //append("media",filePath, ContentType.Video, file.length())
         withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
-            client.post<R>(url(name, parameters)) {
+            client.post(url(name, parameters)) {
                 val file = File(filePath)
                 body = MultiPartFormDataContent(formData {
                     formData?.forEach { append(it.key, it.value) }
@@ -176,7 +187,12 @@ abstract class Api: ClientWrapper(){
         }
     }
 
-    fun  doUpload3(name: String, filePath: String, parameters: Map<String, String?>? = null,formData: Map<String, String>? = null) = runBlocking {
+    fun doUpload3(
+        name: String,
+        filePath: String,
+        parameters: Map<String, String?>? = null,
+        formData: Map<String, String>? = null
+    ) = runBlocking {
         withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
             client.post<Map<String, Any?>>(url(name, parameters)) {
                 val file = File(filePath)
