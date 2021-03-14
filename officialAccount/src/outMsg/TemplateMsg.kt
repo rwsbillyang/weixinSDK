@@ -81,7 +81,7 @@ class ResponseSendTemplateMsg(
         @SerialName("errmsg")
         override val errMsg: String? = null,
         @SerialName("msgid")
-        val msgId: Long
+        val msgId: Long? = null
 ) : IBase
 
 

@@ -20,7 +20,7 @@ package com.github.rwsbillyang.wxSDK
 
 
 import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
+import io.ktor.client.engine.cio.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
@@ -46,7 +46,7 @@ open class KtorHttpClient {
             ignoreUnknownKeys = true
         }
 
-        val DefaultClient = HttpClient(OkHttp) {
+        val DefaultClient = HttpClient(CIO) {
             install(HttpTimeout) {}
             install(JsonFeature) {
                 serializer = KotlinxSerializer(apiJson)
@@ -64,11 +64,35 @@ open class KtorHttpClient {
 
             //https://ktor.io/docs/http-client-engines.html#jvm-and-android
             engine {
-                config { // this: OkHttpClient.Builder ->
-                    followRedirects(true)
-                }
+                maxConnectionsCount = 20480
 
-                //preconfigured = okHttpClientInstance
+
+                endpoint {
+                    /**
+                     * Maximum number of requests for a specific endpoint route.
+                     */
+                    maxConnectionsPerRoute = 10240
+
+                    /**
+                     * Max size of scheduled requests per connection(pipeline queue size).
+                     */
+                    pipelineMaxSize = 20
+
+                    /**
+                     * Max number of milliseconds to keep idle connection alive.
+                     */
+                    keepAliveTime = 5000
+
+                    /**
+                     * Number of milliseconds to wait trying to connect to the server.
+                     */
+                    connectTimeout = 8000
+
+                    /**
+                     * Maximum number of attempts for retrying a connection.
+                     */
+                    connectAttempts = 3
+                }
             }
         }
     }
