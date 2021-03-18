@@ -182,7 +182,7 @@ class NewsItem(
         @SerialName("media_id")
         val mediaId: String,
         @SerialName("update_time")
-        val updateTime: String? = null,
+        val updateTime: Long? = null,
         val content: ArticleContent
 )
 @Serializable
@@ -242,7 +242,7 @@ class MediaItem(
         @SerialName("media_id")
         val mediaId: String,
         @SerialName("update_time")
-        val updateTime: String? = null,
+        val updateTime: Long? = null,
         val url: String? = null,
         val name: String
 )

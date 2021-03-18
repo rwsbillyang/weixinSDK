@@ -46,6 +46,8 @@ open class KtorHttpClient {
             ignoreUnknownKeys = true
         }
 
+        var logLevel = LogLevel.INFO //使用者可直接配置
+
         val DefaultClient = HttpClient(CIO) {
             install(HttpTimeout) {}
             install(JsonFeature) {
@@ -54,9 +56,10 @@ open class KtorHttpClient {
                 //OAuthApi.getAccessToken 返回的是：Content-Type: text/plain
                 accept(ContentType.Text.Any) //https://github.com/ktorio/ktor/issues/772
             }
+
             install(Logging) {
                 logger = Logger.DEFAULT
-                level = LogLevel.INFO
+                level = logLevel
             }
             defaultRequest { // this: HttpRequestBuilder ->
                 contentType(ContentType.Application.Json)
@@ -65,7 +68,6 @@ open class KtorHttpClient {
             //https://ktor.io/docs/http-client-engines.html#jvm-and-android
             engine {
                 maxConnectionsCount = 20480
-
 
                 endpoint {
                     /**
