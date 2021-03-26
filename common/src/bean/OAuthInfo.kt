@@ -33,6 +33,7 @@ class OAuthInfo(
         val redirectUri: String,
         val scope: String,
         val state: String,
+        val needUseInfo: Boolean,
         var authorizeUrl: String? = null
 ){
     init {

@@ -182,6 +182,7 @@ fun Routing.oAuthApi(
     get(oauthInfoPath){
         val appId = call.request.queryParameters["appId"]?:OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
         val owner = call.request.queryParameters["owner"] //系统用户注册id，传递该参数，目的在于notify1中使用它确定是否获取用户信息，然后通知前端跳转
+       val openId =  call.request.queryParameters["openId"]//若已经登录过只有openId，若再需获取用户信息时，上传openId即可，有可能直接进入第二步
         if(appId.isNullOrBlank())
         {
             log.warn("no appId in query parameters for oauth and no config oa")
@@ -189,10 +190,16 @@ fun Routing.oAuthApi(
         }else{
             val host = call.request.queryParameters["host"]
             val url = host ?: (call.request.origin.scheme +"://"+ host)
-            //第一次只获取openId，不获取用户信息
-            val oAuthInfo = OAuthApi(appId).prepareOAuthInfo("$url$notifyPath1/$appId", false)
-            if(owner != null) stateCache.put(oAuthInfo.state,owner)
-            call.respond(oAuthInfo)
+            if(openId.isNullOrBlank()){
+                //第一次只获取openId，不获取用户信息
+                val oAuthInfo = OAuthApi(appId).prepareOAuthInfo("$url$notifyPath1/$appId", false)
+                if(owner != null) stateCache.put(oAuthInfo.state,owner)
+                call.respond(oAuthInfo)
+            }else{
+                val isNeedUserInfo = needUserInfo?.let { needUserInfo(owner, openId) }?:OfficialAccount.defaultGetUserInfo
+                val oAuthInfo = OAuthApi(appId).prepareOAuthInfo("$url$notifyPath2/$appId", isNeedUserInfo)
+                call.respond(oAuthInfo)
+            }
         }
     }
     /**
@@ -222,13 +229,20 @@ fun Routing.oAuthApi(
             }
             val oauthAi = OAuthApi(appId)
             val res = oauthAi.getAccessToken(code)
-            if(res.isOK()  && res.openId != null){
-                val isNeedUserInfo = needUserInfo?.let { needUserInfo(owner, res.openId) }?:OfficialAccount.defaultGetUserInfo
-                if(!isNeedUserInfo){
-                    stateCache.invalidate(state)
+            if(res.isOK()){
+                if(res.openId.isNullOrBlank())
+                {
+                    log.warn("openid is blank: openid=${res.openId}")
+                   // "&code=KO&msg=微信出错了，请重新打开"
+                    "&code=OK&needUserInfo=1"
+                }else{
+                    val isNeedUserInfo = needUserInfo?.let { needUserInfo(owner, res.openId) }?:OfficialAccount.defaultGetUserInfo
+                    if(!isNeedUserInfo){
+                        stateCache.invalidate(state)
+                    }
+                    val isNeedUserInfoInt = if(isNeedUserInfo) 1 else 0
+                    "&code=OK&openId=${res.openId}&needUserInfo=$isNeedUserInfoInt" //通知前端是否跳转到第二步获取userInfo
                 }
-                val isNeedUserInfoInt = if(isNeedUserInfo) 1 else 0
-                "&code=OK&openId=${res.openId}&needUserInfo=$isNeedUserInfoInt"
             }else{
                 "&code=KO&msg=${res.errMsg}"
             }
@@ -247,11 +261,11 @@ fun Routing.oAuthApi(
         if(appId== null || code.isNullOrBlank() || state.isNullOrBlank()){
             url += "&code=KO&msg=null_appId_or_code_or_state"
         }else{
-            val owner = stateCache.getIfPresent(state)
+            //val owner = stateCache.getIfPresent(state)
             stateCache.invalidate(state)
-            if(owner == null){
-                log.warn("state=$state for owner is not present in cache, ip=${call.request.origin.host},ua=${call.request.userAgent()}")
-            }
+//            if(owner == null){
+//                log.warn("step2: state=$state for owner is not present in cache, ip=${call.request.origin.host},ua=${call.request.userAgent()}")
+//            }
 
             val oauthAi = OAuthApi(appId)
             val res = oauthAi.getAccessToken(code)

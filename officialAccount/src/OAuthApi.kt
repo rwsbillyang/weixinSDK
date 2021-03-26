@@ -46,7 +46,7 @@ class OAuthApi(appId: String) : OABaseApi(appId){
      * */
     fun prepareOAuthInfo(redirectUri: String, needUserInfo: Boolean = false): OAuthInfo {
         val state = RandomStringUtils.randomAlphanumeric(16)
-        return OAuthInfo(appId, URLEncoder.encode(redirectUri,"UTF-8") ,if(needUserInfo) "snsapi_userinfo" else "snsapi_base",state)
+        return OAuthInfo(appId, URLEncoder.encode(redirectUri,"UTF-8") ,if(needUserInfo) "snsapi_userinfo" else "snsapi_base",state,needUserInfo)
     }
 
     /**
