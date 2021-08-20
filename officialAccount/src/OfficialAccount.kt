@@ -149,7 +149,7 @@ class ApiContext(
 ) {
     var accessToken: ITimelyRefreshValue
     var ticket: ITimelyRefreshValue
-    var wxBizMsgCrypt = encodingAESKey?.let { WXBizMsgCrypt(token, it, appId) }
+    var wxBizMsgCrypt = encodingAESKey?.let { WXBizMsgCrypt(token, it) }
     var msgHub: OAMsgHub
 
     init {
@@ -202,7 +202,7 @@ class ApiContext(
         }else msgHub.eventHandler
 
         if(dirty1) {
-            wxBizMsgCrypt = encodingAESKey?.let { WXBizMsgCrypt(token, it, appId) }
+            wxBizMsgCrypt = encodingAESKey?.let { WXBizMsgCrypt(token, it) }
             dirty3 = true
         }
         if(dirty3){

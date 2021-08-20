@@ -8,28 +8,28 @@ import javax.xml.stream.XMLEventReader
 
 interface IWorkEventHandler: IDispatcher {
     fun onDefault(e: WxBaseEvent): ReBaseMSg?
-    fun onWorkSubscribeEvent(e: WorkSubscribeEvent): ReBaseMSg?
-    fun onWorkUnsubscribeEvent(e: WorkUnsubscribeEvent): ReBaseMSg?
-    fun onWorkLocationEvent(e: WorkLocationEvent): ReBaseMSg?
-    fun onWorkMenuClickEvent(e: WorkMenuClickEvent): ReBaseMSg?
-    fun onWorkMenuViewEvent(e: WorkMenuViewEvent): ReBaseMSg?
-    fun onWorkMenuScanCodePushEvent(e: WorkMenuScanCodePushEvent): ReBaseMSg?
-    fun onWorkMenuScanCodeWaitEvent(e: WorkMenuScanCodeWaitEvent): ReBaseMSg?
-    fun onWorkMenuPhotoEvent(e: WorkMenuPhotoEvent): ReBaseMSg?
-    fun onWorkMenuPhotoOrAlbumEvent(e: WorkMenuPhotoOrAlbumEvent): ReBaseMSg?
-    fun onWorkMenuWorkAlbumEvent(e: WorkMenuWorkAlbumEvent): ReBaseMSg?
-    fun onWorkMenuLocationEvent(e: WorkMenuLocationEvent): ReBaseMSg?
-    fun onWorkEnterAgent(e: WorkEnterAgent): ReBaseMSg?
-    fun onWorkBatchJobResultEvent(e: WorkBatchJobResultEvent): ReBaseMSg?
-    fun onWorkApprovalStatusChangeEvent(e: WorkApprovalStatusChangeEvent): ReBaseMSg?
-    fun onWorkTaskCardClickEvent(e: WorkTaskCardClickEvent): ReBaseMSg?
-    fun onWorkPartyCreateEvent(e: WorkPartyCreateEvent): ReBaseMSg?
-    fun onWorkPartyUpdateEvent(e: WorkPartyUpdateEvent): ReBaseMSg?
-    fun onWorkPartyDelEvent(e: WorkPartyDelEvent): ReBaseMSg?
-    fun onWorkUserUpdateEvent(e: WorkUserUpdateEvent): ReBaseMSg?
-    fun onWorkUserCreateEvent(e: WorkUserCreateEvent): ReBaseMSg?
-    fun onWorkUserDelEvent(e: WorkUserDelEvent): ReBaseMSg?
-    fun onWorkTagUpdateEvent(e: WorkTagUpdateEvent): ReBaseMSg?
+    fun onSubscribeEvent(e: WorkSubscribeEvent): ReBaseMSg?
+    fun onUnsubscribeEvent(e: WorkUnsubscribeEvent): ReBaseMSg?
+    fun onLocationEvent(e: WorkLocationEvent): ReBaseMSg?
+    fun onMenuClickEvent(e: WorkMenuClickEvent): ReBaseMSg?
+    fun onMenuViewEvent(e: WorkMenuViewEvent): ReBaseMSg?
+    fun onMenuScanCodePushEvent(e: WorkMenuScanCodePushEvent): ReBaseMSg?
+    fun onMenuScanCodeWaitEvent(e: WorkMenuScanCodeWaitEvent): ReBaseMSg?
+    fun onMenuPhotoEvent(e: WorkMenuPhotoEvent): ReBaseMSg?
+    fun onMenuPhotoOrAlbumEvent(e: WorkMenuPhotoOrAlbumEvent): ReBaseMSg?
+    fun onMenuWorkAlbumEvent(e: WorkMenuWorkAlbumEvent): ReBaseMSg?
+    fun onMenuLocationEvent(e: WorkMenuLocationEvent): ReBaseMSg?
+    fun onEnterAgent(e: WorkEnterAgent): ReBaseMSg?
+    fun onBatchJobResultEvent(e: WorkBatchJobResultEvent): ReBaseMSg?
+    fun onApprovalStatusChangeEvent(e: WorkApprovalStatusChangeEvent): ReBaseMSg?
+    fun onTaskCardClickEvent(e: WorkTaskCardClickEvent): ReBaseMSg?
+    fun onPartyCreateEvent(e: WorkPartyCreateEvent): ReBaseMSg?
+    fun onPartyUpdateEvent(e: WorkPartyUpdateEvent): ReBaseMSg?
+    fun onPartyDelEvent(e: WorkPartyDelEvent): ReBaseMSg?
+    fun onUserUpdateEvent(e: WorkUserUpdateEvent): ReBaseMSg?
+    fun onUserCreateEvent(e: WorkUserCreateEvent): ReBaseMSg?
+    fun onUserDelEvent(e: WorkUserDelEvent): ReBaseMSg?
+    fun onTagUpdateEvent(e: WorkTagUpdateEvent): ReBaseMSg?
 }
 
 open class DefaultWorkEventHandler : IWorkEventHandler{
@@ -37,48 +37,48 @@ open class DefaultWorkEventHandler : IWorkEventHandler{
         return null
     }
 
-    override fun onWorkSubscribeEvent(e: WorkSubscribeEvent) = onDefault(e)
+    override fun onSubscribeEvent(e: WorkSubscribeEvent) = onDefault(e)
 
-    override fun onWorkUnsubscribeEvent(e: WorkUnsubscribeEvent) = onDefault(e)
+    override fun onUnsubscribeEvent(e: WorkUnsubscribeEvent) = onDefault(e)
 
-    override fun onWorkLocationEvent(e: WorkLocationEvent) = onDefault(e)
+    override fun onLocationEvent(e: WorkLocationEvent) = onDefault(e)
 
-    override fun onWorkMenuClickEvent(e: WorkMenuClickEvent) = onDefault(e)
+    override fun onMenuClickEvent(e: WorkMenuClickEvent) = onDefault(e)
 
-    override fun onWorkMenuViewEvent(e: WorkMenuViewEvent) = onDefault(e)
+    override fun onMenuViewEvent(e: WorkMenuViewEvent) = onDefault(e)
 
-    override fun onWorkMenuScanCodePushEvent(e: WorkMenuScanCodePushEvent) = onDefault(e)
+    override fun onMenuScanCodePushEvent(e: WorkMenuScanCodePushEvent) = onDefault(e)
 
-    override fun onWorkMenuScanCodeWaitEvent(e: WorkMenuScanCodeWaitEvent) = onDefault(e)
+    override fun onMenuScanCodeWaitEvent(e: WorkMenuScanCodeWaitEvent) = onDefault(e)
 
-    override fun onWorkMenuPhotoEvent(e: WorkMenuPhotoEvent) = onDefault(e)
+    override fun onMenuPhotoEvent(e: WorkMenuPhotoEvent) = onDefault(e)
 
-    override fun onWorkMenuPhotoOrAlbumEvent(e: WorkMenuPhotoOrAlbumEvent) = onDefault(e)
+    override fun onMenuPhotoOrAlbumEvent(e: WorkMenuPhotoOrAlbumEvent) = onDefault(e)
 
-    override fun onWorkMenuWorkAlbumEvent(e: WorkMenuWorkAlbumEvent) = onDefault(e)
+    override fun onMenuWorkAlbumEvent(e: WorkMenuWorkAlbumEvent) = onDefault(e)
 
-    override fun onWorkMenuLocationEvent(e: WorkMenuLocationEvent) = onDefault(e)
+    override fun onMenuLocationEvent(e: WorkMenuLocationEvent) = onDefault(e)
 
-    override fun onWorkEnterAgent(e: WorkEnterAgent) = onDefault(e)
+    override fun onEnterAgent(e: WorkEnterAgent) = onDefault(e)
 
-    override fun onWorkBatchJobResultEvent(e: WorkBatchJobResultEvent) = onDefault(e)
+    override fun onBatchJobResultEvent(e: WorkBatchJobResultEvent) = onDefault(e)
 
-    override fun onWorkApprovalStatusChangeEvent(e: WorkApprovalStatusChangeEvent) = onDefault(e)
+    override fun onApprovalStatusChangeEvent(e: WorkApprovalStatusChangeEvent) = onDefault(e)
 
-    override fun onWorkTaskCardClickEvent(e: WorkTaskCardClickEvent) = onDefault(e)
+    override fun onTaskCardClickEvent(e: WorkTaskCardClickEvent) = onDefault(e)
 
-    override fun onWorkPartyCreateEvent(e: WorkPartyCreateEvent) = onDefault(e)
-    override fun onWorkPartyUpdateEvent(e: WorkPartyUpdateEvent) = onDefault(e)
+    override fun onPartyCreateEvent(e: WorkPartyCreateEvent) = onDefault(e)
+    override fun onPartyUpdateEvent(e: WorkPartyUpdateEvent) = onDefault(e)
 
-    override fun onWorkPartyDelEvent(e: WorkPartyDelEvent) = onDefault(e)
+    override fun onPartyDelEvent(e: WorkPartyDelEvent) = onDefault(e)
 
-    override fun onWorkUserUpdateEvent(e: WorkUserUpdateEvent) = onDefault(e)
+    override fun onUserUpdateEvent(e: WorkUserUpdateEvent) = onDefault(e)
 
-    override fun onWorkUserCreateEvent(e: WorkUserCreateEvent) = onDefault(e)
+    override fun onUserCreateEvent(e: WorkUserCreateEvent) = onDefault(e)
 
-    override fun onWorkUserDelEvent(e: WorkUserDelEvent) = onDefault(e)
+    override fun onUserDelEvent(e: WorkUserDelEvent) = onDefault(e)
 
-    override fun onWorkTagUpdateEvent(e: WorkTagUpdateEvent) = onDefault(e)
+    override fun onTagUpdateEvent(e: WorkTagUpdateEvent) = onDefault(e)
     /**
      * 未知类型的msg或event可以继续进行读取其额外信息，从而可以自定义分发和处理
      * 返回null表示由onDefault继续处理

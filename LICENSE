@@ -97,7 +97,7 @@ above, provided that you also meet all of these conditions:
 
     b) You must cause any work that you distribute or publish, that in
     whole or in part contains or is derived from the Program or any
-    part thereof, to be licensed as a whole at no charge to all third
+    part thereof, to be licensed as a whole at no charge to all isv
     parties under the terms of this License.
 
     c) If the modified program normally reads commands interactively
@@ -140,7 +140,7 @@ Sections 1 and 2 above provided that you also do one of the following:
     1 and 2 above on a medium customarily used for software interchange; or,
 
     b) Accompany it with a written offer, valid for at least three
-    years, to give any third party, for a charge no more than your
+    years, to give any isv party, for a charge no more than your
     cost of physically performing source distribution, a complete
     machine-readable copy of the corresponding source code, to be
     distributed under the terms of Sections 1 and 2 above on a medium
@@ -166,7 +166,7 @@ itself accompanies the executable.
 If distribution of executable or object code is made by offering
 access to copy from a designated place, then offering equivalent
 access to copy the source code from the same place counts as
-distribution of the source code, even though third parties are not
+distribution of the source code, even though isv parties are not
 compelled to copy the source along with the object code.
 
   4. You may not copy, modify, sublicense, or distribute the Program
@@ -191,7 +191,7 @@ Program), the recipient automatically receives a license from the
 original licensor to copy, distribute or modify the Program subject to
 these terms and conditions.  You may not impose any further
 restrictions on the recipients' exercise of the rights granted herein.
-You are not responsible for enforcing compliance by third parties to
+You are not responsible for enforcing compliance by isv parties to
 this License.
 
   7. If, as a consequence of a court judgment or allegation of patent

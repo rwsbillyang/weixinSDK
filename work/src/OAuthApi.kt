@@ -25,7 +25,14 @@ import kotlinx.serialization.Serializable
 import org.apache.commons.lang3.RandomStringUtils
 import java.net.URLEncoder
 
-class OAuthApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
+class OAuthApi(corpId: String) : WorkBaseApi(corpId){
+    constructor(suiteId: String, corpId: String) : this(corpId) {
+        this.suiteId = suiteId
+    }
+    constructor(corpId: String, agentId: Int) : this(corpId) {
+        this.agentId = agentId
+    }
+
     override val group = "user"
     /**
      * 第一步：用户同意授权，获取code
@@ -40,7 +47,7 @@ class OAuthApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
     fun prepareOAuthInfo(redirectUri: String, needUserInfo: Boolean = false): OAuthInfo {
         val state = RandomStringUtils.randomAlphanumeric(16)
         return OAuthInfo(corpId, URLEncoder.encode(redirectUri,"UTF-8") ,
-            "snsapi_base",state)
+            "snsapi_base",state,needUserInfo)
     }
     /**
      * 获取访问用户身份

@@ -4,6 +4,9 @@ import com.github.rwsbillyang.wxSDK.msg.*
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import javax.xml.stream.XMLEventReader
 
+/**
+ * xml消息事件通知的解包、解析、分发处理
+ * */
 class OAMsgHub(
          val msgHandler: IOAMsgHandler,
          val eventHandler: IOAEventHandler,

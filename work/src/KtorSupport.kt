@@ -34,16 +34,19 @@ import java.util.concurrent.TimeUnit
 
 
 
-
-fun Routing.agentMsgApi(corpId: String, agentId: Int) {
+/**
+ * 接收企业微信消息和事件, 然后分发处理。
+ * 只适用于企业内部部署时使用
+ * */
+fun Routing.dispatchAgentMsgApi(corpId: String, agentId: Int) {
     val log = LoggerFactory.getLogger("agentMsgApi")
 
-    val workBaseApi = Work.ApiContextMap[corpId]
-    if(workBaseApi == null){
+    val corpApiCtx = Work.ApiContextMap[corpId]
+    if(corpApiCtx == null){
         log.warn("not init WorkApiContext for: corpId=$corpId")
         return
     }
-    val ctx = workBaseApi.agentMap[agentId]
+    val ctx = corpApiCtx.agentMap[agentId]
     if(ctx == null){
         log.warn("not add agentId=$agentId,corpId=$corpId. please call Work.add(...) first")
         return
@@ -68,14 +71,6 @@ fun Routing.agentMsgApi(corpId: String, agentId: Int) {
          * 开启接收消息模式后，用户在应用里发送的消息会推送给企业后台。此外，还可配置地理位置上报等事件消息，当事件触发时企业微信会把相应的数据推送到企业的后台。
          * 企业后台接收到消息后，可在回复该消息请求的响应包里带上新消息，企业微信会将该被动回复消息推送给用户。
          *
-         * 设置接收消息的参数
-         * 在企业的管理端后台，进入需要设置接收消息的目标应用，点击“接收消息”的“设置API接收”按钮，进入配置页面。
-
-         * 要求填写应用的URL、Token、EncodingAESKey三个参数
-
-         * URL是企业后台接收企业微信推送请求的访问协议和地址，支持http或https协议（为了提高安全性，建议使用https）。
-         * Token可由企业任意填写，用于生成签名。
-         * EncodingAESKey用于消息体的加密。
          *
          * 验证URL有效性
          * 当点击“保存”提交以上信息时，企业微信会发送一条验证消息到填写的URL，发送方法为GET。
@@ -118,7 +113,8 @@ fun Routing.agentMsgApi(corpId: String, agentId: Int) {
                 call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
             } else {
                 try{
-                    val str = ctx.wxBizMsgCrypt!!.verifyUrl(signature,timestamp,nonce,echostr)
+                    //第一个参数为null，不进行corpId的校验，公众号则校验，所有post的消息都校验
+                    val str = ctx.wxBizMsgCrypt!!.verifyUrl(null, signature,timestamp,nonce,echostr)
                     call.respondText(str, ContentType.Text.Plain, HttpStatusCode.OK)
                 }catch (e: AesException){
                     log.warn("AesException: ${e.message}")
@@ -128,6 +124,8 @@ fun Routing.agentMsgApi(corpId: String, agentId: Int) {
         }
 
         /**
+         * 接收分发处理各类消息、事件、回调通知等
+         *
          * 开启接收消息模式后，企业微信会将消息发送给企业填写的URL，企业后台需要做正确的响应。
          *
          * https://work.weixin.qq.com/api/doc/90000/90135/90238
@@ -155,18 +153,23 @@ fun Routing.agentMsgApi(corpId: String, agentId: Int) {
             val msgSignature = call.request.queryParameters["msg_signature"]
             val timeStamp = call.request.queryParameters["timeStamp"]
             val nonce = call.request.queryParameters["nonce"]
-            val encryptType = call.request.queryParameters["encrypt_type"]?:"security"
+            val encryptType = call.request.queryParameters["encrypt_type"]?:"aes"
 
-            val reXml = ctx.msgHub!!.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
+            val reXml = ctx.msgHub!!.handleXmlMsg(null, body, msgSignature, timeStamp, nonce, encryptType)
 
             if(reXml.isNullOrBlank())
-                call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
+                call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
             else
                 call.respondText(reXml, ContentType.Text.Xml, HttpStatusCode.OK)
         }
     }
 }
 
+private val stateCache = Caffeine.newBuilder()
+    .maximumSize(Long.MAX_VALUE)
+    .expireAfterWrite(10, TimeUnit.MINUTES)
+    .expireAfterAccess(1, TimeUnit.SECONDS)
+    .build<String, Pair<String, Int>>()
 
 class OAuthResult(
         val corpId: String,
@@ -178,7 +181,7 @@ class OAuthResult(
 )
 
 /**
- *
+ * 企业微信oauth用户认证登录的api
  * */
 fun Routing.wxWorkOAuthApi(
         oauthInfoPath: String = Work.oauthInfoPath,
@@ -186,12 +189,8 @@ fun Routing.wxWorkOAuthApi(
         oauthNotifyWebAppUrl: String = Work.oauthNotifyWebAppUrl,
         hasPermission: (ApplicationCall, OAuthResult)-> Boolean
 ) {
-    val log = LoggerFactory.getLogger("workOAuthApi")
-    val stateCache = Caffeine.newBuilder()
-            .maximumSize(Long.MAX_VALUE)
-            .expireAfterWrite(10, TimeUnit.MINUTES)
-            .expireAfterAccess(1, TimeUnit.SECONDS)
-            .build<String, Pair<String, Int>>()
+    val log = LoggerFactory.getLogger("wxWorkOAuthApi")
+
     /**
      * 前端webapp请求该api获取appid，state等信息，然后重定向到腾讯的授权页面，用户授权之后将重定向到下面的notify
      * @param corpId
@@ -261,7 +260,9 @@ fun Routing.wxWorkOAuthApi(
 }
 
 
-
+/**
+ * 前端发出请求，获取使用jssdk时所需的认证签名
+ * */
 fun Routing.workJsSdkSignature(path: String = Work.jsSdkSignaturePath){
     get(path){
         val corpId = call.request.queryParameters["corpId"]
@@ -287,3 +288,5 @@ fun Routing.workJsSdkSignature(path: String = Work.jsSdkSignaturePath){
         }
     }
 }
+
+

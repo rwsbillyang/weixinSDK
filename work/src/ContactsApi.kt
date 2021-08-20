@@ -39,7 +39,14 @@ import kotlinx.serialization.json.*
  * 获取通讯录管理secret的方法如下：
 1、进入企业微信管理后台，在“管理工具” — “通讯录同步助手”开启“API接口同步”
  * */
-class ContactsApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
+class ContactsApi(corpId: String) : WorkBaseApi(corpId){
+    constructor(suiteId: String, corpId: String) : this(corpId) {
+        this.suiteId = suiteId
+    }
+    constructor(corpId: String, agentId: Int) : this(corpId) {
+        this.agentId = agentId
+    }
+
     override val group = "user"
 
     fun create(body: Map<String, Any?>) = doPost3("create", body)
@@ -87,10 +94,83 @@ class ContactsApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
             "get_mobile_hashcode",
             mapOf("mobile" to mobile, "state" to state))
 
+
+    /**
+     * 3rd服务商使用
+     * 获取成员授权列表
+     * 当企业当前授权模式为成员授权时，可调用该接口获取成员授权列表。
+     * */
+    fun getAuthMemberList(cursor: String? = null, limit: Int? = null): ResponseAuthMemberList
+     = doGet("list_member_auth", mapOf("cursor" to cursor, "limit" to limit.toString()))
+
+    /**
+     * 3rd服务商使用
+     * 查询成员用户是否已授权
+     * 当企业当前授权模式为成员授权时，可调用该接口查询成员用户是否已授权
+     * */
+    fun checkMemberAuth(openUserId: String): ResponseCheckMemberAuth
+            = doGet("check_member_auth", mapOf("open_userid" to openUserId))
+
+
+    /**
+     * 3rd服务商使用
+     * 获取SelectedTicket用户
+     * 当第三方应用支持成员授权时，可调用该接口获取SelectedTicket对应的用户open_userid（只会返回应用可见范围内的用户open_userid）。
+     * @param selectedTicket 选人sdk或者选人jsapi返回的ticket
+     * */
+    fun getSelectedTicket(selectedTicket: String):ResponseSelectedTicket = doGet("list_selected_ticket_user", mapOf("selected_ticket" to selectedTicket))
 }
 
+@Serializable
+class OpenUserId(val open_userid: String)
 
-class DepartmentApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
+@Serializable
+class ResponseAuthMemberList(
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+
+    @SerialName("next_cursor")
+    val nextCursor: String? = null,
+    @SerialName("member_auth_list")
+    val list: List<OpenUserId>? = null
+): IBase
+
+@Serializable
+class ResponseCheckMemberAuth(
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+
+    @SerialName("is_member_auth")
+    val isMemberAuth: Boolean? = null
+): IBase
+
+
+@Serializable
+class ResponseSelectedTicket(
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+
+    val operator_open_userid: String? = null, //选人用户的open_userid
+    val open_userid_list: List<String>? = null, //应用可见范围内的用户open_userid
+    val total: Int? = null //用户选择的总人数
+): IBase
+
+
+
+class DepartmentApi(corpId: String) : WorkBaseApi(corpId){
+    constructor(suiteId: String, corpId: String) : this(corpId) {
+        this.suiteId = suiteId
+    }
+    constructor(corpId: String, agentId: Int) : this(corpId) {
+        this.agentId = agentId
+    }
+
     override val group = "department"
 
     companion object {
@@ -127,7 +207,14 @@ class DepartmentApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId)
 
 }
 
-class TagApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
+class TagApi(corpId: String) : WorkBaseApi(corpId){
+    constructor(suiteId: String, corpId: String) : this(corpId) {
+        this.suiteId = suiteId
+    }
+    constructor(corpId: String, agentId: Int) : this(corpId) {
+        this.agentId = agentId
+    }
+
     override val group = "tag"
 
     companion object {
@@ -190,7 +277,14 @@ class BatchUserCallback(val url: String?,
 
 class BatchUserBody(val mediaId: String, toInvite: Boolean?, callback: BatchUserCallback?)
 
-class UserBatchApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
+class UserBatchApi(corpId: String) : WorkBaseApi(corpId){
+    constructor(suiteId: String, corpId: String) : this(corpId) {
+        this.suiteId = suiteId
+    }
+    constructor(corpId: String, agentId: Int) : this(corpId) {
+        this.agentId = agentId
+    }
+
     override val group = "batch"
 
     companion object {
@@ -232,6 +326,7 @@ class UserBatchApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
     fun getResult(jobId: String) = doPost3(GET_RESULT, mapOf("jobid" to jobId))
 
 }
+
 
 /**
 {

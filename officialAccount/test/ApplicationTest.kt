@@ -23,6 +23,7 @@ import com.github.rwsbillyang.wxSDK.security.SignUtil
 import com.github.rwsbillyang.wxSDK.security.XmlUtil
 import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
 import io.ktor.http.*
+import io.ktor.request.*
 import io.ktor.server.testing.*
 import org.apache.commons.lang3.RandomStringUtils
 
@@ -50,7 +51,7 @@ class ApplicationTest {
     }
 
     @Test
-    fun testOAUrl(){
+    fun testOAUrlGet(){
         withTestApplication({ apiTest(testing = true) }) {
 
             val signature = SignUtil.getSignature(OfficialAccount.ApiContextMap[AppIdForTest]?.token!!,timestamp, nonce)
@@ -60,35 +61,24 @@ class ApplicationTest {
                 assertEquals(HttpStatusCode.OK, response.status())
                 assertEquals(echoStr, response.content)
             }
+        }
+    }
 
+    @Test
+    fun testOAUrlPost(){
+        withTestApplication({ apiTest(testing = true) }) {
 
             //原始消息文本
             val originalTextMsg = "<xml><ToUserName><![CDATA[$toUser]]></ToUserName><FromUserName><![CDATA[${OfficialAccount.ApiContextMap[AppIdForTest]?.appId}]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[$content]]></Content><MsgId>${msgId}</MsgId></xml>"
             //将原始文本用timestamp和nonce拼接后，用sha1加密，得到加密消息，再置于post data
-            val (xml, msgSignature) = OfficialAccount.ApiContextMap[AppIdForTest]?.wxBizMsgCrypt!!.encryptMsg(originalTextMsg, timestamp, nonce,toUser)
+            val (xml, msgSignature) = OfficialAccount.ApiContextMap[AppIdForTest]?.wxBizMsgCrypt!!.encryptMsg(AppIdForTest, originalTextMsg, timestamp, nonce,toUser)
+            println("post: msgSignature=$msgSignature, xml=$xml")
 
             val postUrl = "${OfficialAccount.msgUri}/$AppIdForTest?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce&encrypt_type=aes"
             handleRequest(HttpMethod.Post,postUrl){
                 setBody(xml)
             }.apply {
                 assertEquals(HttpStatusCode.OK, response.status())
-                if(response.content.isNullOrBlank()){
-                    println("in OA post, get empty response")
-                }else{
-                    if(response.content!!.startsWith("<xml>")){
-                        val map = XmlUtil.extract(response.content!!)
-                        val reTimeStamp =  map["TimeStamp"]?:""
-                        val reNonce = map["Nonce"]?:""
-                        val reEcrypt = map["Encrypt"]?:""
-                        val signature2 = SHA1.getSHA1(OfficialAccount.ApiContextMap[AppIdForTest]?.token!!, reTimeStamp, reNonce, reEcrypt)
-                        val msg = OfficialAccount.ApiContextMap[AppIdForTest]?.wxBizMsgCrypt!!.decryptWxMsg(signature2,reTimeStamp,reNonce,response.content!!)
-                        println("Got OA reply: $msg")
-                    }else{
-                        println("in OA post, got response: ${response.content}")
-                    }
-                }
-
-                //assertEquals("content=$${content},msgId=${msgId}", response.content)
             }
         }
     }

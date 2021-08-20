@@ -31,8 +31,15 @@ import java.io.File
 import java.io.FileOutputStream
 
 
-class ChatMsgApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
-    val log = LoggerFactory.getLogger("ChatMsgApi")
+class ChatMsgApi(corpId: String) : WorkBaseApi(corpId){
+    constructor(suiteId: String, corpId: String) : this(corpId) {
+        this.suiteId = suiteId
+    }
+    constructor(corpId: String, agentId: Int) : this(corpId) {
+        this.agentId = agentId
+    }
+
+    private val log = LoggerFactory.getLogger("ChatMsgApi")
     companion object{
         const val CHAT_MSG_MAX_LIMIT = 1000
     }

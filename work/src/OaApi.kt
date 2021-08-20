@@ -25,7 +25,14 @@ enum class CheckInDataType(val value: Int){
     ALL(3)
 }
 
-class CheckinApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
+class CheckinApi(corpId: String) : WorkBaseApi(corpId){
+    constructor(suiteId: String, corpId: String) : this(corpId) {
+        this.suiteId = suiteId
+    }
+    constructor(corpId: String, agentId: Int) : this(corpId) {
+        this.agentId = agentId
+    }
+
     override val group = "checkin"
 
 
@@ -53,7 +60,14 @@ class CheckinApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
         mapOf("datetime" to datetime, "useridlist" to userIdList))
  }
 
-class OaApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
+class OaApi(corpId: String) : WorkBaseApi(corpId){
+    constructor(suiteId: String, corpId: String) : this(corpId) {
+        this.suiteId = suiteId
+    }
+    constructor(corpId: String, agentId: Int) : this(corpId) {
+        this.agentId = agentId
+    }
+
     override val group = "oa"
     companion object{
 

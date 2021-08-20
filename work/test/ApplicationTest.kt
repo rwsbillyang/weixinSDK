@@ -74,7 +74,7 @@ class ApplicationTest {
             val originalTextMsg = "<xml><ToUserName><![CDATA[$toUser]]></ToUserName><FromUserName><![CDATA[${corpId}]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[$content]]></Content><MsgId>$msgId</MsgId><AgentID>128</AgentID></xml>"
 
             //将原始文本用timestamp和nonce拼接后，用sha1加密，得到加密消息，再置于post data中的Encrypt的标签中
-            val (xml, msgSignature) = ctx.wxBizMsgCrypt!!.encryptMsg(originalTextMsg,timestamp, nonce, toUser,128)
+            val (xml, msgSignature) = ctx.wxBizMsgCrypt!!.encryptMsg(corpId, originalTextMsg,timestamp, nonce, toUser,128)
 
 
             val postUrl = "${ctx.msgNotifyUri}?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce"
@@ -91,7 +91,7 @@ class ApplicationTest {
                         val reNonce = map["Nonce"]?:""
                         val reEcrypt = map["Encrypt"]?:""
                         val signature2 = SHA1.getSHA1(ctx.token!!, reTimeStamp, reNonce, reEcrypt)
-                        val msg = ctx.wxBizMsgCrypt!!.decryptWxMsg(signature2,reTimeStamp,reNonce,response.content!!)
+                        val msg = ctx.wxBizMsgCrypt!!.decryptWxMsg(corpId, signature2,reTimeStamp,reNonce,response.content!!)
                         println("Got wx work reply: $msg")
                     }else{
                         println("in wx work post, got response: ${response.content}")

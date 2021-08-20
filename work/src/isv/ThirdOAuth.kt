@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.wxSDK.work.third
+package com.github.rwsbillyang.wxSDK.work.isv
 
 import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.WxApi

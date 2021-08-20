@@ -19,7 +19,7 @@ apply plugin: 'java-library'
 apply plugin: 'maven-publish'
 
 group 'com.github.rwsbillyang'
-version '0.2.0'
+version '0.3.0'
 //mainClassName = "io.ktor.server.netty.EngineMain"
 
 sourceSets {

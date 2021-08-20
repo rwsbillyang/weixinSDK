@@ -31,27 +31,29 @@ import java.security.PrivateKey
 
 object Work {
     /**
-     * key -> value: corpId -> WorkApiContext
+     * corpId -> WorkApiContext
      * TODO: 大量的corp之后，此map可能很大
      * */
     val ApiContextMap = hashMapOf<String, CorpApiContext>()
 
+    const val prefix = "/api/wx/work"
+
     /**
      * 前端获取api签名信息，重定向到请求腾讯授权页面
      * */
-    var oauthInfoPath: String = "/api/wx/work/oauth/info"
+    var oauthInfoPath: String = "$prefix/oauth/info"
 
     /**
      * 用户授权后的通知微信服务器通知到后端的路径
      * */
-    var oauthNotifyPath: String = "/api/wx/work/oauth/notify"
+    var oauthNotifyPath: String = "$prefix/oauth/notify"
 
     /**
-     * 授权后经过后端再跳转到前端，前端记录下授权结果路径
+     * 授权后腾讯通知到后端，处理后再跳转一下通知前端，前端记录下授权结果路径
      * */
     var oauthNotifyWebAppUrl: String = "/wxwork/authNotify"
 
-    var jsSdkSignaturePath: String =  "/api/wx/work/jssdk/signature"
+    var jsSdkSignaturePath: String =  "$prefix/jssdk/signature"
     /**
      * 当更新配置后，重置
      * */
@@ -75,7 +77,9 @@ object Work {
                customMsgUrl: String? = null,
                customAccessToken: ITimelyRefreshValue? = null,
                enableJsSdk: Boolean = false,
-               customJsTicket: ITimelyRefreshValue? = null
+               customJsTicket: ITimelyRefreshValue? = null,
+               customMsgHandler: IWorkMsgHandler = DefaultWorkMsgHandler(),
+               customEventHandler: IWorkEventHandler = DefaultWorkEventHandler()
     ) {
         var corpApiCtx = ApiContextMap[corpId]
         if (corpApiCtx == null) {
@@ -84,7 +88,8 @@ object Work {
         }
 
         corpApiCtx.agentMap[agentId] = AgentContext(corpId, agentId, secret, enableMsg,
-                token, encodingAESKey, customAccessToken, customMsgUrl, privateKeyFilePath, enableJsSdk, customJsTicket)
+                token, encodingAESKey, customAccessToken, customMsgUrl, privateKeyFilePath, enableJsSdk,
+            customJsTicket,customMsgHandler,customEventHandler)
     }
 }
 
@@ -107,6 +112,11 @@ class CorpApiContext(
         val agentMap: HashMap<Int, AgentContext> = hashMapOf()
 )
 
+
+class ContextBase(
+    val secret: String,
+    customAccessToken: ITimelyRefreshValue? = null,
+)
 /**
  * agent的配置
  *
@@ -127,19 +137,21 @@ class CorpApiContext(
  *  https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Access_Overview.html
  * */
 class AgentContext(
-        corpId: String,
-        val agentId: Int,
-        val secret: String,
-        val enableMsg: Boolean = false,
-        val token: String? = null,
-        val encodingAESKey: String? = null,
-        customAccessToken: ITimelyRefreshValue? = null,
-        customMsgNotifyUri: String? = null,
-        privateKeyFilePath: String? = null,
-        enableJsSdk: Boolean,
-        customJsTicket: ITimelyRefreshValue? = null
+    corpId: String,
+    val agentId: Int,
+    val secret: String,
+    val enableMsg: Boolean = false, //是否激活：消息解析、分发、处理
+    val token: String? = null,
+    val encodingAESKey: String? = null,
+    customAccessToken: ITimelyRefreshValue? = null,
+    customMsgNotifyUri: String? = null,
+    privateKeyFilePath: String? = null,
+    enableJsSdk: Boolean,
+    customJsTicket: ITimelyRefreshValue? = null,
+    msgHandler: IWorkMsgHandler,
+    eventHandler: IWorkEventHandler
 ) {
-    private val log = LoggerFactory.getLogger("workApi")
+    private val log = LoggerFactory.getLogger("AgentContext")
 
     var accessToken: ITimelyRefreshValue = customAccessToken ?: TimelyRefreshAccessToken(corpId,
             AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = agentId.toString())
@@ -148,12 +160,11 @@ class AgentContext(
      * 微信消息接入， 微信消息通知URI
      * */
     var msgNotifyUri: String = if (customMsgNotifyUri.isNullOrBlank()) {
-        "/api/wx/work/${corpId}/${agentId}"
+        "${Work.prefix}/msg/${corpId}/${agentId}"
     } else
         customMsgNotifyUri
 
-    var msgHandler: IWorkMsgHandler? = null
-    var eventHandler: IWorkEventHandler? = null
+
     var msgHub: WorkMsgHub? = null
     var wxBizMsgCrypt: WXBizMsgCrypt? = null
 
@@ -162,12 +173,8 @@ class AgentContext(
     init {
         if (enableMsg) {
             if (!token.isNullOrBlank() && !encodingAESKey.isNullOrBlank()) {
-                wxBizMsgCrypt = WXBizMsgCrypt(token, encodingAESKey, corpId)
-
-                if (msgHandler == null) msgHandler = DefaultWorkMsgHandler()
-                if (eventHandler == null) eventHandler = DefaultWorkEventHandler()
-
-                msgHub = WorkMsgHub(msgHandler!!, eventHandler!!, wxBizMsgCrypt!!)
+                wxBizMsgCrypt = WXBizMsgCrypt(token, encodingAESKey)
+                msgHub = WorkMsgHub(msgHandler, eventHandler, wxBizMsgCrypt!!)
             } else {
                 println("enableMsg=true, but not config token and encodingAESKey")
             }

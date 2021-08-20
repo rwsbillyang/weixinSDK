@@ -73,7 +73,6 @@ open class TimelyRefreshValue @JvmOverloads constructor(
      * 2.刷新标识判断，如果正在刷新，则也直接跳过，避免多次重复刷新；如果没有正在刷新且已过期，则开始刷新
      */
     fun getRefreshedValue(updateType: UpdateType): String? {
-
         val now = System.currentTimeMillis()
         val delta: Long = now - timelyValue.time
         if (timelyValue.value != null){

@@ -21,6 +21,7 @@ package com.github.rwsbillyang.wxSDK.work
 
 import com.github.rwsbillyang.wxSDK.ResponseCallbackIps
 import com.github.rwsbillyang.wxSDK.WxApi
+import com.github.rwsbillyang.wxSDK.work.isv.ThirdPartyWork
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -44,7 +45,7 @@ import kotlinx.serialization.Serializable
  * 所有接口在通信时都需要携带此信息用于验证接口的访问权限
  *
  * */
-abstract class WorkBaseApi(val corpId: String, val agentId: Int): WxApi() {
+abstract class WorkBaseApi(val corpId: String): WxApi() {
     companion object{
         const val KeyBase = 1000
         const val KeyContact = KeyBase + 1
@@ -57,8 +58,26 @@ abstract class WorkBaseApi(val corpId: String, val agentId: Int): WxApi() {
         const val KeyMaterial = KeyBase + 7
         const val KeyOA = KeyBase + 8
     }
+
+    //第三方开发者模式：使用suiteId和corpId。若suiteId非空，认为是isv模式
+    var suiteId: String? = null
+
+    //企业内部模式，使用corpId和agentId
+    var agentId: Int? = null
+
+
+    constructor(suiteId: String, corpId: String) : this(corpId) {
+        this.suiteId = suiteId
+    }
+    constructor(corpId: String, agentId: Int) : this(corpId) {
+        this.agentId = agentId
+    }
+
+
     override val base = "https://qyapi.weixin.qq.com/cgi-bin"
-    override fun accessToken() = Work.ApiContextMap[corpId]?.agentMap?.get(agentId)?.accessToken?.get()
+    override fun accessToken() =
+        if(suiteId == null) Work.ApiContextMap[corpId]?.agentMap?.get(agentId!!)?.accessToken?.get()
+        else ThirdPartyWork.ApiContextMap[suiteId]?.accessTokenMap?.get(corpId)?.get()
 
     /**
      * 企业微信在回调企业指定的URL时，是通过特定的IP发送出去的。如果企业需要做防火墙配置，那么可以通过这个接口获取到所有相关的IP段。

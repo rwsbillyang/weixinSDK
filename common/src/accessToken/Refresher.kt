@@ -30,7 +30,7 @@ interface IRefresher{
  *  https://work.weixin.qq.com/api/doc/90001/90142/90593
  *
  *  @param key 默认解析的值 如：access_token，ticket 等
- *  @param url 提供刷新的url
+ *  @param url 提供刷新的url，拥有比urlBlock更高的优先级，不提供时使用urlBlock获取url
  *  @param urlBlock 返回url的函数
  * */
 open class Refresher(
@@ -51,11 +51,8 @@ open class Refresher(
      * 向远程发出请求，获取最新值然后返回
      */
     override  fun refresh(): String {
-        val url2 = url?: urlBlock?.invoke()
-        log.info("to refresh for key=$key...,url=$url2")
-
         return runBlocking {
-            val text: String = getResponse(url2!!).readText()
+            val text: String = getResponse().readText()
 
             KtorHttpClient.apiJson
                 .parseToJsonElement(text)
@@ -63,17 +60,34 @@ open class Refresher(
                 ?: throw WxException("fail refresh key=suite_access_token, not a jsonObject: $text")
         }
     }
-    open suspend fun getResponse(url: String) = KtorHttpClient.DefaultClient.get<HttpResponse>(url)
+    open fun url() = url?: urlBlock?.invoke()?: throw Throwable("not provide url")
+    open suspend fun getResponse() = KtorHttpClient.DefaultClient.get<HttpResponse>(url())
 }
-
+/**
+ * post请求所用data，使用静态数据
+ * */
 open class PostRefresher<T>(key: String,
                     private val postData: T? = null,
                     url: String? = null,
                     urlBlock: (() -> String)? = null)
 :Refresher(key,url, urlBlock)
 {
-    override suspend fun getResponse(url: String) = KtorHttpClient.DefaultClient.post<HttpResponse>(url){
+    override suspend fun getResponse() = KtorHttpClient.DefaultClient.post<HttpResponse>(url()){
         postData?.let { body = it }
+    }
+}
+
+/**
+ * post请求所用data，使用实时数据
+ * */
+open class VariableDataPostRefresher<T>(key: String,
+                            private val postDataBlock: ()->T?,
+                            url: String? = null,
+                            urlBlock: (() -> String)? = null)
+    :Refresher(key,url, urlBlock)
+{
+    override suspend fun getResponse() = KtorHttpClient.DefaultClient.post<HttpResponse>(url()){
+        postDataBlock()?.let { body = it }
     }
 }
 

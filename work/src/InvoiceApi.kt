@@ -26,7 +26,14 @@ class Invoice(
     @SerialName("card_id")val cardId: String,
     @SerialName("encrypt_code")val encryptCode: String)
 
-class InvoiceApi(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
+class InvoiceApi(corpId: String) : WorkBaseApi(corpId){
+    constructor(suiteId: String, corpId: String) : this(corpId) {
+        this.suiteId = suiteId
+    }
+    constructor(corpId: String, agentId: Int) : this(corpId) {
+        this.agentId = agentId
+    }
+
     override val group = "card/invoice/reimburse"
 
     /**

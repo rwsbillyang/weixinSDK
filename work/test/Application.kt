@@ -74,10 +74,10 @@ fun Application.WorkTestableModule(testing: Boolean = false) {
     Work.config(corpId, WorkBaseApi.KeyCustomer, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C", customAccessToken = TestAccessTokenValue())
 
     routing {
-        agentMsgApi(corpId, WorkBaseApi.KeyBase)
-        agentMsgApi(corpId, WorkBaseApi.KeyChatArchive)
-        agentMsgApi(corpId, WorkBaseApi.KeyContact)
-        agentMsgApi(corpId, WorkBaseApi.KeyCustomer)
+        dispatchAgentMsgApi(corpId, WorkBaseApi.KeyBase)
+        dispatchAgentMsgApi(corpId, WorkBaseApi.KeyChatArchive)
+        dispatchAgentMsgApi(corpId, WorkBaseApi.KeyContact)
+        dispatchAgentMsgApi(corpId, WorkBaseApi.KeyCustomer)
     }
 }
 
@@ -95,7 +95,7 @@ class TestJsTicketValue: ITimelyRefreshValue {
 
 class TestWorkMsgHandler: DefaultWorkMsgHandler()
 {
-    override  fun onWorkTextMsg(msg: WorkTextMsg): ReBaseMSg?{
+    override  fun onTextMsg(msg: WorkTextMsg): ReBaseMSg?{
         return ReTextMsg("TestWorkMsgHandler reply the msg: content=${msg.content},msgId=${msg.msgId},agentId=${msg.agentId}", msg.base.fromUserName, msg.base.toUserName)
     }
 

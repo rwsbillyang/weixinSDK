@@ -31,16 +31,18 @@ import kotlin.experimental.and
  *
  * @param token 公众平台上，开发者设置的token
  * @param encodingAesKey 公众平台上，开发者设置的EncodingAESKey
- * @param appId 公众平台appid
  */
-class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val appId: String) {
+class WXBizMsgCrypt(private val token: String, private val encodingAesKey: String) {
     companion object {
         val CHARSET: Charset = Charset.forName("utf-8")
+
+        //private var base64 = Base64()
+        private val base64Decoder = Base64.getDecoder()
+        private val base64Encoder = Base64.getEncoder()
     }
 
-    //private var base64 = Base64()
-    private val base64Decoder = Base64.getDecoder()
-    private val base64Encoder = Base64.getEncoder()
+
+
     private val aesKey: ByteArray
 
     /**
@@ -71,7 +73,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
      * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
      */
     @Throws(AesException::class)
-    fun verifyUrl(
+    fun verifyUrl(appId: String?,
             msgSignature: String,
             timeStamp: String,
             nonce: String,
@@ -82,7 +84,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
             println("verifyUrl: original signature: $msgSignature, generated signature: $signature")
             throw AesException(AesException.ValidateSignatureError)
         }
-        return decrypt(echoStr)
+        return decrypt(appId, echoStr)
     }
 
     /**
@@ -105,19 +107,14 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
      * https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/Message_Encryption/Technical_Plan.html
      */
     @Throws(AesException::class)
-    fun decryptWxMsg(
+    fun decryptWxMsg(appId: String?,
             msgSignature: String,
             timeStamp: String,
             nonce: String,
-            postData: String,
-            encryptType: String? = "aes"
+            encryptText: String,
+            encryptType: String? = "aes",
+
     ): String {
-
-        // 密钥，公众账号的app secret
-        // 提取密文
-        val map = XmlUtil.extract(postData)
-
-        val encryptText = map["Encrypt"].toString()
         //生成自己的安全签名
         val signature = SHA1.getSHA1(token, timeStamp, nonce, encryptText)
 
@@ -130,7 +127,7 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
         }
 
         // 解密
-        return decrypt(encryptText)
+        return decrypt(appId, encryptText)
     }
 
     /**
@@ -156,13 +153,13 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
      * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
      */
     @Throws(AesException::class)
-    fun encryptMsg(replyMsg: String,
+    fun encryptMsg(appId: String, replyMsg: String,
                    timeStamp: String = System.currentTimeMillis().toString(),
                    nonce: String = getRandomStr(),
                    toUserName: String? = null,
                    agentId: Int? = null
     ): Pair<String, String> {
-        val encrypt = encrypt(replyMsg)
+        val encrypt = encrypt(appId, replyMsg)
         val signature = SHA1.getSHA1(token, timeStamp, nonce, encrypt)
 
         // println("发送给平台的签名是: " + signature[1].toString());
@@ -206,13 +203,13 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
 
     /**
      * 对明文进行加密.
-     *
+     * @param appId 公众号appId或企业的corpId
      * @param text 需要加密的明文
      * @return 加密后base64编码的字符串
      * @throws AesException aes加密失败
      */
     @Throws(AesException::class)
-    fun encrypt(text: String, randomStr: String = getRandomStr()): String {
+    fun encrypt(appId: String, text: String, randomStr: String = getRandomStr()): String {
         val byteCollector = ByteGroup()
         val randomStrBytes = randomStr.toByteArray(CHARSET)
         val textBytes = text.toByteArray(CHARSET)
@@ -253,11 +250,12 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
      * 对密文进行解密.
      *
      * @param text 需要解密的密文
+     * @param appId 公众号appId，用于校验是否来自该公众号。，对于企业微信中的corpId，永远null，不进行校验
      * @return 解密得到的明文
      * @throws AesException aes解密失败
      */
     @Throws(AesException::class)
-    private fun decrypt(text: String?): String {
+    private fun decrypt(appId: String?, text: String?): String {
         val original: ByteArray
         original = try {
             // 设置解密模式为AES的CBC模式
@@ -295,8 +293,8 @@ class WXBizMsgCrypt(val token: String, private val encodingAesKey: String, val a
             throw AesException(AesException.IllegalBuffer)
         }
 
-        // appid不相同的情况
-        if (from_appid != appId) {
+        //企业微信中消息get请求时不校验，公众号则校验。公众号和企业微信所有的post的消息都校验
+        if (appId !=null && from_appid != appId) {
             throw AesException(AesException.ValidateAppidError)
         }
         return xmlContent

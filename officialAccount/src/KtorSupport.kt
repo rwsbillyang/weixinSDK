@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit
 
 
 
-fun Routing.officialAccountMsgApi(path: String = OfficialAccount.msgUri) {
+fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
     val log = LoggerFactory.getLogger("officialAccountMsgApi")
 
     route(path) {
@@ -142,7 +142,7 @@ fun Routing.officialAccountMsgApi(path: String = OfficialAccount.msgUri) {
                     val nonce = call.request.queryParameters["nonce"]
                     val encryptType = call.request.queryParameters["encrypt_type"]?:"security"
 
-                    val reXml = apiCtx.msgHub.handleXmlMsg(body, msgSignature, timeStamp, nonce, encryptType)
+                    val reXml = apiCtx.msgHub.handleXmlMsg(appId, body, msgSignature, timeStamp, nonce, encryptType)
 
                     if(reXml.isNullOrBlank())
                         call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)

@@ -19,7 +19,7 @@ apply plugin: 'java-library'
 apply plugin: 'maven-publish'
 
 group 'com.github.rwsbillyang.wxSDK'
-version '0.2.0'
+version '0.3.0'
 //mainClassName = "io.ktor.server.netty.EngineMain"
 
 sourceSets {
@@ -60,8 +60,9 @@ dependencies {
 
     //testImplementation('junit:junit:4.12')
     testCompile "io.ktor:ktor-server-tests:$ktor_version"
+    testCompile "com.github.ben-manes.caffeine:caffeine:2.7.0+"
 
-    implementation ("com.github.rwsbillyang:wxSDK:0.2.0")
+    implementation ("com.github.rwsbillyang:wxSDK:0.3.0")
     //implementation project(":common")
 }
 

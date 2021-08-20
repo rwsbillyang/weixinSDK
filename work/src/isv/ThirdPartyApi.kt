@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.wxSDK.work.third
+package com.github.rwsbillyang.wxSDK.work.isv
 
 
 import com.github.rwsbillyang.wxSDK.IBase
@@ -29,7 +29,8 @@ class ThirdPartyApi(suiteId: String) : ThirdOAuth(suiteId, "suite_access_token")
 
 
     /**
-     * 获取预授权码
+     * 获取预授权码 预授权码用于企业授权时的第三方服务商安全验证。
+     * https://work.weixin.qq.com/api/doc/90001/90143/90601
      * */
     fun getPreAuthCode():PreAuthCode = doGet("get_pre_auth_code")
 
@@ -42,8 +43,9 @@ class ThirdPartyApi(suiteId: String) : ThirdOAuth(suiteId, "suite_access_token")
         mapOf("pre_auth_code" to pre_auth_code, "session_info" to mapOf("auth_type" to auth_type)))
 
     /**
-     * 获取企业永久授权码
-     * 该API用于使用临时授权码换取授权方的永久授权码，并换取授权信息、企业access_token，临时授权码一次有效。建议第三方以userid为主键，来建立自己的管理员账号。
+     * 通过临时授权码获取企业永久授权码
+     * 该API用于使用临时授权码换取授权方的永久授权码，并换取授权信息、企业access_token，临时授权码一次有效。
+     * 建议第三方以userid为主键，来建立自己的管理员账号。
      * @param auth_code 临时授权码，会在授权成功时附加在redirect_uri中跳转回第三方服务商网站，或通过回调推送给服务商。长度为64至512个字节
      * */
     fun getPermanentCode(auth_code: String):ResponsePermanentCodeInfo = doPost("get_permanent_code",
@@ -54,13 +56,15 @@ class ThirdPartyApi(suiteId: String) : ThirdOAuth(suiteId, "suite_access_token")
      * 该API用于通过永久授权码换取企业微信的授权信息。 永久code的获取，是通过临时授权码使用get_permanent_code 接口获取到的
      * @param auth_corpid 授权方corpid
      * @param permanent_code 永久授权码，通过get_permanent_code获取
+     *
+     * @return 只包含auth_corp_info和auth_info信息，而getPermanentCode返回值更全一些
      * */
-    fun getAuthInfo(auth_corpid: String, permanent_code: String): ResponsePermanentCodeInfo = doPost("get_auth_info",
-        mapOf("auth_corpid" to auth_corpid, "permanent_code" to permanent_code))
+    fun getAuthInfo(auth_corpid: String, permanent_code: String): ResponsePermanentCodeInfo
+        = doPost("get_auth_info",  mapOf("auth_corpid" to auth_corpid, "permanent_code" to permanent_code))
 
     /**
-     * 获取企业access_token
-     *
+     * 通过永久授权码获取企业access_token
+     *  AccessToken3rdRefresher
      * 第三方服务商在取得企业的永久授权码后，通过此接口可以获取到企业的access_token。
      *
      * 获取后可通过通讯录、应用、消息等企业接口来运营这些应用。
@@ -85,6 +89,7 @@ class ThirdPartyApi(suiteId: String) : ThirdOAuth(suiteId, "suite_access_token")
     fun getAdminList(corpId: String, agentId: Int):ResponseAdminList = doPost("get_admin_list",
         mapOf("auth_corpid" to corpId, "agentid" to agentId))
 
+
 }
 
 class PreAuthCode(
@@ -108,21 +113,6 @@ class PreAuthCode(
  * @param corp_industry	企业所属行业。当企业未设置该属性时，值为空
  * @param corp_sub_industry	企业所属子行业。当企业未设置该属性时，值为空
  * @param location	企业所在地信息, 为空时表示未知
-
-"corpid": "xxxx",
-"corp_name": "name",
-"corp_type": "verified",
-"corp_square_logo_url": "yyyyy",
-"corp_user_max": 50,
-"corp_agent_max": 30,
-"corp_full_name":"full_name",
-"verified_end_time":1431775834,
-"subject_type": 1,
-"corp_wxqrcode": "zzzzz",
-"corp_scale": "1-50人",
-"corp_industry": "IT服务",
-"corp_sub_industry": "计算机软件/硬件/信息服务",
-"location":"广东省广州市"
  * */
 @Serializable
 class AuthCorpInfo(
@@ -142,6 +132,8 @@ class AuthCorpInfo(
     val location: String? = null
 )
 
+@Serializable
+class ShareFrom(val corpid: String) //共享了应用的互联企业信息，仅当由互联的企业共享应用触发的安装时才返回
 /**
  * 授权的应用信息，注意是一个数组，但仅旧的多应用套件授权时会返回多个agent，对新的单应用授权，永远只返回一个agent
  * @param agentid	授权方应用id
@@ -150,22 +142,6 @@ class AuthCorpInfo(
  * @param round_logo_url	授权方应用圆形头像
  * @param appid	旧的多应用套件中的对应应用id，新开发者请忽略
  * @param privilege	应用对应的权限
-
-"agentid":1,
-"name":"NAME",
-"round_logo_url":"xxxxxx",
-"square_logo_url":"yyyyyy",
-"appid":1,
-"privilege":
-{
-"level":1,
-"allow_party":[1,2,3],
-"allow_user":["zhansan","lisi"],
-"allow_tag":[1,2,3],
-"extra_party":[4,5,6],
-"extra_user":["wangwu"],
-"extra_tag":[4,5,6]
-}
  * */
 @Serializable
 class AgentInfo(
@@ -173,7 +149,10 @@ class AgentInfo(
     val name: String,
     val round_logo_url:  String? = null,
     val square_logo_url:  String? = null,
+    val appid: Int? = null,
+    val auth_mode: Int? = null, //授权模式，0为管理员授权，1为成员授权
     val privilege: AgentPrivilege? = null,
+    val shared_from:ShareFrom? = null
 )
 /**
  * 应用对应的权限
@@ -206,12 +185,14 @@ class AgentPrivilege(
  * 授权管理员的信息
  * @param userid	授权管理员的userid，可能为空（内部管理员一定有，不可更改）
  * @param name	授权管理员的name，可能为空（内部管理员一定有，不可更改）
+ * @param open_userid
  * @param avatar	授权管理员的头像url
  * */
 @Serializable
 class AuthUserInfo(
     val userid: String? = null,
     val name: String? = null,
+    val open_userid: String? = null,
     val avatar: String? = null
 )
 @Serializable
@@ -234,21 +215,32 @@ class ResponsePermanentCodeInfo(
     val access_token: String? = null,
     val expires_in: Int = 0,
     val permanent_code: String? = null,
+    val dealer_corp_info: DealerCorpInfo? = null,
     val auth_corp_info: AuthCorpInfo? = null,
-    val auth_info : AuthInfo? = null
+    val auth_info : AuthInfo? = null,
+    val register_code_info: RegisterCodeInfo?=null
 ): IBase
 
-
 /**
- * 管理员列表中的成员
- * @param userid	管理员的userid
- * @param auth_type	该管理员对应用的权限：0=发消息权限，1=管理权限
+ * 代理服务商企业信息。应用被代理后才有该信息
+ * @param corpid 代理服务商企业微信id
+ * @param corp_name 代理服务商企业微信名称
  * */
 @Serializable
-class AuthUser(
-    val userid: String,
-    val auth_type: Int
-)
+class DealerCorpInfo(val corpid: String, val corp_name: String)
+
+/**
+ * 推广二维码安装相关信息，扫推广二维码安装时返回。（注：无论企业是否新注册，只要通过扫推广二维码安装，都会返回该字段）
+ * */
+@Serializable
+class RegisterCodeInfo(
+    val register_code: String, //注册码
+    val template_id: String, //推广包ID
+    val state: String////仅当获取注册码指定该字段时才返回
+    )
+
+
+
 
 @Serializable
 class ResponseAdminList(
@@ -256,3 +248,16 @@ class ResponseAdminList(
     override val errMsg: String? = null,
     val admin: List<AuthUser>? = null
 ): IBase
+
+/**
+ * 应用的管理员列表（不包括外部管理员），成员授权模式下，不返回系统管理员
+ * @param userid	管理员的userid
+ * @param open_userid 管理员的open_userid
+ * @param auth_type	该管理员对应用的权限：0=发消息权限，1=管理权限
+ * */
+@Serializable
+class AuthUser(
+    val userid: String,
+    val open_userid: String,
+    val auth_type: Int
+)
