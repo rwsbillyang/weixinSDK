@@ -20,13 +20,19 @@ package com.github.rwsbillyang.wxSDK.work.isv
 
 import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.WxApi
+import com.github.rwsbillyang.wxSDK.work.Work
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 open class ThirdOAuth(private val suiteId: String, accessTokenKey: String="access_token") : WxApi(accessTokenKey) {
     override val base = "https://qyapi.weixin.qq.com/cgi-bin"
     override val group = "service"
-    override fun accessToken() = ThirdPartyWork.ApiContextMap[suiteId]?.suiteAccessToken?.get()
+    override fun accessToken() = if(Work.isMulti){
+        IsvWorkMulti.ApiContextMap[suiteId]?.suiteAccessToken?.get()
+    }else{
+        IsvWorkSingle.ctx.suiteAccessToken?.get()
+    }
+
 
     /**
      * 第三方根据code获取企业成员信息

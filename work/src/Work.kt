@@ -27,14 +27,26 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import java.security.PrivateKey
+import kotlin.properties.Delegates
 
-
+/**
+ * 内部应用使用
+ * */
 object Work {
     /**
-     * corpId -> WorkApiContext
-     * TODO: 大量的corp之后，此map可能很大
+     * 是否是多agent模式，在配置sdk参数时自动指定
      * */
-    val ApiContextMap = hashMapOf<String, CorpApiContext>()
+    internal var _isMulti = false
+
+    /**
+     * 是否是isv模式，即第三方应用模式，在配置sdk参数时自动指定
+     * */
+    internal var _isIsv = false
+
+    val isMulti: Boolean
+        get() = _isMulti
+    val isIsv: Boolean
+        get() = _isIsv
 
     const val prefix = "/api/wx/work"
 
@@ -54,6 +66,63 @@ object Work {
     var oauthNotifyWebAppUrl: String = "/wxwork/authNotify"
 
     var jsSdkSignaturePath: String =  "$prefix/jssdk/signature"
+
+}
+
+/**
+ * 一个进程中就存在一个特定的corp的agent
+ * */
+object WorkSingle{
+    private lateinit var _corpId: String
+    private var _agentId by Delegates.notNull<Int>()
+    private lateinit var _agentContext: AgentContext
+
+    val corpId: String
+        get() = _corpId
+
+    val agentId: Int
+        get() = _agentId
+
+    val agentContext: AgentContext
+        get() = _agentContext
+
+    fun config(corpId: String,
+               agentId: Int,
+               secret: String,
+
+               enableMsg: Boolean = false,
+               token: String? = null,
+               encodingAESKey: String? = null,
+
+               privateKeyFilePath: String? = null,
+               customMsgUrl: String? = null,
+               customAccessToken: ITimelyRefreshValue? = null,
+               enableJsSdk: Boolean = false,
+               customJsTicket: ITimelyRefreshValue? = null,
+               customMsgHandler: IWorkMsgHandler = DefaultWorkMsgHandler(),
+               customEventHandler: IWorkEventHandler = DefaultWorkEventHandler()
+    ) {
+        Work._isIsv = false
+        Work._isMulti = false
+
+        _corpId = corpId
+        _agentId = agentId
+        _agentContext = AgentContext(corpId, agentId, secret, enableMsg,
+            token, encodingAESKey, customAccessToken, customMsgUrl, privateKeyFilePath, enableJsSdk,
+            customJsTicket,customMsgHandler,customEventHandler)
+    }
+}
+/**
+ * 一个运行的应用（通常是一个进程）中，存在多个corp的多个agent。
+ * 亦即多个agent打包到一个jar中，然后运行在一个应用进程中
+ * */
+object WorkMulti{
+    /**
+     * corpId -> WorkApiContext
+     * TODO: 大量的corp之后，此map可能很大
+     * */
+    val ApiContextMap = hashMapOf<String, CorpApiContext>()
+
     /**
      * 当更新配置后，重置
      * */
@@ -81,6 +150,9 @@ object Work {
                customMsgHandler: IWorkMsgHandler = DefaultWorkMsgHandler(),
                customEventHandler: IWorkEventHandler = DefaultWorkEventHandler()
     ) {
+        Work._isIsv = false
+        Work._isMulti = true
+
         var corpApiCtx = ApiContextMap[corpId]
         if (corpApiCtx == null) {
             corpApiCtx = CorpApiContext(corpId)
@@ -88,11 +160,10 @@ object Work {
         }
 
         corpApiCtx.agentMap[agentId] = AgentContext(corpId, agentId, secret, enableMsg,
-                token, encodingAESKey, customAccessToken, customMsgUrl, privateKeyFilePath, enableJsSdk,
+            token, encodingAESKey, customAccessToken, customMsgUrl, privateKeyFilePath, enableJsSdk,
             customJsTicket,customMsgHandler,customEventHandler)
     }
 }
-
 
 /**
  * 调用API时可能需要用到的配置

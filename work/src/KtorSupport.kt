@@ -41,24 +41,38 @@ import java.util.concurrent.TimeUnit
 fun Routing.dispatchAgentMsgApi(corpId: String, agentId: Int) {
     val log = LoggerFactory.getLogger("agentMsgApi")
 
-    val corpApiCtx = Work.ApiContextMap[corpId]
-    if(corpApiCtx == null){
-        log.warn("not init WorkApiContext for: corpId=$corpId")
-        return
+    val ctx: AgentContext?
+    if(Work.isMulti){
+        val corpApiCtx = WorkMulti.ApiContextMap[corpId]
+        if(corpApiCtx == null){
+            log.warn("not init WorkApiContext for: corpId=$corpId")
+            return
+        }
+        ctx = corpApiCtx.agentMap[agentId]
+        if(ctx == null){
+            log.warn("not add agentId=$agentId,corpId=$corpId. please call Work.add(...) first")
+            return
+        }
+        if(!ctx.enableMsg){
+            log.warn("not enableMsg: agentId=$agentId,corpId=$corpId, ignore")
+            return
+        }
+        if(ctx.wxBizMsgCrypt == null || ctx.msgHub == null){
+            log.warn("wxBizMsgCrypt or msgHub is null, please init them correctly")
+            return
+        }
+    }else{
+        ctx = WorkSingle.agentContext
+        if(!ctx.enableMsg){
+            log.warn("not enableMsg: agentId=$agentId,corpId=$corpId, ignore")
+            return
+        }
+        if(ctx.wxBizMsgCrypt == null || ctx.msgHub == null){
+            log.warn("wxBizMsgCrypt or msgHub is null, please init them correctly")
+            return
+        }
     }
-    val ctx = corpApiCtx.agentMap[agentId]
-    if(ctx == null){
-        log.warn("not add agentId=$agentId,corpId=$corpId. please call Work.add(...) first")
-        return
-    }
-    if(!ctx.enableMsg){
-        log.warn("not enableMsg: agentId=$agentId,corpId=$corpId, ignore")
-        return
-    }
-    if(ctx.wxBizMsgCrypt == null || ctx.msgHub == null){
-        log.warn("wxBizMsgCrypt or msgHub is null, please init them correctly")
-        return
-    }
+
 
     route(ctx.msgNotifyUri) {
         /**
@@ -270,7 +284,12 @@ fun Routing.workJsSdkSignature(path: String = Work.jsSdkSignaturePath){
         val msg = if(corpId == null || agentId == null){
             "invalid parameters: corpId and agentId could not be null"
         }else{
-            val ticket =  Work.ApiContextMap[corpId]?.agentMap?.get(agentId)?.jsTicket?.get()
+            val ticket = if(Work.isMulti){
+                WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.jsTicket?.get()
+            }else{
+                WorkSingle.agentContext.jsTicket?.get()
+            }
+
             if(ticket == null){
                 "corpId=$corpId,agentId=$agentId is configured?"
             }else{

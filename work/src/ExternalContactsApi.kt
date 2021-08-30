@@ -19,6 +19,7 @@
 package com.github.rwsbillyang.wxSDK.work
 
 import com.github.rwsbillyang.wxSDK.IBase
+import com.github.rwsbillyang.wxSDK.Response
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -41,11 +42,18 @@ import kotlinx.serialization.Serializable
  * 调用（accesstoken如何获取？）；第三方/自建应用调用时，返回的跟进人follow_user仅包含应用可见范围之
  * 内的成员。
  * */
-class ExternalContactsApi(corpId: String) : WorkBaseApi(corpId){
-    constructor(suiteId: String, corpId: String) : this(corpId) {
+class ExternalContactsApi private constructor (corpId: String?) : WorkBaseApi(corpId){
+    /**
+     * ISV模式，suiteId为null表示single单应用模式
+     * */
+    constructor(suiteId: String?, corpId: String) : this(corpId) {
         this.suiteId = suiteId
     }
-    constructor(corpId: String, agentId: Int) : this(corpId) {
+
+    /**
+     * 企业内部应用模式，空参表示single单应用模式
+     * */
+    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
         this.agentId = agentId
     }
 
@@ -68,21 +76,21 @@ class ExternalContactsApi(corpId: String) : WorkBaseApi(corpId){
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/92227
      * */
-    fun addContactWay(body: Map<String, Any?>) = doPost3("add_contact_way", body)
+    fun addContactWay(body: ContactWayConfig):ResponseAddContactWay = doPost("add_contact_way", body)
 
     /**
      * 获取企业已配置的「联系我」方式
      *
      * @param configId 来自addContactWay的返回结果中的值
      * */
-    fun getContactWay(configId: String) = doPost3("get_contact_way", mapOf("config_id" to configId))
+    fun getContactWay(configId: String):ResponseGetContactWay = doPost("get_contact_way", mapOf("config_id" to configId))
 
     /**
      * 更新企业已配置的「联系我」方式
      *
      * 更新企业配置的「联系我」二维码和「联系我」小程序按钮中的信息，如使用人员和备注等。
      * */
-    fun updateContactWay(body: Map<String, Any?>) = doPost3("update_contact_way", body)
+    fun updateContactWay(body: ContactWayConfig): Response = doPost("update_contact_way", body)
 
     /**
      * 删除企业已配置的「联系我」方式
@@ -309,6 +317,47 @@ class ExternalContactsApi(corpId: String) : WorkBaseApi(corpId){
      * */
     fun getStatGroupChat(body: Map<String, Any?>) = doPost3("groupchat/statistic", body)
 }
+
+
+@Serializable
+class ContactWayConfig(
+    val type: Int = 1, //联系方式类型,1-单人, 2-多人
+    val scene: Int = 2, //场景，1-在小程序中联系，2-通过二维码联系
+    val style: Int = 1, //在小程序中联系时使用的控件样式，详见附表 https://work.weixin.qq.com/api/doc/90000/90135/92572
+    val remark: String? = null, //联系方式的备注信息，用于助记，不超过30个字符
+    val skip_verify: Boolean = true, //外部客户添加时是否无需验证，默认为true
+    val state: String? = null, //企业自定义的state参数，用于区分不同的添加渠道，在调用“获取外部联系人详情”时会返回该参数值，不超过30个字符
+    val user: List<String>, //使用该联系方式的用户userID列表，在type为1时为必填，且只能有一个
+    val party: List<Int>? = null, //使用该联系方式的部门id列表，只在type为2时有效
+    val is_temp: Boolean = false, //是否临时会话模式，true表示使用临时会话模式，默认为false  当设置为临时会话模式时（即is_temp为true），联系人仅支持配置为单人，暂不支持多人
+    val expires_in: Int? = null, //临时会话二维码有效期，以秒为单位。该参数仅在is_temp为true时有效，默认7天
+    val chat_expires_in: Int? = null, //临时会话有效期，以秒为单位。该参数仅在is_temp为true时有效，默认为添加好友后24小时
+    val unionid: String? = null, //可进行临时会话的客户unionid，该参数仅在is_temp为true时有效，如不指定则不进行限制 使用unionid需要调用方（企业或服务商）的企业微信“客户联系”中已绑定微信开发者账户
+    //val conclusions: Conclusions? = null //TODO:结束语，会话结束时自动发送给客户，可参考“结束语定义”，仅在is_temp为true时有效
+    val config_id: String? = null //用于 get_contact_way中请求结果、update_contact_way中的请求参数
+)
+
+@Serializable
+class ResponseAddContactWay(
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+    @SerialName("config_id")
+    val configId: String? = null,
+    @SerialName("qr_code")
+    val qrCode: String? = null
+): IBase
+
+@Serializable
+class ResponseGetContactWay(
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+    @SerialName("contact_way")
+    val contactWayConfig: ContactWayConfig? = null
+): IBase
 
 @Serializable
 class ResponseExternalContactDetail(

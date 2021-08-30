@@ -22,6 +22,8 @@ import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.security.RsaCryptoUtil
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.WorkBaseApi
+import com.github.rwsbillyang.wxSDK.work.WorkMulti
+import com.github.rwsbillyang.wxSDK.work.WorkSingle
 import com.tencent.wework.Finance
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -31,11 +33,18 @@ import java.io.File
 import java.io.FileOutputStream
 
 
-class ChatMsgApi(corpId: String) : WorkBaseApi(corpId){
-    constructor(suiteId: String, corpId: String) : this(corpId) {
+class ChatMsgApi private constructor (corpId: String?) : WorkBaseApi(corpId){
+    /**
+     * ISV模式，suiteId为null表示single单应用模式
+     * */
+    constructor(suiteId: String?, corpId: String) : this(corpId) {
         this.suiteId = suiteId
     }
-    constructor(corpId: String, agentId: Int) : this(corpId) {
+
+    /**
+     * 企业内部应用模式，空参表示single单应用模式
+     * */
+    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
         this.agentId = agentId
     }
 
@@ -109,7 +118,12 @@ class ChatMsgApi(corpId: String) : WorkBaseApi(corpId){
                 //    a) 需首先对每条消息的encrypt_random_key内容进行base64 decode,得到字符串str1.
                 //    b) 使用publickey_ver指定版本的私钥，使用RSA PKCS1算法对str1进行解密，得到解密内容str2.
                 //    c) 得到str2与对应消息的encrypt_chat_msg，调用下方描述的DecryptData接口，即可获得消息明文。
-                val privateKey = Work.ApiContextMap[corpId]?.agentMap?.get(agentId)?.privateKey
+                val privateKey = if(Work.isMulti){
+                    WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.privateKey
+                }else{
+                    WorkSingle.agentContext.privateKey
+                }
+
                 if(privateKey == null){
                     log.warn("Finance.GetChatData privateKey is null, please config it first")
                     return null

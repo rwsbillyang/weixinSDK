@@ -68,10 +68,10 @@ fun Application.WorkTestableModule(testing: Boolean = false) {
 
     testableModule(testing)
 
-    Work.config(corpId, WorkBaseApi.KeyBase, "the_secret", true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",customAccessToken = TestAccessTokenValue())
-    Work.config(corpId, WorkBaseApi.KeyChatArchive, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C", customAccessToken = TestAccessTokenValue())
-    Work.config(corpId, WorkBaseApi.KeyContact, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",  customAccessToken = TestAccessTokenValue())
-    Work.config(corpId, WorkBaseApi.KeyCustomer, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C", customAccessToken = TestAccessTokenValue())
+    WorkMulti.config(corpId, WorkBaseApi.KeyBase, "the_secret", true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",customAccessToken = TestAccessTokenValue())
+    WorkMulti.config(corpId, WorkBaseApi.KeyChatArchive, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C", customAccessToken = TestAccessTokenValue())
+    WorkMulti.config(corpId, WorkBaseApi.KeyContact, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",  customAccessToken = TestAccessTokenValue())
+    WorkMulti.config(corpId, WorkBaseApi.KeyCustomer, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C", customAccessToken = TestAccessTokenValue())
 
     routing {
         dispatchAgentMsgApi(corpId, WorkBaseApi.KeyBase)

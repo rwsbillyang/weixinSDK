@@ -23,6 +23,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.rwsbillyang.wxSDK.bean.DataBox
 import com.github.rwsbillyang.wxSDK.security.AesException
 import com.github.rwsbillyang.wxSDK.security.JsAPI
+import com.github.rwsbillyang.wxSDK.work.Work
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
@@ -38,11 +39,17 @@ import java.util.concurrent.TimeUnit
 fun Routing.isvDispatchMsgApi(suiteId: String){
     val log = LoggerFactory.getLogger("suiteMsgApi")
 
-    val suiteApiCtx = ThirdPartyWork.ApiContextMap[suiteId]
+    val suiteApiCtx = if(Work.isMulti){
+        IsvWorkMulti.ApiContextMap[suiteId]
+
+    }else{
+        IsvWorkSingle.ctx
+    }
     if(suiteApiCtx == null){
         log.warn("not init suiteApiCtx for: suiteId=$suiteId")
         return
     }
+
 
     if(suiteApiCtx.wxBizMsgCrypt == null || suiteApiCtx.msgHub == null){
         log.warn("wxBizMsgCrypt or msgHub is null, please init them correctly")
@@ -50,16 +57,21 @@ fun Routing.isvDispatchMsgApi(suiteId: String){
     }
 
     //"/api/wx/work/3rd"
-    route(ThirdPartyWork.msgNotifyPath) {
+    route(IsvWork.msgNotifyPath) {
         get {
-            val appId = call.parameters["suiteId"]
+            //val suiteId = call.parameters["suiteId"]
 
             val signature = call.request.queryParameters["msg_signature"]
             val timestamp = call.request.queryParameters["timestamp"]
             val nonce = call.request.queryParameters["nonce"]
             val echostr = call.request.queryParameters["echostr"]
 
-            val ctx = ThirdPartyWork.ApiContextMap[appId]
+            val ctx = if(Work.isMulti){
+                IsvWorkMulti.ApiContextMap[suiteId]
+            }else{
+                IsvWorkSingle.ctx
+            }
+
             val token = ctx?.token
 
             //if (StringUtils.isAnyBlank(token, signature, timestamp, nonce,echostr)) {
@@ -81,8 +93,12 @@ fun Routing.isvDispatchMsgApi(suiteId: String){
     }
 
     post{
-        val appId = call.parameters["suiteId"]
-        val ctx = ThirdPartyWork.ApiContextMap[appId]
+        //val appId = call.parameters["suiteId"]
+        val ctx = if(Work.isMulti){
+            IsvWorkMulti.ApiContextMap[suiteId]
+        }else{
+            IsvWorkSingle.ctx
+        }
 
         val body: String = call.receiveText()
 
@@ -116,7 +132,7 @@ fun Routing.isvAuthFromOutsideApi(onGetPermanentAuthInfo: (suiteId: String, info
     /**
      * 前端请求该endpoint，从服务商网站发起应用授权
      * */
-    get(ThirdPartyWork.authFromOutsidePath){
+    get(IsvWork.authFromOutsidePath){
         val suiteId = call.parameters["suiteId"]
         if(suiteId.isNullOrBlank())
         {
@@ -128,7 +144,7 @@ fun Routing.isvAuthFromOutsideApi(onGetPermanentAuthInfo: (suiteId: String, info
                 val state = RandomStringUtils.randomAlphanumeric(16)
                 thirdStateCache.put(state,suiteId)
                 val host = call.request.host() //如："https：//www.example.com"
-                val redirect = URLEncoder.encode("$host/${ThirdPartyWork.authCodeNotifyPath}/${suiteId}","UTF-8")
+                val redirect = URLEncoder.encode("$host/${IsvWork.authCodeNotifyPath}/${suiteId}","UTF-8")
                 //引导用户进入授权页
                 val url = "https://open.work.weixin.qq.com/3rdapp/install?suite_id=$suiteId&pre_auth_code=${preAuthCode.pre_auth_code}&redirect_uri=$redirect&state=$state"
                 call.respondRedirect(url)
@@ -143,7 +159,7 @@ fun Routing.isvAuthFromOutsideApi(onGetPermanentAuthInfo: (suiteId: String, info
      *  用户授权成功后，接收来自企业微信的通知，得到临时授权码，再使用临时授权码获取永久授权码
      * 获取永久授权码后，通过指定的回调onGetPermanentAuthInfo处理永久授权码，期间任何错误处理均通过指定的web通知path通知到前端
      * */
-    get(ThirdPartyWork.authCodeNotifyPath){
+    get(IsvWork.authCodeNotifyPath){
         val authCode = call.request.queryParameters["auth_code"]
         //val expiresIn = call.request.queryParameters["expires_in"]
         val state = call.request.queryParameters["state"]
@@ -171,7 +187,7 @@ fun Routing.isvAuthFromOutsideApi(onGetPermanentAuthInfo: (suiteId: String, info
             }
         }
 
-        val url = call.request.host() + ThirdPartyWork.permanentWebNotifyPath + webNotifyResult
+        val url = call.request.host() + IsvWork.permanentWebNotifyPath + webNotifyResult
         call.respondRedirect(url, permanent = false)
     }
 }
@@ -181,14 +197,18 @@ fun Routing.isvAuthFromOutsideApi(onGetPermanentAuthInfo: (suiteId: String, info
  * 前端发出请求，获取使用jssdk时所需的认证签名
  * */
 fun Routing.isvJsSdkSignature(){
-    get(ThirdPartyWork.jsSdkSignaturePath){
+    get(IsvWork.jsSdkSignaturePath){
         val suiteId = call.request.queryParameters["suiteId"]
         val corpId = call.request.queryParameters["corpId"]
 
         val msg = if(suiteId == null || corpId == null){
             "invalid parameters: corpId or suiteId could not be null"
         }else{
-            val ticket =  ThirdPartyWork.ApiContextMap[suiteId]?.jsTicket?.get()
+            val ticket =  if(Work.isMulti){
+                IsvWorkMulti.ApiContextMap[suiteId]?.jsTicket?.get()
+            }else{
+                IsvWorkSingle.ctx.jsTicket?.get()
+            }
             if(ticket == null){
                 "suiteId=$suiteId, corpId=$corpId is configured?"
             }else{

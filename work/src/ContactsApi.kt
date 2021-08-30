@@ -39,11 +39,18 @@ import kotlinx.serialization.json.*
  * 获取通讯录管理secret的方法如下：
 1、进入企业微信管理后台，在“管理工具” — “通讯录同步助手”开启“API接口同步”
  * */
-class ContactsApi(corpId: String) : WorkBaseApi(corpId){
-    constructor(suiteId: String, corpId: String) : this(corpId) {
+class ContactsApi private constructor (corpId: String?) : WorkBaseApi(corpId){
+    /**
+     * ISV模式，suiteId为null表示single单应用模式
+     * */
+    constructor(suiteId: String?, corpId: String) : this(corpId) {
         this.suiteId = suiteId
     }
-    constructor(corpId: String, agentId: Int) : this(corpId) {
+
+    /**
+     * 企业内部应用模式，空参表示single单应用模式
+     * */
+    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
         this.agentId = agentId
     }
 
@@ -163,11 +170,18 @@ class ResponseSelectedTicket(
 
 
 
-class DepartmentApi(corpId: String) : WorkBaseApi(corpId){
-    constructor(suiteId: String, corpId: String) : this(corpId) {
+class DepartmentApi private constructor (corpId: String?) : WorkBaseApi(corpId){
+    /**
+     * ISV模式，suiteId为null表示single单应用模式
+     * */
+    constructor(suiteId: String?, corpId: String) : this(corpId) {
         this.suiteId = suiteId
     }
-    constructor(corpId: String, agentId: Int) : this(corpId) {
+
+    /**
+     * 企业内部应用模式，空参表示single单应用模式
+     * */
+    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
         this.agentId = agentId
     }
 
@@ -207,11 +221,18 @@ class DepartmentApi(corpId: String) : WorkBaseApi(corpId){
 
 }
 
-class TagApi(corpId: String) : WorkBaseApi(corpId){
-    constructor(suiteId: String, corpId: String) : this(corpId) {
+class TagApi private constructor (corpId: String?) : WorkBaseApi(corpId){
+    /**
+     * ISV模式，suiteId为null表示single单应用模式
+     * */
+    constructor(suiteId: String?, corpId: String) : this(corpId) {
         this.suiteId = suiteId
     }
-    constructor(corpId: String, agentId: Int) : this(corpId) {
+
+    /**
+     * 企业内部应用模式，空参表示single单应用模式
+     * */
+    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
         this.agentId = agentId
     }
 
@@ -277,11 +298,18 @@ class BatchUserCallback(val url: String?,
 
 class BatchUserBody(val mediaId: String, toInvite: Boolean?, callback: BatchUserCallback?)
 
-class UserBatchApi(corpId: String) : WorkBaseApi(corpId){
-    constructor(suiteId: String, corpId: String) : this(corpId) {
+class UserBatchApi private constructor (corpId: String?) : WorkBaseApi(corpId){
+    /**
+     * ISV模式，suiteId为null表示single单应用模式
+     * */
+    constructor(suiteId: String?, corpId: String) : this(corpId) {
         this.suiteId = suiteId
     }
-    constructor(corpId: String, agentId: Int) : this(corpId) {
+
+    /**
+     * 企业内部应用模式，空参表示single单应用模式
+     * */
+    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
         this.agentId = agentId
     }
 

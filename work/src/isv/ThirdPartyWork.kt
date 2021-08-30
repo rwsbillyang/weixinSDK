@@ -22,6 +22,7 @@ package com.github.rwsbillyang.wxSDK.work.isv
 import com.github.rwsbillyang.wxSDK.accessToken.*
 import com.github.rwsbillyang.wxSDK.security.PemUtil
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
+import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler
 
@@ -37,14 +38,7 @@ import java.security.PrivateKey
 /**./gr
  * 每个第三方应用有一个suiteId
  * */
-object ThirdPartyWork {
-    private val log: Logger = LoggerFactory.getLogger("ThirdPartyWork")
-
-    /**
-     * suiteId -> SuiteApiContext
-     * 一个服务商，可以有多个应用，这里的map是多个应用
-     * */
-    val ApiContextMap = hashMapOf<String, SuiteApiContext>()
+object IsvWork {
 
     private const val prefix = "/api/wx/work/isv"
 
@@ -67,6 +61,105 @@ object ThirdPartyWork {
      */
     var permanentWebNotifyPath: String = "/wxwork/isv/authNotify"
 
+}
+
+
+object IsvWorkSingle {
+    private val log: Logger = LoggerFactory.getLogger("IsvWorkSingle")
+
+    private lateinit var _suiteId: String
+    private lateinit var _ctx: SuiteApiContext
+    val suiteId: String
+        get() = _suiteId
+    val ctx: SuiteApiContext
+        get() = _ctx
+
+    fun config(
+        suiteId: String, secret: String, token: String, encodingAESKey: String?,
+        enableJsSdk: Boolean, privateKeyFilePath: String?,
+        suiteInfoHandler: ISuiteInfoHandler, msgHandler: IWorkMsgHandler, eventHandler: IWorkEventHandler
+    ) {
+        Work._isIsv = true
+        Work._isMulti = false
+
+        _suiteId = suiteId
+        _ctx = SuiteApiContext(
+            suiteId,
+            secret,
+            token,
+            encodingAESKey,
+            enableJsSdk,
+            privateKeyFilePath,
+            msgHandler,
+            eventHandler,
+            suiteInfoHandler
+        )
+    }
+
+    /**
+     * 配置IsvWork之step2：收到suite ticket时配置suiteAccessToken
+     * suite_ticket由企业微信后台定时推送给“指令回调URL”，每十分钟更新一次,suite_ticket实际有效期为30分钟
+     *
+     * 调用情景：每次收到suite ticket推送消息时
+     * */
+    fun configSuiteToken(suiteId: String, ticket: String, corpListBlock: () -> List<Pair<String, String>>) {
+        val ctx = IsvWorkSingle.ctx
+
+        ctx.ticket = ticket
+        if (ctx.suiteAccessToken == null) {//第一次推送ticket时为空，需要创建suiteAccessToken，以后无需再创建
+            ctx.suiteAccessToken = TimelyRefreshSuiteToken(suiteId, SuiteRefresher(suiteId))
+
+            //查询是否已有授权码，有的话，直接配置accessToken，否则等收到授权通知后再配置accessToken
+            corpListBlock().forEach {
+                configAccessToken(suiteId, it.first, it.second)
+            }
+        }
+    }
+
+    /**
+     * 配置ThirdPartyWork之step3：配置suietId+corpId对应的accessToken
+     * 调用情景：1. 收到授权成功通知后获取到永久授权码时；2. 从数据库中读取到永久授权码时
+     * 收到授权成功通知后获取到永久授权码时(或从数据库读取待)，配置accessToken
+     * @param initialAccessToken 获取永久授权码时，已返回有accessToken，可作为初始有效值
+     * */
+    fun configAccessToken(suiteId: String, corpId: String, permanentCode: String, initialAccessToken: String? = null) {
+        val ctx = IsvWorkSingle.ctx
+
+        val accessToken = ctx.accessTokenMap[corpId]
+        if (accessToken == null) {
+            ctx.accessTokenMap[corpId] = TimelyRefreshAccessToken3rd(suiteId, corpId, permanentCode)
+            if (initialAccessToken != null) {
+                ctx.accessTokenMap[corpId]!!.updateTokenInfo(initialAccessToken, System.currentTimeMillis())
+            }
+
+            if(ctx.enableJsSdk){
+                ctx.jsTicket = TimelyRefreshTicket(suiteId,
+                    TicketRefresher{
+                        "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${ctx.accessTokenMap[corpId]!!.get()}"
+                    })
+            }
+        } else
+            log.warn("not need config accessToken again")
+    }
+
+    /**
+     * 取消授权后，将accessToken从map中移除
+     * */
+    fun removeCorpAuth(corpId: String) {
+        ctx.accessTokenMap.remove(corpId)
+    }
+}
+
+object IsvWorkMulti{
+    private val log: Logger = LoggerFactory.getLogger("IsvWorkMulti")
+
+    /**
+     * suiteId -> SuiteApiContext
+     * 一个服务商，可以有多个应用，这里的map是多个应用
+     * */
+    val ApiContextMap = hashMapOf<String, SuiteApiContext>()
+
+
     /**
      * 配置ThirdPartyWork之step1：系统启动时用suiteId和secret等进行配置
      * 配置map：配置suiteId和secret等，ticket等待腾讯系统推送，然后创建suiteAccessToken
@@ -74,7 +167,10 @@ object ThirdPartyWork {
      * */
     fun config(suiteId: String, secret: String, token: String, encodingAESKey: String?,
                enableJsSdk: Boolean, privateKeyFilePath: String?,
-         suiteInfoHandler: ISuiteInfoHandler, msgHandler: IWorkMsgHandler, eventHandler: IWorkEventHandler) {
+               suiteInfoHandler: ISuiteInfoHandler, msgHandler: IWorkMsgHandler, eventHandler: IWorkEventHandler) {
+        Work._isIsv = true
+        Work._isMulti = true
+
         var ctx = ApiContextMap[suiteId]
         if (ctx == null) {//first time
             ctx = SuiteApiContext(suiteId, secret, token, encodingAESKey, enableJsSdk,privateKeyFilePath, msgHandler, eventHandler, suiteInfoHandler)
@@ -104,7 +200,6 @@ object ThirdPartyWork {
                 configAccessToken(suiteId, it.first, it.second)
             }
         }
-
     }
 
     /**
@@ -135,7 +230,6 @@ object ThirdPartyWork {
             }
         } else
             log.warn("not need config accessToken again")
-
     }
 
     fun removeSuite(suiteId: String){
@@ -155,9 +249,8 @@ object ThirdPartyWork {
 
 }
 
-
 class SuiteApiContext(
-    val id: String, //suiteId
+    id: String, //suiteId
     val secret: String,
     val token: String,
     val encodingAESKey: String? = null,
@@ -208,10 +301,11 @@ class SuiteApiContext(
  * suite_access_token刷新请求器
  * 注意：需要等suite ticket推送过来后才可创建
  * */
-class SuiteRefresher(suiteId: String) : VariableDataPostRefresher<SuiteParameters>(
+class SuiteRefresher(suiteId: String?) : VariableDataPostRefresher<SuiteParameters>(
     "suite_access_token",
     {
-        ThirdPartyWork.ApiContextMap[suiteId]?.let { SuiteParameters(suiteId, it.secret, it.ticket!!) }
+        if(suiteId == null) SuiteParameters(IsvWorkSingle.suiteId, IsvWorkSingle.ctx.secret, IsvWorkSingle.ctx.ticket!!)
+        else IsvWorkMulti.ApiContextMap[suiteId]?.let { SuiteParameters(suiteId, it.secret, it.ticket!!) }
     },
     "https://qyapi.weixin.qq.com/cgi-bin/service/get_suite_token"
 )
@@ -259,10 +353,11 @@ class AccessToken3rdRefresher(corpId: String, permanentCode: String, suiteAccess
  * 会自动刷新的 AccessToken
  * */
 class TimelyRefreshAccessToken3rd @JvmOverloads constructor(
-    suiteId: String, corpId: String, permanentCode: String,
+    suiteId: String?, corpId: String, permanentCode: String,
     refresher: IRefresher = AccessToken3rdRefresher(
         corpId, permanentCode,
-        ThirdPartyWork.ApiContextMap[suiteId]?.suiteAccessToken
+        if(suiteId == null) IsvWorkSingle.ctx.suiteAccessToken
+        else IsvWorkMulti.ApiContextMap[suiteId]?.suiteAccessToken
     )
 ) : TimelyRefreshValue("$suiteId/$corpId", refresher), ITimelyRefreshValue {
     init {

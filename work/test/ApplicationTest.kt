@@ -22,6 +22,8 @@ import com.github.rwsbillyang.wxSDK.security.SHA1
 import com.github.rwsbillyang.wxSDK.security.XmlUtil
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.WorkBaseApi
+import com.github.rwsbillyang.wxSDK.work.WorkMulti
+import com.github.rwsbillyang.wxSDK.work.WorkSingle
 
 
 import io.ktor.http.*
@@ -51,23 +53,37 @@ class ApplicationTest {
         }
     }
 
-    @Test
-    fun testWorkUrl(){
+    //@Test
+    fun testWorkUrlGet(){
         withTestApplication({ WorkTestableModule(testing = true) }) {
             //TODO: how to get the encryptEchoStr from "1616140317555161061"
             val encryptEcho = "P9nAzCzyDtyTWESHep1vC5X9xho/qYX3Zpb4yKa9SKld1DsH3Iyt3tP3zNdtp+4RPcs8TgAE7OaBO+FZXvnaqQ=="
             //val encryptEcho = _WORK.wxBizMsgCrypt.encrypt(sVerifyEchoStr)
             val agentName = WorkBaseApi.KeyBase
-            val ctx = Work.ApiContextMap[corpId]!!.agentMap[agentName]!!
+            val ctx = if(Work.isMulti)
+                WorkMulti.ApiContextMap[corpId]!!.agentMap[agentName]!!
+            else WorkSingle.agentContext
+
 
             val signature =  SHA1.getSHA1(ctx.token!!, timestamp, nonce, encryptEcho)
             val getUrl  = "${ctx.msgNotifyUri}?msg_signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$encryptEcho"
 
-//            handleRequest(HttpMethod.Get, getUrl).apply {
-//                assertEquals(HttpStatusCode.OK, response.status())
-//                println("getUrl=$getUrl")
-//                assertEquals(echoStr, response.content)
-//            }
+            handleRequest(HttpMethod.Get, getUrl).apply {
+                assertEquals(HttpStatusCode.OK, response.status())
+                println("getUrl=$getUrl")
+                assertEquals(echoStr, response.content)
+            }
+        }
+    }
+
+
+    @Test
+    fun testWorkUrlPost(){
+        withTestApplication({ WorkTestableModule(testing = true) }) {
+            val agentName = WorkBaseApi.KeyBase
+            val ctx = if(Work.isMulti)
+                WorkMulti.ApiContextMap[corpId]!!.agentMap[agentName]!!
+            else WorkSingle.agentContext
 
 
             //原始消息文本
@@ -76,29 +92,28 @@ class ApplicationTest {
             //将原始文本用timestamp和nonce拼接后，用sha1加密，得到加密消息，再置于post data中的Encrypt的标签中
             val (xml, msgSignature) = ctx.wxBizMsgCrypt!!.encryptMsg(corpId, originalTextMsg,timestamp, nonce, toUser,128)
 
-
             val postUrl = "${ctx.msgNotifyUri}?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce"
             handleRequest(HttpMethod.Post,postUrl){
                 setBody(xml)
             }.apply {
                 assertEquals(HttpStatusCode.OK, response.status())
-                if(response.content.isNullOrBlank()){
+                val content = response.content
+                if(content.isNullOrBlank()){
                     println("in wx work post, get empty response")
                 }else{
-                    if(response.content!!.startsWith("<xml>")){
-                        val map = XmlUtil.extract(response.content!!)
+                    if(content.startsWith("<xml>")){
+                        val map = XmlUtil.extract(content)
                         val reTimeStamp =  map["TimeStamp"]?:""
                         val reNonce = map["Nonce"]?:""
                         val reEcrypt = map["Encrypt"]?:""
                         val signature2 = SHA1.getSHA1(ctx.token!!, reTimeStamp, reNonce, reEcrypt)
-                        val msg = ctx.wxBizMsgCrypt!!.decryptWxMsg(corpId, signature2,reTimeStamp,reNonce,response.content!!)
+                        val msg = ctx.wxBizMsgCrypt!!.decryptWxMsg(corpId, signature2,reTimeStamp,reNonce,content)
                         println("Got wx work reply: $msg")
                     }else{
-                        println("in wx work post, got response: ${response.content}")
+                        println("in wx work post, got response: ${content}")
                     }
                 }
             }
-
 
         }
     }

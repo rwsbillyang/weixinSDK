@@ -44,11 +44,18 @@ data class Calendar(
     @SerialName("cal_id") val id: String? = null
 )
 
-class CalendarApi(corpId: String) : WorkBaseApi(corpId){
-    constructor(suiteId: String, corpId: String) : this(corpId) {
+class CalendarApi private constructor (corpId: String?) : WorkBaseApi(corpId){
+    /**
+     * ISV模式，suiteId为null表示single单应用模式
+     * */
+    constructor(suiteId: String?, corpId: String) : this(corpId) {
         this.suiteId = suiteId
     }
-    constructor(corpId: String, agentId: Int) : this(corpId) {
+
+    /**
+     * 企业内部应用模式，空参表示single单应用模式
+     * */
+    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
         this.agentId = agentId
     }
 
@@ -75,7 +82,21 @@ class CalendarApi(corpId: String) : WorkBaseApi(corpId){
     fun delete(id: String) = doPost3("del", mapOf("cal_id" to  id))
 }
 
-class Schedule(corpId: String, agentId: Int) : WorkBaseApi(corpId, agentId){
+class Schedule private constructor (corpId: String?) : WorkBaseApi(corpId){
+    /**
+     * ISV模式，suiteId为null表示single单应用模式
+     * */
+    constructor(suiteId: String?, corpId: String) : this(corpId) {
+        this.suiteId = suiteId
+    }
+
+    /**
+     * 企业内部应用模式，空参表示single单应用模式
+     * */
+    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
+        this.agentId = agentId
+    }
+
     override val group = "oa/schedule"
     companion object{
         const val ADD = "add"
