@@ -23,14 +23,16 @@ import org.bson.types.ObjectId
 import java.util.*
 
 /**
- * @param objectId 用于做share或relay的id,不需要时可以忽略
+ *
+ * @param agentId 当企业微信中需要调用agentConfig进行注入时才提供，否则未空
  * */
 @Serializable
 data class JsApiSignature(
     val appId: String,
     val nonceStr: String,
     val timestamp: Long,
-    val signature: String
+    val signature: String,
+    val agentId: Int?
 )
 
 object JsAPI {
@@ -39,6 +41,7 @@ object JsAPI {
     /**
      * 获取js-sdk所需的签名JsApiSignature
      * @param appId 公众号appId或企业corpId
+     * @param agentId 当企业微信中需要调用agentConfig进行注入时才提供，否则未空
      * @param jsApiTicket 通过appId或corpId与secret获取的js ticket
      * @param url 当前网页的URL，不包含#及其后面部分
      * @param nonceStr 随机字符串，可不提供
@@ -46,7 +49,7 @@ object JsAPI {
      *
      * @return 签名以及相关参数
      */
-    fun getSignature(appId: String, jsApiTicket: String, url: String,  nonceStr: String? = null, timestamp: Long? = null): JsApiSignature {
+    fun getSignature(appId: String, jsApiTicket: String, url: String, agentId: Int? = null,  nonceStr: String? = null, timestamp: Long? = null): JsApiSignature {
         require(!url.contains("#")){"url cannot contains #"}
 
         val nonce = nonceStr?:UUID.randomUUID().toString().replace("-".toRegex(), "")
@@ -54,6 +57,6 @@ object JsAPI {
         val time = timestamp?:System.currentTimeMillis() / 1000
         val signature = SignUtil.jsApiSignature(jsApiTicket, nonce, time, url)
 
-        return JsApiSignature(appId, nonce, time, signature)
+        return JsApiSignature(appId, nonce, time, signature, agentId)
     }
 }

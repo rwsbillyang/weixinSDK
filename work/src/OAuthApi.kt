@@ -20,23 +20,54 @@ package com.github.rwsbillyang.wxSDK.work
 
 import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.bean.OAuthInfo
+import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
+import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.apache.commons.lang3.RandomStringUtils
 import java.net.URLEncoder
 
-class OAuthApi private constructor (corpId: String) : WorkBaseApi(corpId){
+/**
+ * scope为:
+ * snsapi_base 静默授权，可获取成员的基础信息（UserId与DeviceId）；
+ * snsapi_userinfo 静默授权，可获取成员的详细信息，但不包含手机、邮箱等敏感信息
+ * snsapi_privateinfo 手动授权，可获取成员的详细信息，包含手机、邮箱等敏感信息（已不再支持获取手机号/邮箱）
+ * 第三方应用必须有“成员敏感信息授权”的权限:“成员敏感信息授权”的开启方法为：登录服务商管理后台->标准应用服务->本地应用->进入应用->点击基本信息栏“编辑”按钮->勾选”成员敏感信息”
+ *
+ * 第三方应用id（即ww或wx开头的suite_id）。注意与企业的网页授权登录不同
+ * 当oauth2中appid=corpid时，scope为snsapi_userinfo或snsapi_privateinfo时，必须填agentid参数，
+ * 否则系统会视为snsapi_base，不会返回敏感信息. 企业自建应用调用读取成员接口没有字段限制，可以获取包括敏感字段在内的所有信息。
+ * 因此，只有第三方应用才有必要使用snsapi_userinfo或snsapi_privateinfo的scope。
+ * */
+enum class SnsApiScope(val value: String){
+    Base("snsapi_base"), UserInfo("snsapi_userinfo"), PrivateInfo("snsapi_privateinfo")
+}
+
+/**
+ * OAUTH身份认证，支持第三方应用
+ * */
+class OAuthApi private constructor (corpId: String?) : WorkBaseApi(corpId){
     /**
-     * ISV模式，suiteId为null表示single单应用模式
+     * 单应用模式下，Oauth在获取用户身份之前，还没有各种信息
      * */
-    constructor(suiteId: String?, corpId: String) : this(corpId) {
+    constructor(): this(if(Work.isIsv) null else WorkSingle.corpId){
+        if(Work.isIsv){
+            this.suiteId = IsvWorkSingle.suiteId
+        }else{
+            this.agentId = WorkSingle.agentId
+        }
+    }
+    /**
+     * ISV-Multi
+     * */
+    constructor(suiteId: String, corpId: String) : this(corpId) {
         this.suiteId = suiteId
     }
 
     /**
-     * 企业内部应用模式，空参表示single单应用模式
+     * 企业内部多应用
      * */
-    constructor(corpId: String, agentId: Int? = null) : this(corpId) {
+    constructor(corpId: String, agentId: Int) : this(corpId) {
         this.agentId = agentId
     }
 
@@ -49,12 +80,25 @@ class OAuthApi private constructor (corpId: String) : WorkBaseApi(corpId){
      * "https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect"
      * 然后重定向到该url
      *
-     * scope为snsapi_base，snsapi_userinfo
+     * @param redirectUri 重定向地址，用于接收code（获取用户信息时使用）
+     * @param snsApiScope: snsapi_base, snsapi_userinfo, snsapi_privateinfo
+     * snsapi_base 静默授权，可获取成员的基础信息（UserId与DeviceId）；
+     * snsapi_userinfo 静默授权，可获取成员的详细信息，但不包含手机、邮箱等敏感信息
+     * snsapi_privateinfo 手动授权，可获取成员的详细信息，包含手机、邮箱等敏感信息（已不再支持获取手机号/邮箱）
+     * 第三方应用必须有“成员敏感信息授权”的权限:“成员敏感信息授权”的开启方法为：登录服务商管理后台->标准应用服务->本地应用->进入应用->点击基本信息栏“编辑”按钮->勾选”成员敏感信息”
+     *
+     * 第三方应用id（即ww或wx开头的suite_id）。注意与企业的网页授权登录不同
+     * 当oauth2中appid=corpid时，scope为snsapi_userinfo或snsapi_privateinfo时，必须填agentid参数，
+     * 否则系统会视为snsapi_base，不会返回敏感信息. 企业自建应用调用读取成员接口没有字段限制，可以获取包括敏感字段在内的所有信息。
+     * 因此，只有第三方应用才有必要使用snsapi_userinfo或snsapi_privateinfo的scope。
+     *
+     *
      * */
-    fun prepareOAuthInfo(redirectUri: String, needUserInfo: Boolean = false): OAuthInfo {
+    fun prepareOAuthInfo(redirectUri: String, snsApiScope: SnsApiScope = SnsApiScope.PrivateInfo): OAuthInfo {
         val state = RandomStringUtils.randomAlphanumeric(16)
-        return OAuthInfo(corpId!!, URLEncoder.encode(redirectUri,"UTF-8") ,
-            "snsapi_base",state,needUserInfo)
+        val appId = if(suiteId != null) suiteId!! else corpId!!
+        return OAuthInfo(appId, URLEncoder.encode(redirectUri,"UTF-8") ,
+            snsApiScope.value, state, agentId)
     }
     /**
      * 获取访问用户身份
@@ -66,6 +110,27 @@ class OAuthApi private constructor (corpId: String) : WorkBaseApi(corpId){
      * */
     fun getUserInfo(code: String): ResponseOAuthUserInfo = doGet("getuserinfo", mapOf("code" to code))
 
+    /**
+     * 获取访问用户身份
+     * https://work.weixin.qq.com/api/doc/90001/90143/91121
+     *
+     * */
+    fun getUserInfo3rd(code: String): ResponseOAuthUserInfo = doGet2{
+        val token = if(Work.isMulti){
+            IsvWorkMulti.ApiContextMap[suiteId]?.suiteAccessToken?.get()
+        }else
+            IsvWorkSingle.ctx.suiteAccessToken?.get()
+        "https://qyapi.weixin.qq.com/cgi-bin/service/getuserinfo3rd?suite_access_token=$token&code=$code"
+    }
+
+    fun getUserDetail3rd(userTicket: String):ResponseOauthUserDetail3rd = doPost("user_ticket" to userTicket){
+        val token = if(Work.isMulti){
+            IsvWorkMulti.ApiContextMap[suiteId]?.suiteAccessToken?.get()
+        }else
+            IsvWorkSingle.ctx.suiteAccessToken?.get()
+
+        "https://qyapi.weixin.qq.com/cgi-bin/service/getuserdetail3rd?suite_access_token=$token"
+    }
 }
 
 /**
@@ -84,12 +149,39 @@ class ResponseOAuthUserInfo(
     override val errCode: Int = 0,
     @SerialName("errmsg")
     override val errMsg: String? = null,
-    @SerialName("DeviceId")
+    @SerialName("DeviceId") //both：ISV和内部应用共有
     val deviceId: String? = null,
     @SerialName("UserId")
-    val userId: String? = null,
+    val userId: String? = null, //both：ISV和内部应用共有。 用户在企业内的UserID，如果该企业与第三方应用有授权关系时，返回明文UserId，否则返回密文UserId
     @SerialName("external_userid")
-    val externalUserId: String? = null,
+    val externalUserId: String? = null, //both：ISV和内部应用共有。 外部联系人id，当且仅当用户是企业的客户，且跟进人在应用的可见范围内时返回。如果是第三方应用调用，针对同一个客户，同一个服务商不同应用获取到的id相同
     @SerialName("OpenId")
-    val openId: String? = null
+    val openId: String? = null, //both：ISV和内部应用共有。 非企业成员的标识，对当前企业唯一。不超过64字节. ISV: 非企业成员的标识，对当前服务商唯一
+
+    @SerialName("CorpId")
+    val corpId: String? = null, //ISV模式下独有
+    @SerialName("user_ticket")
+    val userTicket: String? = null,//ISV模式下独有 成员票据，最大为512字节。 scope为snsapi_userinfo或snsapi_privateinfo，且用户在应用可见范围之内时返回此参数。 后续利用该参数可以获取用户信息或敏感信息，参见“第三方使用user_ticket获取成员详情”。
+    @SerialName("expires_in")
+    val expiresIn: Int? = null,//ISV模式下独有
+    @SerialName("open_userid")
+    val openUserid: String? = null //ISV模式下独有 同一个内部成员对服务商唯一。最多64个字节。
+): IBase
+
+@Serializable
+class ResponseOauthUserDetail3rd(
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+
+    @SerialName("corpid")
+    val corpId: String? = null, //用户所属企业的corpid
+    @SerialName("userid")
+    val userId: String? = null,//成员UserID
+    val name: String? = null, // 成员姓名，对新创建第三方应用不再返回真实name，使用userid代替name返回，第三方页面需要通过通讯录展示组件来展示名字
+    val gender: Int? = null, //性别。0表示未定义，1表示男性，2表示女性
+    val avatar: String? = null, //头像url。仅在用户同意snsapi_privateinfo授权时返回
+    @SerialName("qr_code")
+    val qrCode: String? = null //员工个人二维码（扫描可添加为外部联系人），仅在用户同意snsapi_privateinfo授权时返回
 ): IBase

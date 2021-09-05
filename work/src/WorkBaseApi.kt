@@ -49,25 +49,11 @@ import kotlinx.serialization.Serializable
  * */
 abstract class WorkBaseApi protected constructor (val corpId: String?): WxApi() {
 
-    companion object{
-        const val KeyBase = 1000
-        const val KeyContact = KeyBase + 1
-        const val KeyCustomer = KeyBase + 2
-        const val KeyChatArchive = KeyBase + 3
-
-        const val KeyAgentMgt = KeyBase + 4
-        const val KeyCalendar = KeyBase + 5
-        const val KeyInvoice = KeyBase + 6
-        const val KeyMaterial = KeyBase + 7
-        const val KeyOA = KeyBase + 8
-    }
-
     //第三方开发者模式：使用suiteId和corpId。若suiteId非空，认为是isv模式
     var suiteId: String? = null
 
     //企业内部模式，使用corpId和agentId
     var agentId: Int? = null
-
 
 
     override val base = "https://qyapi.weixin.qq.com/cgi-bin"

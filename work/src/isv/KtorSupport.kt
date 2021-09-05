@@ -22,8 +22,8 @@ package com.github.rwsbillyang.wxSDK.work.isv
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.rwsbillyang.wxSDK.bean.DataBox
 import com.github.rwsbillyang.wxSDK.security.AesException
-import com.github.rwsbillyang.wxSDK.security.JsAPI
 import com.github.rwsbillyang.wxSDK.work.Work
+import com.github.rwsbillyang.wxSDK.work.stateCache
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
@@ -33,15 +33,13 @@ import kotlinx.coroutines.launch
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
-import java.util.concurrent.TimeUnit
 
 
 fun Routing.isvDispatchMsgApi(suiteId: String){
-    val log = LoggerFactory.getLogger("suiteMsgApi")
+    val log = LoggerFactory.getLogger("isvDispatchMsgApi")
 
     val suiteApiCtx = if(Work.isMulti){
         IsvWorkMulti.ApiContextMap[suiteId]
-
     }else{
         IsvWorkSingle.ctx
     }
@@ -118,13 +116,13 @@ fun Routing.isvDispatchMsgApi(suiteId: String){
 
 
 
-private val thirdStateCache = Caffeine.newBuilder()
-    .maximumSize(Long.MAX_VALUE)
-    .expireAfterWrite(10, TimeUnit.MINUTES)
-    .expireAfterAccess(1, TimeUnit.SECONDS)
-    .build<String, String>()
+//private val thirdStateCache = Caffeine.newBuilder()
+//    .maximumSize(Long.MAX_VALUE)
+//    .expireAfterWrite(10, TimeUnit.MINUTES)
+//    .expireAfterAccess(1, TimeUnit.SECONDS)
+//    .build<String, String>()
 /**
- * 第三方授权认证的api
+ * 从第三方网站发起对app的授权
  *
  * @param onGetPermanentAuthInfo 成功获取到永久授权码后的回调
  */
@@ -142,7 +140,7 @@ fun Routing.isvAuthFromOutsideApi(onGetPermanentAuthInfo: (suiteId: String, info
             val preAuthCode = ThirdPartyApi(suiteId).getPreAuthCode()
             if(preAuthCode.isOK() && !preAuthCode.pre_auth_code.isNullOrBlank()){
                 val state = RandomStringUtils.randomAlphanumeric(16)
-                thirdStateCache.put(state,suiteId)
+                stateCache.put(state,suiteId)
                 val host = call.request.host() //如："https：//www.example.com"
                 val redirect = URLEncoder.encode("$host/${IsvWork.authCodeNotifyPath}/${suiteId}","UTF-8")
                 //引导用户进入授权页
@@ -167,7 +165,7 @@ fun Routing.isvAuthFromOutsideApi(onGetPermanentAuthInfo: (suiteId: String, info
         val webNotifyResult = if(state.isNullOrBlank() || authCode.isNullOrBlank()){
             "?ret=KO&msg=no_state_or_authCode"
         }else{
-            val suiteIdInCache = thirdStateCache.getIfPresent(state)
+            val suiteIdInCache = stateCache.getIfPresent(state)
             val suiteId = call.parameters["suiteId"]
             if(suiteIdInCache == null){
                 "?ret=KO&msg=no_suiteId_in_cache"
@@ -177,7 +175,7 @@ fun Routing.isvAuthFromOutsideApi(onGetPermanentAuthInfo: (suiteId: String, info
                 val permanentCodeInfo = ThirdPartyApi(suiteId).getPermanentCode(authCode)
                 if(permanentCodeInfo.isOK()){
                     launch {
-                        thirdStateCache.invalidate(state)
+                        stateCache.invalidate(state)
                         onGetPermanentAuthInfo(suiteId, permanentCodeInfo)
                     }
                     "?ret=OK"
@@ -192,37 +190,3 @@ fun Routing.isvAuthFromOutsideApi(onGetPermanentAuthInfo: (suiteId: String, info
     }
 }
 
-
-/**
- * 前端发出请求，获取使用jssdk时所需的认证签名
- * */
-fun Routing.isvJsSdkSignature(){
-    get(IsvWork.jsSdkSignaturePath){
-        val suiteId = call.request.queryParameters["suiteId"]
-        val corpId = call.request.queryParameters["corpId"]
-
-        val msg = if(suiteId == null || corpId == null){
-            "invalid parameters: corpId or suiteId could not be null"
-        }else{
-            val ticket =  if(Work.isMulti){
-                IsvWorkMulti.ApiContextMap[suiteId]?.jsTicket?.get()
-            }else{
-                IsvWorkSingle.ctx.jsTicket?.get()
-            }
-            if(ticket == null){
-                "suiteId=$suiteId, corpId=$corpId is configured?"
-            }else{
-                val url = call.request.headers["Referer"]
-                if(url == null){
-                    "request Referer is null"
-                }else{
-                    call.respond(DataBox("OK",null, JsAPI.getSignature(corpId,ticket, url)))
-                    null
-                }
-            }
-        }
-        if(msg != null){
-            call.respond(DataBox("KO", msg))
-        }
-    }
-}

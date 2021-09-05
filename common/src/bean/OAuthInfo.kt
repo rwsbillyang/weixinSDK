@@ -22,10 +22,11 @@ package com.github.rwsbillyang.wxSDK.bean
 import kotlinx.serialization.Serializable
 
 /**
- * @param appId	appid 是	公众号的唯一标识 or corpId
+ * @param appId	appid 是 公众号appId or corpId or suiteId(ISV)
  * @param redirectUri	redirect_uri 是	授权后重定向的回调链接地址， 使用 urlEncode 链接进行处理过
  * @param scope	是	应用授权作用域，snsapi_base （不弹出授权页面，直接跳转，只能获取用户openid），snsapi_userinfo （弹出授权页面，可通过openid拿到昵称、性别、所在地。并且， 即使在未关注的情况下，只要用户授权，也能获取其信息 ）
  * @param state	否	重定向后会带上state参数，开发者可以填写a-zA-Z0-9的参数值，最多128字节
+ * @param agentId 企业自建应用且需要获取用户信息时需要，其它情况为null
  * */
 @Serializable
 class OAuthInfo(
@@ -33,11 +34,15 @@ class OAuthInfo(
         val redirectUri: String,
         val scope: String,
         val state: String,
-        val needUseInfo: Boolean,
+        val agentId: Int?,
         var authorizeUrl: String? = null
 ){
     init {
-        authorizeUrl = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}" +
+        if(agentId == null)
+            authorizeUrl = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}" +
                 "&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}#wechat_redirect"
+        else
+            authorizeUrl = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}" +
+                    "&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&agentid=${agentId}&state=${state}#wechat_redirect"
     }
 }

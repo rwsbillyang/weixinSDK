@@ -67,6 +67,8 @@ object Work {
 
     var jsSdkSignaturePath: String =  "$prefix/jssdk/signature"
 
+    //var agentJsSdkSignaturePath: String =  "$prefix/jssdk/signature/agent"
+
 }
 
 /**
@@ -89,15 +91,13 @@ object WorkSingle{
     fun config(corpId: String,
                agentId: Int,
                secret: String,
-
-               enableMsg: Boolean = false,
                token: String? = null,
                encodingAESKey: String? = null,
-
                privateKeyFilePath: String? = null,
+               enableJsSdk: Boolean = false,
+               enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
                customMsgUrl: String? = null,
                customAccessToken: ITimelyRefreshValue? = null,
-               enableJsSdk: Boolean = false,
                customJsTicket: ITimelyRefreshValue? = null,
                customMsgHandler: IWorkMsgHandler = DefaultWorkMsgHandler(),
                customEventHandler: IWorkEventHandler = DefaultWorkEventHandler()
@@ -109,7 +109,7 @@ object WorkSingle{
         _agentId = agentId
         _agentContext = AgentContext(corpId, agentId, secret, enableMsg,
             token, encodingAESKey, customAccessToken, customMsgUrl, privateKeyFilePath, enableJsSdk,
-            customJsTicket,customMsgHandler,customEventHandler)
+            customJsTicket,null,customMsgHandler,customEventHandler)
     }
 }
 /**
@@ -137,15 +137,13 @@ object WorkMulti{
     fun config(corpId: String,
                agentId: Int,
                secret: String,
-
-               enableMsg: Boolean = false,
                token: String? = null,
                encodingAESKey: String? = null,
-
                privateKeyFilePath: String? = null,
+               enableJsSdk: Boolean = false,
+               enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
                customMsgUrl: String? = null,
                customAccessToken: ITimelyRefreshValue? = null,
-               enableJsSdk: Boolean = false,
                customJsTicket: ITimelyRefreshValue? = null,
                customMsgHandler: IWorkMsgHandler = DefaultWorkMsgHandler(),
                customEventHandler: IWorkEventHandler = DefaultWorkEventHandler()
@@ -161,7 +159,7 @@ object WorkMulti{
 
         corpApiCtx.agentMap[agentId] = AgentContext(corpId, agentId, secret, enableMsg,
             token, encodingAESKey, customAccessToken, customMsgUrl, privateKeyFilePath, enableJsSdk,
-            customJsTicket,customMsgHandler,customEventHandler)
+            customJsTicket,null, customMsgHandler,customEventHandler)
     }
 }
 
@@ -218,7 +216,8 @@ class AgentContext(
     customMsgNotifyUri: String? = null,
     privateKeyFilePath: String? = null,
     enableJsSdk: Boolean,
-    customJsTicket: ITimelyRefreshValue? = null,
+    var agentJsTicket: ITimelyRefreshValue? = null,
+    var corpJsTicket:ITimelyRefreshValue? = null,
     msgHandler: IWorkMsgHandler,
     eventHandler: IWorkEventHandler
 ) {
@@ -226,7 +225,7 @@ class AgentContext(
 
     var accessToken: ITimelyRefreshValue = customAccessToken ?: TimelyRefreshAccessToken(corpId,
             AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = agentId.toString())
-    var jsTicket: ITimelyRefreshValue? = null
+
     /**
      * 微信消息接入， 微信消息通知URI
      * */
@@ -251,10 +250,14 @@ class AgentContext(
             }
         }
         if(enableJsSdk){
-            jsTicket = customJsTicket?:TimelyRefreshTicket(corpId,
+            agentJsTicket = TimelyRefreshTicket(corpId,
                     TicketRefresher{
                         "https://qyapi.weixin.qq.com/cgi-bin/ticket/get?access_token=${accessToken.get()}&type=agent_config"
                     }, extra = agentId.toString())
+            corpJsTicket = TimelyRefreshTicket(corpId,
+                TicketRefresher{
+                    "https://qyapi.weixin.qq.com/cgi-bin/ticket/get?access_token=${accessToken.get()}"
+                })
         }
 
         if (!privateKeyFilePath.isNullOrBlank()) {

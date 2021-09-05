@@ -22,16 +22,18 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.rwsbillyang.wxSDK.bean.DataBox
 import com.github.rwsbillyang.wxSDK.security.AesException
 import com.github.rwsbillyang.wxSDK.security.JsAPI
+import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
+import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import kotlinx.coroutines.launch
 
 
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
-
 
 
 /**
@@ -42,32 +44,32 @@ fun Routing.dispatchAgentMsgApi(corpId: String, agentId: Int) {
     val log = LoggerFactory.getLogger("agentMsgApi")
 
     val ctx: AgentContext?
-    if(Work.isMulti){
+    if (Work.isMulti) {
         val corpApiCtx = WorkMulti.ApiContextMap[corpId]
-        if(corpApiCtx == null){
+        if (corpApiCtx == null) {
             log.warn("not init WorkApiContext for: corpId=$corpId")
             return
         }
         ctx = corpApiCtx.agentMap[agentId]
-        if(ctx == null){
+        if (ctx == null) {
             log.warn("not add agentId=$agentId,corpId=$corpId. please call Work.add(...) first")
             return
         }
-        if(!ctx.enableMsg){
+        if (!ctx.enableMsg) {
             log.warn("not enableMsg: agentId=$agentId,corpId=$corpId, ignore")
             return
         }
-        if(ctx.wxBizMsgCrypt == null || ctx.msgHub == null){
+        if (ctx.wxBizMsgCrypt == null || ctx.msgHub == null) {
             log.warn("wxBizMsgCrypt or msgHub is null, please init them correctly")
             return
         }
-    }else{
+    } else {
         ctx = WorkSingle.agentContext
-        if(!ctx.enableMsg){
+        if (!ctx.enableMsg) {
             log.warn("not enableMsg: agentId=$agentId,corpId=$corpId, ignore")
             return
         }
-        if(ctx.wxBizMsgCrypt == null || ctx.msgHub == null){
+        if (ctx.wxBizMsgCrypt == null || ctx.msgHub == null) {
             log.warn("wxBizMsgCrypt or msgHub is null, please init them correctly")
             return
         }
@@ -121,16 +123,17 @@ fun Routing.dispatchAgentMsgApi(corpId: String, agentId: Int) {
             val token = ctx.token
 
             //if (StringUtils.isAnyBlank(token, signature, timestamp, nonce,echostr)) {
-            if(token.isNullOrBlank() || signature.isNullOrBlank() || timestamp.isNullOrBlank()
-                    || nonce.isNullOrBlank() || echostr.isNullOrBlank()){
+            if (token.isNullOrBlank() || signature.isNullOrBlank() || timestamp.isNullOrBlank()
+                || nonce.isNullOrBlank() || echostr.isNullOrBlank()
+            ) {
                 log.warn("invalid parameters: token=$token, signature=$signature, timestamp=$timestamp, nonce=$nonce, echostr=$echostr")
                 call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
             } else {
-                try{
+                try {
                     //第一个参数为null，不进行corpId的校验，公众号则校验，所有post的消息都校验
-                    val str = ctx.wxBizMsgCrypt!!.verifyUrl(null, signature,timestamp,nonce,echostr)
+                    val str = ctx.wxBizMsgCrypt!!.verifyUrl(null, signature, timestamp, nonce, echostr)
                     call.respondText(str, ContentType.Text.Plain, HttpStatusCode.OK)
-                }catch (e: AesException){
+                } catch (e: AesException) {
                     log.warn("AesException: ${e.message}")
                     call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
                 }
@@ -167,11 +170,11 @@ fun Routing.dispatchAgentMsgApi(corpId: String, agentId: Int) {
             val msgSignature = call.request.queryParameters["msg_signature"]
             val timeStamp = call.request.queryParameters["timeStamp"]
             val nonce = call.request.queryParameters["nonce"]
-            val encryptType = call.request.queryParameters["encrypt_type"]?:"aes"
+            val encryptType = call.request.queryParameters["encrypt_type"] ?: "aes"
 
             val reXml = ctx.msgHub!!.handleXmlMsg(null, body, msgSignature, timeStamp, nonce, encryptType)
 
-            if(reXml.isNullOrBlank())
+            if (reXml.isNullOrBlank())
                 call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
             else
                 call.respondText(reXml, ContentType.Text.Xml, HttpStatusCode.OK)
@@ -179,53 +182,61 @@ fun Routing.dispatchAgentMsgApi(corpId: String, agentId: Int) {
     }
 }
 
-private val stateCache = Caffeine.newBuilder()
+internal val stateCache = Caffeine.newBuilder()
     .maximumSize(Long.MAX_VALUE)
     .expireAfterWrite(10, TimeUnit.MINUTES)
     .expireAfterAccess(1, TimeUnit.SECONDS)
-    .build<String, Pair<String, Int>>()
+    .build<String, String>()
+
+private val DefaultSnsApiScope = SnsApiScope.PrivateInfo
 
 class OAuthResult(
-        val corpId: String,
-        val agentId: Int,
-        val userId: String?,
-        val externalUserId: String?,
-        val openId: String?,
-        val deviceId: String?
+    val corpId: String,
+    val userId: String?,
+    val externalUserId: String?,
+    val openId: String?,
+    val deviceId: String?,
+    val agentId: Int? //内建应用才有值，ISV第三方应用则为空
 )
 
 /**
  * 企业微信oauth用户认证登录的api
  * */
 fun Routing.wxWorkOAuthApi(
-        oauthInfoPath: String = Work.oauthInfoPath,
-        oauthNotifyPath: String = Work.oauthNotifyPath,
-        oauthNotifyWebAppUrl: String = Work.oauthNotifyWebAppUrl,
-        hasPermission: (ApplicationCall, OAuthResult)-> Boolean
+    oauthInfoPath: String = Work.oauthInfoPath,
+    oauthNotifyPath: String = Work.oauthNotifyPath,
+    oauthNotifyWebAppUrl: String = Work.oauthNotifyWebAppUrl,
+    //hasPermission: (ApplicationCall, OAuthResult) -> Boolean, //用户是否有权限进一步访问
+    onResponseOauthUserDetail3rd:((res: ResponseOauthUserDetail3rd) -> Unit)? = null //第三方应用需要获取用户敏感信息（头像和二维码）时提供，一般情况下没必要
 ) {
     val log = LoggerFactory.getLogger("wxWorkOAuthApi")
 
     /**
+     * 请求地址："/api/wx/work/oauth/info?scope=2" scope可选默认为2
      * 前端webapp请求该api获取appid，state等信息，然后重定向到腾讯的授权页面，用户授权之后将重定向到下面的notify
-     * @param corpId
-     * @param agentId 要登录的agentID
-     * @param host 跳转host，如："https：//www.example.com"
+     * scope： 0， 1， 2 分别对应：snsapi_base, snsapi_userinfo, snsapi_privateinfo
+     *  host 跳转host，如："https：//www.example.com"
      * 前端重定向地址：https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect" 然后重定向到该url
      *
      * */
-    get(oauthInfoPath){
-        val corpId = call.request.queryParameters["corpId"]
-        val agentId = call.request.queryParameters["agentId"]?.toInt()?:-1
-        val host = call.request.queryParameters["host"]?:call.request.host()
-        if(corpId.isNullOrBlank() || agentId < 0)
-        {
-            call.respond(HttpStatusCode.BadRequest, "no corpId or agentId")
-        }else{
-            val oAuthInfo = OAuthApi(corpId, agentId).prepareOAuthInfo(host + oauthNotifyPath, false)
-            stateCache.put(oAuthInfo.state, Pair(corpId, agentId))
+    get(oauthInfoPath) {//默认路径： /api/wx/work/oauth/info?scope=2
+        if (Work.isMulti) {
+            call.respond(DataBox("KO", "oauth not support multi mode"))
+        } else {
+            val scope = when (call.request.queryParameters["scope"]) {
+                "0" -> SnsApiScope.Base
+                "1" -> SnsApiScope.UserInfo
+                "2" -> SnsApiScope.PrivateInfo
+                else -> DefaultSnsApiScope
+            }
+            val host = call.request.queryParameters["host"] ?: call.request.host()
+
+            val oAuthInfo = OAuthApi().prepareOAuthInfo(host + oauthNotifyPath, scope)
+            stateCache.put(oAuthInfo.state, scope.value)
             call.respond(oAuthInfo)
         }
     }
+
     /**
      * 腾讯在用户授权之后，将调用下面的api通知code，并附带上原state。
      *
@@ -236,37 +247,59 @@ fun Routing.wxWorkOAuthApi(
      * code作为换取access_token的票据，每次用户授权带上的code将不一样，code只能使用一次，5分钟未被使用自动过期。
      *
      * */
-    get(oauthNotifyPath) {
+    get(oauthNotifyPath) { //默认路径： /api/wx/work/oauth/notify
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]
 
-        val url = if (code.isNullOrBlank() || state.isNullOrBlank()) {
-            //notify webapp fail
+        val url: String
+        if (code.isNullOrBlank() || state.isNullOrBlank()) {
             log.warn("code or state is null, code=$code, state=$state")
-            "$oauthNotifyWebAppUrl?state=$state&code=KO&msg=nullCodeOrState"
+            url = "$oauthNotifyWebAppUrl?state=$state&code=KO&msg=nullCodeOrState"
         } else {
-            val pair = stateCache.getIfPresent(state)
-            stateCache.invalidate(state)
-            if (pair == null) {
-                log.warn("not found corpId&agentId pair in cache, code=$code, state=$state")
-                "$oauthNotifyWebAppUrl?state=$state&code=KO&msg=NotFoundAgentIdInCache"
+            if (Work.isMulti) {
+                call.respond(DataBox("KO", "oauth not support multi mode"))
+                url = "$oauthNotifyWebAppUrl?state=$state&code=KO&msg=oauth_not_support_multi_mode"
             } else {
-                val res = OAuthApi(pair.first, pair.second).getUserInfo(code)
-                val part = if (res.isOK()) {
-                    val isAllow = hasPermission(call, OAuthResult(pair.first, pair.second, res.userId, res.externalUserId, res.openId, res.deviceId))
-                    if (isAllow) {
-                        //log.info("res=$res")
-                        var param = if(!res.userId.isNullOrBlank()) "&userId=${res.userId}" else ""
-                        if(!res.externalUserId.isNullOrBlank()) param += "&externalUserId=${res.externalUserId}"
-                        if(!res.openId.isNullOrBlank())param += "&openId=${res.openId}"
-                        "$oauthNotifyWebAppUrl?state=$state&code=OK${param}"
-                    } else {
-                        "$oauthNotifyWebAppUrl?state=$state&code=KO&msg=Forbidden"
-                    }
+                val oAuthApi = OAuthApi()
+                val res = if (Work.isIsv) {
+                    oAuthApi.getUserInfo3rd(code)
                 } else {
-                    "$oauthNotifyWebAppUrl?state=$state&code=KO&msg=${res.errCode}:${res.errMsg}"
+                    oAuthApi.getUserInfo(code)
                 }
-                "$part&corpId=${pair.first}&agentId=${pair.second}"
+
+                if (res.isOK()) {
+                    val oaResult = OAuthResult(
+                        res.corpId ?: WorkSingle.corpId,
+                        res.userId,
+                        res.externalUserId,
+                        res.openId,
+                        res.deviceId, if(Work.isIsv) null else WorkSingle.agentId
+                    )
+                    val isIsv = if(Work.isIsv) 1 else 0
+                    var param = "&corpId=${oaResult.corpId}&isIsv=${isIsv}"
+                    if (!res.userId.isNullOrBlank()) param += "&userId=${res.userId}"
+                    if (!res.externalUserId.isNullOrBlank()) param += "&externalUserId=${res.externalUserId}"
+                    if (!res.openId.isNullOrBlank()) param += "&openId=${res.openId}"
+                    if(oaResult.agentId != null)  param += "&agentId=${oaResult.agentId}"
+
+                    //不再检查用户是否具备可见性，在login时再检查
+//                    val isAllow = hasPermission(call, oaResult)
+//                    url = if (isAllow) {
+//                        "$oauthNotifyWebAppUrl?state=$state&code=OK${param}"
+//                    } else {
+//                        "$oauthNotifyWebAppUrl?state=$state&code=NotAllow&msg=Forbidden${param}" //ISV模式下引导用户申请授权
+//                    }
+                    url = "$oauthNotifyWebAppUrl?state=$state&code=OK${param}"
+                } else {
+                    url = "$oauthNotifyWebAppUrl?state=$state&code=KO&msg=${res.errCode}:${res.errMsg}"
+                }
+
+                val scope = stateCache.getIfPresent(state) ?: DefaultSnsApiScope
+                stateCache.invalidate(state)
+
+                if(Work.isIsv && onResponseOauthUserDetail3rd != null && scope == SnsApiScope.PrivateInfo && res.userTicket != null){
+                    launch { onResponseOauthUserDetail3rd(oAuthApi.getUserDetail3rd(res.userTicket)) }
+                }
             }
         }
         call.respondRedirect(url, permanent = false)
@@ -276,36 +309,97 @@ fun Routing.wxWorkOAuthApi(
 
 /**
  * 前端发出请求，获取使用jssdk时所需的认证签名
+ * 请求默认路径：/api/wx/work/jssdk/signature?corpId=XXX&type=agent_config
+ *
+ * 请求参数：corpId均需提供， 另：
+ * type只在注入agentConfig时需提供。
+ * Referer非空用于获取当前host，通常满足
+ *
+ * 当为ISV第三方多应用：需再提供suiteId，单应用无需提供
+ * 当为内部多应用：需再提供agentId，单应用无需提供
  * */
-fun Routing.workJsSdkSignature(path: String = Work.jsSdkSignaturePath){
-    get(path){
-        val corpId = call.request.queryParameters["corpId"]
-        val agentId = call.request.queryParameters["agentId"]?.toInt()
-        val msg = if(corpId == null || agentId == null){
-            "invalid parameters: corpId and agentId could not be null"
-        }else{
-            val ticket = if(Work.isMulti){
-                WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.jsTicket?.get()
-            }else{
-                WorkSingle.agentContext.jsTicket?.get()
-            }
+fun Routing.workJsSdkSignature() {
+    get(Work.jsSdkSignaturePath) { //默认路径： /api/wx/work/jssdk/signature?corpId=XXX&type=agent_config
+        val suiteId = call.request.queryParameters["suiteId"]//IsvWorkMulti时需非空
+        val corpId = call.request.queryParameters["corpId"] //均不能空
+        val agentId = call.request.queryParameters["agentId"]?.toInt()//内部多应用时提供
+        val isAgent = call.request.queryParameters["type"] == "agent_config" //agent_config
+        val url = call.request.headers["Referer"] //非空
 
-            if(ticket == null){
-                "corpId=$corpId,agentId=$agentId is configured?"
-            }else{
-                val url = call.request.headers["Referer"]
-                if(url == null){
-                    "request Referer is null"
-                }else{
-                    call.respond(DataBox("OK",null,JsAPI.getSignature(corpId,ticket, url)))
-                    null
+        val jsTicket: String?
+        if (url == null) {
+            call.respond(DataBox("KO", "request Referer is null"))
+        } else {
+            if (corpId == null) {
+                call.respond(DataBox("KO", "invalid parameters: corpId is null"))
+            } else {
+                if (Work.isIsv) {
+                    if (Work.isMulti) {
+                        if (suiteId == null) {
+                            call.respond(DataBox("KO", "IsvWorkMulti invalid parameters: suiteId is null"))
+                        } else {
+                            jsTicket = if (isAgent)
+                                IsvWorkMulti.ApiContextMap[suiteId]?.agentJsTicket?.get()
+                            else
+                                IsvWorkMulti.ApiContextMap[suiteId]?.corpJsTicket?.get()
+
+                            if (jsTicket == null) {
+                                call.respond(DataBox("KO", "IsvWorkMulti: jsTicket is null"))
+                            } else {
+                                //TODO: 根据suiteId和corpId查询得到agentId
+                                call.respond(DataBox("OK", null, JsAPI.getSignature(corpId, jsTicket, url)))
+                            }
+                        }
+                    } else {
+                        jsTicket = if (isAgent)
+                            IsvWorkSingle.ctx.agentJsTicket?.get()
+                        else
+                            IsvWorkSingle.ctx.corpJsTicket?.get()
+
+                        if (jsTicket == null)
+                            call.respond(DataBox("KO", "IsvWorkSingle: jsTicket is null"))
+                        else {
+                            //TODO: 根据suiteId和corpId查询得到agentId
+                            call.respond(DataBox("OK", null, JsAPI.getSignature(corpId, jsTicket, url)))
+                        }
+                    }
+                } else {
+                    if (Work.isMulti) {
+                        if (agentId == null) {
+                            call.respond(DataBox("KO", "invalid parameters: corpId and agentId could not be null"))
+                        } else {
+                            jsTicket = if (isAgent)
+                                WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.agentJsTicket?.get()
+                            else
+                                WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.corpJsTicket?.get()
+
+                            if (jsTicket == null)
+                                call.respond(DataBox("KO", "WorkMulti: jsTicket is null"))
+                            else
+                                call.respond(DataBox("OK", null, JsAPI.getSignature(corpId, jsTicket, url, agentId)))
+                        }
+                    } else {
+                        jsTicket = if (isAgent)
+                            WorkSingle.agentContext.agentJsTicket?.get()
+                        else
+                            WorkSingle.agentContext.corpJsTicket?.get()
+
+                        if (jsTicket == null)
+                            call.respond(DataBox("KO", "WorkSingle: jsTicket is null"))
+                        else
+                            call.respond(
+                                DataBox(
+                                    "OK",
+                                    null,
+                                    JsAPI.getSignature(corpId, jsTicket, url, WorkSingle.agentId)
+                                )
+                            )
+                    }
                 }
             }
         }
-        if(msg != null){
-            call.respond(DataBox("KO", msg))
-        }
     }
+
 }
 
 

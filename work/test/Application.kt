@@ -35,6 +35,22 @@ import io.ktor.http.*
 
 //fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
+object TestConstatns {
+    const val KeyBase = 1000
+    const val KeyContact = KeyBase + 1
+    const val KeyCustomer = KeyBase + 2
+    const val KeyChatArchive = KeyBase + 3
+
+    const val KeyAgentMgt = KeyBase + 4
+    const val KeyCalendar = KeyBase + 5
+    const val KeyInvoice = KeyBase + 6
+    const val KeyMaterial = KeyBase + 7
+    const val KeyOA = KeyBase + 8
+
+    const val CorpId = "wx5823bf96d3bd56c7"
+}
+
+
 
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
@@ -61,45 +77,81 @@ fun Application.testableModule(testing: Boolean = false) {
 
 
 
-val corpId = "wx5823bf96d3bd56c7"
+
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.WorkTestableModule(testing: Boolean = false) {
 
     testableModule(testing)
 
-    WorkMulti.config(corpId, WorkBaseApi.KeyBase, "the_secret", true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",customAccessToken = TestAccessTokenValue())
-    WorkMulti.config(corpId, WorkBaseApi.KeyChatArchive, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C", customAccessToken = TestAccessTokenValue())
-    WorkMulti.config(corpId, WorkBaseApi.KeyContact, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",  customAccessToken = TestAccessTokenValue())
-    WorkMulti.config(corpId, WorkBaseApi.KeyCustomer, "the_secret",true,"QDG6eK" ,"jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C", customAccessToken = TestAccessTokenValue())
+    WorkMulti.config(
+        TestConstatns.CorpId,
+        TestConstatns.KeyBase,
+        "the_secret",
+        "QDG6eK",
+        "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",
+        customAccessToken = TestAccessTokenValue()
+    )
+    WorkMulti.config(
+        TestConstatns.CorpId,
+        TestConstatns.KeyChatArchive,
+        "the_secret",
+        "QDG6eK",
+        "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",
+        customAccessToken = TestAccessTokenValue()
+    )
+    WorkMulti.config(
+        TestConstatns.CorpId,
+        TestConstatns.KeyContact,
+        "the_secret",
+        "QDG6eK",
+        "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",
+        customAccessToken = TestAccessTokenValue()
+    )
+    WorkMulti.config(
+        TestConstatns.CorpId,
+        TestConstatns.KeyCustomer,
+        "the_secret",
+        "QDG6eK",
+        "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",
+        customAccessToken = TestAccessTokenValue()
+    )
 
     routing {
-        dispatchAgentMsgApi(corpId, WorkBaseApi.KeyBase)
-        dispatchAgentMsgApi(corpId, WorkBaseApi.KeyChatArchive)
-        dispatchAgentMsgApi(corpId, WorkBaseApi.KeyContact)
-        dispatchAgentMsgApi(corpId, WorkBaseApi.KeyCustomer)
+        dispatchAgentMsgApi(TestConstatns.CorpId, TestConstatns.KeyBase)
+        dispatchAgentMsgApi(TestConstatns.CorpId, TestConstatns.KeyChatArchive)
+        dispatchAgentMsgApi(TestConstatns.CorpId, TestConstatns.KeyContact)
+        dispatchAgentMsgApi(TestConstatns.CorpId, TestConstatns.KeyCustomer)
     }
 }
 
-class TestAccessTokenValue: ITimelyRefreshValue {
+class TestAccessTokenValue : ITimelyRefreshValue {
     override fun get(): String {
         return "testAccessToken-${System.currentTimeMillis()}"
     }
 }
-class TestJsTicketValue: ITimelyRefreshValue {
+
+class TestJsTicketValue : ITimelyRefreshValue {
     override fun get(): String {
         return "testTicket-${System.currentTimeMillis()}"
     }
 }
 
 
-class TestWorkMsgHandler: DefaultWorkMsgHandler()
-{
-    override  fun onTextMsg(msg: WorkTextMsg): ReBaseMSg?{
-        return ReTextMsg("TestWorkMsgHandler reply the msg: content=${msg.content},msgId=${msg.msgId},agentId=${msg.agentId}", msg.base.fromUserName, msg.base.toUserName)
+class TestWorkMsgHandler : DefaultWorkMsgHandler() {
+    override fun onTextMsg(msg: WorkTextMsg): ReBaseMSg? {
+        return ReTextMsg(
+            "TestWorkMsgHandler reply the msg: content=${msg.content},msgId=${msg.msgId},agentId=${msg.agentId}",
+            msg.base.fromUserName,
+            msg.base.toUserName
+        )
     }
 
     override fun onDefault(msg: WorkBaseMsg): ReBaseMSg? {
-        return ReTextMsg("TestWorkMsgHandler default reply the msg: msgId=${msg.msgId},agentId=${msg.agentId}", msg.base.fromUserName, msg.base.toUserName)
+        return ReTextMsg(
+            "TestWorkMsgHandler default reply the msg: msgId=${msg.msgId},agentId=${msg.agentId}",
+            msg.base.fromUserName,
+            msg.base.toUserName
+        )
     }
 }

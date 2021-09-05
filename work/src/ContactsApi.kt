@@ -356,130 +356,6 @@ class UserBatchApi private constructor (corpId: String?) : WorkBaseApi(corpId){
 }
 
 
-/**
-{
-"errcode": 0,
-"errmsg": "ok",
-"userid": "zhangsan",
-"name": "李四",
-"department": [1, 2],
-"order": [1, 2],
-"position": "后台工程师",
-"mobile": "13800000000",
-"gender": "1",
-"email": "zhangsan@gzdev.com",
-"is_leader_in_dept": [1, 0],
-"avatar": "http://wx.qlogo.cn/mmopen/ajNVdqHZLLA3WJ6DSZUfiakYe37PKnQhBIeOQBO4czqrnZDS79FH5Wm5m4X69TBicnHFlhiafvDwklOpZeXYQQ2icg/0",
-"thumb_avatar": "http://wx.qlogo.cn/mmopen/ajNVdqHZLLA3WJ6DSZUfiakYe37PKnQhBIeOQBO4czqrnZDS79FH5Wm5m4X69TBicnHFlhiafvDwklOpZeXYQQ2icg/100",
-"telephone": "020-123456",
-"alias": "jackzhang",
-"address": "广州市海珠区新港中路",
-"open_userid": "xxxxxx",
-"main_department": 1,
-"extattr": {
-"attrs": [
-{
-"type": 0,
-"name": "文本名称",
-"text": {
-"value": "文本"
-}
-},
-{
-"type": 1,
-"name": "网页名称",
-"web": {
-"url": "http://www.test.com",
-"title": "标题"
-}
-}
-]
-},
-"status": 1,
-"qr_code": "https://open.work.weixin.qq.com/wwopen/userQRCode?vcode=xxx",
-"external_position": "产品经理",
-"external_profile": {
-"external_corp_name": "企业简称",
-"external_attr": [{
-"type": 0,
-"name": "文本名称",
-"text": {
-"value": "文本"
-}
-},
-{
-"type": 1,
-"name": "网页名称",
-"web": {
-"url": "http://www.test.com",
-"title": "标题"
-}
-},
-{
-"type": 2,
-"name": "测试app",
-"miniprogram": {
-"appid": "wx8bd80126147dFAKE",
-"pagepath": "/index",
-"title": "my miniprogram"
-}
-}
-]
-}
-}
-
-{"errcode":0,"errmsg":"ok",
-"userid":"YangShaoWen",
-"name":"杨绍文",
-"department":[1],
-"position":"",
-"mobile":"17503715758",
-"gender":"1",
-"email":"",
-"avatar":"https://wework.qpic.cn/wwhead/duc2TvpEgSTPk74IwG7Bs3icnQHhUYvPg1WJyp97g81ibrPcj7kTjA00Nv8h9bVCeRZLGDYeHaNk4/0",
-"status":1,
-"isleader":0,
-"extattr":{"attrs":[]},
-"telephone":"",
-"enable":1,
-"hide_mobile":0,
-"order":[0],
-"main_department":1,
-"qr_code":"https://open.work.weixin.qq.com/wwopen/userQRCode?vcode=vc18885293950e8b25",
-"alias":"文文",
-"is_leader_in_dept":[0],
-"thumb_avatar":"https://wework.qpic.cn/wwhead/duc2TvpEgSTPk74IwG7Bs3icnQHhUYvPg1WJyp97g81ibrPcj7kTjA00Nv8h9bVCeRZLGDYeHaNk4/100"
-}
-参数说明：
-
-参数	说明
-errcode	返回码
-errmsg	对返回码的文本描述内容
-userid	成员UserID。对应管理端的帐号，企业内必须唯一。不区分大小写，长度为1~64个字节
-name	成员名称，此字段从2019年12月30日起，对新创建第三方应用不再返回真实name，使用userid代替name，
-2020年6月30日起，对所有历史第三方应用不再返回真实name，使用userid代替name，后续第三方仅通讯录应用可获取，
-第三方页面需要通过通讯录展示组件来展示名字
-mobile	手机号码，第三方仅通讯录应用可获取
-department	成员所属部门id列表，仅返回该应用有查看权限的部门id
-order	部门内的排序值，默认为0。数量必须和department一致，数值越大排序越前面。值范围是[0, 2^32)
-position	职务信息；第三方仅通讯录应用可获取
-gender	性别。0表示未定义，1表示男性，2表示女性
-email	邮箱，第三方仅通讯录应用可获取
-is_leader_in_dept	表示在所在的部门内是否为上级。；第三方仅通讯录应用可获取
-avatar	头像url。 第三方仅通讯录应用可获取
-thumb_avatar	头像缩略图url。第三方仅通讯录应用可获取
-telephone	座机。第三方仅通讯录应用可获取
-alias	别名；第三方仅通讯录应用可获取
-extattr	扩展属性，第三方仅通讯录应用可获取
-status	激活状态: 1=已激活，2=已禁用，4=未激活，5=退出企业。
-已激活代表已激活企业微信或已关注微工作台（原企业号）。未激活代表既未激活企业微信又未关注微工作台（原企业号）。
-qr_code	员工个人二维码，扫描可添加为外部联系人(注意返回的是一个url，可在浏览器上打开该url以展示二维码)；第三方仅通讯录应用可获取
-external_profile	成员对外属性，字段详情见对外属性；第三方仅通讯录应用可获取
-external_position	对外职务，如果设置了该值，则以此作为对外展示的职务，否则以position来展示。第三方仅通讯录应用可获取
-address	地址。第三方仅通讯录应用可获取
-open_userid	全局唯一。对于同一个服务商，不同应用获取到企业内同一个成员的open_userid是相同的，最多64个字节。仅第三方应用可获取
-main_department	主部门
- * */
 @Serializable
 class ResponseUserDetail(
         @SerialName("errcode")
@@ -523,8 +399,15 @@ class ResponseUserDetail(
 @Serializable
 class ExternalProfile(
         val external_corp_name: String? = null, //内部联系人拥有该属性,外部联系人无此属性
-        val external_attr: List<Attr>? = null
+        val external_attr: List<Attr>? = null,
+        val wechat_channels: WechatChannel? = null
 )
+
+@Serializable
+class WechatChannel(
+    val nickname: String,//对外展示视频号名称（即微信视频号名称）。第三方仅通讯录应用可获取；对于非第三方创建的成员，第三方通讯录应用也不可获取
+    val status: Int//对外展示视频号状态。0表示企业视频号已被确认，可正常使用，1表示企业视频号待确认。第三方仅通讯录应用可获取；对于非第三方创建的成员，第三方通讯录应用也不可获取
+    )
 
 @Serializable
 class Text(val value: String)

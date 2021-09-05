@@ -21,12 +21,19 @@ package com.github.rwsbillyang.wxSDK.work.isv
 
 import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.Response
+import com.github.rwsbillyang.wxSDK.WxApi
+import com.github.rwsbillyang.wxSDK.work.Work
 import kotlinx.serialization.Serializable
 
-class ThirdPartyApi(suiteId: String) : ThirdOAuth(suiteId, "suite_access_token") {
+class ThirdPartyApi(private val suiteId: String) : WxApi("suite_access_token") {
     override val base = "https://qyapi.weixin.qq.com/cgi-bin"
     override val group = "service"
 
+    override fun accessToken() = if(Work.isMulti){
+        IsvWorkMulti.ApiContextMap[suiteId]?.suiteAccessToken?.get()
+    }else{
+        IsvWorkSingle.ctx.suiteAccessToken?.get()
+    }
 
     /**
      * 获取预授权码 预授权码用于企业授权时的第三方服务商安全验证。

@@ -50,7 +50,7 @@ class WorkTest {
         val sEchoStr: String //需要返回的明文
         try {
             sEchoStr = wXBizMsgCrypt.verifyUrl(
-                corpId,
+                TestConstatns.CorpId,
                 sVerifyMsgSig, sVerifyTimeStamp,
                 sVerifyNonce, sVerifyEchoStr
             )
@@ -102,7 +102,7 @@ class WorkTest {
             "<xml><ToUserName><![CDATA[wx5823bf96d3bd56c7]]></ToUserName><Encrypt><![CDATA[RypEvHKD8QQKFhvQ6QleEB4J58tiPdvo+rtK1I9qca6aM/wvqnLSV5zEPeusUiX5L5X/0lWfrf0QADHHhGd3QczcdCUpj911L3vg3W/sYYvuJTs3TUUkSUXxaccAS0qhxchrRYt66wiSpGLYL42aM6A8dTT+6k4aSknmPj48kzJs8qLjvd4Xgpue06DOdnLxAUHzM6+kDZ+HMZfJYuR+LtwGc2hgf5gsijff0ekUNXZiqATP7PF5mZxZ3Izoun1s4zG4LUMnvw2r+KqCKIw+3IQH03v+BCA9nMELNqbSf6tiWSrXJB3LAVGUcallcrw8V2t9EL4EhzJWrQUax5wLVMNS0+rUPA3k22Ncx4XXZS9o0MBH27Bo6BpNelZpS+/uh9KsNlY6bHCmJU9p8g7m3fVKn28H3KDYA5Pl/T8Z1ptDAVe0lXdQ2YoyyH2uyPIGHBZZIs2pDBS8R07+qN+E7Q==]]></Encrypt><AgentID><![CDATA[218]]></AgentID></xml>"
 
         try {
-            val sMsg: String = wXBizMsgCrypt.decryptWxMsg(corpId, sReqMsgSig, sReqTimeStamp, sReqNonce, sReqData, "security")
+            val sMsg: String = wXBizMsgCrypt.decryptWxMsg(TestConstatns.CorpId, sReqMsgSig, sReqTimeStamp, sReqNonce, sReqData, "security")
             println("\nafter decrypt msg: $sMsg")
 
             // 解析出明文xml标签的内容进行处理
@@ -151,7 +151,7 @@ class WorkTest {
         val sRespData =
             "<xml><ToUserName><![CDATA[mycreate]]></ToUserName><FromUserName><![CDATA[wx5823bf96d3bd56c7]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[this is a test]]></Content><MsgId>1234567890123456</MsgId><AgentID>128</AgentID></xml>"
         try {
-            val sEncryptMsg: String = wXBizMsgCrypt.encryptMsg(corpId, sRespData, sReqTimeStamp, sReqNonce,"mycreate", 128).first
+            val sEncryptMsg: String = wXBizMsgCrypt.encryptMsg(TestConstatns.CorpId, sRespData, sReqTimeStamp, sReqNonce,"mycreate", 128).first
             println("\nafter encrypt sEncrytMsg: $sEncryptMsg")
             // 加密成功
             // HttpUtils.SetResponse(sEncryptMsg);

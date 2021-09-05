@@ -44,7 +44,7 @@ object IsvWork {
 
     const val msgNotifyPath: String = "$prefix/msg/{suiteId}"
 
-    const val jsSdkSignaturePath: String =  "$prefix/jssdk/signature"
+    //const val jsSdkSignaturePath: String =  "$prefix/jssdk/signature"
 
     /**
      * 前端请求该路径，发起应用授权，用于从外部网站发起
@@ -133,9 +133,14 @@ object IsvWorkSingle {
             }
 
             if(ctx.enableJsSdk){
-                ctx.jsTicket = TimelyRefreshTicket(suiteId,
+                ctx.corpJsTicket = TimelyRefreshTicket(suiteId,
                     TicketRefresher{
                         "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${ctx.accessTokenMap[corpId]!!.get()}"
+                    })
+
+                ctx.agentJsTicket = TimelyRefreshTicket(suiteId,
+                    TicketRefresher{
+                        "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${ctx.accessTokenMap[corpId]!!.get()}&type=agent_config"
                     })
             }
         } else
@@ -183,6 +188,9 @@ object IsvWorkMulti{
      * suite_ticket由企业微信后台定时推送给“指令回调URL”，每十分钟更新一次,suite_ticket实际有效期为30分钟
      *
      * 调用情景：每次收到suite ticket推送消息时
+     * @param suiteId
+     * @param ticket 腾讯服务器推送过来的suite_ticket
+     * @param corpListBlock Pair中的第一个参数是corpId，第二个参数永久授权码permanentCode
      * */
     fun configSuiteToken(suiteId: String, ticket: String, corpListBlock: () -> List<Pair<String, String>>) {
         val ctx = ApiContextMap[suiteId]
@@ -223,9 +231,14 @@ object IsvWorkMulti{
             }
 
             if(ctx.enableJsSdk){
-                ctx.jsTicket = TimelyRefreshTicket(suiteId,
+                ctx.corpJsTicket = TimelyRefreshTicket(suiteId,
                     TicketRefresher{
                         "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${ctx.accessTokenMap[corpId]!!.get()}"
+                    })
+
+                ctx.agentJsTicket = TimelyRefreshTicket(suiteId,
+                    TicketRefresher{
+                        "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${ctx.accessTokenMap[corpId]!!.get()}&type=agent_config"
                     })
             }
         } else
@@ -268,7 +281,9 @@ class SuiteApiContext(
 
     //corpId -> accessToken, suite ticket推送过来后，也被授权了，通过得到的永久授权码(第一次授权通知或从数据库中得到)，进行创建
     val accessTokenMap: HashMap<String, TimelyRefreshAccessToken3rd> = hashMapOf(),
-    var jsTicket: ITimelyRefreshValue? = null // 由accessToken换取,参见 ThirdPartyWork.configAccessToken
+    var corpJsTicket: ITimelyRefreshValue? = null, //二者使用不同的jsTicket：https://work.weixin.qq.com/api/doc/90001/90144/94325
+    var agentJsTicket: ITimelyRefreshValue? = null // 由accessToken换取,参见 ThirdPartyWork.configAccessToken
+    //val agentIdMap: HashMap<String, Int> = hashMapOf() //corpId -> agentId
 )
 {
     private val log = LoggerFactory.getLogger("SuiteApiContext")
