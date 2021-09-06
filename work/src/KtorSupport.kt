@@ -39,10 +39,16 @@ import java.util.concurrent.TimeUnit
 /**
  * 接收企业微信消息和事件, 然后分发处理。
  * 只适用于企业内部部署时使用
+ *
+ * 当为多应用模式时，提供corpId、agentId
  * */
-fun Routing.dispatchAgentMsgApi(corpId: String, agentId: Int) {
+fun Routing.dispatchAgentMsgApi(corpId: String? = null, agentId: Int? = null) {
     val log = LoggerFactory.getLogger("agentMsgApi")
-
+    if(!Work.initial)//避免test中未config时，单应用模式未初始化异常
+    {
+        log.warn("not init?")
+        return
+    }
     val ctx: AgentContext?
     if (Work.isMulti) {
         val corpApiCtx = WorkMulti.ApiContextMap[corpId]
@@ -66,7 +72,7 @@ fun Routing.dispatchAgentMsgApi(corpId: String, agentId: Int) {
     } else {
         ctx = WorkSingle.agentContext
         if (!ctx.enableMsg) {
-            log.warn("not enableMsg: agentId=$agentId,corpId=$corpId, ignore")
+            log.warn("not enableMsg: agentId=${WorkSingle.agentId},corpId=${WorkSingle.corpId}, ignore")
             return
         }
         if (ctx.wxBizMsgCrypt == null || ctx.msgHub == null) {

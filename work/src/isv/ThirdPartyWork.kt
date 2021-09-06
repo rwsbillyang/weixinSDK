@@ -94,6 +94,9 @@ object IsvWorkSingle {
             eventHandler,
             suiteInfoHandler
         )
+
+
+        Work.initial = true
     }
 
     /**
@@ -181,6 +184,8 @@ object IsvWorkMulti{
             ctx = SuiteApiContext(suiteId, secret, token, encodingAESKey, enableJsSdk,privateKeyFilePath, msgHandler, eventHandler, suiteInfoHandler)
             ApiContextMap[suiteId] = ctx
         }
+
+        Work.initial = true
     }
 
     /**

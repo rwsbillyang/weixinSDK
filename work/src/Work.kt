@@ -34,6 +34,10 @@ import kotlin.properties.Delegates
  * */
 object Work {
     /**
+     * config后变为true，否则为false
+     * */
+    var initial = false
+    /**
      * 是否是多agent模式，在配置sdk参数时自动指定
      * */
     internal var _isMulti = false
@@ -110,6 +114,8 @@ object WorkSingle{
         _agentContext = AgentContext(corpId, agentId, secret, enableMsg,
             token, encodingAESKey, customAccessToken, customMsgUrl, privateKeyFilePath, enableJsSdk,
             customJsTicket,null,customMsgHandler,customEventHandler)
+
+        Work.initial = true
     }
 }
 /**
@@ -160,6 +166,8 @@ object WorkMulti{
         corpApiCtx.agentMap[agentId] = AgentContext(corpId, agentId, secret, enableMsg,
             token, encodingAESKey, customAccessToken, customMsgUrl, privateKeyFilePath, enableJsSdk,
             customJsTicket,null, customMsgHandler,customEventHandler)
+
+        Work.initial = true
     }
 }
 

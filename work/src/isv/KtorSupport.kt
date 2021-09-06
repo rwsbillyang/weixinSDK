@@ -19,7 +19,6 @@
 package com.github.rwsbillyang.wxSDK.work.isv
 
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.rwsbillyang.wxSDK.bean.DataBox
 import com.github.rwsbillyang.wxSDK.security.AesException
 import com.github.rwsbillyang.wxSDK.work.Work
@@ -34,9 +33,14 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
-
-fun Routing.isvDispatchMsgApi(suiteId: String){
+//当为多应用模式时，提供suiteId
+fun Routing.isvDispatchMsgApi(suiteId: String? = null){
     val log = LoggerFactory.getLogger("isvDispatchMsgApi")
+    if(!Work.initial) //避免test中未config时，单应用模式未初始化异常
+    {
+        log.warn("not init?")
+        return
+    }
 
     val suiteApiCtx = if(Work.isMulti){
         IsvWorkMulti.ApiContextMap[suiteId]
@@ -54,7 +58,7 @@ fun Routing.isvDispatchMsgApi(suiteId: String){
         return
     }
 
-    //"/api/wx/work/3rd"
+    //"/api/wx/work/isv/msg/{suiteId}"
     route(IsvWork.msgNotifyPath) {
         get {
             //val suiteId = call.parameters["suiteId"]
