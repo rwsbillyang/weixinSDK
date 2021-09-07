@@ -308,7 +308,10 @@ fun Routing.wxWorkOAuthApi(
                 }
             }
         }
-        call.respondRedirect(url, permanent = false)
+        if(Work.browserHistorySeparator.isEmpty())
+            call.respondRedirect(url, permanent = false)
+        else//前端若是SPA，通知路径可能需要添加browserHistorySeparator
+            call.respondRedirect("/${Work.browserHistorySeparator}" + url, permanent = false)
     }
 }
 

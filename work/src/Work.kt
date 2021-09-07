@@ -65,6 +65,10 @@ object Work {
     var oauthNotifyPath: String = "$prefix/oauth/notify"
 
     /**
+     * 一些前端SPA应用路径通常使用"#!"进行隔离，若为正常路径，可赋值为""
+     * */
+    var browserHistorySeparator = "#!"
+    /**
      * 授权后腾讯通知到后端，处理后再跳转一下通知前端，前端记录下授权结果路径
      * */
     var oauthNotifyWebAppUrl: String = "/wxwork/authNotify"
