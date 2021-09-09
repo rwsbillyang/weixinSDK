@@ -95,7 +95,7 @@ class ExternalContactsApi private constructor (corpId: String?) : WorkBaseApi(co
     /**
      * 删除企业已配置的「联系我」方式
      * */
-    fun delContactWay(configId: String) = doPost3("del_contact_way", mapOf("config_id" to configId))
+    fun delContactWay(configId: String): Response = doPost("del_contact_way", mapOf("config_id" to configId))
 
 
     /* 客户管理 */
@@ -321,8 +321,8 @@ class ExternalContactsApi private constructor (corpId: String?) : WorkBaseApi(co
 
 @Serializable
 class ContactWayConfig(
-    val type: Int = 1, //联系方式类型,1-单人, 2-多人
-    val scene: Int = 2, //场景，1-在小程序中联系，2-通过二维码联系
+    val type: Int, //联系方式类型,1-单人, 2-多人  不给默认值是为了适应默认值不序列化的配置
+    val scene: Int, //场景，1-在小程序中联系，2-通过二维码联系
     val style: Int = 1, //在小程序中联系时使用的控件样式，详见附表 https://work.weixin.qq.com/api/doc/90000/90135/92572
     val remark: String? = null, //联系方式的备注信息，用于助记，不超过30个字符
     val skip_verify: Boolean = true, //外部客户添加时是否无需验证，默认为true
