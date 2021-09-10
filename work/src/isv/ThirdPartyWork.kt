@@ -22,7 +22,6 @@ package com.github.rwsbillyang.wxSDK.work.isv
 import com.github.rwsbillyang.wxSDK.accessToken.*
 import com.github.rwsbillyang.wxSDK.security.PemUtil
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
-import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler
 
@@ -42,22 +41,27 @@ object IsvWork {
 
     private const val prefix = "/api/wx/work/isv"
 
-    const val msgNotifyPath: String = "$prefix/msg/{suiteId}"
+    const val msgNotifyPath: String = "$prefix/msg"
 
     //const val jsSdkSignaturePath: String =  "$prefix/jssdk/signature"
 
     /**
      * 前端请求该路径，发起应用授权，用于从外部网站发起
      * */
-    const val authFromOutsidePath = "$prefix/auth/outside/{suiteId}"
+    const val authFromOutsidePath = "$prefix/oauth/outside"
 
     /**
      * 后端路径：应用由客户授权后腾讯通知到后端临时授权码，处理后再跳转一下通知前端
      * */
-    const val authCodeNotifyPath: String = "$prefix/auth/notify/{suiteId}"
+    const val oauthNotifyPath: String = "$prefix/oauth/notify" //  /api/wx/work/isv/oauth/notify/{suiteId}
+    /**
+     * 后端路径：应用由客户授权后腾讯通知到后端临时授权码，处理后再跳转一下通知前端
+     * */
+    const val oauthNotifyPermanentCodePath: String = "$prefix/oauth/pcode/notify" //  /api/wx/work/isv/oauth/notify/{suiteId}
 
     /**
      * 前端路径：获取永久授权信息成功通知前端的路径，默认: /wxwork/isv/authNotify
+     *
      */
     var permanentWebNotifyPath: String = "/wxwork/isv/authNotify"
 
@@ -77,11 +81,10 @@ object IsvWorkSingle {
     fun config(
         suiteId: String, secret: String, token: String, encodingAESKey: String?,
         enableJsSdk: Boolean, privateKeyFilePath: String?,
-        suiteInfoHandler: ISuiteInfoHandler, msgHandler: IWorkMsgHandler, eventHandler: IWorkEventHandler
+        suiteInfoHandler: ISuiteInfoHandler,
+        msgHandler: IWorkMsgHandler,
+        eventHandler: IWorkEventHandler
     ) {
-        Work._isIsv = true
-        Work._isMulti = false
-
         _suiteId = suiteId
         _ctx = SuiteApiContext(
             suiteId,
@@ -94,9 +97,6 @@ object IsvWorkSingle {
             eventHandler,
             suiteInfoHandler
         )
-
-
-        Work.initial = true
     }
 
     /**
@@ -175,17 +175,14 @@ object IsvWorkMulti{
      * */
     fun config(suiteId: String, secret: String, token: String, encodingAESKey: String?,
                enableJsSdk: Boolean, privateKeyFilePath: String?,
-               suiteInfoHandler: ISuiteInfoHandler, msgHandler: IWorkMsgHandler, eventHandler: IWorkEventHandler) {
-        Work._isIsv = true
-        Work._isMulti = true
-
+               suiteInfoHandler: ISuiteInfoHandler,
+               msgHandler: IWorkMsgHandler,
+               eventHandler: IWorkEventHandler) {
         var ctx = ApiContextMap[suiteId]
         if (ctx == null) {//first time
             ctx = SuiteApiContext(suiteId, secret, token, encodingAESKey, enableJsSdk,privateKeyFilePath, msgHandler, eventHandler, suiteInfoHandler)
             ApiContextMap[suiteId] = ctx
         }
-
-        Work.initial = true
     }
 
     /**

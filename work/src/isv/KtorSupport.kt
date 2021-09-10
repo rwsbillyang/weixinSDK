@@ -19,7 +19,7 @@
 package com.github.rwsbillyang.wxSDK.work.isv
 
 
-import com.github.rwsbillyang.wxSDK.bean.DataBox
+
 import com.github.rwsbillyang.wxSDK.security.AesException
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.stateCache
@@ -34,34 +34,34 @@ import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
 //当为多应用模式时，提供suiteId
-fun Routing.isvDispatchMsgApi(suiteId: String? = null){
+fun Routing.isvDispatchMsgApi(){
     val log = LoggerFactory.getLogger("isvDispatchMsgApi")
-    if(!Work.initial) //避免test中未config时，单应用模式未初始化异常
-    {
-        log.warn("not init?")
-        return
-    }
-
-    val suiteApiCtx = if(Work.isMulti){
-        IsvWorkMulti.ApiContextMap[suiteId]
-    }else{
-        IsvWorkSingle.ctx
-    }
-    if(suiteApiCtx == null){
-        log.warn("not init suiteApiCtx for: suiteId=$suiteId")
-        return
-    }
-
-
-    if(suiteApiCtx.wxBizMsgCrypt == null || suiteApiCtx.msgHub == null){
-        log.warn("wxBizMsgCrypt or msgHub is null, please init them correctly")
-        return
-    }
+//    if(!Work.initial) //避免test中未config时，单应用模式未初始化异常
+//    {
+//        log.warn("not init?")
+//        return
+//    }
+//
+//    val suiteApiCtx = if(Work.isMulti){
+//        IsvWorkMulti.ApiContextMap[suiteId]
+//    }else{
+//        IsvWorkSingle.ctx
+//    }
+//    if(suiteApiCtx == null){
+//        log.warn("not init suiteApiCtx for: suiteId=$suiteId")
+//        return
+//    }
+//
+//
+//    if(suiteApiCtx.wxBizMsgCrypt == null || suiteApiCtx.msgHub == null){
+//        log.warn("wxBizMsgCrypt or msgHub is null, please init them correctly")
+//        return
+//    }
 
     //"/api/wx/work/isv/msg/{suiteId}"
-    route(IsvWork.msgNotifyPath) {
+    route(IsvWork.msgNotifyPath+"/{suiteId}") {
         get {
-            //val suiteId = call.parameters["suiteId"]
+            val suiteId = call.parameters["suiteId"]?:"NoSuiteId"
 
             val signature = call.request.queryParameters["msg_signature"]
             val timestamp = call.request.queryParameters["timestamp"]
@@ -95,7 +95,7 @@ fun Routing.isvDispatchMsgApi(suiteId: String? = null){
     }
 
     post{
-        //val appId = call.parameters["suiteId"]
+        val suiteId = call.parameters["suiteId"]?:"NoSuiteId"
         val ctx = if(Work.isMulti){
             IsvWorkMulti.ApiContextMap[suiteId]
         }else{
@@ -109,7 +109,7 @@ fun Routing.isvDispatchMsgApi(suiteId: String? = null){
         val nonce = call.request.queryParameters["nonce"]
         val encryptType = call.request.queryParameters["encrypt_type"]?:"aes"
 
-        val reXml = ctx?.msgHub!!.handleXmlMsg(null, body, msgSignature, timeStamp, nonce, encryptType)
+        val reXml = ctx?.msgHub!!.handleXmlMsg(suiteId, null, body, msgSignature, timeStamp, nonce, encryptType)
 
         if(reXml.isNullOrBlank())
             call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
@@ -134,11 +134,11 @@ fun Routing.isvAuthFromOutsideApi(onGetPermanentAuthInfo: (suiteId: String, info
     /**
      * 前端请求该endpoint，从服务商网站发起应用授权
      * */
-    get(IsvWork.authFromOutsidePath){
+    get(IsvWork.authFromOutsidePath+"/{suiteId}"){
         val suiteId = call.parameters["suiteId"]
         if(suiteId.isNullOrBlank())
         {
-            call.respond(DataBox("KO", "invalid parameter: suiteId"))
+            call.respond(HttpStatusCode.BadRequest, "invalid parameter: suiteId")
         }else{
             //获取预授权码后，重定向到用户授权页面
             val preAuthCode = ThirdPartyApi(suiteId).getPreAuthCode()
@@ -146,12 +146,12 @@ fun Routing.isvAuthFromOutsideApi(onGetPermanentAuthInfo: (suiteId: String, info
                 val state = RandomStringUtils.randomAlphanumeric(16)
                 stateCache.put(state,suiteId)
                 val host = call.request.host() //如："https：//www.example.com"
-                val redirect = URLEncoder.encode("$host/${IsvWork.authCodeNotifyPath}/${suiteId}","UTF-8")
+                val redirect = URLEncoder.encode("$host/${IsvWork.oauthNotifyPath}/${suiteId}","UTF-8")
                 //引导用户进入授权页
                 val url = "https://open.work.weixin.qq.com/3rdapp/install?suite_id=$suiteId&pre_auth_code=${preAuthCode.pre_auth_code}&redirect_uri=$redirect&state=$state"
                 call.respondRedirect(url)
             }else{
-                call.respond(DataBox("KO", "fail to get preAuthCode: "+preAuthCode.errMsg))
+                call.respond(HttpStatusCode.BadRequest, "fail to get preAuthCode: "+preAuthCode.errMsg)
             }
         }
     }
@@ -161,7 +161,7 @@ fun Routing.isvAuthFromOutsideApi(onGetPermanentAuthInfo: (suiteId: String, info
      *  用户授权成功后，接收来自企业微信的通知，得到临时授权码，再使用临时授权码获取永久授权码
      * 获取永久授权码后，通过指定的回调onGetPermanentAuthInfo处理永久授权码，期间任何错误处理均通过指定的web通知path通知到前端
      * */
-    get(IsvWork.authCodeNotifyPath){
+    get(IsvWork.oauthNotifyPermanentCodePath+"/{suiteId}"){//  /api/wx/work/isv/oauth/notify/{suiteId}
         val authCode = call.request.queryParameters["auth_code"]
         //val expiresIn = call.request.queryParameters["expires_in"]
         val state = call.request.queryParameters["state"]

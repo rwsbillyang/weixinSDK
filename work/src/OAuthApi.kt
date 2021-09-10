@@ -60,7 +60,7 @@ class OAuthApi private constructor (corpId: String?) : WorkBaseApi(corpId){
     /**
      * ISV-Multi
      * */
-    constructor(suiteId: String, corpId: String) : this(corpId) {
+    constructor(suiteId: String, corpId: String?) : this(corpId) {
         this.suiteId = suiteId
     }
 
@@ -92,16 +92,34 @@ class OAuthApi private constructor (corpId: String?) : WorkBaseApi(corpId){
      * 否则系统会视为snsapi_base，不会返回敏感信息. 企业自建应用调用读取成员接口没有字段限制，可以获取包括敏感字段在内的所有信息。
      * 因此，只有第三方应用才有必要使用snsapi_userinfo或snsapi_privateinfo的scope。
      *
-     *
+     * 对于multi模式内建应用，需提供corpId和agentId
+     * 对于multi模式ISV应用，需提供suiteId和corpId
      * */
     fun prepareOAuthInfo(redirectUri: String, snsApiScope: SnsApiScope = SnsApiScope.PrivateInfo): OAuthInfo {
         val state = RandomStringUtils.randomAlphanumeric(16)
-        val appId = if(suiteId != null) suiteId!! else corpId!!
+        val appId: String
+        var agentId2: Int? = null
+        if(Work.isIsv){
+            appId = if(Work.isMulti){
+                suiteId!!
+            }else{
+                IsvWorkSingle.suiteId
+            }
+        }else{
+            if(Work.isMulti){
+                appId = corpId!!
+                agentId2 = agentId
+            }else{
+                appId = WorkSingle.corpId
+                agentId2 = WorkSingle.agentId
+            }
+        }
+
         return OAuthInfo(appId, URLEncoder.encode(redirectUri,"UTF-8") ,
-            snsApiScope.value, state, agentId)
+            snsApiScope.value, state, agentId2)
     }
     /**
-     * 获取访问用户身份
+     * 获取访问用户身份(内建应用使用)
      *
      * 根据code获取成员信息，用于网页授权后的身份信息获取
      * 跳转的域名须完全匹配access_token对应应用的可信域名，否则会返回50001错误。

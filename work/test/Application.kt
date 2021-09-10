@@ -23,6 +23,7 @@ import com.github.rwsbillyang.wxSDK.accessToken.ITimelyRefreshValue
 import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.msg.ReTextMsg
 import com.github.rwsbillyang.wxSDK.work.*
+import com.github.rwsbillyang.wxSDK.work.inMsg.DefaultWorkEventHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.DefaultWorkMsgHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.WorkBaseMsg
 import com.github.rwsbillyang.wxSDK.work.inMsg.WorkTextMsg
@@ -81,15 +82,21 @@ fun Application.testableModule(testing: Boolean = false) {
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.WorkTestableModule(testing: Boolean = false) {
-
     testableModule(testing)
 
+    Work.isIsv = false
+    Work.isMulti = true
+
+    val msgHandler = TestWorkMsgHandler()
+    val eventHandler = DefaultWorkEventHandler()
     WorkMulti.config(
         TestConstatns.CorpId,
         TestConstatns.KeyBase,
         "the_secret",
         "QDG6eK",
         "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",
+        customMsgHandler = msgHandler,
+        customEventHandler = eventHandler,
         customAccessToken = TestAccessTokenValue()
     )
     WorkMulti.config(
@@ -98,6 +105,8 @@ fun Application.WorkTestableModule(testing: Boolean = false) {
         "the_secret",
         "QDG6eK",
         "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",
+        customMsgHandler = msgHandler,
+        customEventHandler = eventHandler,
         customAccessToken = TestAccessTokenValue()
     )
     WorkMulti.config(
@@ -106,6 +115,8 @@ fun Application.WorkTestableModule(testing: Boolean = false) {
         "the_secret",
         "QDG6eK",
         "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",
+        customMsgHandler = msgHandler,
+        customEventHandler = eventHandler,
         customAccessToken = TestAccessTokenValue()
     )
     WorkMulti.config(
@@ -114,14 +125,13 @@ fun Application.WorkTestableModule(testing: Boolean = false) {
         "the_secret",
         "QDG6eK",
         "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",
+        customMsgHandler = msgHandler,
+        customEventHandler = eventHandler,
         customAccessToken = TestAccessTokenValue()
     )
 
     routing {
-        dispatchAgentMsgApi(TestConstatns.CorpId, TestConstatns.KeyBase)
-        dispatchAgentMsgApi(TestConstatns.CorpId, TestConstatns.KeyChatArchive)
-        dispatchAgentMsgApi(TestConstatns.CorpId, TestConstatns.KeyContact)
-        dispatchAgentMsgApi(TestConstatns.CorpId, TestConstatns.KeyCustomer)
+        dispatchAgentMsgApi()
     }
 }
 
@@ -139,7 +149,7 @@ class TestJsTicketValue : ITimelyRefreshValue {
 
 
 class TestWorkMsgHandler : DefaultWorkMsgHandler() {
-    override fun onTextMsg(msg: WorkTextMsg): ReBaseMSg? {
+    override fun onTextMsg(corpId: String ,agentId: Int?, msg: WorkTextMsg): ReBaseMSg? {
         return ReTextMsg(
             "TestWorkMsgHandler reply the msg: content=${msg.content},msgId=${msg.msgId},agentId=${msg.agentId}",
             msg.base.fromUserName,
@@ -147,7 +157,7 @@ class TestWorkMsgHandler : DefaultWorkMsgHandler() {
         )
     }
 
-    override fun onDefault(msg: WorkBaseMsg): ReBaseMSg? {
+    override fun onDefault(corpId: String ,agentId: Int?,msg: WorkBaseMsg): ReBaseMSg? {
         return ReTextMsg(
             "TestWorkMsgHandler default reply the msg: msgId=${msg.msgId},agentId=${msg.agentId}",
             msg.base.fromUserName,

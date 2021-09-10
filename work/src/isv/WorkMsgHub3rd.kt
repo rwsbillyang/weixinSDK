@@ -51,21 +51,21 @@ class WorkMsgHub3rd(
      * AgentID：接收的应用id，可在应用的设置页面获取。对于应用授权部分，此字段为空
      * 参见：https://work.weixin.qq.com/api/doc/90000/90135/90238#%E4%BD%BF%E7%94%A8%E6%8E%A5%E6%94%B6%E6%B6%88%E6%81%AF
      * */
-    override fun parseXml(decryptedXmlText: String, outerMap: Map<String, String?>): ReBaseMSg?{
+    override fun parseXml(appId: String, agentId:Int?, decryptedXmlText: String, outerMap: Map<String, String?>): ReBaseMSg?{
         //val suiteId = outerMap["ToUserName"] //收到的数据包中ToUserName为产生事件的SuiteId，
-        val agentId = outerMap["AgentID"] //AgentID为空
+        val agentId_ = outerMap["AgentID"] //AgentID为空
 
         val reader: XMLEventReader = XMLInputFactory.newInstance().createXMLEventReader(decryptedXmlText.byteInputStream())
 
         //以agentId是否为空，区分是应用授权部分的回调通知，还是普通应用的通知
-        val reMsg = if(agentId.isNullOrBlank()){
-            dispatchSuiteInfo(reader, SuiteInfo.fromXml(decryptedXmlText, reader))
+        val reMsg = if(agentId_ == null){
+            dispatchSuiteInfo(appId, reader, SuiteInfo.fromXml(decryptedXmlText, reader))
             null
         }else{
             val base = BaseInfo.fromXml(decryptedXmlText, reader)
             when(base.msgType){
-                MsgType.EVENT -> dispatchEvent(reader,base)
-                else -> dispatchMsg(reader,base)
+                MsgType.EVENT -> dispatchEvent(appId, null, reader,base)
+                else -> dispatchMsg(appId, null, reader,base)
             }
         }
 
@@ -75,27 +75,27 @@ class WorkMsgHub3rd(
 
 
 
-    fun dispatchSuiteInfo(reader: XMLEventReader, suiteInfo: SuiteInfo)
+    fun dispatchSuiteInfo(suiteId: String, reader: XMLEventReader, suiteInfo: SuiteInfo)
     {
         when(suiteInfo.infoType){
-            SuiteInfo.INFO_TYPE_TICKET -> suiteInfoHandler.onTicket(SuiteTicket(suiteInfo).apply { read(reader) })
-            SuiteInfo.INFO_TYPE_AUTH_CREATE -> suiteInfoHandler.onAuthCode(AuthCode(suiteInfo))
-            SuiteInfo.INFO_TYPE_AUTH_CHANGE -> suiteInfoHandler.onAuthChange(AuthChange(suiteInfo))
-            SuiteInfo.INFO_TYPE_AUTH_CANCEL -> suiteInfoHandler.onAuthCancel(AuthCancel(suiteInfo))
-            SuiteInfo.INFO_TYPE_AGENT_SHARE_CHANGE -> suiteInfoHandler.onAgentShareChange(AgentShareChange(suiteInfo).apply { read(reader) })
+            SuiteInfo.INFO_TYPE_TICKET -> suiteInfoHandler.onTicket(suiteId,  SuiteTicket(suiteInfo).apply { read(reader) })
+            SuiteInfo.INFO_TYPE_AUTH_CREATE -> suiteInfoHandler.onAuthCode(suiteId,  AuthCode(suiteInfo))
+            SuiteInfo.INFO_TYPE_AUTH_CHANGE -> suiteInfoHandler.onAuthChange(suiteId,  AuthChange(suiteInfo))
+            SuiteInfo.INFO_TYPE_AUTH_CANCEL -> suiteInfoHandler.onAuthCancel(suiteId,  AuthCancel(suiteInfo))
+            SuiteInfo.INFO_TYPE_AGENT_SHARE_CHANGE -> suiteInfoHandler.onAgentShareChange(suiteId,  AgentShareChange(suiteInfo).apply { read(reader) })
             SuiteInfo.INFO_TYPE_CONTACT_CHANGE -> {
                 val base = ContactChangeBase(suiteInfo).apply { read(reader) }
                 when(base.changeType){
-                    ContactChangeBase.CHANGE_TYPE_CREATE_USER -> suiteInfoHandler.onContactAdd(ContactAdd(base).apply { read(reader) })
-                    ContactChangeBase.CHANGE_TYPE_UPDATE_USER -> suiteInfoHandler.onContactUpdate(ContactUpdate(base).apply { read(reader) })
-                    ContactChangeBase.CHANGE_TYPE_DEL_USER -> suiteInfoHandler.onContactDel(ContactDel(base).apply { read(reader) })
-                    ContactChangeBase.CHANGE_TYPE_CREATE_PARTY -> suiteInfoHandler.onDepartmentAdd(DepartmentAdd(base).apply { read(reader) })
-                    ContactChangeBase.CHANGE_TYPE_UPDATE_PARTY -> suiteInfoHandler.onDepartmentUpdate(DepartmentUpdate(base).apply { read(reader) })
-                    ContactChangeBase.CHANGE_TYPE_DEL_PARTY -> suiteInfoHandler.onDepartmentDel(DepartmentDel(base).apply { read(reader) })
-                    ContactChangeBase.CHANGE_TYPE_UPDATE_TAG -> suiteInfoHandler.onTagContactChange(TagContactChange(base).apply { read(reader) })
+                    ContactChangeBase.CHANGE_TYPE_CREATE_USER -> suiteInfoHandler.onContactAdd(suiteId,  ContactAdd(base).apply { read(reader) })
+                    ContactChangeBase.CHANGE_TYPE_UPDATE_USER -> suiteInfoHandler.onContactUpdate(suiteId,  ContactUpdate(base).apply { read(reader) })
+                    ContactChangeBase.CHANGE_TYPE_DEL_USER -> suiteInfoHandler.onContactDel(suiteId,  ContactDel(base).apply { read(reader) })
+                    ContactChangeBase.CHANGE_TYPE_CREATE_PARTY -> suiteInfoHandler.onDepartmentAdd(suiteId,  DepartmentAdd(base).apply { read(reader) })
+                    ContactChangeBase.CHANGE_TYPE_UPDATE_PARTY -> suiteInfoHandler.onDepartmentUpdate(suiteId,  DepartmentUpdate(base).apply { read(reader) })
+                    ContactChangeBase.CHANGE_TYPE_DEL_PARTY -> suiteInfoHandler.onDepartmentDel(suiteId,  DepartmentDel(base).apply { read(reader) })
+                    ContactChangeBase.CHANGE_TYPE_UPDATE_TAG -> suiteInfoHandler.onTagContactChange(suiteId,  TagContactChange(base).apply { read(reader) })
                 }
             }
-            else -> suiteInfoHandler.onDefault(suiteInfo)
+            else -> suiteInfoHandler.onDefault(suiteId,  suiteInfo)
         }
     }
 }

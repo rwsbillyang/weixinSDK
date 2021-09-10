@@ -67,7 +67,7 @@ class ApplicationTest {
 
             val signature = SHA1.getSHA1(ctx.token!!, timestamp, nonce, encryptEcho)
             val getUrl =
-                "${ctx.msgNotifyUri}?msg_signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$encryptEcho"
+                "${Work.msgNotifyUri}/${TestConstatns.CorpId}/${agentName}?msg_signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$encryptEcho"
 
             handleRequest(HttpMethod.Get, getUrl).apply {
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -78,7 +78,7 @@ class ApplicationTest {
     }
 
 
-    @Test
+    //@Test
     fun testWorkUrlPost() {
         withTestApplication({ WorkTestableModule(testing = true) }) {
             val agentName = TestConstatns.KeyBase
@@ -101,12 +101,13 @@ class ApplicationTest {
                 128
             )
 
-            val postUrl = "${ctx.msgNotifyUri}?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce"
+            val postUrl = "${Work.msgNotifyUri}/${TestConstatns.CorpId}/${agentName}?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce"
             handleRequest(HttpMethod.Post, postUrl) {
                 setBody(xml)
             }.apply {
                 assertEquals(HttpStatusCode.OK, response.status())
                 val content = response.content
+                println("response.content=${response.content}")
                 if (content.isNullOrBlank()) {
                     println("in wx work post, get empty response")
                 } else {

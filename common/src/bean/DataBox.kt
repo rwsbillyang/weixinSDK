@@ -18,11 +18,11 @@
 
 package com.github.rwsbillyang.wxSDK.bean
 
-import com.github.rwsbillyang.wxSDK.security.JsApiSignature
+
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DataBox(
+class DataBox<T>(
         val code: String,
         val msg: String? = null,
-        val data: JsApiSignature? = null)
+        val data: T? = null)

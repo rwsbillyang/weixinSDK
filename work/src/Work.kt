@@ -36,24 +36,27 @@ object Work {
     /**
      * config后变为true，否则为false
      * */
-    var initial = false
+    //var initial = false
+
     /**
      * 是否是多agent模式，在配置sdk参数时自动指定
      * */
-    internal var _isMulti = false
+    var isMulti by Delegates.notNull<Boolean>()
 
     /**
      * 是否是isv模式，即第三方应用模式，在配置sdk参数时自动指定
      * */
-    internal var _isIsv = false
+    var isIsv by Delegates.notNull<Boolean>()
 
-    val isMulti: Boolean
-        get() = _isMulti
-    val isIsv: Boolean
-        get() = _isIsv
+
+
 
     const val prefix = "/api/wx/work"
 
+    /**
+     * 接收消息
+     * */
+    var msgNotifyUri = "${prefix}/msg"
     /**
      * 前端获取api签名信息，重定向到请求腾讯授权页面
      * */
@@ -104,22 +107,15 @@ object WorkSingle{
                privateKeyFilePath: String? = null,
                enableJsSdk: Boolean = false,
                enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
-               customMsgUrl: String? = null,
-               customAccessToken: ITimelyRefreshValue? = null,
-               customJsTicket: ITimelyRefreshValue? = null,
-               customMsgHandler: IWorkMsgHandler = DefaultWorkMsgHandler(),
-               customEventHandler: IWorkEventHandler = DefaultWorkEventHandler()
+               customMsgHandler: IWorkMsgHandler,
+               customEventHandler: IWorkEventHandler,
+               customAccessToken: ITimelyRefreshValue? = null
     ) {
-        Work._isIsv = false
-        Work._isMulti = false
-
         _corpId = corpId
         _agentId = agentId
         _agentContext = AgentContext(corpId, agentId, secret, enableMsg,
-            token, encodingAESKey, customAccessToken, customMsgUrl, privateKeyFilePath, enableJsSdk,
-            customJsTicket,null,customMsgHandler,customEventHandler)
-
-        Work.initial = true
+            token, encodingAESKey, privateKeyFilePath, enableJsSdk,
+            customMsgHandler,customEventHandler,customAccessToken)
     }
 }
 /**
@@ -129,7 +125,7 @@ object WorkSingle{
 object WorkMulti{
     /**
      * corpId -> WorkApiContext
-     * TODO: 大量的corp之后，此map可能很大
+     * 大量的corp之后，此map可能很大
      * */
     val ApiContextMap = hashMapOf<String, CorpApiContext>()
 
@@ -152,15 +148,10 @@ object WorkMulti{
                privateKeyFilePath: String? = null,
                enableJsSdk: Boolean = false,
                enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
-               customMsgUrl: String? = null,
-               customAccessToken: ITimelyRefreshValue? = null,
-               customJsTicket: ITimelyRefreshValue? = null,
-               customMsgHandler: IWorkMsgHandler = DefaultWorkMsgHandler(),
-               customEventHandler: IWorkEventHandler = DefaultWorkEventHandler()
+               customMsgHandler: IWorkMsgHandler,
+               customEventHandler: IWorkEventHandler,
+               customAccessToken: ITimelyRefreshValue? = null
     ) {
-        Work._isIsv = false
-        Work._isMulti = true
-
         var corpApiCtx = ApiContextMap[corpId]
         if (corpApiCtx == null) {
             corpApiCtx = CorpApiContext(corpId)
@@ -168,10 +159,8 @@ object WorkMulti{
         }
 
         corpApiCtx.agentMap[agentId] = AgentContext(corpId, agentId, secret, enableMsg,
-            token, encodingAESKey, customAccessToken, customMsgUrl, privateKeyFilePath, enableJsSdk,
-            customJsTicket,null, customMsgHandler,customEventHandler)
-
-        Work.initial = true
+            token, encodingAESKey, privateKeyFilePath, enableJsSdk,
+            customMsgHandler,customEventHandler,customAccessToken)
     }
 }
 
@@ -224,27 +213,26 @@ class AgentContext(
     val enableMsg: Boolean = false, //是否激活：消息解析、分发、处理
     val token: String? = null,
     val encodingAESKey: String? = null,
-    customAccessToken: ITimelyRefreshValue? = null,
-    customMsgNotifyUri: String? = null,
     privateKeyFilePath: String? = null,
     enableJsSdk: Boolean,
-    var agentJsTicket: ITimelyRefreshValue? = null,
-    var corpJsTicket:ITimelyRefreshValue? = null,
     msgHandler: IWorkMsgHandler,
-    eventHandler: IWorkEventHandler
+    eventHandler: IWorkEventHandler,
+    customAccessToken: ITimelyRefreshValue? = null,
+    var agentJsTicket: ITimelyRefreshValue? = null,
+    var corpJsTicket:ITimelyRefreshValue? = null
 ) {
     private val log = LoggerFactory.getLogger("AgentContext")
 
     var accessToken: ITimelyRefreshValue = customAccessToken ?: TimelyRefreshAccessToken(corpId,
             AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = agentId.toString())
 
-    /**
-     * 微信消息接入， 微信消息通知URI
-     * */
-    var msgNotifyUri: String = if (customMsgNotifyUri.isNullOrBlank()) {
-        "${Work.prefix}/msg/${corpId}/${agentId}"
-    } else
-        customMsgNotifyUri
+//    /**
+//     * 微信消息接入， 微信消息通知URI
+//     * */
+//    var msgNotifyUri: String = if (customMsgNotifyUri.isNullOrBlank()) {
+//        "${Work.prefix}/msg/${corpId}/${agentId}"
+//    } else
+//        customMsgNotifyUri
 
 
     var msgHub: WorkMsgHub? = null

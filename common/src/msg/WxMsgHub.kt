@@ -21,7 +21,8 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
      * @param appId 公众号appId或企业微信中的corpId
      * */
     fun handleXmlMsg(
-        appId: String?, //公众号通过路径传入appId，企业微信为corpId，通过xml解析得到
+        appId: String, //公众号通过路径传入appId，企业微信为corpId or suiteId
+        agentId: Int?, //企业微信内建应用
         body: String,
         msgSignature: String?,
         timeStamp: String?,
@@ -54,7 +55,7 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
             log.debug("after decrypt: $decryptedXmlText")
 
 
-           val reMsg = parseXml(decryptedXmlText, map)
+           val reMsg = parseXml(appId, agentId, decryptedXmlText, map)
 
             //val re = reMsg?.toXml()?.let { wxBizMsgCrypt?.encryptMsg(it)?.first }
             //log.debug("Reply: $re")
@@ -75,14 +76,14 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
      * @param decryptedXmlText 由外层xml中的Encrypt字段解析出来的新xml字段
      * @param outerMap 外层xml得到的map数据,即body直接转换成的map数据
      * */
-    protected open fun parseXml(decryptedXmlText: String, outerMap: Map<String, String?>): ReBaseMSg?{
+    protected open fun parseXml(appId: String, agentId: Int?, decryptedXmlText: String, outerMap: Map<String, String?>): ReBaseMSg?{
         val reader: XMLEventReader = XMLInputFactory.newInstance().createXMLEventReader(decryptedXmlText.byteInputStream())
 
         val base = BaseInfo.fromXml(decryptedXmlText, reader)
 
         val reMsg = when(base.msgType){
-            MsgType.EVENT -> dispatchEvent(reader,base)
-            else -> dispatchMsg(reader,base)
+            MsgType.EVENT -> dispatchEvent(appId, agentId, reader,base)
+            else -> dispatchMsg(appId, agentId, reader,base)
         }
         reader.close()
         return reMsg
@@ -90,7 +91,7 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
 
 
 
-    abstract fun dispatchMsg(reader: XMLEventReader, base: BaseInfo): ReBaseMSg?
+    abstract fun dispatchMsg(appId: String, agentId: Int?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg?
 
-    abstract fun dispatchEvent(reader: XMLEventReader, base: BaseInfo): ReBaseMSg?
+    abstract fun dispatchEvent(appId: String, agentId: Int?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg?
 }

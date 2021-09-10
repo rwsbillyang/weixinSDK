@@ -27,7 +27,7 @@ import java.util.*
  * @param agentId 当企业微信中需要调用agentConfig进行注入时才提供，否则未空
  * */
 @Serializable
-data class JsApiSignature(
+class JsApiSignature(
     val appId: String,
     val nonceStr: String,
     val timestamp: Long,

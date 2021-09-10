@@ -294,7 +294,7 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
         }
 
         //企业微信中消息get请求时不校验，公众号则校验。公众号和企业微信所有的post的消息都校验
-        if (appId !=null && from_appid != appId) {
+        if (appId != null && from_appid != appId) {
             throw AesException(AesException.ValidateAppidError)
         }
         return xmlContent

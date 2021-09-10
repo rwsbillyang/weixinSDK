@@ -101,16 +101,16 @@ class TestJsTicketValue: ITimelyRefreshValue {
 
 class TestOAMsgHandler: DefaultOAMsgHandler()
 {
-    override fun onOATextMsg(msg: OATextMsg): ReBaseMSg?{
+    override fun onOATextMsg(appId:String, msg: OATextMsg): ReBaseMSg?{
         return ReTextMsg("TestOAMsgHandler reply the msg: ${msg.content},msgId=${msg.msgId}", msg.base.fromUserName, msg.base.toUserName)
     }
 
-    override fun onDefault(msg: WxBaseMsg): ReBaseMSg? {
+    override fun onDefault(appId:String, msg: WxBaseMsg): ReBaseMSg? {
         return ReTextMsg("TestOAMsgHandler default reply the msg: msgId=${msg.msgId}", msg.base.fromUserName, msg.base.toUserName)
     }
 }
 class OAEventTestHandler: DefaultOAEventHandler(){
-    override fun onDefault(e: WxBaseEvent): ReBaseMSg? {
+    override fun onDefault(appId:String, e: WxBaseEvent): ReBaseMSg? {
         println("got event: ${e.event}")
         return null
 

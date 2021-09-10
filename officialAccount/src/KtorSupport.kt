@@ -142,7 +142,7 @@ fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
                     val nonce = call.request.queryParameters["nonce"]
                     val encryptType = call.request.queryParameters["encrypt_type"]?:"security"
 
-                    val reXml = apiCtx.msgHub.handleXmlMsg(appId, body, msgSignature, timeStamp, nonce, encryptType)
+                    val reXml = apiCtx.msgHub.handleXmlMsg(appId, null, body, msgSignature, timeStamp, nonce, encryptType)
 
                     if(reXml.isNullOrBlank())
                         call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
@@ -317,7 +317,7 @@ fun Routing.jsSdkSignature(path: String = OfficialAccount.jsSdkSignaturePath){
             }
         }
         if(msg != null){
-            call.respond(DataBox("KO", msg))
+            call.respond(HttpStatusCode.BadRequest, msg)
         }
     }
 }
