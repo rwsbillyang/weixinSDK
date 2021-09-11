@@ -8,11 +8,12 @@ import javax.xml.stream.XMLEventReader
  * xml消息事件通知的解包、解析、分发处理
  * */
 class OAMsgHub(
-         val msgHandler: IOAMsgHandler,
-         val eventHandler: IOAEventHandler,
+         val msgHandler: IOAMsgHandler?,
+         val eventHandler: IOAEventHandler?,
         wxBizMsgCrypt: WXBizMsgCrypt?
 ):WxMsgHub(wxBizMsgCrypt) {
     override fun dispatchMsg(appId:String, agentId:Int?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
+        if(msgHandler == null) return null
         return when(base.msgType){
             MsgType.TEXT -> {
                 val msg = OACustomerClickMenuMsg(base).apply { read(reader) }
@@ -45,6 +46,7 @@ class OAMsgHub(
     }
 
     override fun dispatchEvent(appId:String, agentId:Int?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
+        if(eventHandler == null) return null
         val baseEvent = WxBaseEvent(base).apply { read(reader) }
         return when (baseEvent.event) {
             InEventType.SUBSCRIBE -> {

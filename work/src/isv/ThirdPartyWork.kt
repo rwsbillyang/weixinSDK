@@ -81,9 +81,9 @@ object IsvWorkSingle {
     fun config(
         suiteId: String, secret: String, token: String, encodingAESKey: String?,
         enableJsSdk: Boolean, privateKeyFilePath: String?,
-        suiteInfoHandler: ISuiteInfoHandler,
-        msgHandler: IWorkMsgHandler,
-        eventHandler: IWorkEventHandler
+        suiteInfoHandler: ISuiteInfoHandler?,
+        msgHandler: IWorkMsgHandler?,
+        eventHandler: IWorkEventHandler?
     ) {
         _suiteId = suiteId
         _ctx = SuiteApiContext(
@@ -175,9 +175,9 @@ object IsvWorkMulti{
      * */
     fun config(suiteId: String, secret: String, token: String, encodingAESKey: String?,
                enableJsSdk: Boolean, privateKeyFilePath: String?,
-               suiteInfoHandler: ISuiteInfoHandler,
-               msgHandler: IWorkMsgHandler,
-               eventHandler: IWorkEventHandler) {
+               suiteInfoHandler: ISuiteInfoHandler?,
+               msgHandler: IWorkMsgHandler?,
+               eventHandler: IWorkEventHandler?) {
         var ctx = ApiContextMap[suiteId]
         if (ctx == null) {//first time
             ctx = SuiteApiContext(suiteId, secret, token, encodingAESKey, enableJsSdk,privateKeyFilePath, msgHandler, eventHandler, suiteInfoHandler)
@@ -273,9 +273,9 @@ class SuiteApiContext(
 
     privateKeyFilePath: String? = null,
 
-    msgHandler: IWorkMsgHandler,
-    eventHandler: IWorkEventHandler,
-    suiteInfoHandler: ISuiteInfoHandler,
+    msgHandler: IWorkMsgHandler?,
+    eventHandler: IWorkEventHandler?,
+    suiteInfoHandler: ISuiteInfoHandler?,
 
     //系统初始化时是空值，等腾讯推送过来后，才有值，才进行suiteAccessToken的创建
     var ticket: String? = null,//微信回调通知，每十分钟更新一次.若开发者想立即获得ticket推送值，可登录服务商平台，在第三方应用详情-回调配置，手动刷新ticket推送。

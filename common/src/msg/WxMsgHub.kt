@@ -39,12 +39,12 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
             }else{
                 map = XmlUtil.extract(body)//body转换成的map数据结构
                 // 提取密文
-               // val encryptText = map["Encrypt"]?:""//提取body中的Encrypt字段
+                val encryptText = map["Encrypt"]?:""//提取body中的Encrypt字段
                // corpId = appId?:map["ToUserName"]
-                wxBizMsgCrypt.decryptWxMsg(appId, msgSignature, timestamp, nonce, body, encryptType)
+                wxBizMsgCrypt.decryptWxMsg(appId, msgSignature, timestamp, nonce, encryptText, encryptType)
             }
 
-            log.debug("after decrypt: $decryptedXmlText")
+            log.info("after decrypt: $decryptedXmlText")
 
 
            val reMsg = parseXml(appId, agentId, decryptedXmlText, map)
@@ -53,9 +53,9 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
             return reMsg?.toXml()?.let { wxBizMsgCrypt?.encryptMsg(appId, it)?.first }
 
         }catch (e: AesException){
-            log.warn("AesException: ${e.localizedMessage}, msgSignature=$msgSignature, timestamp=$timestamp, nonce=$nonce")
+            log.warn("AesException: ${e.localizedMessage}, agentId=$agentId,  appId=$appId, msgSignature=$msgSignature,  timestamp=$timestamp, nonce=$nonce, body=$body")
         }catch (e: Exception){
-            log.warn("Exception: ${e.message}")
+            log.warn("Exception: ${e.localizedMessage}")
         }
 
         return null

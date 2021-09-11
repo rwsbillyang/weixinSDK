@@ -153,9 +153,7 @@ class ApiContext(
     var msgHub: OAMsgHub
 
     init {
-        val msgHandler = customMsgHandler ?: DefaultOAMsgHandler()
-        val eventHandler = customEventHandler ?: DefaultOAEventHandler()
-        msgHub = OAMsgHub(msgHandler, eventHandler, wxBizMsgCrypt)
+        msgHub = OAMsgHub(customMsgHandler, customEventHandler, wxBizMsgCrypt)
 
         accessToken = customAccessToken
                 ?: TimelyRefreshAccessToken(appId, AccessTokenRefresher(accessTokenUrl(appId, secret)))

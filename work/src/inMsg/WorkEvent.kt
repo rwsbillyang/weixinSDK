@@ -48,14 +48,19 @@ open class WorkBaseEvent(base: BaseInfo): WxBaseEvent(base)
 
     override fun read(reader: XMLEventReader)
     {
-        while (reader.hasNext()) {
+        var count = 0
+        while (reader.hasNext() && count < 2) {
             val e = reader.nextEvent()
             if (e.isStartElement) {
+                //实际顺序与文档中不一致
                 when(e.asStartElement().name.toString()){
-                    "Event" -> event = reader.elementText
                     "AgentID" -> {
                         agentId = reader.elementText
-                        break
+                        count++
+                    }
+                    "Event" -> {
+                        event = reader.elementText
+                        count++
                     }
                 }
             }
@@ -73,28 +78,39 @@ open class WorkBaseEvent(base: BaseInfo): WxBaseEvent(base)
  * 成员已经在应用可见范围，成员加入(或退出)企业时
  * 事件类型，subscribe(关注)、unsubscribe(取消关注)
  * */
-class WorkSubscribeEvent(base: BaseInfo): WorkBaseEvent(base)
+class WorkSubscribeEvent(base: WorkBaseEvent): WorkBaseEvent(base.base){
+    init {
+        agentId = base.agentId
+        event = base.event
+    }
+}
 
 /**
  * 取消关注事件
  *
  * 事件类型，subscribe(关注)、unsubscribe(取消关注)
  * */
-class WorkUnsubscribeEvent(base: BaseInfo): WorkBaseEvent(base)
-
+class WorkUnsubscribeEvent(base: WorkBaseEvent): WorkBaseEvent(base.base){
+    init {
+        agentId = base.agentId
+        event = base.event
+    }
+}
 /**
  * 进入应用
  * 本事件在成员进入企业微信的应用时触发
  * @property eventKey EventKey	事件KEY值，此事件该值为空
  * */
-class WorkEnterAgent(base: BaseInfo): WorkBaseEvent(base){
+class WorkEnterAgent(base: WorkBaseEvent): WorkBaseEvent(base.base){
     init {
-        event = ENTER_AGENT
+        agentId = base.agentId
+        event = base.event
     }
+
     var eventKey: String? = null
     override fun read(reader: XMLEventReader)
     {
-        super.readEvent(reader)
+        //super.readEvent(reader)
         while (reader.hasNext()) {
             val e = reader.nextEvent()
             if (e.isStartElement) {
@@ -105,7 +121,7 @@ class WorkEnterAgent(base: BaseInfo): WorkBaseEvent(base){
                     }
                 }
             }
-            super.readAgentId(reader)
+            //super.readAgentId(reader)
         }
     }
 }

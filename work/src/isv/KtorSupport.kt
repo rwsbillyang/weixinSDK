@@ -36,27 +36,7 @@ import java.net.URLEncoder
 //当为多应用模式时，提供suiteId
 fun Routing.isvDispatchMsgApi(){
     val log = LoggerFactory.getLogger("isvDispatchMsgApi")
-//    if(!Work.initial) //避免test中未config时，单应用模式未初始化异常
-//    {
-//        log.warn("not init?")
-//        return
-//    }
-//
-//    val suiteApiCtx = if(Work.isMulti){
-//        IsvWorkMulti.ApiContextMap[suiteId]
-//    }else{
-//        IsvWorkSingle.ctx
-//    }
-//    if(suiteApiCtx == null){
-//        log.warn("not init suiteApiCtx for: suiteId=$suiteId")
-//        return
-//    }
-//
-//
-//    if(suiteApiCtx.wxBizMsgCrypt == null || suiteApiCtx.msgHub == null){
-//        log.warn("wxBizMsgCrypt or msgHub is null, please init them correctly")
-//        return
-//    }
+
 
     //"/api/wx/work/isv/msg/{suiteId}"
     route(IsvWork.msgNotifyPath+"/{suiteId}") {
@@ -83,8 +63,8 @@ fun Routing.isvDispatchMsgApi(){
                 call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
             } else {
                 try{
-                    val str = ctx.wxBizMsgCrypt!!.verifyUrl(suiteId, signature,timestamp,nonce,echostr)
-                    call.respondText(str, ContentType.Text.Plain, HttpStatusCode.OK)
+                    val str = ctx.wxBizMsgCrypt?.verifyUrl(suiteId, signature,timestamp,nonce,echostr)
+                    call.respondText(str?:"", ContentType.Text.Plain, HttpStatusCode.OK)
                 }catch (e: AesException){
                     log.warn("AesException: ${e.message}")
                     call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
@@ -123,13 +103,6 @@ fun Routing.isvDispatchMsgApi(){
     }
 }
 
-
-
-//private val thirdStateCache = Caffeine.newBuilder()
-//    .maximumSize(Long.MAX_VALUE)
-//    .expireAfterWrite(10, TimeUnit.MINUTES)
-//    .expireAfterAccess(1, TimeUnit.SECONDS)
-//    .build<String, String>()
 /**
  * 从第三方网站发起对app的授权
  *

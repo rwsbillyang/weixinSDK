@@ -9,12 +9,13 @@ import javax.xml.stream.XMLEventReader
  * xml消息事件通知的解包、解析、分发处理
  * */
 open class WorkMsgHub(
-    private val msgHandler: IWorkMsgHandler,
-    private val eventHandler: IWorkEventHandler,
+    private val msgHandler: IWorkMsgHandler?,
+    private val eventHandler: IWorkEventHandler?,
     wxBizMsgCrypt: WXBizMsgCrypt
 ): WxMsgHub(wxBizMsgCrypt) {
 
     override fun dispatchMsg(appId: String, agentId: Int?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
+        if(msgHandler == null) return null
         return when(base.msgType){
             MsgType.TEXT -> msgHandler.onTextMsg(appId, agentId,
                 WorkTextMsg(base).apply { read(reader) }
@@ -39,14 +40,21 @@ open class WorkMsgHub(
         }
     }
 
+    /**
+     * TODO: 某些event里面的数据与文档中不一致，导致值为空，需根据实际情况来读取
+     * */
     override fun dispatchEvent(appId: String, agentId: Int?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
+        if(eventHandler == null) return null
         val baseEvent = WorkBaseEvent(base).apply { read(reader) }
         return when (baseEvent.event) {
             InEventType.SUBSCRIBE -> eventHandler.onSubscribeEvent(appId, agentId,
-                WorkSubscribeEvent(base).apply { read(reader) }
+                WorkSubscribeEvent(baseEvent).apply { read(reader) }
             )
             InEventType.UNSUBSCRIBE -> eventHandler.onUnsubscribeEvent(appId, agentId,
-                WorkUnsubscribeEvent(base).apply { read(reader) }
+                WorkUnsubscribeEvent(baseEvent).apply { read(reader) }
+            )
+            WorkBaseEvent.ENTER_AGENT -> eventHandler.onEnterAgent(appId, agentId,
+                WorkEnterAgent(baseEvent).apply { read(reader) }
             )
             InEventType.LOCATION -> eventHandler.onLocationEvent(appId, agentId,
                 WorkLocationEvent(base).apply { read(reader) }
@@ -77,9 +85,7 @@ open class WorkMsgHub(
                 WorkMenuLocationEvent(base).apply { read(reader) }
             )
 
-            WorkBaseEvent.ENTER_AGENT -> eventHandler.onEnterAgent(appId, agentId,
-                WorkEnterAgent(base).apply { read(reader) }
-            )
+
             WorkBaseEvent.BATCH_JOB_RESULT -> eventHandler.onBatchJobResultEvent(appId, agentId,
                 WorkBatchJobResultEvent(base).apply { read(reader) }
             )

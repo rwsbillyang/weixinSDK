@@ -31,10 +31,10 @@ import javax.xml.stream.XMLInputFactory
  * xml消息事件通知的解包、解析、分发处理
  * */
 class WorkMsgHub3rd(
-    msgHandler: IWorkMsgHandler,
-    eventHandler: IWorkEventHandler,
+    msgHandler: IWorkMsgHandler?,
+    eventHandler: IWorkEventHandler?,
     wxBizMsgCrypt: WXBizMsgCrypt,
-    private val suiteInfoHandler: ISuiteInfoHandler
+    private val suiteInfoHandler: ISuiteInfoHandler?
 ): WorkMsgHub(msgHandler,eventHandler, wxBizMsgCrypt) {
 
     /**
@@ -77,6 +77,7 @@ class WorkMsgHub3rd(
 
     fun dispatchSuiteInfo(suiteId: String, reader: XMLEventReader, suiteInfo: SuiteInfo)
     {
+        if(suiteInfoHandler == null) return
         when(suiteInfo.infoType){
             SuiteInfo.INFO_TYPE_TICKET -> suiteInfoHandler.onTicket(suiteId,  SuiteTicket(suiteInfo).apply { read(reader) })
             SuiteInfo.INFO_TYPE_AUTH_CREATE -> suiteInfoHandler.onAuthCode(suiteId,  AuthCode(suiteInfo))

@@ -1,19 +1,19 @@
 package com.github.rwsbillyang.wxSDK.security
 
 
-
-
+import org.apache.commons.codec.binary.Base64
+import security.BytesUtil
 import java.nio.charset.Charset
-import java.util.*
+import java.util.Random
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import kotlin.experimental.and
+
 
 
 /**
  * 针对org.apache.commons.codec.binary.Base64，
- * 需要导入架包commons-codec-1.9（或commons-codec-1.8等其他版本）
+ * 需要导入架包commons-codec-1.9（或commons-c odec-1.8等其他版本）
  * 官方下载地址：http://commons.apache.org/proper/commons-codec/download_codec.cgi
  *
  * 提供接收和推送给公众平台消息的加解密接口(UTF8编码的字符串).
@@ -38,9 +38,16 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
     companion object {
         val CHARSET: Charset = Charset.forName("utf-8")
 
-        //private var base64 = Base64()
-        private val base64Decoder = Base64.getUrlDecoder()
-        private val base64Encoder = Base64.getUrlEncoder()
+
+        //关于base64编码： https://blog.csdn.net/java_4_ever/article/details/80978089
+        // rfc1521：已淘汰，jdk7支持，限制行长度，因此编码中可添加换行符
+        // rfc2045: rfc1521的更新版本 编码结果长度和解码字符范围的规定与rfc1521并没有什么差别
+        // rfc4648: 不能添加换行符 jdk8支持  jdk8无法解码包含换行的编码结果
+
+        //实际项目中应使用Base64.getDecoder()和Base64.getEncoder()，
+        // 但测试程序中生成signature时应该用Base64.getUrlEncoder()生成，并且解码时也用getUrlDecoder(), 否则可能通不过签名验证
+//        private val base64Decoder = Base64.getDecoder()
+//        private val base64Encoder = Base64.getEncoder()
 
         // 随机生成num位字符串
         fun getRandomStr(num: Int = 16): String {
@@ -72,7 +79,9 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
         //V1.15: Base32/Base64/BCodec: Added strict decoding property to control handling of trailing bits.
         // Default lenient mode discards them without error. Strict mode raise an exception.
         // Fixes CODEC-280. see https://commons.apache.org/proper/commons-codec/changes-report.html#a1.15
-        aesKey = Base64.getDecoder().decode("$encodingAesKey=") //base64.decodeBase64()
+        aesKey = Base64.decodeBase64("$encodingAesKey=")
+       //aesKey = base64Decoder.decode("$encodingAesKey=")
+
     }
 
 
@@ -112,7 +121,7 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
      * @param msgSignature 签名串，URL参数的msg_signature
      * @param timestamp 时间戳，URL参数的timestamp
      * @param nonce 随机串，URL参数的nonce
-     * @param postData 密文，接收消息的URL中获取的整个post数据
+     * @param encrypt 密文，接收消息postData Encrypt
      * @param encryptType aes，当前用不到
      * @return 解密后的原文
      *
@@ -121,24 +130,25 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
      * https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/Message_Encryption/Technical_Plan.html
      */
     @Throws(AesException::class)
-    fun decryptWxMsg(appId: String,
-            msgSignature: String,
-            timestamp: String,
-            nonce: String,
-            postData: String,
-            encryptType: String? = "aes",
+    fun decryptWxMsg(
+        appId: String,
+        msgSignature: String,
+        timestamp: String,
+        nonce: String,
+        encrypt: String,
+        encryptType: String? = "aes",
 
-    ): String {
+        ): String {
         //生成自己的安全签名
-        val signature = SHA1.getSHA1(token, timestamp, nonce, postData)
+        val signature = SHA1.getSHA1(token, timestamp, nonce, encrypt)
 
         if (signature != msgSignature) {
-            println("verify signature fail: token=$token,timestamp=$timestamp,nonce=$nonce, postData=$postData, tx signature=$msgSignature, rx signature=$signature")
+            println("verify signature fail: token=$token,timestamp=$timestamp,nonce=$nonce, encrypt=$encrypt, tx signature=$msgSignature, rx signature=$signature")
             throw AesException(AesException.ValidateSignatureError)
         }
 
         // 解密
-        return decrypt(appId, postData)
+        return decrypt(appId, encrypt)
     }
 
     /**
@@ -180,24 +190,24 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
 
 
     // 生成4个字节的网络字节序
-    private fun getNetworkBytesOrder(sourceNumber: Int): ByteArray {
-        val orderBytes = ByteArray(4)
-        orderBytes[3] = (sourceNumber and 0xFF).toByte()
-        orderBytes[2] = (sourceNumber shr 8 and 0xFF).toByte()
-        orderBytes[1] = (sourceNumber shr 16 and 0xFF).toByte()
-        orderBytes[0] = (sourceNumber shr 24 and 0xFF).toByte()
-        return orderBytes
-    }
-
-    // 还原4个字节的网络字节序
-    private fun recoverNetworkBytesOrder(orderBytes: ByteArray): Int {
-        var sourceNumber = 0
-        for (i in 0..3) {
-            sourceNumber = sourceNumber shl 8
-            sourceNumber = sourceNumber or ((orderBytes[i] and 0xff.toByte()).toInt())
-        }
-        return sourceNumber
-    }
+//    private fun getNetworkBytesOrder_del(sourceNumber: Int): ByteArray {
+//        val orderBytes = ByteArray(4)
+//        orderBytes[3] = (sourceNumber and 0xFF).toByte()
+//        orderBytes[2] = (sourceNumber shr 8 and 0xFF).toByte()
+//        orderBytes[1] = (sourceNumber shr 16 and 0xFF).toByte()
+//        orderBytes[0] = (sourceNumber shr 24 and 0xFF).toByte()
+//        return orderBytes
+//    }
+//
+//    // 还原4个字节的网络字节序 有bug
+//    private fun recoverNetworkBytesOrder_del(orderBytes: ByteArray): Int {
+//        var sourceNumber = 0
+//        for (i in 0..3) {
+//            sourceNumber = sourceNumber shl 8
+//            sourceNumber = sourceNumber or ((orderBytes[i] and 0xff.toByte()).toInt())
+//        }
+//        return sourceNumber
+//    }
 
 
 
@@ -213,7 +223,7 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
         val byteCollector = ByteGroup()
         val randomStrBytes = randomStr.toByteArray(CHARSET)
         val textBytes = text.toByteArray(CHARSET)
-        val networkBytesOrder = getNetworkBytesOrder(textBytes.size)
+        val networkBytesOrder = BytesUtil.getNetworkBytesOrder(textBytes.size)
         val appidBytes = appId.toByteArray(CHARSET)
 
         // randomStr + networkBytesOrder + text + appid
@@ -239,7 +249,9 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
             val encrypted = cipher.doFinal(unencrypted)
 
             // 使用BASE64对加密后的字符串进行编码
-            base64Encoder.encodeToString(encrypted)//base64.encodeToString(encrypted)
+            //base64Encoder.encodeToString(encrypted)
+            Base64.encodeBase64String(encrypted)
+
         } catch (e: Exception) {
             e.printStackTrace()
             throw AesException(AesException.EncryptAESError)
@@ -255,49 +267,55 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
      * @throws AesException aes解密失败
      */
     @Throws(AesException::class)
-    private fun decrypt(appId: String, text: String?): String {
-        val original: ByteArray
-        original = try {
+    private fun decrypt(appId: String, text: String): String {
+        val original: ByteArray = try {
             // 设置解密模式为AES的CBC模式
             val cipher = Cipher.getInstance("AES/CBC/NoPadding")
-            val key_spec = SecretKeySpec(aesKey, "AES")
-            val iv = IvParameterSpec(Arrays.copyOfRange(aesKey, 0, 16))
-            cipher.init(Cipher.DECRYPT_MODE, key_spec, iv)
+            val keySpec = SecretKeySpec(aesKey, "AES")
+            val iv = IvParameterSpec(aesKey.copyOfRange(0, 16))
+            cipher.init(Cipher.DECRYPT_MODE, keySpec, iv)
 
             // 使用BASE64对密文进行解码
-            val encrypted = base64Decoder.decode(text) //Base64.decodeBase64(text)
+            //val encrypted = base64Decoder.decode(text)
+            val encrypted: ByteArray = Base64.decodeBase64(text)
 
             // 解密
             cipher.doFinal(encrypted)
         } catch (e: Exception) {
-           // e.printStackTrace()
+            //e.printStackTrace()
             throw AesException(AesException.DecryptAESError)
         }
 
         val xmlContent: String
-        val from_appid: String
+        val fromAppId: String
         try {
             // 去除补位字符
             val bytes = PKCS7Encoder.decode(original)
 
             // 分离16位随机字符串,网络字节序和AppId
-            val networkOrder = Arrays.copyOfRange(bytes, 16, 20)
-            val xmlLength = recoverNetworkBytesOrder(networkOrder)
-            xmlContent = String(Arrays.copyOfRange(bytes, 20, 20 + xmlLength), CHARSET)
-            from_appid = String(
-                    Arrays.copyOfRange(bytes, 20 + xmlLength, bytes.size),
+            val networkOrder = bytes.copyOfRange(16, 20)
+            val xmlLength = BytesUtil.recoverNetworkBytesOrder(networkOrder)
+
+            println("xmlLength=$xmlLength, bytes.size=${bytes.size}")
+
+            xmlContent = String(bytes.copyOfRange(20, 20 + xmlLength), CHARSET)
+            fromAppId = String(
+                bytes.copyOfRange(20 + xmlLength, bytes.size),
                     CHARSET
             )
+
         } catch (e: Exception) {
-            //e.printStackTrace()
+            e.printStackTrace()
+
             throw AesException(AesException.IllegalBuffer)
         }
 
         //企业微信中消息get请求时不校验，公众号则校验。公众号和企业微信所有的post的消息都校验
-        if (from_appid != appId) {
+        if (fromAppId != appId) {
             println("ValidateAppidError")
             throw AesException(AesException.ValidateAppidError)
         }
         return xmlContent
     }
+
 }

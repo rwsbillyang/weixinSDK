@@ -47,43 +47,6 @@ import java.util.concurrent.TimeUnit
  * */
 fun Routing.dispatchAgentMsgApi() {
     val log = LoggerFactory.getLogger("dispatchAgentMsgApi")
-//    if (!Work.initial)//避免test中未config时，单应用模式未初始化异常
-//    {
-//        log.warn("not init?")
-//        return
-//    }
-//    val ctx: AgentContext?
-//    if (Work.isMulti) {
-//        val corpApiCtx = WorkMulti.ApiContextMap[corpId]
-//        if (corpApiCtx == null) {
-//            log.warn("not init WorkApiContext for: corpId=$corpId")
-//            return
-//        }
-//        ctx = corpApiCtx.agentMap[agentId]
-//        if (ctx == null) {
-//            log.warn("not add agentId=$agentId,corpId=$corpId. please call Work.add(...) first")
-//            return
-//        }
-//        if (!ctx.enableMsg) {
-//            log.warn("not enableMsg: agentId=$agentId,corpId=$corpId, ignore")
-//            return
-//        }
-//        if (ctx.wxBizMsgCrypt == null || ctx.msgHub == null) {
-//            log.warn("wxBizMsgCrypt or msgHub is null, please init them correctly")
-//            return
-//        }
-//    } else {
-//        ctx = WorkSingle.agentContext
-//        if (!ctx.enableMsg) {
-//            log.warn("not enableMsg: agentId=${WorkSingle.agentId},corpId=${WorkSingle.corpId}, ignore")
-//            return
-//        }
-//        if (ctx.wxBizMsgCrypt == null || ctx.msgHub == null) {
-//            log.warn("wxBizMsgCrypt or msgHub is null, please init them correctly")
-//            return
-//        }
-//    }
-
 
     route(Work.msgNotifyUri+"/{corpId}/{agentId}") {
         /**
@@ -148,8 +111,8 @@ fun Routing.dispatchAgentMsgApi() {
                 call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
             } else {
                 try {
-                    val str = ctx.wxBizMsgCrypt!!.verifyUrl(corpId, signature, timestamp, nonce, echostr)
-                    call.respondText(str, ContentType.Text.Plain, HttpStatusCode.OK)
+                    val str = ctx.wxBizMsgCrypt?.verifyUrl(corpId, signature, timestamp, nonce, echostr)
+                    call.respondText(str?:"", ContentType.Text.Plain, HttpStatusCode.OK)
                 } catch (e: AesException) {
                     log.warn("AesException: ${e.message}")
                     log.warn("Rx: token=$token, timestamp=$timestamp, nonce=$nonce, encryptEcho=$echostr")
@@ -204,12 +167,14 @@ fun Routing.dispatchAgentMsgApi() {
                 }else{
                     WorkSingle.agentContext
                 }
+
                 val msgHub = ctx?.msgHub
                 if(msgHub == null)
                 {
                     log.error("no agentContext or msgHub, corpId=$corpId, agentId=$agentId, msgHub=$msgHub, config it?")
                 }
 
+                log.info("handle post: uri=${call.request.uri}, body=$body")
                 val reXml = msgHub?.handleXmlMsg(corpId, agentId, body, msgSignature, timestamp, nonce, encryptType)
 
                 if (reXml.isNullOrBlank())

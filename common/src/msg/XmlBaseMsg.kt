@@ -25,7 +25,7 @@ open class BaseInfo(
     val msgType: String?
 ) {
     companion object {
-        val log: Logger = LoggerFactory.getLogger("BaseInfo")
+        private val log: Logger = LoggerFactory.getLogger("BaseInfo")
         /**
          * 严格按照顺序来进行解析xml，当遇到"MsgType"时结束解析，从而进行对应的子消息的继续解析
          * Limit： 当MsgType不是ToUserName、FromUserName、CreateTime、CreateTime在之后时会导致这些字段未解析

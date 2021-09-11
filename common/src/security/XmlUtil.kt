@@ -69,7 +69,7 @@ object XmlUtil {
             return map
         } catch (e: Exception) {
             println("Fail parse xml: $xmltext")
-            e.printStackTrace()
+            //e.printStackTrace()
             throw AesException(AesException.ParseXmlError)
         }
     }

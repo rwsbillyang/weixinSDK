@@ -107,8 +107,8 @@ object WorkSingle{
                privateKeyFilePath: String? = null,
                enableJsSdk: Boolean = false,
                enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
-               customMsgHandler: IWorkMsgHandler,
-               customEventHandler: IWorkEventHandler,
+               customMsgHandler: IWorkMsgHandler?,
+               customEventHandler: IWorkEventHandler?,
                customAccessToken: ITimelyRefreshValue? = null
     ) {
         _corpId = corpId
@@ -148,8 +148,8 @@ object WorkMulti{
                privateKeyFilePath: String? = null,
                enableJsSdk: Boolean = false,
                enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
-               customMsgHandler: IWorkMsgHandler,
-               customEventHandler: IWorkEventHandler,
+               customMsgHandler: IWorkMsgHandler?,
+               customEventHandler: IWorkEventHandler?,
                customAccessToken: ITimelyRefreshValue? = null
     ) {
         var corpApiCtx = ApiContextMap[corpId]
@@ -215,8 +215,8 @@ class AgentContext(
     val encodingAESKey: String? = null,
     privateKeyFilePath: String? = null,
     enableJsSdk: Boolean,
-    msgHandler: IWorkMsgHandler,
-    eventHandler: IWorkEventHandler,
+    msgHandler: IWorkMsgHandler?,
+    eventHandler: IWorkEventHandler?,
     customAccessToken: ITimelyRefreshValue? = null,
     var agentJsTicket: ITimelyRefreshValue? = null,
     var corpJsTicket:ITimelyRefreshValue? = null
