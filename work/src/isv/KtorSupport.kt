@@ -21,6 +21,7 @@ package com.github.rwsbillyang.wxSDK.work.isv
 
 
 import com.github.rwsbillyang.wxSDK.security.AesException
+import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.stateCache
 import io.ktor.application.*
@@ -29,7 +30,6 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.coroutines.launch
-import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
@@ -83,8 +83,7 @@ fun Routing.isvDispatchMsgApi(){
                 call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
             } else {
                 try{
-                    //第一个参数为null，不进行corpId的校验，公众号则校验，所有post的消息都校验
-                    val str = ctx.wxBizMsgCrypt!!.verifyUrl(null, signature,timestamp,nonce,echostr)
+                    val str = ctx.wxBizMsgCrypt!!.verifyUrl(suiteId, signature,timestamp,nonce,echostr)
                     call.respondText(str, ContentType.Text.Plain, HttpStatusCode.OK)
                 }catch (e: AesException){
                     log.warn("AesException: ${e.message}")
@@ -105,16 +104,22 @@ fun Routing.isvDispatchMsgApi(){
         val body: String = call.receiveText()
 
         val msgSignature = call.request.queryParameters["msg_signature"]
-        val timeStamp = call.request.queryParameters["timeStamp"]
+        val timestamp = call.request.queryParameters["timestamp"]
         val nonce = call.request.queryParameters["nonce"]
         val encryptType = call.request.queryParameters["encrypt_type"]?:"aes"
-
-        val reXml = ctx?.msgHub!!.handleXmlMsg(suiteId, null, body, msgSignature, timeStamp, nonce, encryptType)
-
-        if(reXml.isNullOrBlank())
+        if(msgSignature == null || timestamp == null || nonce == null)
+        {
+            log.warn("Should not null: msgSignature=$msgSignature, timestamp=$timestamp, nonce=$nonce")
             call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
-        else
-            call.respondText(reXml, ContentType.Text.Xml, HttpStatusCode.OK)
+        }else{
+            val reXml = ctx?.msgHub?.handleXmlMsg(suiteId, null, body, msgSignature, timestamp, nonce, encryptType)
+
+            if(reXml.isNullOrBlank())
+                call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
+            else
+                call.respondText(reXml, ContentType.Text.Xml, HttpStatusCode.OK)
+        }
+
     }
 }
 
@@ -143,7 +148,7 @@ fun Routing.isvAuthFromOutsideApi(onGetPermanentAuthInfo: (suiteId: String, info
             //获取预授权码后，重定向到用户授权页面
             val preAuthCode = ThirdPartyApi(suiteId).getPreAuthCode()
             if(preAuthCode.isOK() && !preAuthCode.pre_auth_code.isNullOrBlank()){
-                val state = RandomStringUtils.randomAlphanumeric(16)
+                val state = WXBizMsgCrypt.getRandomStr()
                 stateCache.put(state,suiteId)
                 val host = call.request.host() //如："https：//www.example.com"
                 val redirect = URLEncoder.encode("$host/${IsvWork.oauthNotifyPath}/${suiteId}","UTF-8")

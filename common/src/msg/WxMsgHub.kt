@@ -3,7 +3,6 @@ package com.github.rwsbillyang.wxSDK.msg
 import com.github.rwsbillyang.wxSDK.security.AesException
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.security.XmlUtil
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.xml.stream.XMLEventReader
@@ -24,49 +23,39 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
         appId: String, //公众号通过路径传入appId，企业微信为corpId or suiteId
         agentId: Int?, //企业微信内建应用
         body: String,
-        msgSignature: String?,
-        timeStamp: String?,
-        nonce: String?,
+        msgSignature: String,
+        timestamp: String,
+        nonce: String,
         encryptType: String?
     ): String?
     {
-        log.debug("Receive post data: $body")
+        //log.debug("Receive post data: $body")
         try {
             var map: Map<String, String?> = mapOf()
-            var corpId: String? = null
+
             val decryptedXmlText = if(wxBizMsgCrypt == null) {
+                log.info("wxBizMsgCrypt is null, appId=$appId, agentId=$agentId")
                 body
             }else{
-                if (StringUtils.isAllBlank(msgSignature, timeStamp, nonce)) {
-                    log.warn("some one of is blank: msgSignature={},timeStamp={},nonce{}", msgSignature, timeStamp, nonce)
-                    return null
-                }
                 map = XmlUtil.extract(body)//body转换成的map数据结构
                 // 提取密文
-                val encryptText = map["Encrypt"]?:""//提取body中的Encrypt字段
-                corpId = appId?:map["ToUserName"]
-                if(corpId == null){
-                   log.error("no corpId")
-                   return null
-                }else{
-                    wxBizMsgCrypt.decryptWxMsg(corpId, msgSignature!!, timeStamp!!, nonce!!, encryptText, encryptType)
-                }
+               // val encryptText = map["Encrypt"]?:""//提取body中的Encrypt字段
+               // corpId = appId?:map["ToUserName"]
+                wxBizMsgCrypt.decryptWxMsg(appId, msgSignature, timestamp, nonce, body, encryptType)
             }
+
             log.debug("after decrypt: $decryptedXmlText")
 
 
            val reMsg = parseXml(appId, agentId, decryptedXmlText, map)
 
-            //val re = reMsg?.toXml()?.let { wxBizMsgCrypt?.encryptMsg(it)?.first }
-            //log.debug("Reply: $re")
-            return reMsg?.toXml()?.let { wxBizMsgCrypt?.encryptMsg(corpId!!, it)?.first }
+
+            return reMsg?.toXml()?.let { wxBizMsgCrypt?.encryptMsg(appId, it)?.first }
 
         }catch (e: AesException){
-            e.printStackTrace()
-            log.warn("${e.message}")
+            log.warn("AesException: ${e.localizedMessage}, msgSignature=$msgSignature, timestamp=$timestamp, nonce=$nonce")
         }catch (e: Exception){
-            e.printStackTrace()
-            log.warn("${e.message}")
+            log.warn("Exception: ${e.message}")
         }
 
         return null

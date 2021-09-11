@@ -22,9 +22,9 @@ package com.github.rwsbillyang.wxSDK.officialAccount
 import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.Response
 import com.github.rwsbillyang.wxSDK.bean.OAuthInfo
+import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.apache.commons.lang3.RandomStringUtils
 import java.net.URLEncoder
 
 /**
@@ -45,7 +45,7 @@ class OAuthApi(appId: String) : OABaseApi(appId){
      * scope为snsapi_base，snsapi_userinfo
      * */
     fun prepareOAuthInfo(redirectUri: String, needUserInfo: Boolean = false): OAuthInfo {
-        val state = RandomStringUtils.randomAlphanumeric(16)
+        val state = WXBizMsgCrypt.getRandomStr()
         return OAuthInfo(appId, URLEncoder.encode(redirectUri,"UTF-8") ,if(needUserInfo) "snsapi_userinfo" else "snsapi_base",state,null)
     }
 

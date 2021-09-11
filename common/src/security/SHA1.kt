@@ -17,7 +17,7 @@ object SHA1 {
      * @param token 票据
      * @param timestamp 时间戳
      * @param nonce 随机字符串
-     * @param encrypt 加密的消息密文，此处是微信服务器推送过来的加密字符串，即标签<Encrypt>中的内容
+     * @param encrypt 加密的消息密文，此处是get请求中的echoStr 或 微信服务器post过来的加密字符串即标签<Encrypt>中的内容
      * @return 安全签名
      * @throws AesException
      */

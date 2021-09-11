@@ -20,11 +20,11 @@ package com.github.rwsbillyang.wxSDK.work
 
 import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.bean.OAuthInfo
+import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import org.apache.commons.lang3.RandomStringUtils
 import java.net.URLEncoder
 
 /**
@@ -96,7 +96,7 @@ class OAuthApi private constructor (corpId: String?) : WorkBaseApi(corpId){
      * 对于multi模式ISV应用，需提供suiteId和corpId
      * */
     fun prepareOAuthInfo(redirectUri: String, snsApiScope: SnsApiScope = SnsApiScope.PrivateInfo): OAuthInfo {
-        val state = RandomStringUtils.randomAlphanumeric(16)
+        val state = WXBizMsgCrypt.getRandomStr()
         val appId: String
         var agentId2: Int? = null
         if(Work.isIsv){

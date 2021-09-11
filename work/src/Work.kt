@@ -210,7 +210,7 @@ class AgentContext(
     corpId: String,
     val agentId: Int,
     val secret: String,
-    val enableMsg: Boolean = false, //是否激活：消息解析、分发、处理
+    val enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
     val token: String? = null,
     val encodingAESKey: String? = null,
     privateKeyFilePath: String? = null,
@@ -225,14 +225,6 @@ class AgentContext(
 
     var accessToken: ITimelyRefreshValue = customAccessToken ?: TimelyRefreshAccessToken(corpId,
             AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = agentId.toString())
-
-//    /**
-//     * 微信消息接入， 微信消息通知URI
-//     * */
-//    var msgNotifyUri: String = if (customMsgNotifyUri.isNullOrBlank()) {
-//        "${Work.prefix}/msg/${corpId}/${agentId}"
-//    } else
-//        customMsgNotifyUri
 
 
     var msgHub: WorkMsgHub? = null

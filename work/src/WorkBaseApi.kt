@@ -66,7 +66,12 @@ abstract class WorkBaseApi protected constructor (val corpId: String?): WxApi() 
             }
         }else{
             if(Work.isMulti){
-                WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId!!)?.accessToken?.get()
+                if(agentId == null)
+                {
+                    println("no agentId in multi mode?")
+                    null
+                }else
+                    WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.accessToken?.get()
             }else{
                 WorkSingle.agentContext.accessToken.get()
             }

@@ -18,14 +18,15 @@
 
 package com.github.rwsbillyang.wxSDK.officialAccount.test
 
-import com.github.rwsbillyang.wxSDK.security.SHA1
+
 import com.github.rwsbillyang.wxSDK.security.SignUtil
-import com.github.rwsbillyang.wxSDK.security.XmlUtil
+
 import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
+import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import io.ktor.http.*
-import io.ktor.request.*
+
 import io.ktor.server.testing.*
-import org.apache.commons.lang3.RandomStringUtils
+
 
 
 import org.junit.Test
@@ -34,7 +35,7 @@ import kotlin.test.*
 
 class ApplicationTest {
     private val timestamp = System.currentTimeMillis().toString()
-    private val nonce: String = RandomStringUtils.randomAlphanumeric(6)
+    private val nonce: String = WXBizMsgCrypt.getRandomStr(6)
     private val echoStr = "123456"
     private val msgId= "1234567890123456"
     private val content = "this is a test content"

@@ -19,6 +19,7 @@
 package com.github.rwsbillyang.wxSDK.work.test
 
 import com.github.rwsbillyang.wxSDK.security.SHA1
+import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.security.XmlUtil
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.WorkMulti
@@ -27,7 +28,6 @@ import com.github.rwsbillyang.wxSDK.work.WorkSingle
 
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import org.apache.commons.lang3.RandomStringUtils
 
 
 import org.junit.Test
@@ -36,7 +36,7 @@ import kotlin.test.*
 
 class ApplicationTest {
     private val timestamp = System.currentTimeMillis().toString()
-    private val nonce: String = RandomStringUtils.randomAlphanumeric(6)
+    private val nonce: String = WXBizMsgCrypt.getRandomStr(6)
     private val echoStr = "123456"
     private val msgId = "1234567890123456"
     private val content = "this is a test content"
@@ -52,33 +52,34 @@ class ApplicationTest {
         }
     }
 
-    //@Test
+    @Test
     fun testWorkUrlGet() {
         withTestApplication({ WorkTestableModule(testing = true) }) {
-            //TODO: how to get the encryptEchoStr from "1616140317555161061"
-            val encryptEcho = "P9nAzCzyDtyTWESHep1vC5X9xho/qYX3Zpb4yKa9SKld1DsH3Iyt3tP3zNdtp+4RPcs8TgAE7OaBO+FZXvnaqQ=="
-            //val encryptEcho = _WORK.wxBizMsgCrypt.encrypt(sVerifyEchoStr)
             val agentName = TestConstatns.KeyBase
 
             val ctx = if (Work.isMulti)
                 WorkMulti.ApiContextMap[TestConstatns.CorpId]!!.agentMap[agentName]!!
             else WorkSingle.agentContext
 
+            //加密第二个参数
+            val encryptEcho = ctx.wxBizMsgCrypt!!.encrypt(TestConstatns.CorpId,echoStr)
 
+            //对加密后的内容进行签名
             val signature = SHA1.getSHA1(ctx.token!!, timestamp, nonce, encryptEcho)
-            val getUrl =
-                "${Work.msgNotifyUri}/${TestConstatns.CorpId}/${agentName}?msg_signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$encryptEcho"
 
-            handleRequest(HttpMethod.Get, getUrl).apply {
+            val url = "${Work.msgNotifyUri}/${TestConstatns.CorpId}/${agentName}?msg_signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$encryptEcho"
+            println("getUrl=$url")
+
+            handleRequest(HttpMethod.Get, url).apply {
                 assertEquals(HttpStatusCode.OK, response.status())
-                println("getUrl=$getUrl")
+                println("Tx: token=${ctx.token}, timestamp=$timestamp, nonce=$nonce, encryptEcho=$encryptEcho")
                 assertEquals(echoStr, response.content)
             }
         }
     }
 
 
-    //@Test
+    @Test
     fun testWorkUrlPost() {
         withTestApplication({ WorkTestableModule(testing = true) }) {
             val agentName = TestConstatns.KeyBase
@@ -98,16 +99,17 @@ class ApplicationTest {
                 timestamp,
                 nonce,
                 toUser,
-                128
+                agentName
             )
 
+            //println("post Tx: msgSignature=$msgSignature, token=${ctx.token},timestamp=$timestamp,nonce=$nonce, encryptText=$xml")
             val postUrl = "${Work.msgNotifyUri}/${TestConstatns.CorpId}/${agentName}?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce"
+            println("postUrl=$postUrl")
             handleRequest(HttpMethod.Post, postUrl) {
                 setBody(xml)
             }.apply {
                 assertEquals(HttpStatusCode.OK, response.status())
                 val content = response.content
-                println("response.content=${response.content}")
                 if (content.isNullOrBlank()) {
                     println("in wx work post, get empty response")
                 } else {
@@ -120,7 +122,7 @@ class ApplicationTest {
                         val msg = ctx.wxBizMsgCrypt!!.decryptWxMsg(TestConstatns.CorpId, signature2, reTimeStamp, reNonce, content)
                         println("Got wx work reply: $msg")
                     } else {
-                        println("in wx work post, got response: ${content}")
+                        println("in wx work post, got response: $content")
                     }
                 }
             }

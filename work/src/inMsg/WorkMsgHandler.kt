@@ -38,5 +38,5 @@ open class DefaultWorkMsgHandler : IWorkMsgHandler{
      * 未知类型的msg或event可以继续进行读取其额外信息，从而可以自定义分发和处理
      * 返回null表示由onDefault继续处理
      * */
-    override fun onDispatch(appId: String, agentId:Int?,reader: XMLEventReader, base: BaseInfo) = null
+    override fun onDispatch(appId: String, agentId:Int?,reader: XMLEventReader, base: BaseInfo): ReBaseMSg? = null
 }

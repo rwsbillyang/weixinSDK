@@ -29,6 +29,8 @@ import kotlin.experimental.and
  *  1. 如果安装了JRE，将两个jar文件放到%JRE_HOME%\lib\security目录下覆盖原来的文件
  *  1. 如果安装了JDK，将两个jar文件放到%JDK_HOME%\jre\lib\security目录下覆盖原来文件
  *
+ * 加解密方案说明: https://work.weixin.qq.com/api/doc/90000/90139/90968
+ *
  * @param token 公众平台上，开发者设置的token
  * @param encodingAesKey 公众平台上，开发者设置的EncodingAESKey
  */
@@ -37,8 +39,20 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
         val CHARSET: Charset = Charset.forName("utf-8")
 
         //private var base64 = Base64()
-        private val base64Decoder = Base64.getDecoder()
-        private val base64Encoder = Base64.getEncoder()
+        private val base64Decoder = Base64.getUrlDecoder()
+        private val base64Encoder = Base64.getUrlEncoder()
+
+        // 随机生成num位字符串
+        fun getRandomStr(num: Int = 16): String {
+            val base = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+            val random = Random()
+            val sb = StringBuffer()
+            for (i in 0 until num) {
+                val number = random.nextInt(base.length)
+                sb.append(base[number])
+            }
+            return sb.toString()
+        }
     }
 
 
@@ -58,14 +72,14 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
         //V1.15: Base32/Base64/BCodec: Added strict decoding property to control handling of trailing bits.
         // Default lenient mode discards them without error. Strict mode raise an exception.
         // Fixes CODEC-280. see https://commons.apache.org/proper/commons-codec/changes-report.html#a1.15
-        aesKey = base64Decoder.decode("$encodingAesKey=") //base64.decodeBase64()
+        aesKey = Base64.getDecoder().decode("$encodingAesKey=") //base64.decodeBase64()
     }
 
 
     /**
      * 接入微信时，验证填写的GET请求URL
      * @param msgSignature 签名串，对应URL参数的msg_signature
-     * @param timeStamp 时间戳，对应URL参数的timestamp
+     * @param timestamp 时间戳，对应URL参数的timestamp
      * @param nonce 随机串，对应URL参数的nonce
      * @param echoStr 随机串，对应URL参数的echostr
      *
@@ -73,15 +87,15 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
      * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
      */
     @Throws(AesException::class)
-    fun verifyUrl(appId: String?,
+    fun verifyUrl(appId: String,
             msgSignature: String,
-            timeStamp: String,
+            timestamp: String,
             nonce: String,
             echoStr: String
     ): String {
-        val signature = SHA1.getSHA1(token, timeStamp, nonce, echoStr)
+        val signature = SHA1.getSHA1(token, timestamp, nonce, echoStr)
         if (signature != msgSignature) {
-            println("verifyUrl: original signature: $msgSignature, generated signature: $signature")
+            println("verifyUrl fail: timestamp=$timestamp,nonce=$nonce,echoStr=$echoStr,  tx signature=$msgSignature, rx signature=$signature")
             throw AesException(AesException.ValidateSignatureError)
         }
         return decrypt(appId, echoStr)
@@ -95,10 +109,10 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
      *  1. 利用收到的密文生成安全签名，进行签名验证
      *  2. 若验证通过，则提取xml中的加密消息
      *  3. 对消息进行解密
-     * @param msgSignature 签名串，对应URL参数的msg_signature
-     * @param timeStamp 时间戳，对应URL参数的timestamp
-     * @param nonce 随机串，对应URL参数的nonce
-     * @param postData 密文，对应POST请求的数据
+     * @param msgSignature 签名串，URL参数的msg_signature
+     * @param timestamp 时间戳，URL参数的timestamp
+     * @param nonce 随机串，URL参数的nonce
+     * @param postData 密文，接收消息的URL中获取的整个post数据
      * @param encryptType aes，当前用不到
      * @return 解密后的原文
      *
@@ -107,34 +121,31 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
      * https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/Message_Encryption/Technical_Plan.html
      */
     @Throws(AesException::class)
-    fun decryptWxMsg(appId: String?,
+    fun decryptWxMsg(appId: String,
             msgSignature: String,
-            timeStamp: String,
+            timestamp: String,
             nonce: String,
-            encryptText: String,
+            postData: String,
             encryptType: String? = "aes",
 
     ): String {
         //生成自己的安全签名
-        val signature = SHA1.getSHA1(token, timeStamp, nonce, encryptText)
+        val signature = SHA1.getSHA1(token, timestamp, nonce, postData)
 
-        // 和URL中的签名比较是否相等
-        // println("第三方收到URL中的签名：" + msg_sign);
-        // println("第三方校验签名：" + signature);
         if (signature != msgSignature) {
-            println("decryptWxMsg: original signature: $msgSignature, generated signature: $signature")
+            println("verify signature fail: token=$token,timestamp=$timestamp,nonce=$nonce, postData=$postData, tx signature=$msgSignature, rx signature=$signature")
             throw AesException(AesException.ValidateSignatureError)
         }
 
         // 解密
-        return decrypt(appId, encryptText)
+        return decrypt(appId, postData)
     }
 
     /**
      * 生成xml格式字符串，包括Encrypt、ToUserName, AgentID, MsgSignature, Timestamp, Nonce等信息
      * 提供toUserName或agentId时用于模拟一条来自微信的推送消息
      *
-     * @param replyMsg 回复消息，xml格式的字符串,形如：res_msg =
+     * @param replyMsg 回复消息，xml格式的字符串,形如：
      *   <xml>
      *   <ToUserName></ToUserName>
      *    <FromUserName></FromUserName>
@@ -162,7 +173,6 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
         val encrypt = encrypt(appId, replyMsg)
         val signature = SHA1.getSHA1(token, timeStamp, nonce, encrypt)
 
-        // println("发送给平台的签名是: " + signature[1].toString());
         // 生成回复发送的xml
         val xml = XmlUtil.generateEncryptReMsg(encrypt, signature, timeStamp, nonce, toUserName, agentId)
         return Pair(xml, signature)
@@ -189,21 +199,11 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
         return sourceNumber
     }
 
-    // 随机生成16位字符串
-    private fun getRandomStr(): String {
-        val base = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-        val random = Random()
-        val sb = StringBuffer()
-        for (i in 0..15) {
-            val number = random.nextInt(base.length)
-            sb.append(base[number])
-        }
-        return sb.toString()
-    }
+
 
     /**
      * 对明文进行加密.
-     * @param appId 公众号appId或企业的corpId
+     * @param appId 公众号appId或企业的corpId,suiteId
      * @param text 需要加密的明文
      * @return 加密后base64编码的字符串
      * @throws AesException aes加密失败
@@ -255,7 +255,7 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
      * @throws AesException aes解密失败
      */
     @Throws(AesException::class)
-    private fun decrypt(appId: String?, text: String?): String {
+    private fun decrypt(appId: String, text: String?): String {
         val original: ByteArray
         original = try {
             // 设置解密模式为AES的CBC模式
@@ -270,7 +270,7 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
             // 解密
             cipher.doFinal(encrypted)
         } catch (e: Exception) {
-            e.printStackTrace()
+           // e.printStackTrace()
             throw AesException(AesException.DecryptAESError)
         }
 
@@ -289,12 +289,13 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
                     CHARSET
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            //e.printStackTrace()
             throw AesException(AesException.IllegalBuffer)
         }
 
         //企业微信中消息get请求时不校验，公众号则校验。公众号和企业微信所有的post的消息都校验
-        if (appId != null && from_appid != appId) {
+        if (from_appid != appId) {
+            println("ValidateAppidError")
             throw AesException(AesException.ValidateAppidError)
         }
         return xmlContent

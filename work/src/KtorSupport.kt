@@ -148,11 +148,11 @@ fun Routing.dispatchAgentMsgApi() {
                 call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
             } else {
                 try {
-                    //第一个参数为null，不进行corpId的校验，公众号则校验，所有post的消息都校验
-                    val str = ctx.wxBizMsgCrypt!!.verifyUrl(null, signature, timestamp, nonce, echostr)
+                    val str = ctx.wxBizMsgCrypt!!.verifyUrl(corpId, signature, timestamp, nonce, echostr)
                     call.respondText(str, ContentType.Text.Plain, HttpStatusCode.OK)
                 } catch (e: AesException) {
                     log.warn("AesException: ${e.message}")
+                    log.warn("Rx: token=$token, timestamp=$timestamp, nonce=$nonce, encryptEcho=$echostr")
                     call.respondText("", ContentType.Text.Plain, HttpStatusCode.OK)
                 }
             }
@@ -186,24 +186,39 @@ fun Routing.dispatchAgentMsgApi() {
             val body: String = call.receiveText()
 
             val msgSignature = call.request.queryParameters["msg_signature"]
-            val timeStamp = call.request.queryParameters["timeStamp"]
+            val timestamp = call.request.queryParameters["timestamp"]
             val nonce = call.request.queryParameters["nonce"]
             val encryptType = call.request.queryParameters["encrypt_type"] ?: "aes"
 
-            val corpId = call.parameters["corpId"]?:"NoCorpId"
-            val agentId = call.parameters["agentId"]?.toInt()?:0
-            val ctx = if(Work.isMulti)
-            {
-                WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)
-            }else{
-                WorkSingle.agentContext
-            }
-            val reXml = ctx?.msgHub!!.handleXmlMsg(corpId, agentId, body, msgSignature, timeStamp, nonce, encryptType)
+            val corpId = call.parameters["corpId"]
+            val agentId = call.parameters["agentId"]?.toInt()
 
-            if (reXml.isNullOrBlank())
+            if(msgSignature == null || timestamp == null || nonce == null || corpId == null || agentId == null)
+            {
+                log.warn("Should not null: msgSignature=$msgSignature, timestamp=$timestamp, nonce=$nonce,corpId=$corpId, agentId=$agentId")
                 call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
-            else
-                call.respondText(reXml, ContentType.Text.Xml, HttpStatusCode.OK)
+            }else{
+                val ctx = if(Work.isMulti)
+                {
+                    WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)
+                }else{
+                    WorkSingle.agentContext
+                }
+                val msgHub = ctx?.msgHub
+                if(msgHub == null)
+                {
+                    log.error("no agentContext or msgHub, corpId=$corpId, agentId=$agentId, msgHub=$msgHub, config it?")
+                }
+
+                val reXml = msgHub?.handleXmlMsg(corpId, agentId, body, msgSignature, timestamp, nonce, encryptType)
+
+                if (reXml.isNullOrBlank())
+                    call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
+                else
+                    call.respondText(reXml, ContentType.Text.Xml, HttpStatusCode.OK)
+            }
+
+
         }
     }
 }
@@ -407,7 +422,7 @@ private fun handleNotify(call: ApplicationCall, code: String): DataBox<OAuthResu
 private fun concat(box: DataBox<OAuthResult>): String {
     return box.data?.let {
         var param = "code=OK"
-        if (it.corpId != null) param = "&corpId=${it.corpId}"
+        if (it.corpId != null) param += "&corpId=${it.corpId}"
         if (!it.userId.isNullOrBlank()) param += "&userId=${it.userId}"
         if (!it.externalUserId.isNullOrBlank()) param += "&externalUserId=${it.externalUserId}"
         if (!it.openId.isNullOrBlank()) param += "&openId=${it.openId}"

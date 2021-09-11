@@ -28,7 +28,6 @@ import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
@@ -42,7 +41,6 @@ import java.util.concurrent.TimeUnit
 //        }
 //    }
 //}
-
 
 
 fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
@@ -72,10 +70,10 @@ fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
         get("/{appId}") {
             val appId = call.parameters["appId"]
             var msg = ""
-            if(appId.isNullOrBlank()){
+            if (appId.isNullOrBlank()) {
                 msg = "no appId, wrong uri"
                 log.warn(msg)
-            }else{
+            } else {
                 val signature = call.request.queryParameters["signature"]
                 val timestamp = call.request.queryParameters["timestamp"]
                 val nonce = call.request.queryParameters["nonce"]
@@ -83,16 +81,15 @@ fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
 
                 val ctx = OfficialAccount.ApiContextMap[appId]
                 val token = ctx?.token
-                if(token.isNullOrBlank()){
+                if (token.isNullOrBlank()) {
                     msg = "not config token, ctx=$ctx"
                     log.warn(msg)
-                }else{
-                    msg = echostr?:""
-                    if (StringUtils.isAnyBlank(token, signature, timestamp, nonce,echostr)) {
+                } else {
+                    msg = echostr ?: ""
+                    if (signature.isNullOrBlank() || timestamp.isNullOrBlank() || nonce.isNullOrBlank() || echostr.isNullOrBlank()) {
                         log.warn("invalid parameters: token=$token, signature=$signature, timestamp=$timestamp, nonce=$nonce,echostr=$echostr")
                     } else {
-                        if (!SignUtil.checkSignature(token, signature!!, timestamp!!, nonce!!))
-                        {
+                        if (!SignUtil.checkSignature(token, signature!!, timestamp!!, nonce!!)) {
                             msg = "fail to check signature"
                             log.warn(msg)
                         }
@@ -127,27 +124,34 @@ fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
          * */
         post("/{appId}") {
             val appId = call.parameters["appId"]
-            if(appId.isNullOrBlank()){
+            if (appId.isNullOrBlank()) {
                 log.warn("no appId, wrong uri")
                 call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
-            }else{
+            } else {
                 val apiCtx = OfficialAccount.ApiContextMap[appId]
-                if(apiCtx == null){
+                if (apiCtx == null) {
                     log.warn("not config officialAccount: appId=$appId")
-                }else{
+                } else {
                     val body: String = call.receiveText()
 
                     val msgSignature = call.request.queryParameters["msg_signature"]
                     val timeStamp = call.request.queryParameters["timestamp"]
                     val nonce = call.request.queryParameters["nonce"]
-                    val encryptType = call.request.queryParameters["encrypt_type"]?:"security"
+                    val encryptType = call.request.queryParameters["encrypt_type"] ?: "security"
 
-                    val reXml = apiCtx.msgHub.handleXmlMsg(appId, null, body, msgSignature, timeStamp, nonce, encryptType)
-
-                    if(reXml.isNullOrBlank())
+                    if (msgSignature == null || timeStamp == null || nonce == null) {
+                        log.warn("Should not null: msgSignature=$msgSignature, timeStamp=$timeStamp, nonce=$nonce")
                         call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
-                    else
-                        call.respondText(reXml, ContentType.Text.Xml, HttpStatusCode.OK)
+                    } else {
+                        val reXml =
+                            apiCtx.msgHub.handleXmlMsg(appId, null, body, msgSignature, timeStamp, nonce, encryptType)
+
+                        if (reXml.isNullOrBlank())
+                            call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
+                        else
+                            call.respondText(reXml, ContentType.Text.Xml, HttpStatusCode.OK)
+                    }
+
                 }
             }
         }
@@ -156,19 +160,19 @@ fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
 
 
 fun Routing.oAuthApi(
-        oauthInfoPath: String = OfficialAccount.oauthInfoPath,
-        notifyPath1: String = OfficialAccount.oauthNotifyPath1,
-        notifyPath2: String = OfficialAccount.oauthNotifyPath2,
-        notifyWebAppUrl: String = OfficialAccount.oauthNotifyWebAppUrl,
-        needUserInfo: ((String?, String) -> Boolean?)? = null, //第一个参数时owner，系统注册用户id，用于查询用户设置，第二个参数是访客的openId
-        onGetOauthAccessToken: ((ResponseOauthAccessToken, appId: String)-> Unit)? = null,
-        onGetUserInfo: ((info: ResponseUserInfo, appId: String) -> Unit)? = null
+    oauthInfoPath: String = OfficialAccount.oauthInfoPath,
+    notifyPath1: String = OfficialAccount.oauthNotifyPath1,
+    notifyPath2: String = OfficialAccount.oauthNotifyPath2,
+    notifyWebAppUrl: String = OfficialAccount.oauthNotifyWebAppUrl,
+    needUserInfo: ((String?, String) -> Boolean?)? = null, //第一个参数时owner，系统注册用户id，用于查询用户设置，第二个参数是访客的openId
+    onGetOauthAccessToken: ((ResponseOauthAccessToken, appId: String) -> Unit)? = null,
+    onGetUserInfo: ((info: ResponseUserInfo, appId: String) -> Unit)? = null
 ) {
     val log = LoggerFactory.getLogger("oAuthApi")
     //保存state，用于校验非法请求,只是前端校验
     val stateCache = Caffeine.newBuilder().maximumSize(Int.MAX_VALUE.toLong())
-            .expireAfterWrite(10, TimeUnit.MINUTES)
-            .build<String, String>()
+        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .build<String, String>()
     /**
      * 当不能明确需要是否获取用户信息时，调用此API，上传owner参数，用于与notify1中获取的openId决定是否需要获取用户信息
      * owner用于获取用户设置，openId用于查询是否已经有值
@@ -179,24 +183,24 @@ fun Routing.oAuthApi(
      * 前端重定向地址：https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect" 然后重定向到该url
      *
      * */
-    get(oauthInfoPath){
-        val appId = call.request.queryParameters["appId"]?:OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
+    get(oauthInfoPath) {
+        val appId = call.request.queryParameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
         val owner = call.request.queryParameters["owner"] //系统用户注册id，传递该参数，目的在于notify1中使用它确定是否获取用户信息，然后通知前端跳转
-       val openId =  call.request.queryParameters["openId"]//若已经登录过只有openId，若再需获取用户信息时，上传openId即可，有可能直接进入第二步
-        if(appId.isNullOrBlank())
-        {
+        val openId = call.request.queryParameters["openId"]//若已经登录过只有openId，若再需获取用户信息时，上传openId即可，有可能直接进入第二步
+        if (appId.isNullOrBlank()) {
             log.warn("no appId in query parameters for oauth and no config oa")
             call.respond(HttpStatusCode.BadRequest, "no appId in query parameters and no config oa")
-        }else{
+        } else {
             val host = call.request.queryParameters["host"]
-            val url = host ?: (call.request.origin.scheme +"://"+ host)
-            if(openId.isNullOrBlank()){
+            val url = host ?: (call.request.origin.scheme + "://" + host)
+            if (openId.isNullOrBlank()) {
                 //第一次只获取openId，不获取用户信息
                 val oAuthInfo = OAuthApi(appId).prepareOAuthInfo("$url$notifyPath1/$appId", false)
-                if(owner != null) stateCache.put(oAuthInfo.state,owner)
+                if (owner != null) stateCache.put(oAuthInfo.state, owner)
                 call.respond(oAuthInfo)
-            }else{
-                val isNeedUserInfo = needUserInfo?.let { needUserInfo(owner, openId) }?:OfficialAccount.defaultGetUserInfo
+            } else {
+                val isNeedUserInfo =
+                    needUserInfo?.let { needUserInfo(owner, openId) } ?: OfficialAccount.defaultGetUserInfo
                 val oAuthInfo = OAuthApi(appId).prepareOAuthInfo("$url$notifyPath2/$appId", isNeedUserInfo)
                 call.respond(oAuthInfo)
             }
@@ -212,38 +216,38 @@ fun Routing.oAuthApi(
      * code作为换取access_token的票据，每次用户授权带上的code将不一样，code只能使用一次，5分钟未被使用自动过期。
      *
      * */
-    get("$notifyPath1/{appId}"){
-        val appId = call.parameters["appId"]?:OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
+    get("$notifyPath1/{appId}") {
+        val appId = call.parameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]
 
 
         var url = "$notifyWebAppUrl?state=$state&step=1&appId=${appId}"
 
-        url += if(appId== null || code.isNullOrBlank() || state.isNullOrBlank()){
+        url += if (appId == null || code.isNullOrBlank() || state.isNullOrBlank()) {
             "&code=KO&msg=null_appId_or_code_or_state"
-        }else{
+        } else {
             val owner = stateCache.getIfPresent(state)
-            if(owner == null){
+            if (owner == null) {
                 log.warn("state=$state for owner is not present in cache, ip=${call.request.origin.host},ua=${call.request.userAgent()}")
             }
             val oauthAi = OAuthApi(appId)
             val res = oauthAi.getAccessToken(code)
-            if(res.isOK()){
-                if(res.openId.isNullOrBlank())
-                {
+            if (res.isOK()) {
+                if (res.openId.isNullOrBlank()) {
                     log.warn("openid is blank: openid=${res.openId}")
-                   // "&code=KO&msg=微信出错了，请重新打开"
+                    // "&code=KO&msg=微信出错了，请重新打开"
                     "&code=OK&needUserInfo=1"
-                }else{
-                    val isNeedUserInfo = needUserInfo?.let { needUserInfo(owner, res.openId) }?:OfficialAccount.defaultGetUserInfo
-                    if(!isNeedUserInfo){
+                } else {
+                    val isNeedUserInfo =
+                        needUserInfo?.let { needUserInfo(owner, res.openId) } ?: OfficialAccount.defaultGetUserInfo
+                    if (!isNeedUserInfo) {
                         stateCache.invalidate(state)
                     }
-                    val isNeedUserInfoInt = if(isNeedUserInfo) 1 else 0
+                    val isNeedUserInfoInt = if (isNeedUserInfo) 1 else 0
                     "&code=OK&openId=${res.openId}&needUserInfo=$isNeedUserInfoInt" //通知前端是否跳转到第二步获取userInfo
                 }
-            }else{
+            } else {
                 "&code=KO&msg=${res.errMsg}"
             }
         }
@@ -251,16 +255,16 @@ fun Routing.oAuthApi(
         call.respondRedirect(url, permanent = false)
     }
 
-    get("$notifyPath2/{appId}"){
-        val appId = call.parameters["appId"]?:OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
+    get("$notifyPath2/{appId}") {
+        val appId = call.parameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]
 
         var url = "$notifyWebAppUrl?state=$state&step=2&appId=$appId"
 
-        if(appId== null || code.isNullOrBlank() || state.isNullOrBlank()){
+        if (appId == null || code.isNullOrBlank() || state.isNullOrBlank()) {
             url += "&code=KO&msg=null_appId_or_code_or_state"
-        }else{
+        } else {
             //val owner = stateCache.getIfPresent(state)
             stateCache.invalidate(state)
 //            if(owner == null){
@@ -269,18 +273,18 @@ fun Routing.oAuthApi(
 
             val oauthAi = OAuthApi(appId)
             val res = oauthAi.getAccessToken(code)
-            url += if(res.isOK() && res.openId != null){
+            url += if (res.isOK() && res.openId != null) {
                 onGetOauthAccessToken?.let { run { it.invoke(res, appId) } }
-                if(res.accessToken != null){
+                if (res.accessToken != null) {
                     val resUserInfo = oauthAi.getUserInfo(res.accessToken, res.openId)
-                    if(resUserInfo.isOK()) {
-                        onGetUserInfo?.let { run { it.invoke(resUserInfo, appId)} }//async save fan user info
-                    }else{
+                    if (resUserInfo.isOK()) {
+                        onGetUserInfo?.let { run { it.invoke(resUserInfo, appId) } }//async save fan user info
+                    } else {
                         log.warn("fail getUserInfo: $resUserInfo")
                     }
                 }
                 "&code=OK&openId=${res.openId}"
-            }else{
+            } else {
                 "&code=KO&msg=${res.errMsg}"
             }
         }
@@ -290,33 +294,30 @@ fun Routing.oAuthApi(
 }
 
 
-
-
-fun Routing.jsSdkSignature(path: String = OfficialAccount.jsSdkSignaturePath){
+fun Routing.jsSdkSignature(path: String = OfficialAccount.jsSdkSignaturePath) {
     val log = LoggerFactory.getLogger("jsSdkSignature")
-    get(path){
-        val appId = call.request.queryParameters["appId"]?:OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
+    get(path) {
+        val appId = call.request.queryParameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
         val url = call.request.queryParameters["url"]
-        val msg = if(appId.isNullOrBlank())
-        {
+        val msg = if (appId.isNullOrBlank()) {
             //call.respond(HttpStatusCode.BadRequest, "no appId in query parameters and no config oa")
             "no appId in query parameters and no config oa"
-        }else{
-            val ticket =  OfficialAccount.ApiContextMap[appId]?.ticket?.get()
-            if(ticket == null){
+        } else {
+            val ticket = OfficialAccount.ApiContextMap[appId]?.ticket?.get()
+            if (ticket == null) {
                 "appId=$appId is configured?"
-            }else{
+            } else {
                 val referer = call.request.headers["Referer"]
-                if(referer == null){
+                if (referer == null) {
                     "request Referer is null"
-                }else{
+                } else {
                     //log.info("url=$url, referer=$referer")
-                    call.respond(DataBox("OK",null, JsAPI.getSignature(appId,ticket, (url?:referer).split('#')[0])))
+                    call.respond(DataBox("OK", null, JsAPI.getSignature(appId, ticket, (url ?: referer).split('#')[0])))
                     null
                 }
             }
         }
-        if(msg != null){
+        if (msg != null) {
             call.respond(HttpStatusCode.BadRequest, msg)
         }
     }
