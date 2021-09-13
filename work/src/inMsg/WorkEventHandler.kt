@@ -3,13 +3,12 @@ package com.github.rwsbillyang.wxSDK.work.inMsg
 import com.github.rwsbillyang.wxSDK.msg.BaseInfo
 import com.github.rwsbillyang.wxSDK.msg.IDispatcher
 import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
-import com.github.rwsbillyang.wxSDK.msg.WxBaseEvent
 import javax.xml.stream.XMLEventReader
 
 //对于ISV， appId 来自于suiteId，agentId为空；内建应用：appId是corpId，agentID非空。
 // 它们来自于接收消息api中的路径参数
 interface IWorkEventHandler: IDispatcher {
-    fun onDefault(appId: String, agentId:Int?,e: WxBaseEvent): ReBaseMSg?
+    fun onDefault(appId: String, agentId:Int?,e: AgentEvent): ReBaseMSg?
     fun onSubscribeEvent(appId: String, agentId:Int?,e: WorkSubscribeEvent): ReBaseMSg?
     fun onUnsubscribeEvent(appId: String, agentId:Int?,e: WorkUnsubscribeEvent): ReBaseMSg?
     fun onLocationEvent(appId: String, agentId:Int?,e: WorkLocationEvent): ReBaseMSg?
@@ -32,10 +31,23 @@ interface IWorkEventHandler: IDispatcher {
     fun onUserCreateEvent(appId: String, agentId:Int?,e: WorkUserCreateEvent): ReBaseMSg?
     fun onUserDelEvent(appId: String, agentId:Int?,e: WorkUserDelEvent): ReBaseMSg?
     fun onTagUpdateEvent(appId: String, agentId:Int?,e: WorkTagUpdateEvent): ReBaseMSg?
+
+    //外部联系人变化事件
+    fun onExternalContactAddEvent(appId: String, agentId:Int?,e: ExternalContactAddEvent): ReBaseMSg?
+    fun onExternalContactHalfAddEvent(appId: String, agentId:Int?,e: ExternalContactAddEvent): ReBaseMSg?
+    fun onExternalContactUpdateEvent(appId: String, agentId:Int?,e: ExternalContactUpdateEvent): ReBaseMSg?
+    fun onExternalContactDelEvent(appId: String, agentId:Int?,e: ExternalContactDelEvent): ReBaseMSg?
+    fun onExternalContactDelFollowEvent(appId: String, agentId:Int?,e: ExternalContactUpdateEvent): ReBaseMSg?
+    fun onExternalContactTransferFailEvent(appId: String, agentId:Int?,e: ExternalContactTransferFailEvent): ReBaseMSg?
+
+    //客户群事件
+    fun onExternalGroupChatCreateEvent(appId: String, agentId:Int?,e: ExternalChatChangeEvent): ReBaseMSg?
+    fun onExternalGroupChatUpdateEvent(appId: String, agentId:Int?,e: ExternalChatUpdateEvent): ReBaseMSg?
+    fun onExternalGroupChatDelEvent(appId: String, agentId:Int?,e: ExternalChatChangeEvent): ReBaseMSg?
 }
 
 open class DefaultWorkEventHandler : IWorkEventHandler{
-    override fun onDefault(appId: String, agentId:Int?,e: WxBaseEvent): ReBaseMSg? {
+    override fun onDefault(appId: String, agentId:Int?,e: AgentEvent): ReBaseMSg? {
         return null
     }
 
@@ -81,6 +93,16 @@ open class DefaultWorkEventHandler : IWorkEventHandler{
     override fun onUserDelEvent(appId: String, agentId:Int?,e: WorkUserDelEvent) = onDefault(appId, agentId,e)
 
     override fun onTagUpdateEvent(appId: String, agentId:Int?,e: WorkTagUpdateEvent) = onDefault(appId, agentId,e)
+    override fun onExternalContactAddEvent(appId: String, agentId: Int?, e: ExternalContactAddEvent) = onDefault(appId, agentId,e)
+    override fun onExternalContactHalfAddEvent(appId: String, agentId: Int?, e: ExternalContactAddEvent) = onDefault(appId, agentId,e)
+    override fun onExternalContactUpdateEvent(appId: String, agentId: Int?, e: ExternalContactUpdateEvent) = onDefault(appId, agentId,e)
+    override fun onExternalContactDelEvent(appId: String, agentId: Int?, e: ExternalContactDelEvent) = onDefault(appId, agentId,e)
+    override fun onExternalContactDelFollowEvent( appId: String,agentId: Int?, e: ExternalContactUpdateEvent) = onDefault(appId, agentId,e)
+    override fun onExternalContactTransferFailEvent(appId: String,agentId: Int?,e: ExternalContactTransferFailEvent) = onDefault(appId, agentId,e)
+
+    override fun onExternalGroupChatCreateEvent(appId: String, agentId: Int?, e: ExternalChatChangeEvent) = onDefault(appId, agentId,e)
+    override fun onExternalGroupChatUpdateEvent(appId: String, agentId: Int?, e: ExternalChatUpdateEvent) = onDefault(appId, agentId,e)
+    override fun onExternalGroupChatDelEvent(appId: String, agentId: Int?, e: ExternalChatChangeEvent) = onDefault(appId, agentId,e)
     /**
      * 未知类型的msg或event可以继续进行读取其额外信息，从而可以自定义分发和处理
      * 返回null表示由onDefault继续处理

@@ -1,37 +1,52 @@
 package com.github.rwsbillyang.wxSDK.work.inMsg
 
 
-import com.github.rwsbillyang.wxSDK.msg.BaseInfo
-import com.github.rwsbillyang.wxSDK.msg.InEventType
-import com.github.rwsbillyang.wxSDK.msg.SendPicsInfo
-import com.github.rwsbillyang.wxSDK.msg.WxBaseEvent
+
+import com.github.rwsbillyang.wxSDK.msg.*
 import javax.xml.stream.XMLEventReader
 
 /*
 * https://work.weixin.qq.com/api/doc/90000/90135/90240
 * 开启接收消息模式后，可以配置接收事件消息。
 * 当企业成员通过企业微信APP或微工作台（原企业号）触发进入应用、上报地理位置、点击菜单等事件时，企业微信会将这些事件消息发送给企业后台。
-* 如何接收消息已经在使用接收消息说明，本小节是对事件消息结构体的说明。
 *
 * 注：以下出现的xml包仅是接收的消息包中的Encrypt参数解密后的内容说明
 * */
 
+object WorkEventType{
+    const val ENTER_AGENT = "enter_agent"
+    const val BATCH_JOB_RESULT = "batch_job_result"
+    const val CHANGE_CONTACT = "change_contact"
+    const val OPEN_APPROVAL_CHANGE = "open_approval_change"
+    const val TASK_CARD_CLICK = "taskcard_click"
+
+
+    const val EXTERNAL_CONTACT_CHANGE = "change_external_contact"
+    const val EXTERNAL_CONTACT_ADD = "add_external_contact"
+    const val EXTERNAL_CONTACT_EDIT = "edit_external_contact"
+    const val EXTERNAL_CONTACT_DEL = "del_external_contact"
+    //外部联系人添加了配置了客户联系功能且开启了免验证的成员时（此时成员尚未确认添加对方为好友），回调该事件
+    const val EXTERNAL_CONTACT_ADD_HALF = "add_half_external_contact"
+    const val EXTERNAL_CONTACT_DEL_FOLLOW_USER = "del_follow_user" //成员被外部联系人删除时，即被客户删除拉黑
+    const val EXTERNAL_CONTACT_TRANSFER_FAIL = "transfer_fail"
+
+    const val EXTERNAL_CHAT_CHANGE = "change_external_chat"
+    const val EXTERNAL_CHAT_ADD = "create"
+    const val EXTERNAL_CHAT_EDIT = "update"
+    const val EXTERNAL_CHAT_DEL = "dismiss"
+}
+
 /**
  * 添加了AgentID的事件基类
+ *
+ * 注意：各Event的构建参数类型尽量使用读取较多共性数据的类，自己只需要读取较少的剩下的数据。
+ * 若有未覆盖到的成员，将导致其为空
  * */
-open class WorkBaseEvent(base: BaseInfo): WxBaseEvent(base)
+open class AgentEvent(val baseInfo: BaseInfo)
 {
-    companion object{
-        const val ENTER_AGENT = "enter_agent"
-        const val BATCH_JOB_RESULT = "batch_job_result"
-        const val CHANGE_CONTACT = "change_contact"
-        const val OPEN_APPROVAL_CHANGE = "open_approval_change"
-        const val TASK_CARD_CLICK = "taskcard_click"
-    }
-
+    var event: String? = null
     var agentId: String? = null
-    fun readEvent(reader: XMLEventReader) = super.read(reader)
-    protected fun readAgentId(reader: XMLEventReader)
+    open fun read(reader: XMLEventReader)
     {
         while (reader.hasNext()) {
             val e = reader.nextEvent()
@@ -41,26 +56,9 @@ open class WorkBaseEvent(base: BaseInfo): WxBaseEvent(base)
                         agentId = reader.elementText
                         break
                     }
-                }
-            }
-        }
-    }
-
-    override fun read(reader: XMLEventReader)
-    {
-        var count = 0
-        while (reader.hasNext() && count < 2) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                //实际顺序与文档中不一致
-                when(e.asStartElement().name.toString()){
-                    "AgentID" -> {
-                        agentId = reader.elementText
-                        count++
-                    }
                     "Event" -> {
                         event = reader.elementText
-                        count++
+                        break
                     }
                 }
             }
@@ -72,56 +70,41 @@ open class WorkBaseEvent(base: BaseInfo): WxBaseEvent(base)
  * 关注事件
  *
  * 小程序在管理端开启接收消息配置后，也可收到关注/取消关注事件
- *
+ * <xml><ToUserName><![CDATA[wwb096af219dea3f1c]]></ToUserName><FromUserName><![CDATA[BiDandan]]></FromUserName><CreateTime>1631359354</CreateTime><MsgType><![CDATA[event]]></MsgType><AgentID>1000002</AgentID><Event><![CDATA[subscribe]]></Event></xml>
  * 本事件触发时机为：
  * 成员已经加入企业，管理员添加成员到应用可见范围(或移除可见范围)时
  * 成员已经在应用可见范围，成员加入(或退出)企业时
  * 事件类型，subscribe(关注)、unsubscribe(取消关注)
  * */
-class WorkSubscribeEvent(base: WorkBaseEvent): WorkBaseEvent(base.base){
-    init {
-        agentId = base.agentId
-        event = base.event
-    }
-}
+class WorkSubscribeEvent(baseInfo: BaseInfo): AgentEvent(baseInfo)
 
 /**
  * 取消关注事件
  *
  * 事件类型，subscribe(关注)、unsubscribe(取消关注)
  * */
-class WorkUnsubscribeEvent(base: WorkBaseEvent): WorkBaseEvent(base.base){
-    init {
-        agentId = base.agentId
-        event = base.event
-    }
-}
+class WorkUnsubscribeEvent(baseInfo: BaseInfo): AgentEvent(baseInfo)
+
 /**
  * 进入应用
  * 本事件在成员进入企业微信的应用时触发
  * @property eventKey EventKey	事件KEY值，此事件该值为空
  * */
-class WorkEnterAgent(base: WorkBaseEvent): WorkBaseEvent(base.base){
-    init {
-        agentId = base.agentId
-        event = base.event
-    }
-
+class WorkEnterAgent(baseInfo: BaseInfo): AgentEvent(baseInfo){
     var eventKey: String? = null
     override fun read(reader: XMLEventReader)
     {
-        //super.readEvent(reader)
-        while (reader.hasNext()) {
+        var count = 0
+        while (reader.hasNext() && count < 2) {
             val e = reader.nextEvent()
             if (e.isStartElement) {
                 when(e.asStartElement().name.toString()){
                     "EventKey" -> {
                         eventKey = reader.elementText
-                        break
+                        count++
                     }
                 }
             }
-            //super.readAgentId(reader)
         }
     }
 }
@@ -142,7 +125,7 @@ class WorkEnterAgent(base: WorkBaseEvent): WorkBaseEvent(base.base){
  * //@property agentId AgentID 企业应用的id，整型。可在应用的设置页面查看
  * @property appType AppType app类型，在企业微信固定返回wxwork，在微信不返回该字段
  * */
-open class WorkLocationEvent(base: BaseInfo): WorkBaseEvent(base)
+open class WorkLocationEvent(baseInfo: BaseInfo): AgentEvent(baseInfo)
 {
     init {
         event = InEventType.LOCATION
@@ -170,7 +153,7 @@ open class WorkLocationEvent(base: BaseInfo): WorkBaseEvent(base)
                 }
             }
         }
-        super.readAgentId(reader)
+        super.read(reader)
     }
 }
 
@@ -186,19 +169,19 @@ class BatchJob(val id: String?, val type: String?, val code: Int?, val msg: Stri
  *
  * 本事件是成员在使用异步任务接口时，用于接收任务执行完毕的结果通知。
  * */
-class WorkBatchJobResultEvent(base: BaseInfo): WorkBaseEvent(base){
+class WorkBatchJobResultEvent(baseInfo: BaseInfo): AgentEvent(baseInfo){
     init {
-        event = BATCH_JOB_RESULT
+        event = WorkEventType.BATCH_JOB_RESULT
     }
     var batchJob: BatchJob? = null
     override fun read(reader: XMLEventReader) {
-        var count = 0
+        super.read(reader)
 
         var id: String? = null
         var type: String? = null
         var code: Int?= null
         var msg: String? = null
-        while (reader.hasNext() && count < 3) {
+        while (reader.hasNext()) {
             val event = reader.nextEvent()
             if (event.isStartElement) {
                 when (event.asStartElement().name.toString()) {
@@ -227,326 +210,6 @@ class WorkBatchJobResultEvent(base: BaseInfo): WorkBaseEvent(base){
 
 
 /*
-* 通讯录变更事件
-*
-* 当企业通过通讯录助手开通通讯录权限后，成员的变更会通知给企业。变更的事件，将推送到企业微信管理端通讯录助手中的‘接收事件服务器’。
-* 由通讯录同步助手调用接口触发的变更事件不回调通讯录同步助手本身。管理员在管理端更改组织架构或者成员信息以及企业微信的成员在客户端
-* 变更自己的个人信息将推送给通讯录同步助手。第三方通讯录变更事件参见第三方回调协议
-* */
-
-/**
- * 通讯录变更事件  base class
- * */
-open class WorkChangeContactEvent(base: BaseInfo): WorkBaseEvent(base) {
-    init {
-        event = CHANGE_CONTACT
-    }
-    var changeType: String? = null
-    companion object{
-        const val CREATE_USER = "create_user"
-        const val UPDATE_USER = "update_user"
-        const val DELETE_USER = "delete_user"
-        const val CREATE_PARTY= "create_party"
-        const val UPDATE_PARTY= "update_party"
-        const val DELETE_PARTY= "delete_party"
-        const val UPDATE_TAG= "update_tag"
-    }
-    override fun read(reader: XMLEventReader)
-    {
-        while (reader.hasNext()) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "ChangeType" -> {
-                        changeType = reader.elementText
-                        break
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * 扩展属性
- * @param name 扩展属性名称
- * @param type 扩展属性类型: 0-文本 1-网页
- * */
-open class ExtAttr(val name: String?, val type: Int?)
-{
-    companion object{
-        fun fromXml(reader: XMLEventReader):List<ExtAttr>{
-            val list = mutableListOf<ExtAttr>()
-            while (reader.hasNext()) {
-                val event1 = reader.nextEvent()
-                if (event1.isStartElement && "item" == event1.asStartElement().name.toString())
-                {
-                    val map = mutableMapOf<String, String?>()
-                    while (reader.hasNext()){
-                        val event2 = reader.nextEvent()
-                        val tag = event1.asStartElement().name.toString()
-                        map[tag] = reader.elementText
-                        if(event2.isEndElement && "item" == event2.asEndElement().name.toString()) {
-                            break
-                        }
-                    }
-
-                    val type = map["Type"]?.toInt()
-                    when(type){
-                        0 -> list.add(ExtAttrText(map["Name"],map["Value"]))
-                        1 -> list.add(ExtAttrWeb(map["Name"],map["Title"],map["Url"]))
-                        else -> list.add(ExtAttr(map["Name"],type))
-                    }
-                } else if (event1.isEndElement && "ExtAttr" == event1.asEndElement().name.toString()) {
-                    break
-                }
-            }
-            return  list
-        }
-    }
-}
-/**
- * 文本扩展属性
- * @param value 文本属性内容
- * */
-class ExtAttrText(name: String?,val value: String?):ExtAttr(name, 0)
-/**
- * 网页扩展属性
- * @param title 网页的展示标题
- * @param url Url	网页的url
- * */
-class ExtAttrWeb(name: String?, val title: String?, val url: String?):ExtAttr(name, 1)
-/**
- * 新增成员事件
- * @property userId UserID	变更信息的成员UserID
- * @property newUserID NewUserID	新的UserID，变更时推送（userid由系统生成时可更改一次）
- * @property name Name	成员名称，变更时推送
- * @property department Department	成员部门列表，变更时推送，仅返回该应用有查看权限的部门id
- * @property isLeaderInDept IsLeaderInDept	表示所在部门是否为上级，0-否，1-是，顺序与Department字段的部门逐一对应
- * @property mobile Mobile	手机号码，变更时推送
- * @property position Position	职位信息。长度为0~64个字节，变更时推送
- * @property gender Gender	性别，变更时推送。1表示男性，2表示女性
- * @property email Email	邮箱，变更时推送
- * @property status Status	激活状态：1=激活或关注， 2=禁用， 4=未激活（重新启用未激活用户或者退出企业并且取消关注时触发）
- * @property avatar Avatar	头像url。注：如果要获取小图将url最后的”/0”改成”/100”即可。变更时推送
- * @property alias Alias	成员别名，变更时推送
- * @property telephone Telephone	座机，变更时推送
- * @property address Address	地址
- * */
-open class WorkUserCreateEvent(base: BaseInfo): WorkChangeContactEvent(base) {
-    init {
-        changeType = CREATE_USER
-    }
-    var userId: String? = null
-    var newUserID: String? = null
-    var name: String? = null
-    var department: String? = null
-    var isLeaderInDept: Int? = null
-    var mobile: String? = null
-    var position: String? = null
-    var gender: Int? = null
-    var email: String? = null
-    var status: Int? = null
-    var avatar: String? = null
-    var alias: String? = null
-    var telephone: String? = null
-    var address: String? = null
-    var extAttrs: List<ExtAttr>? = null
-    override fun read(reader: XMLEventReader)
-    {
-        var count2 = 0
-        while (reader.hasNext() && count2 < 15) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "UserID" ->{ userId = reader.elementText; count2++ }
-                    "NewUserID" ->{ newUserID= reader.elementText; count2++}
-                    "Name" ->{ name= reader.elementText; count2++}
-                    "Department" ->{ department = reader.elementText; count2++ }
-                    "IsLeaderInDept" ->{ isLeaderInDept= reader.elementText?.toInt(); count2++}
-                    "Mobile" ->{ mobile= reader.elementText; count2++}
-                    "Position" ->{ position = reader.elementText; count2++ }
-                    "Gender" ->{ gender= reader.elementText?.toInt(); count2++}
-                    "Email" ->{ email= reader.elementText; count2++}
-                    "Status" ->{ status= reader.elementText?.toInt(); count2++}
-                    "Avatar" ->{ avatar = reader.elementText; count2++ }
-                    "Alias" ->{ alias= reader.elementText; count2++}
-                    "Telephone" ->{ telephone= reader.elementText; count2++}
-                    "Address" ->{ address= reader.elementText; count2++}
-                    "ExtAttr" -> {extAttrs = ExtAttr.fromXml(reader); count2++}
-                }
-            }
-        }
-    }
-}
-
-/**
- * 更新部门事件
- * @property userId UserID	变更信息的成员UserID
- * @property newUserID NewUserID	新的UserID，变更时推送（userid由系统生成时可更改一次）
- * @property name Name	成员名称，变更时推送
- * @property department Department	成员部门列表，变更时推送，仅返回该应用有查看权限的部门id
- * @property isLeaderInDept IsLeaderInDept	表示所在部门是否为上级，0-否，1-是，顺序与Department字段的部门逐一对应
- * @property mobile Mobile	手机号码，变更时推送
- * @property position Position	职位信息。长度为0~64个字节，变更时推送
- * @property gender Gender	性别，变更时推送。1表示男性，2表示女性
- * @property email Email	邮箱，变更时推送
- * @property status Status	激活状态：1=激活或关注， 2=禁用， 4=未激活（重新启用未激活用户或者退出企业并且取消关注时触发）
- * @property avatar Avatar	头像url。注：如果要获取小图将url最后的”/0”改成”/100”即可。变更时推送
- * @property alias Alias	成员别名，变更时推送
- * @property telephone Telephone	座机，变更时推送
- * @property address Address	地址
- * */
-class WorkUserUpdateEvent(base: BaseInfo): WorkUserCreateEvent(base) {
-    init {
-        changeType = UPDATE_USER
-    }
-}
-
-/**
- * 删除成员事件
- * @property userId UserID	变更信息的成员UserID
- * */
-class WorkUserDelEvent(base: BaseInfo): WorkChangeContactEvent(base) {
-    init {
-        changeType = DELETE_USER
-    }
-    var userId: String? = null
-    override fun read(reader: XMLEventReader)
-    {
-        while (reader.hasNext()) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "UserID" ->{ userId = reader.elementText; break }
-                }
-            }
-        }
-    }
-}
-
-/**
- * 新增部门事件
- * @property id Id	部门Id
- * @property name Name	部门名称
- * @property parentId ParentId	父部门id
- * @property order Order	部门排序
- * */
-class WorkPartyCreateEvent(base: BaseInfo): WorkChangeContactEvent(base) {
-    init {
-        changeType = CREATE_PARTY
-    }
-    var id: String? = null
-    var name: String? = null
-    var parentId: String? = null
-    var order: Int? = null
-    override fun read(reader: XMLEventReader)
-    {
-        var count2 = 0
-        while (reader.hasNext() && count2 < 4) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "Id" ->{ id = reader.elementText; count2++ }
-                    "Name" ->{ name= reader.elementText; count2++}
-                    "ParentId" ->{ parentId= reader.elementText; count2++}
-                    "Order" ->{ order= reader.elementText?.toInt(); count2++}
-                }
-            }
-        }
-    }
-}
-
-/**
- * 更新部门事件
- * @property id Id	部门Id
- * @property name Name	部门名称，仅发送变更时传递
- * @property parentId ParentId	父部门id，仅发送变更时传递
- * */
-class WorkPartyUpdateEvent(base: BaseInfo): WorkChangeContactEvent(base) {
-    init {
-        changeType = UPDATE_PARTY
-    }
-    var id: String? = null
-    var name: String? = null
-    var parentId: String? = null
-    override fun read(reader: XMLEventReader)
-    {
-        var count2 = 0
-        while (reader.hasNext() && count2 < 3) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "Id" ->{ id = reader.elementText; count2++ }
-                    "Name" ->{ name= reader.elementText; count2++}
-                    "ParentId" ->{ parentId= reader.elementText; count2++}
-                }
-            }
-        }
-    }
-}
-
-/**
- * 删除部门事件
- * @property id Id	部门Id
- * */
-class WorkPartyDelEvent(base: BaseInfo): WorkChangeContactEvent(base) {
-    init {
-        changeType = DELETE_PARTY
-    }
-    var id: String? = null
-    override fun read(reader: XMLEventReader)
-    {
-        while (reader.hasNext()) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "Id" ->{ id = reader.elementText; break }
-                }
-            }
-        }
-    }
-}
-
-/**
- * 标签成员变更事件
- * @property tagId TagId	标签Id
- * @property addUserItems AddUserItems	标签中新增的成员userid列表，用逗号分隔
- * @property delUserItems	标签中删除的成员userid列表，用逗号分隔
- * @property addPartyItems	标签中新增的部门id列表，用逗号分隔
- * @property delPartyItems	标签中删除的部门id列表，用逗号分隔
- * */
-class WorkTagUpdateEvent(base: BaseInfo): WorkChangeContactEvent(base) {
-    init {
-        changeType = UPDATE_TAG
-    }
-    var tagId: String? = null
-    var addUserItems: List<String>? = null
-    var delUserItems: List<String>? = null
-    var addPartyItems: List<String>? = null
-    var delPartyItems: List<String>? = null
-    override fun read(reader: XMLEventReader)
-    {
-        var count = 0
-        while (reader.hasNext() && count < 4) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "TagId" ->{ tagId = reader.elementText; count++ }
-                    "AddUserItems" ->{ addUserItems = reader.elementText?.split(','); count++ }
-                    "DelUserItems" ->{ delUserItems = reader.elementText.split(','); count++ }
-                    "AddPartyItems" ->{ addPartyItems = reader.elementText.split(','); count++ }
-                    "DelPartyItems" ->{ delPartyItems = reader.elementText.split(','); count++ }
-                }
-            }
-        }
-    }
-}
-
-
-
-
-/*
 * 菜单事件
 *
 * 成员点击自定义菜单后，企业微信会把点击事件推送给应用。
@@ -563,13 +226,14 @@ class WorkTagUpdateEvent(base: BaseInfo): WorkChangeContactEvent(base) {
  *
  * @property eventKey EventKey 事件KEY值，与自定义菜单接口中KEY值对应
  * */
-class WorkMenuClickEvent(base: BaseInfo): WorkBaseEvent(base)
-{
+class WorkMenuClickEvent(baseInfo: BaseInfo): AgentEvent(baseInfo){
+
     init {
         event = InEventType.CLICK
     }
     var eventKey: String? = null
     override fun read(reader: XMLEventReader) {
+        super.read(reader)
         while (reader.hasNext()) {
             val event = reader.nextEvent()
             if (event.isStartElement) {
@@ -580,7 +244,7 @@ class WorkMenuClickEvent(base: BaseInfo): WorkBaseEvent(base)
                 }
             }
         }
-        super.readAgentId(reader)
+
     }
 }
 
@@ -591,7 +255,7 @@ class WorkMenuClickEvent(base: BaseInfo): WorkBaseEvent(base)
  * //@property menuId MenuID	指菜单ID，如果是个性化菜单，则可以通过这个字段，知道是哪个规则的菜单被点击了
  *
  * */
-class WorkMenuViewEvent(base: BaseInfo): WorkBaseEvent(base)
+class WorkMenuViewEvent(baseInfo: BaseInfo): AgentEvent(baseInfo)
 {
     init {
         event = InEventType.VIEW
@@ -609,7 +273,7 @@ class WorkMenuViewEvent(base: BaseInfo): WorkBaseEvent(base)
                 }
             }
         }
-        super.readAgentId(reader)
+        super.read(reader)
     }
 }
 /**
@@ -621,7 +285,7 @@ class WorkMenuViewEvent(base: BaseInfo): WorkBaseEvent(base)
  * @property scanType ScanType	扫描类型，一般是qrcode
  * @property scanResult ScanResult	扫描结果，即二维码对应的字符串信息
  * */
-open class WorkMenuScanCodePushEvent(base: BaseInfo): WorkBaseEvent(base)
+open class WorkMenuScanCodePushEvent(baseInfo: BaseInfo): AgentEvent(baseInfo)
 {
     init {
         event = InEventType.SCAN_CODE_PUSH
@@ -654,7 +318,7 @@ open class WorkMenuScanCodePushEvent(base: BaseInfo): WorkBaseEvent(base)
                 }
             }
         }
-        super.readAgentId(reader)
+        super.read(reader)
     }
 }
 
@@ -662,7 +326,7 @@ open class WorkMenuScanCodePushEvent(base: BaseInfo): WorkBaseEvent(base)
  * scancode_waitmsg：扫码推事件且弹出“消息接收中”提示框的事件推送
  *
  * */
-class WorkMenuScanCodeWaitEvent(base: BaseInfo): WorkMenuScanCodePushEvent(base)
+class WorkMenuScanCodeWaitEvent(baseInfo: BaseInfo): WorkMenuScanCodePushEvent(baseInfo)
 {
     init {
         event = InEventType.SCAN_CODE_WAIT_MSG
@@ -678,7 +342,7 @@ class WorkMenuScanCodeWaitEvent(base: BaseInfo): WorkMenuScanCodePushEvent(base)
  * @property eventKey EventKey	事件KEY值，由开发者在创建菜单时设定
  * @property picsInfo SendPicsInfo 图片的MD5值，开发者若需要，可用于验证接收到图片
  * */
-open class WorkMenuPhotoEvent(base: BaseInfo): WorkBaseEvent(base){
+open class WorkMenuPhotoEvent(baseInfo: BaseInfo): AgentEvent(baseInfo){
     init {
         event = InEventType.PIC_SYS_PHOTO
     }
@@ -701,7 +365,7 @@ open class WorkMenuPhotoEvent(base: BaseInfo): WorkBaseEvent(base){
                 }
             }
         }
-        super.readAgentId(reader)
+        super.read(reader)
     }
 
 
@@ -710,7 +374,7 @@ open class WorkMenuPhotoEvent(base: BaseInfo): WorkBaseEvent(base){
  * pic_photo_or_album：弹出拍照或者相册发图的事件推送
  *
  * */
-class WorkMenuPhotoOrAlbumEvent(base: BaseInfo): WorkMenuPhotoEvent(base)
+class WorkMenuPhotoOrAlbumEvent(baseInfo: BaseInfo): WorkMenuPhotoEvent(baseInfo)
 {
     init {
         event = InEventType.PIC_PHOTO_OR_ALBUM
@@ -722,7 +386,7 @@ class WorkMenuPhotoOrAlbumEvent(base: BaseInfo): WorkMenuPhotoEvent(base)
  * pic_weixin：弹出微信相册发图器的事件推送
  *
  * */
-class WorkMenuWorkAlbumEvent(base: BaseInfo): WorkMenuPhotoEvent(base)
+class WorkMenuWorkAlbumEvent(baseInfo: BaseInfo): WorkMenuPhotoEvent(baseInfo)
 {
     init {
         event = InEventType.PIC_WEIXIN
@@ -739,7 +403,7 @@ class WorkMenuWorkAlbumEvent(base: BaseInfo): WorkMenuPhotoEvent(base)
  * @property label Label	地理位置的字符串信息
  * @property poiname Poiname	朋友圈POI的名字，可能为空
  * */
-class WorkMenuLocationEvent(base: BaseInfo): WorkBaseEvent(base)
+class WorkMenuLocationEvent(baseInfo: BaseInfo): AgentEvent(baseInfo)
 {
     init {
         event = InEventType.LOCATION_SELECT
@@ -788,7 +452,7 @@ class WorkMenuLocationEvent(base: BaseInfo): WorkBaseEvent(base)
                 }
             }
         }
-        super.readAgentId(reader)
+        super.read(reader)
     }
 }
 
@@ -828,15 +492,15 @@ class ApprovalInfo(val id: String?, val openSpName: String?)
  * 1.自建/第三方应用调用审批流程引擎发起申请之后，审批状态发生变化时
  * 2.自建/第三方应用调用审批流程引擎发起申请之后，在“审批中”状态，有任意审批人进行审批操作时
  * */
-class WorkApprovalStatusChangeEvent(base: BaseInfo): WorkBaseEvent(base)
+class WorkApprovalStatusChangeEvent(baseInfo: BaseInfo): AgentEvent(baseInfo)
 {
     init {
-        event = OPEN_APPROVAL_CHANGE
+        event = WorkEventType.OPEN_APPROVAL_CHANGE
     }
     var eventKey: String? = null
     var approvalInfo: ApprovalInfo? = null
     override fun read(reader: XMLEventReader) {
-        super.readAgentId(reader)
+        super.read(reader)
         var count = 0
         while (reader.hasNext() && count < 2) {
             val event = reader.nextEvent()
@@ -860,9 +524,9 @@ class WorkApprovalStatusChangeEvent(base: BaseInfo): WorkBaseEvent(base)
  * @property eventKey EventKey	与发送任务卡片消息时指定的按钮btn:key值相同
  * @property taskId TaskId	与发送任务卡片消息时指定的task_id相同
  * */
-class WorkTaskCardClickEvent(base: BaseInfo): WorkBaseEvent(base){
+class WorkTaskCardClickEvent(baseInfo: BaseInfo): AgentEvent(baseInfo){
     init {
-        event = TASK_CARD_CLICK
+        event = WorkEventType.TASK_CARD_CLICK
     }
     var eventKey: String? = null
     var taskId: String? = null
@@ -882,7 +546,7 @@ class WorkTaskCardClickEvent(base: BaseInfo): WorkBaseEvent(base){
                 }
             }
         }
-        super.readAgentId(reader)
+        super.read(reader)
     }
 }
 
@@ -894,7 +558,7 @@ class WorkTaskCardClickEvent(base: BaseInfo): WorkBaseEvent(base){
 // * @param eventKey EventKey	事件KEY值，跳转的小程序路径
 // * @param menuId MenuID	菜单ID，如果是个性化菜单，则可以通过这个字段，知道是哪个规则的菜单被点击了
 // * */
-//class WorkMenuMiniEvent(base: BaseInfo): WorkBaseEvent(base)
+//class WorkMenuMiniEvent(base: BaseInfo): AgentEvent(baseInfo)
 //{
 //    var eventKey: String? = null
 //    var menuId: String? = null
@@ -927,7 +591,7 @@ class WorkTaskCardClickEvent(base: BaseInfo): WorkBaseEvent(base){
  * failed:user block: 送达由于用户拒收（用户设置拒绝接收公众号消息）;
  * failed: system failed: 发送状态为发送失败（非用户拒绝）
  * */
-//class WorkTemplateSendJobFinish(base: BaseInfo): WorkBaseEvent(base)
+//class WorkTemplateSendJobFinish(base: BaseInfo): AgentEvent(baseInfo)
 //{
 //    var status: String? = null
 //    override fun read(reader: XMLEventReader) {
@@ -951,7 +615,7 @@ class WorkTaskCardClickEvent(base: BaseInfo): WorkBaseEvent(base){
  * @property eventKey EventKey	事件KEY值，qrscene_为前缀，后面为二维码的参数值
  * @property ticket Ticket	二维码的ticket，可用来换取二维码图片
  * */
-//class WorkScanSubscribeEvent(base: BaseInfo): WorkBaseEvent(base)
+//class WorkScanSubscribeEvent(base: BaseInfo): AgentEvent(baseInfo)
 //{
 //    var eventKey: String? = null
 //    var ticket: String? = null
