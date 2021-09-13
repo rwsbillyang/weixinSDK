@@ -20,10 +20,7 @@ package com.github.rwsbillyang.wxSDK.work.chatMsg
 
 import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.security.RsaCryptoUtil
-import com.github.rwsbillyang.wxSDK.work.Work
-import com.github.rwsbillyang.wxSDK.work.WorkBaseApi
-import com.github.rwsbillyang.wxSDK.work.WorkMulti
-import com.github.rwsbillyang.wxSDK.work.WorkSingle
+import com.github.rwsbillyang.wxSDK.work.*
 import com.tencent.wework.Finance
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -33,26 +30,16 @@ import java.io.File
 import java.io.FileOutputStream
 
 
-class ChatMsgApi private constructor (corpId: String?) : WorkBaseApi(corpId){
-    /**
-     * ISV模式，suiteId为null表示single单应用模式
-     * */
-    constructor(suiteId: String?, corpId: String) : this(corpId) {
-        this.suiteId = suiteId
-    }
-
-    /**
-     * 企业内部应用模式，空参表示single单应用模式
-     * */
-    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
-        this.agentId = agentId
-    }
-
-    private val log = LoggerFactory.getLogger("ChatMsgApi")
+class ChatMsgApi (corpId: String?, agentId: Int?, suiteId: String?)
+    : WorkBaseApi(corpId, agentId, suiteId)
+{
     companion object{
         const val CHAT_MSG_MAX_LIMIT = 1000
     }
+
+
     override val group = "msgaudit"
+    override var sysAccessTokenKey: String? = SysAccessTokenKey.ChatArchive
 
     /**
      * 获取会话内容存档开启成员列表 企业可通过此接口，获取企业开启会话内容存档的成员列表

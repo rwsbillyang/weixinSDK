@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
 
 
 import org.slf4j.LoggerFactory
+import java.lang.IllegalArgumentException
 import java.util.concurrent.TimeUnit
 
 
@@ -234,34 +235,26 @@ fun Routing.wxWorkOAuthApi(
         }
 
         val host = call.request.queryParameters["host"] ?: (call.request.origin.scheme +"://"+ call.request.host())
+        val suiteId = call.request.queryParameters["suiteId"]
+        val corpId = call.request.queryParameters["corpId"]
+        val agentId = call.request.queryParameters["agentId"]?.toInt()
+
         val redirect: String
         val api = if (Work.isIsv) {
             if (Work.isMulti) {
-                val suiteId = call.request.queryParameters["suiteId"]
-                //val corpId = call.request.queryParameters["corpId"]
-                if (suiteId == null) {
-                    call.respond(HttpStatusCode.BadRequest, "oauth isv multi mode need suiteId and corpId")
-                    return@get
-                }
                 redirect = "$host${IsvWork.oauthNotifyPath}/$suiteId"
-                OAuthApi(suiteId, null)
+                OAuthApi(corpId?:"", agentId, suiteId)
             } else {
                 redirect = "$host${IsvWork.oauthNotifyPath}"
-                OAuthApi()
+                OAuthApi(corpId, agentId, suiteId)
             }
         } else {
             if (Work.isMulti) {
-                val corpId = call.request.queryParameters["corpId"]
-                val agentId = call.request.queryParameters["agentId"]?.toInt()
-                if (corpId == null || agentId == null) {
-                    call.respond(HttpStatusCode.BadRequest, "oauth multi mode need corpId and agentId")
-                    return@get
-                }
                 redirect = "$host${Work.oauthNotifyPath}/$corpId/$agentId"
-                OAuthApi(corpId, agentId)
+                OAuthApi(corpId, agentId, suiteId)
             } else {
                 redirect = "$host${Work.oauthNotifyPath}"
-                OAuthApi()
+                OAuthApi(corpId, agentId, suiteId)
             }
         }
 
@@ -287,116 +280,64 @@ fun Routing.wxWorkOAuthApi(
     { //默认路径： /api/wx/work/oauth/notify/{corpId}/{agentId} or /api/wx/work/isv/oauth/notify/{suiteId}
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]
-        //val host = call.request.origin.scheme +"://"+ call.request.host()
 
+        //val host = call.request.origin.scheme +"://"+ call.request.host()
         //前端若是SPA，通知路径可能需要添加browserHistorySeparator: /wxwork/authNotify  or /#!/wxwork/authNotify
-        var url: String =
-                if (Work.browserHistorySeparator.isEmpty()) Work.oauthNotifyWebAppUrl
+        var url = if (Work.browserHistorySeparator.isEmpty()) Work.oauthNotifyWebAppUrl
                 else "/${Work.browserHistorySeparator}${Work.oauthNotifyWebAppUrl}"
 
         if (code.isNullOrBlank() || state.isNullOrBlank()) {
             log.warn("code or state is null, code=$code, state=$state")
             val box = DataBox<OAuthResult>("KO", "nullCodeOrState")
-            url = url + "?" + concat(box)
+            url = "$url?code=KO&msg=nullCodeOrState"
             call.respondRedirect(url, permanent = false)
         } else {
             val scope = stateCache.getIfPresent(state)?.let { SnsApiScope.valueOf(it) } ?: DefaultSnsApiScope
             stateCache.invalidate(state)
 
-            val box = if (Work.isIsv) {
-                handleIsvNotify(call, code, scope, onResponseOauthUserDetail3rd)
-            } else {
-                handleNotify(call, code)
+            val suiteId = call.parameters["suiteId"]
+            val corpId = call.parameters["corpId"]
+            val agentId = call.parameters["agentId"]?.toInt()
+
+            try {
+                val api = OAuthApi(corpId, agentId, suiteId)
+                val res = if(Work.isIsv){
+                    api.getUserInfo3rd(code)
+                }else{
+                    api.getUserInfo(code)
+                }
+
+                if (Work.isIsv && onResponseOauthUserDetail3rd != null && scope == SnsApiScope.PrivateInfo && res.userTicket != null) {
+                    launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket)) }
+                }
+
+                val params = listOf(
+                    Pair("code", "OK"),
+                    Pair("state", state),
+                    Pair("corpId", res.corpId?:corpId),
+                    Pair("userId", res.userId),
+                    Pair("externalUserId", res.externalUserId),
+                    Pair("openId", res.openId),
+                    Pair("deviceId", res.deviceId),
+                    Pair("agentId", agentId?.toString()),
+                    Pair("suiteId", suiteId),
+                )
+                    .filter{ !it.second.isNullOrBlank() }
+                    .joinToString("&"){
+                        "${it.first}=${it.second}"
+                    }
+
+                url = "$url?$params"
+            }catch(e: IllegalArgumentException) {
+                url = "$url?code=KO&msg=${e.message}"
             }
-            url = url + "?state=$state&" + concat(box)
 
             call.respondRedirect(url, permanent = false)
         }
     }
 }
 
-private fun handleIsvNotify(
-    call: ApplicationCall, code: String, scope: SnsApiScope,
-    onResponseOauthUserDetail3rd: ((res: ResponseOauthUserDetail3rd) -> Unit)? = null )
-: DataBox<OAuthResult> {
-    val suiteId: String?
-    //val corpId: String?
-    val api = if (Work.isMulti) {
-        suiteId = call.request.queryParameters["suiteId"]
-        //corpId = call.request.queryParameters["corpId"]
-        if (suiteId == null) {
-            return DataBox("KO", "oauth_isv_multi_mode_need_suiteId")
-        }
-        OAuthApi(suiteId, null)
-    } else {
-        suiteId = IsvWorkSingle.suiteId
-        OAuthApi()
-    }
 
-    val res = api.getUserInfo3rd(code)
-    if ( onResponseOauthUserDetail3rd != null && scope == SnsApiScope.PrivateInfo && res.userTicket != null) {
-        GlobalScope.launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket)) }
-    }
-
-    return if (res.isOK()) {
-        DataBox(
-            "OK", null, OAuthResult(
-                res.corpId,
-                res.userId,
-                res.externalUserId,
-                res.openId,
-                res.deviceId, null, suiteId
-            )
-        )
-    } else
-        DataBox("KO", "${res.errCode}:${res.errMsg}")
-}
-
-
-private fun handleNotify(call: ApplicationCall, code: String): DataBox<OAuthResult> {
-    val corpId: String?
-    val agentId: Int?
-    val api = if (Work.isMulti) {
-        corpId = call.parameters["corpId"]
-        agentId = call.parameters["agentId"]?.toInt()
-        if (agentId == null || corpId == null) {
-            return DataBox("KO", "oauth_multi_mode_need_agentId_and_corpId")
-        } else {
-            OAuthApi(corpId, agentId)
-        }
-    } else {
-        corpId = WorkSingle.corpId
-        agentId = WorkSingle.agentId
-        OAuthApi()
-    }
-    val res = api.getUserInfo(code)
-    return if (res.isOK()) {
-        DataBox(
-            "OK", null, OAuthResult(
-                corpId,
-                res.userId,
-                res.externalUserId,
-                res.openId,
-                res.deviceId, agentId, null
-            )
-        )
-    } else
-        DataBox("KO", "${res.errCode}:${res.errMsg}")
-}
-
-private fun concat(box: DataBox<OAuthResult>): String {
-    return box.data?.let {
-        var param = "code=OK"
-        if (it.corpId != null) param += "&corpId=${it.corpId}"
-        if (!it.userId.isNullOrBlank()) param += "&userId=${it.userId}"
-        if (!it.externalUserId.isNullOrBlank()) param += "&externalUserId=${it.externalUserId}"
-        if (!it.openId.isNullOrBlank()) param += "&openId=${it.openId}"
-        if (it.agentId != null) param += "&agentId=${it.agentId}"
-        if (it.suiteId != null) param += "&suiteId=${it.suiteId}"
-        if (it.deviceId != null) param += "&deviceId=${it.deviceId}"
-        param
-    } ?: "code=${box.code}&msg=${box.msg}"
-}
 
 /**
  * 前端发出请求，获取使用jssdk时所需的认证签名

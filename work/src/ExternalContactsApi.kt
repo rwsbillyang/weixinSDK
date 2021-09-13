@@ -42,22 +42,12 @@ import kotlinx.serialization.Serializable
  * 调用（accesstoken如何获取？）；第三方/自建应用调用时，返回的跟进人follow_user仅包含应用可见范围之
  * 内的成员。
  * */
-class ExternalContactsApi private constructor (corpId: String?) : WorkBaseApi(corpId){
-    /**
-     * ISV模式，suiteId为null表示single单应用模式
-     * */
-    constructor(suiteId: String?, corpId: String) : this(corpId) {
-        this.suiteId = suiteId
-    }
-
-    /**
-     * 企业内部应用模式，空参表示single单应用模式
-     * */
-    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
-        this.agentId = agentId
-    }
+class ExternalContactsApi(corpId: String?, agentId: Int?, suiteId: String?)
+    : WorkBaseApi(corpId, agentId,suiteId)
+{
 
     override val group = "externalcontact"
+    override var sysAccessTokenKey: String? = SysAccessTokenKey.ExternalContact
 
     /* 企业服务人员（客服），「联系我」 */
 

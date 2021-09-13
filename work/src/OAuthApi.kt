@@ -45,32 +45,11 @@ enum class SnsApiScope(val value: String){
 
 /**
  * OAUTH身份认证，支持第三方应用
+ * 注意：prepareOAuthInfo在企业多应用情况下可以缺少corpId，此时可以用""代替coprId，避免参数错误异常
  * */
-class OAuthApi private constructor (corpId: String?) : WorkBaseApi(corpId){
-    /**
-     * 单应用模式下，Oauth在获取用户身份之前，还没有各种信息
-     * */
-    constructor(): this(if(Work.isIsv) null else WorkSingle.corpId){
-        if(Work.isIsv){
-            this.suiteId = IsvWorkSingle.suiteId
-        }else{
-            this.agentId = WorkSingle.agentId
-        }
-    }
-    /**
-     * ISV-Multi
-     * */
-    constructor(suiteId: String, corpId: String?) : this(corpId) {
-        this.suiteId = suiteId
-    }
-
-    /**
-     * 企业内部多应用
-     * */
-    constructor(corpId: String, agentId: Int) : this(corpId) {
-        this.agentId = agentId
-    }
-
+class OAuthApi (corpId: String?, agentId: Int?, suiteId: String?)
+    : WorkBaseApi(corpId, agentId, suiteId)
+{
     override val group = "user"
     /**
      * 第一步：用户同意授权，获取code

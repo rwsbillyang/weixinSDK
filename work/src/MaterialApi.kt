@@ -18,20 +18,9 @@
 
 package com.github.rwsbillyang.wxSDK.work
 
-class MaterialApi private constructor (corpId: String?) : WorkBaseApi(corpId){
-    /**
-     * ISV模式，suiteId为null表示single单应用模式
-     * */
-    constructor(suiteId: String?, corpId: String) : this(corpId) {
-        this.suiteId = suiteId
-    }
-
-    /**
-     * 企业内部应用模式，空参表示single单应用模式
-     * */
-    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
-        this.agentId = agentId
-    }
+class MaterialApi(corpId: String?, agentId: Int?, suiteId: String?)
+    : WorkBaseApi(corpId, agentId,suiteId)
+{
 
     override val group = "media"
 

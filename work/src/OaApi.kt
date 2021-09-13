@@ -25,20 +25,9 @@ enum class CheckInDataType(val value: Int){
     ALL(3)
 }
 
-class CheckinApi private constructor (corpId: String?) : WorkBaseApi(corpId){
-    /**
-     * ISV模式，suiteId为null表示single单应用模式
-     * */
-    constructor(suiteId: String?, corpId: String) : this(corpId) {
-        this.suiteId = suiteId
-    }
-
-    /**
-     * 企业内部应用模式，空参表示single单应用模式
-     * */
-    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
-        this.agentId = agentId
-    }
+class CheckinApi  (corpId: String?, agentId: Int?, suiteId: String?)
+    : WorkBaseApi(corpId, agentId,suiteId)
+{
 
     override val group = "checkin"
 
@@ -67,20 +56,9 @@ class CheckinApi private constructor (corpId: String?) : WorkBaseApi(corpId){
         mapOf("datetime" to datetime, "useridlist" to userIdList))
  }
 
-class OaApi private constructor (corpId: String?) : WorkBaseApi(corpId){
-    /**
-     * ISV模式，suiteId为null表示single单应用模式
-     * */
-    constructor(suiteId: String?, corpId: String) : this(corpId) {
-        this.suiteId = suiteId
-    }
-
-    /**
-     * 企业内部应用模式，空参表示single单应用模式
-     * */
-    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
-        this.agentId = agentId
-    }
+class OaApi  (corpId: String?, agentId: Int?, suiteId: String?)
+    : WorkBaseApi(corpId, agentId,suiteId)
+{
 
     override val group = "oa"
 

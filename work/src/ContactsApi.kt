@@ -19,6 +19,8 @@
 package com.github.rwsbillyang.wxSDK.work
 
 import com.github.rwsbillyang.wxSDK.IBase
+import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
+import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -39,22 +41,13 @@ import kotlinx.serialization.json.*
  * 获取通讯录管理secret的方法如下：
 1、进入企业微信管理后台，在“管理工具” — “通讯录同步助手”开启“API接口同步”
  * */
-class ContactsApi private constructor (corpId: String?) : WorkBaseApi(corpId){
-    /**
-     * ISV模式，suiteId为null表示single单应用模式
-     * */
-    constructor(suiteId: String?, corpId: String) : this(corpId) {
-        this.suiteId = suiteId
-    }
-
-    /**
-     * 企业内部应用模式，空参表示single单应用模式
-     * */
-    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
-        this.agentId = agentId
-    }
+class ContactsApi(corpId: String?, agentId: Int?, suiteId: String?)
+    : WorkBaseApi(corpId, agentId,suiteId)
+{
 
     override val group = "user"
+    override var sysAccessTokenKey: String? = SysAccessTokenKey.Contact
+
 
     fun create(body: Map<String, Any?>) = doPost3("create", body)
 
@@ -170,20 +163,9 @@ class ResponseSelectedTicket(
 
 
 
-class DepartmentApi private constructor (corpId: String?) : WorkBaseApi(corpId){
-    /**
-     * ISV模式，suiteId为null表示single单应用模式
-     * */
-    constructor(suiteId: String?, corpId: String) : this(corpId) {
-        this.suiteId = suiteId
-    }
-
-    /**
-     * 企业内部应用模式，空参表示single单应用模式
-     * */
-    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
-        this.agentId = agentId
-    }
+class DepartmentApi(corpId: String?, agentId: Int?, suiteId: String?)
+    : WorkBaseApi(corpId, agentId,suiteId)
+{
 
     override val group = "department"
 
@@ -221,20 +203,9 @@ class DepartmentApi private constructor (corpId: String?) : WorkBaseApi(corpId){
 
 }
 
-class TagApi private constructor (corpId: String?) : WorkBaseApi(corpId){
-    /**
-     * ISV模式，suiteId为null表示single单应用模式
-     * */
-    constructor(suiteId: String?, corpId: String) : this(corpId) {
-        this.suiteId = suiteId
-    }
-
-    /**
-     * 企业内部应用模式，空参表示single单应用模式
-     * */
-    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
-        this.agentId = agentId
-    }
+class TagApi(corpId: String?, agentId: Int?, suiteId: String?)
+    : WorkBaseApi(corpId, agentId,suiteId)
+{
 
     override val group = "tag"
 
@@ -298,20 +269,9 @@ class BatchUserCallback(val url: String?,
 
 class BatchUserBody(val mediaId: String, toInvite: Boolean?, callback: BatchUserCallback?)
 
-class UserBatchApi private constructor (corpId: String?) : WorkBaseApi(corpId){
-    /**
-     * ISV模式，suiteId为null表示single单应用模式
-     * */
-    constructor(suiteId: String?, corpId: String) : this(corpId) {
-        this.suiteId = suiteId
-    }
-
-    /**
-     * 企业内部应用模式，空参表示single单应用模式
-     * */
-    constructor(corpId: String? = null, agentId: Int? = null) : this(corpId) {
-        this.agentId = agentId
-    }
+class UserBatchApi  (corpId: String?, agentId: Int?, suiteId: String?)
+    : WorkBaseApi(corpId, agentId,suiteId)
+{
 
     override val group = "batch"
 

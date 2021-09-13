@@ -26,6 +26,8 @@ import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.slf4j.LoggerFactory
+import java.lang.IllegalArgumentException
 
 /**
  * 不同的api可能属于不同的agent，需要维护着自己的secret和accessToken
@@ -47,16 +49,53 @@ import kotlinx.serialization.Serializable
  * 所有接口在通信时都需要携带此信息用于验证接口的访问权限
  *
  * */
-abstract class WorkBaseApi protected constructor (val corpId: String?): WxApi() {
+abstract class WorkBaseApi(val corpId: String?, val agentId: Int?, val suiteId: String?): WxApi() {
+    init {
+        val errMsg = checkValid(corpId, agentId, suiteId)
+        if(errMsg != null){
+            throw IllegalArgumentException(errMsg)
+        }
+    }
 
-    //第三方开发者模式：使用suiteId和corpId。若suiteId非空，认为是isv模式
-    var suiteId: String? = null
-
-    //企业内部模式，使用corpId和agentId
-    var agentId: Int? = null
-
+    val log = LoggerFactory.getLogger("WorkBaseApi")
 
     override val base = "https://qyapi.weixin.qq.com/cgi-bin"
+
+    //若被子类重载指定了值，则试图使用该key，获取企业微信基础应用的accessToken
+    open var sysAccessTokenKey: String? = null
+
+
+    /**
+     * 检查构造api的参数是否正常
+     * @return 返回错误信息，没错误返回null
+     * */
+    fun checkValid(corpId: String?, agentId: Int?, suiteId: String?): String?{
+        var errMsg: String? = null
+        if(Work.isIsv){
+            if(corpId == null){
+                errMsg = "no corpId for isv mode, suiteId=$suiteId"
+                log.warn(errMsg)
+                return errMsg
+            }
+            if(Work.isMulti){
+                if(suiteId == null){
+                    errMsg = "no suiteId or corpId, suiteId=$suiteId, corpId=$corpId"
+                    log.warn(errMsg)
+                    return errMsg
+                }
+            }
+        }else{
+            if(Work.isMulti){
+                if(corpId == null || agentId == null){
+                    errMsg = "no agentId or corpId=$corpId, agentId=$agentId in multi mode"
+                    log.warn(errMsg)
+                    return errMsg
+                }
+            }
+        }
+        return errMsg
+    }
+
     override fun accessToken() =
         if(Work.isIsv){
             if(Work.isMulti){
@@ -66,16 +105,27 @@ abstract class WorkBaseApi protected constructor (val corpId: String?): WxApi() 
             }
         }else{
             if(Work.isMulti){
-                if(agentId == null)
-                {
-                    println("no agentId in multi mode?")
+                val corpCtx = WorkMulti.ApiContextMap[corpId]
+                if(corpCtx == null){
+                    println("no corpCtx in multi mode?: corpId=$corpId")
                     null
-                }else
-                    WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.accessToken?.get()
+                }else{
+                    //存在的话使用系统级别的secret及accessToken
+                    sysAccessTokenKey?.let { corpCtx.sysAccessTokenMap[it] }?.get()?:
+                    if(agentId != null) {
+                        WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.accessToken?.get()
+                    }else {
+                        println("no agentId in multi mode? corpId=$corpId")
+                        null
+                    }
+                }
             }else{
-                WorkSingle.agentContext.accessToken.get()
+                //存在的话使用系统级别的secret及accessToken
+                sysAccessTokenKey?.let { WorkSingle.sysAccessTokenMap[it] }?.get()?:WorkSingle.agentContext.accessToken.get()
             }
         }
+
+
 
     /**
      * 企业微信在回调企业指定的URL时，是通过特定的IP发送出去的。如果企业需要做防火墙配置，那么可以通过这个接口获取到所有相关的IP段。
