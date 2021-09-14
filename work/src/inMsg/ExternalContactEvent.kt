@@ -27,8 +27,15 @@ import javax.xml.stream.XMLEventReader
 
 /**
  * 外部联系人变更事件，适合内建应用，不适合第三方
+ * @param baseInfo 将已读取的BaseInfo数据传递过来
+ * @param agentEvent 将已读取的数据AgentEvent传递过来
  * */
-open class ExternalContactChangeEvent(baseInfo: BaseInfo) : AgentEvent(baseInfo) {
+open class ExternalContactChangeEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): AgentEvent(baseInfo)
+{
+    init {
+        event = agentEvent.event
+        agentId = agentEvent.agentId
+    }
     var changeType: String? = null
     var userId: String? = null
     var externalUserId: String? = null
@@ -49,7 +56,7 @@ open class ExternalContactChangeEvent(baseInfo: BaseInfo) : AgentEvent(baseInfo)
 }
 
 
-open class ExternalContactAddEvent(baseInfo: BaseInfo) : ExternalContactChangeEvent(baseInfo) {
+open class ExternalContactAddEvent(baseInfo: BaseInfo, agentEvent: AgentEvent) : ExternalContactChangeEvent(baseInfo, agentEvent) {
     init{
         changeType = WorkEventType.EXTERNAL_CONTACT_ADD
     }
@@ -79,7 +86,7 @@ open class ExternalContactAddEvent(baseInfo: BaseInfo) : ExternalContactChangeEv
     }
 }
 
-class ExternalContactUpdateEvent(baseInfo: BaseInfo) : ExternalContactChangeEvent(baseInfo)
+class ExternalContactUpdateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent) : ExternalContactChangeEvent(baseInfo, agentEvent)
 {
     override fun read(reader: XMLEventReader) {
         var count = 0
@@ -98,7 +105,7 @@ class ExternalContactUpdateEvent(baseInfo: BaseInfo) : ExternalContactChangeEven
         }
     }
 }
-class ExternalContactDelEvent(baseInfo: BaseInfo) : ExternalContactChangeEvent(baseInfo) {
+class ExternalContactDelEvent(baseInfo: BaseInfo, agentEvent: AgentEvent) : ExternalContactChangeEvent(baseInfo, agentEvent) {
     var source: String? = null
     override fun read(reader: XMLEventReader) {
         var count = 0
@@ -123,7 +130,7 @@ class ExternalContactDelEvent(baseInfo: BaseInfo) : ExternalContactChangeEvent(b
 }
 }
 
-class ExternalContactTransferFailEvent(baseInfo: BaseInfo) : ExternalContactChangeEvent(baseInfo){
+class ExternalContactTransferFailEvent(baseInfo: BaseInfo, agentEvent: AgentEvent) : ExternalContactChangeEvent(baseInfo, agentEvent){
 
     var failReason: String? = null
 
@@ -154,7 +161,12 @@ class ExternalContactTransferFailEvent(baseInfo: BaseInfo) : ExternalContactChan
 /**
  * 外部联系人变更事件，适合内建应用，不适合第三方
  * */
-open class ExternalChatChangeEvent(baseInfo: BaseInfo) : AgentEvent(baseInfo) {
+open class ExternalChatChangeEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): AgentEvent(baseInfo)
+{
+    init {
+        event = agentEvent.event
+        agentId = agentEvent.agentId
+    }
 
     var changeType: String? = null
     var chatId: String? = null
@@ -196,7 +208,7 @@ change_notice : 群公告变更
  * @property memChangeCnt 当是成员入群或退群时有值。表示成员变更数量
  *
  * */
-class ExternalChatUpdateEvent(baseInfo: BaseInfo) : ExternalChatChangeEvent(baseInfo) {
+class ExternalChatUpdateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent) : ExternalChatChangeEvent(baseInfo, agentEvent) {
     var updateDetail: String? = null
     var joinScene: String? = null
     var quitScene: Int? = null

@@ -62,7 +62,7 @@ object XmlUtil {
             val document = db.parse(`is`)
             val root = document.documentElement
 
-            for(tag in listOf("ToUserName","Encrypt","TimeStamp","Nonce"))
+            for(tag in listOf("ToUserName","Encrypt","TimeStamp","Nonce","AgentID"))
             {
                 map[tag] = root.getElementsByTagName(tag)?.item(0)?.textContent
             }

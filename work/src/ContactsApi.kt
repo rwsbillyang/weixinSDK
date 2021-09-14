@@ -386,6 +386,7 @@ class TextAttr(override val type: Int, override val name: String, val text: Text
 class WebAttr(override val type: Int, override val name: String, val web: Web) : Attr()
 @Serializable
 class MiniProgramAttr(override val type: Int, override val name: String, val miniprogram: MiniProgram) : Attr()
+
 @Serializable
 class ExtAttr(val attrs: List<Attr>? = null)
 

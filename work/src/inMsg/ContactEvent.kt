@@ -20,6 +20,7 @@ package com.github.rwsbillyang.wxSDK.work.inMsg
 
 
 import com.github.rwsbillyang.wxSDK.msg.BaseInfo
+import com.github.rwsbillyang.wxSDK.work.*
 import javax.xml.stream.XMLEventReader
 
 
@@ -34,9 +35,11 @@ import javax.xml.stream.XMLEventReader
 /**
  * 通讯录变更事件  base class
  * */
-open class WorkChangeContactEvent(baseInfo: BaseInfo): AgentEvent(baseInfo) {
+open class WorkChangeContactEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): AgentEvent(baseInfo)
+{
     init {
-        event = WorkEventType.CHANGE_CONTACT
+        event = agentEvent.event
+        agentId = agentEvent.agentId
     }
     var changeType: String? = null
     companion object{
@@ -78,27 +81,103 @@ open class ExtAttr(val name: String?, val type: Int?)
                 val event1 = reader.nextEvent()
                 if (event1.isStartElement && "item" == event1.asStartElement().name.toString())
                 {
-                    val map = mutableMapOf<String, String?>()
+                    var name: String?
+                    //val map = mutableMapOf<String, String?>()
                     while (reader.hasNext()){
-                        val event2 = reader.nextEvent()
-                        val tag = event1.asStartElement().name.toString()
-                        map[tag] = reader.elementText
-                        if(event2.isEndElement && "item" == event2.asEndElement().name.toString()) {
-                            break
+                        val e2 = reader.nextEvent()
+                        if(e2.isEndElement && "item" == e2.asEndElement().name.toString()) {
+                            readExtAttr(reader)?.let { list.add(it) }
                         }
-                    }
-
-                    val type = map["Type"]?.toInt()
-                    when(type){
-                        0 -> list.add(ExtAttrText(map["Name"],map["Value"]))
-                        1 -> list.add(ExtAttrWeb(map["Name"],map["Title"],map["Url"]))
-                        else -> list.add(ExtAttr(map["Name"],type))
                     }
                 } else if (event1.isEndElement && "ExtAttr" == event1.asEndElement().name.toString()) {
                     break
                 }
             }
             return  list
+        }
+
+        fun readExtAttr(reader: XMLEventReader): ExtAttr?{
+            var name: String? = null
+            var type: Int? = null
+            while (reader.hasNext()) {
+                val e = reader.nextEvent()
+                if (e.isStartElement) {
+                    when(e.asStartElement().name.toString()){
+                        "Name" -> {
+                            name = reader.elementText
+                            break
+                        }
+                        "Type" -> {
+                            type = reader.elementText?.toInt()
+                            break
+                        }
+                        "Text" -> {
+                            val e2 = reader.nextEvent()
+                            while (reader.hasNext()) {
+                                if (e2.isStartElement) {
+                                    when(e2.asStartElement().name.toString()){
+                                        "Value" -> {
+                                            return ExtAttrText(name, reader.elementText)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        "Web" -> {
+                            var url: String? = null
+                            var title: String? = null
+                            var count = 0
+                            val e2 = reader.nextEvent()
+                            while (reader.hasNext() && count < 2) {
+                                if (e2.isStartElement) {
+                                    when(e.asStartElement().name.toString()){
+                                        "Title" -> {
+                                            title = reader.elementText; count++
+                                        }
+                                        "Url" -> {
+                                            url = reader.elementText; count++
+                                        }
+                                    }
+                                }
+                            }
+                            return ExtAttrWeb(name, title, url)
+                        }
+                        "MiniProgram" ->{ //此段内容，文档中没有，根据读取成员详情添加进来的
+                            var appId: String? = null
+                            var pagepath: String? = null
+                            var title: String? = null
+                            var count = 0
+                            val e2 = reader.nextEvent()
+                            while (reader.hasNext() && count < 3) {
+                                if (e2.isStartElement) {
+                                    when(e.asStartElement().name.toString()){
+                                        "Title" -> {
+                                            title = reader.elementText; count++
+                                        }
+                                        "AppID" -> {
+                                            appId = reader.elementText; count++
+                                        }
+                                        "PagePath" -> {
+                                            pagepath = reader.elementText; count++
+                                        }
+                                    }
+                                }
+                            }
+                            return ExtAttrMiniProgram(name, title, appId, pagepath)
+                        }
+                    }
+                }
+            }
+            return null
+        }
+    }
+
+    fun toAttr():Attr?{
+        return when(this){
+            is ExtAttrText -> TextAttr(0, name?:"", Text(value?:""))
+            is ExtAttrWeb -> WebAttr(1, name?:"", Web(url?:"", title?:"") )
+            is ExtAttrMiniProgram -> MiniProgramAttr(2,name?:"", MiniProgram(appId?:"", pagePath?:"", title?:""))
+            else -> null
         }
     }
 }
@@ -113,6 +192,7 @@ class ExtAttrText(name: String?,val value: String?):ExtAttr(name, 0)
  * @param url Url	网页的url
  * */
 class ExtAttrWeb(name: String?, val title: String?, val url: String?):ExtAttr(name, 1)
+class ExtAttrMiniProgram(name: String?, val title: String?, val appId: String?, val pagePath: String?):ExtAttr(name, 2)
 /**
  * 新增成员事件
  * @property userId UserID	变更信息的成员UserID
@@ -129,20 +209,20 @@ class ExtAttrWeb(name: String?, val title: String?, val url: String?):ExtAttr(na
  * @property telephone Telephone	座机，变更时推送
  * @property address Address	地址
  * */
-open class WorkUserCreateEvent(baseInfo: BaseInfo): WorkChangeContactEvent(baseInfo) {
+open class WorkUserCreateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): WorkChangeContactEvent(baseInfo, agentEvent) {
     init {
         changeType = CREATE_USER
     }
     var userId: String? = null
-    var mainDepartment: Int? = null
+    var mainDepartment: String? = null
     var name: String? = null
     var department: String? = null
-    var isLeaderInDept: Int? = null
+    var isLeaderInDept: String? = null
     var mobile: String? = null
     var position: String? = null
-    var gender: Int? = null
+    var gender: String? = null
     var email: String? = null
-    var status: Int? = null
+    var status: String? = null
     var avatar: String? = null
     var alias: String? = null
     var telephone: String? = null
@@ -158,13 +238,13 @@ open class WorkUserCreateEvent(baseInfo: BaseInfo): WorkChangeContactEvent(baseI
                     "UserID" ->{ userId = reader.elementText; count2++ }
                     "Name" ->{ name= reader.elementText; count2++}
                     "Department" ->{ department = reader.elementText; count2++ }
-                    "MainDepartment" ->{ mainDepartment= reader.elementText?.toInt(); count2++}
-                    "IsLeaderInDept" ->{ isLeaderInDept= reader.elementText?.toInt(); count2++}
+                    "MainDepartment" ->{ mainDepartment= reader.elementText; count2++}
+                    "IsLeaderInDept" ->{ isLeaderInDept= reader.elementText; count2++}
                     "Mobile" ->{ mobile= reader.elementText; count2++}
                     "Position" ->{ position = reader.elementText; count2++ }
-                    "Gender" ->{ gender= reader.elementText?.toInt(); count2++}
+                    "Gender" ->{ gender= reader.elementText; count2++}
                     "Email" ->{ email= reader.elementText; count2++}
-                    "Status" ->{ status= reader.elementText?.toInt(); count2++}
+                    "Status" ->{ status= reader.elementText; count2++}
                     "Avatar" ->{ avatar = reader.elementText; count2++ }
                     "Alias" ->{ alias= reader.elementText; count2++}
                     "Telephone" ->{ telephone= reader.elementText; count2++}
@@ -193,7 +273,7 @@ open class WorkUserCreateEvent(baseInfo: BaseInfo): WorkChangeContactEvent(baseI
  * @property telephone Telephone	座机，变更时推送
  * @property address Address	地址
  * */
-class WorkUserUpdateEvent(baseInfo: BaseInfo):  WorkChangeContactEvent(baseInfo) {
+class WorkUserUpdateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent):  WorkChangeContactEvent(baseInfo, agentEvent) {
     init {
         changeType = CREATE_USER
     }
@@ -201,13 +281,13 @@ class WorkUserUpdateEvent(baseInfo: BaseInfo):  WorkChangeContactEvent(baseInfo)
     var newUserID: String? = null
     var name: String? = null
     var department: String? = null
-    var mainDepartment: Int? = null
-    var isLeaderInDept: Int? = null
+    var mainDepartment: String? = null
+    var isLeaderInDept: String? = null
     var mobile: String? = null
     var position: String? = null
-    var gender: Int? = null
+    var gender: String? = null
     var email: String? = null
-    var status: Int? = null
+    var status: String? = null
     var avatar: String? = null
     var alias: String? = null
     var telephone: String? = null
@@ -224,13 +304,13 @@ class WorkUserUpdateEvent(baseInfo: BaseInfo):  WorkChangeContactEvent(baseInfo)
                     "NewUserID" ->{ newUserID= reader.elementText; count2++}
                     "Name" ->{ name= reader.elementText; count2++}
                     "Department" ->{ department = reader.elementText; count2++ }
-                    "MainDepartment" ->{ mainDepartment= reader.elementText?.toInt(); count2++}
-                    "IsLeaderInDept" ->{ isLeaderInDept= reader.elementText?.toInt(); count2++}
+                    "MainDepartment" ->{ mainDepartment= reader.elementText; count2++}
+                    "IsLeaderInDept" ->{ isLeaderInDept= reader.elementText; count2++}
                     "Mobile" ->{ mobile= reader.elementText; count2++}
                     "Position" ->{ position = reader.elementText; count2++ }
-                    "Gender" ->{ gender= reader.elementText?.toInt(); count2++}
+                    "Gender" ->{ gender= reader.elementText; count2++}
                     "Email" ->{ email= reader.elementText; count2++}
-                    "Status" ->{ status= reader.elementText?.toInt(); count2++}
+                    "Status" ->{ status= reader.elementText; count2++}
                     "Avatar" ->{ avatar = reader.elementText; count2++ }
                     "Alias" ->{ alias= reader.elementText; count2++}
                     "Telephone" ->{ telephone= reader.elementText; count2++}
@@ -246,7 +326,7 @@ class WorkUserUpdateEvent(baseInfo: BaseInfo):  WorkChangeContactEvent(baseInfo)
  * 删除成员事件
  * @property userId UserID	变更信息的成员UserID
  * */
-class WorkUserDelEvent(baseInfo: BaseInfo): WorkChangeContactEvent(baseInfo) {
+class WorkUserDelEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): WorkChangeContactEvent(baseInfo, agentEvent) {
     init {
         changeType = DELETE_USER
     }
@@ -274,14 +354,14 @@ class WorkUserDelEvent(baseInfo: BaseInfo): WorkChangeContactEvent(baseInfo) {
  * @property parentId ParentId	父部门id
  * @property order Order	部门排序
  * */
-class WorkPartyCreateEvent(baseInfo: BaseInfo): WorkChangeContactEvent(baseInfo) {
+class WorkPartyCreateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): WorkChangeContactEvent(baseInfo, agentEvent) {
     init {
         changeType = CREATE_PARTY
     }
     var id: String? = null
     var name: String? = null
     var parentId: String? = null
-    var order: Int? = null
+    var order: String? = null
     override fun read(reader: XMLEventReader)
     {
         var count2 = 0
@@ -292,7 +372,7 @@ class WorkPartyCreateEvent(baseInfo: BaseInfo): WorkChangeContactEvent(baseInfo)
                     "Id" ->{ id = reader.elementText; count2++ }
                     "Name" ->{ name= reader.elementText; count2++}
                     "ParentId" ->{ parentId= reader.elementText; count2++}
-                    "Order" ->{ order= reader.elementText?.toInt(); count2++}
+                    "Order" ->{ order= reader.elementText; count2++}
                 }
             }
         }
@@ -305,7 +385,7 @@ class WorkPartyCreateEvent(baseInfo: BaseInfo): WorkChangeContactEvent(baseInfo)
  * @property name Name	部门名称，仅发送变更时传递
  * @property parentId ParentId	父部门id，仅发送变更时传递
  * */
-class WorkPartyUpdateEvent(baseInfo: BaseInfo): WorkChangeContactEvent(baseInfo) {
+class WorkPartyUpdateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): WorkChangeContactEvent(baseInfo, agentEvent) {
     init {
         changeType = UPDATE_PARTY
     }
@@ -332,7 +412,7 @@ class WorkPartyUpdateEvent(baseInfo: BaseInfo): WorkChangeContactEvent(baseInfo)
  * 删除部门事件
  * @property id Id	部门Id
  * */
-class WorkPartyDelEvent(baseInfo: BaseInfo): WorkChangeContactEvent(baseInfo) {
+class WorkPartyDelEvent(baseInfo: BaseInfo,  agentEvent: AgentEvent): WorkChangeContactEvent(baseInfo, agentEvent) {
     init {
         changeType = DELETE_PARTY
     }
@@ -358,7 +438,7 @@ class WorkPartyDelEvent(baseInfo: BaseInfo): WorkChangeContactEvent(baseInfo) {
  * @property addPartyItems	标签中新增的部门id列表，用逗号分隔
  * @property delPartyItems	标签中删除的部门id列表，用逗号分隔
  * */
-class WorkTagUpdateEvent(baseInfo: BaseInfo): WorkChangeContactEvent(baseInfo) {
+class WorkTagUpdateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): WorkChangeContactEvent(baseInfo, agentEvent) {
     init {
         changeType = UPDATE_TAG
     }

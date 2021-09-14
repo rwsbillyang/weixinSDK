@@ -51,12 +51,14 @@ class WorkMsgHub3rd(
      * AgentID：接收的应用id，可在应用的设置页面获取。对于应用授权部分，此字段为空
      * 参见：https://work.weixin.qq.com/api/doc/90000/90135/90238#%E4%BD%BF%E7%94%A8%E6%8E%A5%E6%94%B6%E6%B6%88%E6%81%AF
      * */
-    override fun parseXml(appId: String, agentId:Int?, decryptedXmlText: String, outerMap: Map<String, String?>): ReBaseMSg?{
-        //val suiteId = outerMap["ToUserName"] //收到的数据包中ToUserName为产生事件的SuiteId，
+    override fun parseXmlThenDispatch(appId: String, agentId:Int?, decryptedXmlText: String, outerMap: Map<String, String?>): ReBaseMSg?{
+        //val suiteId = outerMap["ToUserName"] //收到的数据包中ToUserName为产生事件的SuiteId，以ww或wx开头应用id， corpId也会以ww开头
         val agentId_ = outerMap["AgentID"] //AgentID为空
 
         val reader: XMLEventReader = XMLInputFactory.newInstance().createXMLEventReader(decryptedXmlText.byteInputStream())
 
+        //内建应用的body
+        //body=<xml><ToUserName><![CDATA[wwb096af3f1c]]></ToUserName><Encrypt><![CDATA[d9...LE=]]></Encrypt><AgentID><![CDATA[1000002]]></AgentID></xml>
         //以agentId是否为空，区分是应用授权部分的回调通知，还是普通应用的通知
         val reMsg = if(agentId_ == null){
             dispatchSuiteInfo(appId, reader, SuiteInfo.fromXml(decryptedXmlText, reader))

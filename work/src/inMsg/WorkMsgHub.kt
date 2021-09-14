@@ -43,83 +43,83 @@ open class WorkMsgHub(
     /**
      * TODO: 某些event里面的数据与文档中不一致，导致值为空，需根据实际情况来读取
      * */
-    override fun dispatchEvent(appId: String, agentId: Int?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
+    override fun dispatchEvent(appId: String, agentId: Int?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?{
         if(eventHandler == null) return null
         //若使用WxBaseEvent可能event字段在后面，而agentID在前面，即使再去读，也读取不到了。
         //这里使用AgentEvent，比WxBaseEvent多读取一个agentId字段，即使没有此字段，便让其为空罢了
-        val agentEvent = AgentEvent(base).apply { read(reader) }
+        val agentEvent = AgentEvent(baseInfo).apply { read(reader) } // 读取agentId和event
         return when (agentEvent.event) {
             InEventType.SUBSCRIBE -> eventHandler.onSubscribeEvent(appId, agentId,
-                WorkSubscribeEvent(base).apply { read(reader) }
+                WorkSubscribeEvent(baseInfo, agentEvent) //无需额外数据，故不需再读
             )
             InEventType.UNSUBSCRIBE -> eventHandler.onUnsubscribeEvent(appId, agentId,
-                WorkUnsubscribeEvent(base).apply { read(reader) }
+                WorkUnsubscribeEvent(baseInfo, agentEvent)//无需额外数据，故不需再读
             )
             WorkEventType.ENTER_AGENT -> eventHandler.onEnterAgent(appId, agentId,
-                WorkEnterAgent(base).apply { read(reader) }
+                WorkEnterAgent(baseInfo, agentEvent).apply { read(reader) }
             )
             InEventType.LOCATION -> eventHandler.onLocationEvent(appId, agentId,
-                WorkLocationEvent(base).apply { read(reader) }
+                WorkLocationEvent(baseInfo, agentEvent).apply { read(reader) }
             )
             InEventType.CLICK -> eventHandler.onMenuClickEvent(appId, agentId,
-                WorkMenuClickEvent(base).apply { read(reader) }
+                WorkMenuClickEvent(baseInfo, agentEvent).apply { read(reader) }
             )
             InEventType.VIEW -> eventHandler.onMenuViewEvent(appId, agentId,
-                WorkMenuViewEvent(base).apply { read(reader) }
+                WorkMenuViewEvent(baseInfo, agentEvent).apply { read(reader) }
             )
             InEventType.SCAN_CODE_PUSH ->
                 eventHandler.onMenuScanCodePushEvent(appId, agentId,
-                    WorkMenuScanCodePushEvent(base).apply { read(reader) }
+                    WorkMenuScanCodePushEvent(baseInfo, agentEvent).apply { read(reader) }
                 )
             InEventType.SCAN_CODE_WAIT_MSG -> eventHandler.onMenuScanCodeWaitEvent(appId, agentId,
-                WorkMenuScanCodeWaitEvent(base).apply { read(reader) }
+                WorkMenuScanCodeWaitEvent(baseInfo, agentEvent).apply { read(reader) }
             )
             InEventType.PIC_SYS_PHOTO -> eventHandler.onMenuPhotoEvent(appId, agentId,
-                WorkMenuPhotoEvent(base).apply { read(reader) }
+                WorkMenuPhotoEvent(baseInfo, agentEvent).apply { read(reader) }
             )
             InEventType.PIC_PHOTO_OR_ALBUM -> eventHandler.onMenuPhotoOrAlbumEvent(appId, agentId,
-                WorkMenuPhotoOrAlbumEvent(base).apply { read(reader) }
+                WorkMenuPhotoOrAlbumEvent(baseInfo, agentEvent).apply { read(reader) }
             )
             InEventType.PIC_WEIXIN -> eventHandler.onMenuWorkAlbumEvent(appId, agentId,
-                WorkMenuWorkAlbumEvent(base).apply { read(reader) }
+                WorkMenuWorkAlbumEvent(baseInfo, agentEvent).apply { read(reader) }
             )
             InEventType.LOCATION_SELECT -> eventHandler.onMenuLocationEvent(appId, agentId,
-                WorkMenuLocationEvent(base).apply { read(reader) }
+                WorkMenuLocationEvent(baseInfo, agentEvent).apply { read(reader) }
             )
 
 
             WorkEventType.BATCH_JOB_RESULT -> eventHandler.onBatchJobResultEvent(appId, agentId,
-                WorkBatchJobResultEvent(base).apply { read(reader) }
+                WorkBatchJobResultEvent(baseInfo, agentEvent).apply { read(reader) }
             )
             WorkEventType.OPEN_APPROVAL_CHANGE -> eventHandler.onApprovalStatusChangeEvent(appId, agentId,
-                WorkApprovalStatusChangeEvent(base).apply { read(reader) }
+                WorkApprovalStatusChangeEvent(baseInfo, agentEvent).apply { read(reader) }
             )
             WorkEventType.TASK_CARD_CLICK -> eventHandler.onTaskCardClickEvent(appId, agentId,
-                WorkTaskCardClickEvent(base).apply { read(reader) }
+                WorkTaskCardClickEvent(baseInfo, agentEvent).apply { read(reader) }
             )
             WorkEventType.CHANGE_CONTACT ->{
-                val e = WorkChangeContactEvent(base).apply { read(reader) }
+                val e = WorkChangeContactEvent(baseInfo, agentEvent).apply { read(reader) }
                 when(e.changeType){
                     WorkChangeContactEvent.CREATE_PARTY -> eventHandler.onPartyCreateEvent(appId, agentId,
-                        WorkPartyCreateEvent(base).apply { read(reader) }
+                        WorkPartyCreateEvent(baseInfo, agentEvent).apply { read(reader) }
                     )
                     WorkChangeContactEvent.UPDATE_PARTY -> eventHandler.onPartyUpdateEvent(appId, agentId,
-                        WorkPartyUpdateEvent(base).apply { read(reader) }
+                        WorkPartyUpdateEvent(baseInfo, agentEvent).apply { read(reader) }
                     )
                     WorkChangeContactEvent.DELETE_PARTY -> eventHandler.onPartyDelEvent(appId, agentId,
-                        WorkPartyDelEvent(base).apply { read(reader) }
+                        WorkPartyDelEvent(baseInfo, agentEvent).apply { read(reader) }
                     )
                     WorkChangeContactEvent.UPDATE_USER -> eventHandler.onUserUpdateEvent(appId, agentId,
-                        WorkUserUpdateEvent(base).apply { read(reader) }
+                        WorkUserUpdateEvent(baseInfo, agentEvent).apply { read(reader) }
                     )
                     WorkChangeContactEvent.CREATE_USER -> eventHandler.onUserCreateEvent(appId, agentId,
-                        WorkUserCreateEvent(base).apply { read(reader) }
+                        WorkUserCreateEvent(baseInfo, agentEvent).apply { read(reader) }
                     )
                     WorkChangeContactEvent.DELETE_USER -> eventHandler.onUserDelEvent(appId, agentId,
-                        WorkUserDelEvent(base).apply { read(reader) }
+                        WorkUserDelEvent(baseInfo, agentEvent).apply { read(reader) }
                     )
                     WorkChangeContactEvent.UPDATE_TAG -> eventHandler.onTagUpdateEvent(appId, agentId,
-                        WorkTagUpdateEvent(base).apply { read(reader) }
+                        WorkTagUpdateEvent(baseInfo, agentEvent).apply { read(reader) }
                     )
                     else -> {
                         log.warn("not support changeType: ${e.changeType}")
@@ -128,14 +128,14 @@ open class WorkMsgHub(
                 }
             }
             WorkEventType.EXTERNAL_CONTACT_CHANGE ->{
-                val e = ExternalContactChangeEvent(base).apply { read(reader) }
+                val e = ExternalContactChangeEvent(baseInfo, agentEvent).apply { read(reader) }
                 when(e.changeType){
-                    WorkEventType.EXTERNAL_CONTACT_ADD -> eventHandler.onExternalContactAddEvent(appId, agentId, ExternalContactAddEvent(base).apply { read(reader) })
-                    WorkEventType.EXTERNAL_CONTACT_ADD_HALF -> eventHandler.onExternalContactHalfAddEvent(appId, agentId, ExternalContactAddEvent(base).apply { read(reader) })
-                    WorkEventType.EXTERNAL_CONTACT_EDIT -> eventHandler.onExternalContactUpdateEvent(appId, agentId, ExternalContactUpdateEvent(base))
-                    WorkEventType.EXTERNAL_CONTACT_DEL -> eventHandler.onExternalContactDelEvent(appId, agentId, ExternalContactDelEvent(base).apply { read(reader) })
-                    WorkEventType.EXTERNAL_CONTACT_DEL_FOLLOW_USER -> eventHandler.onExternalContactDelFollowEvent(appId, agentId, ExternalContactUpdateEvent(base))
-                    WorkEventType.EXTERNAL_CONTACT_TRANSFER_FAIL -> eventHandler.onExternalContactTransferFailEvent(appId, agentId, ExternalContactTransferFailEvent(base).apply { read(reader) })
+                    WorkEventType.EXTERNAL_CONTACT_ADD -> eventHandler.onExternalContactAddEvent(appId, agentId, ExternalContactAddEvent(baseInfo, agentEvent).apply { read(reader) })
+                    WorkEventType.EXTERNAL_CONTACT_ADD_HALF -> eventHandler.onExternalContactHalfAddEvent(appId, agentId, ExternalContactAddEvent(baseInfo, agentEvent).apply { read(reader) })
+                    WorkEventType.EXTERNAL_CONTACT_EDIT -> eventHandler.onExternalContactUpdateEvent(appId, agentId, ExternalContactUpdateEvent(baseInfo, agentEvent))
+                    WorkEventType.EXTERNAL_CONTACT_DEL -> eventHandler.onExternalContactDelEvent(appId, agentId, ExternalContactDelEvent(baseInfo, agentEvent).apply { read(reader) })
+                    WorkEventType.EXTERNAL_CONTACT_DEL_FOLLOW_USER -> eventHandler.onExternalContactDelFollowEvent(appId, agentId, ExternalContactUpdateEvent(baseInfo, agentEvent))
+                    WorkEventType.EXTERNAL_CONTACT_TRANSFER_FAIL -> eventHandler.onExternalContactTransferFailEvent(appId, agentId, ExternalContactTransferFailEvent(baseInfo, agentEvent).apply { read(reader) })
                     else -> {
                         log.warn("not support EXTERNAL_CHAT_CHANGE changeType: ${e.changeType}")
                         eventHandler.onDefault(appId, agentId, e)
@@ -143,10 +143,10 @@ open class WorkMsgHub(
                 }
             }
             WorkEventType.EXTERNAL_CHAT_CHANGE ->{
-                val e = ExternalChatChangeEvent(base).apply { read(reader) }
+                val e = ExternalChatChangeEvent(baseInfo, agentEvent).apply { read(reader) }
                 when(e.changeType){
                     WorkEventType.EXTERNAL_CHAT_ADD -> eventHandler.onExternalGroupChatCreateEvent(appId, agentId, e)
-                    WorkEventType.EXTERNAL_CHAT_EDIT -> eventHandler.onExternalGroupChatUpdateEvent(appId, agentId, ExternalChatUpdateEvent(base).apply { read(reader) })
+                    WorkEventType.EXTERNAL_CHAT_EDIT -> eventHandler.onExternalGroupChatUpdateEvent(appId, agentId, ExternalChatUpdateEvent(baseInfo, agentEvent).apply { read(reader) })
                     WorkEventType.EXTERNAL_CHAT_DEL -> eventHandler.onExternalGroupChatDelEvent(appId, agentId, e)
                     else -> {
                         log.warn("not support EXTERNAL_CHAT_CHANGE changeType: ${e.changeType}")
@@ -154,9 +154,13 @@ open class WorkMsgHub(
                     }
                 }
             }
+            null -> {
+                log.warn("not read event value? appId=$appId, agentEvent.agentID=${agentEvent.agentId}")
+                null
+            }
             else -> {
                 log.warn("not support event: ${agentEvent.event}")
-                eventHandler.onDispatch(appId, agentId,reader, base)?: eventHandler.onDefault(appId, agentId, agentEvent)
+                eventHandler.onDispatch(appId, agentId,reader, baseInfo)?: eventHandler.onDefault(appId, agentId, agentEvent)
             }
         }
     }
