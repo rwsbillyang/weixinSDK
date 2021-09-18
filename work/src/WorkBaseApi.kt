@@ -21,6 +21,9 @@ package com.github.rwsbillyang.wxSDK.work
 
 import com.github.rwsbillyang.wxSDK.ResponseCallbackIps
 import com.github.rwsbillyang.wxSDK.WxApi
+import com.github.rwsbillyang.wxSDK.accessToken.ITimelyRefreshValue
+import com.github.rwsbillyang.wxSDK.accessToken.TimelyRefreshAccessToken
+import com.github.rwsbillyang.wxSDK.accessToken.TimelyRefreshValue
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
 
@@ -28,6 +31,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.slf4j.LoggerFactory
 import java.lang.IllegalArgumentException
+import javax.lang.model.element.NestingKind
 
 /**
  * 不同的api可能属于不同的agent，需要维护着自己的secret和accessToken
@@ -64,6 +68,25 @@ abstract class WorkBaseApi(val corpId: String?, val agentId: Int?, val suiteId: 
     //若被子类重载指定了值，则试图使用该key，获取企业微信基础应用的accessToken
     open var sysAccessTokenKey: String? = null
 
+    /**
+     * ChatMsg中可能需要, 优先获取高权限key
+     * */
+    val secret: String?
+    get() = if(Work.isIsv){
+        if(Work.isMulti){
+            IsvWorkMulti.ApiContextMap[suiteId]?.secret
+        }else{
+            IsvWorkSingle.ctx.secret
+        }
+    }else{
+        if(Work.isMulti){
+            WorkMulti.ApiContextMap[corpId]?.sysSecretMap?.get(sysAccessTokenKey)
+        }else{
+            WorkSingle.sysSecretMap[sysAccessTokenKey]
+        }
+    }
+
+
 
     /**
      * 检查构造api的参数是否正常
@@ -96,34 +119,33 @@ abstract class WorkBaseApi(val corpId: String?, val agentId: Int?, val suiteId: 
         return errMsg
     }
 
-    override fun accessToken() =
-        if(Work.isIsv){
-            if(Work.isMulti){
-                IsvWorkMulti.ApiContextMap[suiteId]?.accessTokenMap?.get(corpId)?.get()
-            }else{
-                IsvWorkSingle.ctx.accessTokenMap[corpId]?.get()
-            }
+    override fun accessToken() = (if(Work.isIsv){
+        if(Work.isMulti){
+            IsvWorkMulti.ApiContextMap[suiteId]?.accessTokenMap?.get(corpId)
         }else{
-            if(Work.isMulti){
-                val corpCtx = WorkMulti.ApiContextMap[corpId]
-                if(corpCtx == null){
-                    println("no corpCtx in multi mode?: corpId=$corpId")
-                    null
-                }else{
-                    //存在的话使用系统级别的secret及accessToken
-                    sysAccessTokenKey?.let { corpCtx.sysAccessTokenMap[it] }?.get()?:
-                    if(agentId != null) {
-                        WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.accessToken?.get()
-                    }else {
-                        println("no agentId in multi mode? corpId=$corpId")
-                        null
-                    }
-                }
+            IsvWorkSingle.ctx.accessTokenMap[corpId]
+        }
+    }else{
+        if(Work.isMulti){
+            val corpCtx = WorkMulti.ApiContextMap[corpId]
+            if(corpCtx == null){
+                println("no corpCtx in multi mode?: corpId=$corpId")
+                null
             }else{
                 //存在的话使用系统级别的secret及accessToken
-                sysAccessTokenKey?.let { WorkSingle.sysAccessTokenMap[it] }?.get()?:WorkSingle.agentContext.accessToken.get()
+                sysAccessTokenKey?.let { corpCtx.sysAccessTokenMap[it] }?:
+                if(agentId != null) {
+                    WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.accessToken
+                }else {
+                    println("no agentId in multi mode? corpId=$corpId")
+                    null
+                }
             }
+        }else{
+            //存在的话使用系统级别的secret及accessToken
+            sysAccessTokenKey?.let { WorkSingle.sysAccessTokenMap[it] }?:WorkSingle.agentContext.accessToken
         }
+    })?.get()
 
 
 

@@ -19,8 +19,11 @@
 package com.github.rwsbillyang.wxSDK.work.chatMsg
 
 import com.github.rwsbillyang.wxSDK.IBase
+import com.github.rwsbillyang.wxSDK.accessToken.ITimelyRefreshValue
 import com.github.rwsbillyang.wxSDK.security.RsaCryptoUtil
 import com.github.rwsbillyang.wxSDK.work.*
+import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
+import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
 import com.tencent.wework.Finance
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -35,6 +38,37 @@ class ChatMsgApi (corpId: String?, agentId: Int?, suiteId: String?)
 {
     companion object{
         const val CHAT_MSG_MAX_LIMIT = 1000
+
+        fun timelyRefreshAccessToken(key: String?, corpId: String?, agentId: Int?, suiteId: String?): ITimelyRefreshValue?
+        {
+            return if(Work.isIsv){
+                if(Work.isMulti){
+                    IsvWorkMulti.ApiContextMap[suiteId]?.accessTokenMap?.get(corpId)
+                }else{
+                    IsvWorkSingle.ctx.accessTokenMap[corpId]
+                }
+            }else{
+                if(Work.isMulti){
+                    val corpCtx = WorkMulti.ApiContextMap[corpId]
+                    if(corpCtx == null){
+                        println("no corpCtx in multi mode?: corpId=$corpId")
+                        null
+                    }else{
+                        //存在的话使用系统级别的secret及accessToken
+                        key?.let { corpCtx.sysAccessTokenMap[it] }?:
+                        if(agentId != null) {
+                            WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.accessToken
+                        }else {
+                            println("no agentId in multi mode? corpId=$corpId")
+                            null
+                        }
+                    }
+                }else{
+                    //存在的话使用系统级别的secret及accessToken
+                    key?.let { WorkSingle.sysAccessTokenMap[it] }?:WorkSingle.agentContext.accessToken
+                }
+            }
+        }
     }
 
 

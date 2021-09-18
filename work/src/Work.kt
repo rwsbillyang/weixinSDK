@@ -112,6 +112,7 @@ object WorkSingle{
     //key为SysAccessToken中的KeyXxxx
 
     internal val sysAccessTokenMap = hashMapOf<String, TimelyRefreshAccessToken>()
+    internal val sysSecretMap = hashMapOf<String, String>()
 
     /**
      * 配置高权限secret
@@ -125,11 +126,13 @@ object WorkSingle{
      * @param secret 高权限api的secret
      * */
     fun config(key: String, secret: String){
+        sysSecretMap[key] = secret
         sysAccessTokenMap[key] = TimelyRefreshAccessToken(corpId,
             AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = key)
     }
     fun reset(key: String){
         sysAccessTokenMap.remove(key)
+        sysSecretMap.remove(key)
     }
 
     fun config(corpId: String,
@@ -214,13 +217,18 @@ object WorkMulti{
             ApiContextMap[corpId] = corpApiCtx
         }
 
+        corpApiCtx.sysSecretMap[key] = secret
         corpApiCtx.sysAccessTokenMap[key] = TimelyRefreshAccessToken(
             WorkSingle.corpId,
             AccessTokenRefresher(accessTokenUrl(WorkSingle.corpId, secret)), extra = key)
     }
 
     fun resetAccessToken(corpId: String, key: String){
-        ApiContextMap[corpId]?.sysAccessTokenMap?.remove(key)
+        ApiContextMap[corpId]?.run{
+            sysAccessTokenMap.remove(key)
+            sysSecretMap.remove(key)
+        }
+
     }
 }
 
@@ -244,7 +252,8 @@ class CorpApiContext(
         val agentMap: HashMap<Int, AgentContext> = hashMapOf(),
 
         //key为SysAccessToken中的KeyXxxx
-        val sysAccessTokenMap: HashMap<String, TimelyRefreshAccessToken> = hashMapOf()
+        val sysAccessTokenMap: HashMap<String, TimelyRefreshAccessToken> = hashMapOf(),
+        val sysSecretMap: HashMap<String, String> = hashMapOf()
 )
 
 
