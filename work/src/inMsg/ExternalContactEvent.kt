@@ -29,6 +29,7 @@ import javax.xml.stream.XMLEventReader
  * 外部联系人变更事件，适合内建应用，不适合第三方
  * @param baseInfo 将已读取的BaseInfo数据传递过来
  * @param agentEvent 将已读取的数据AgentEvent传递过来
+ *
  * */
 open class ExternalContactChangeEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): AgentEvent(baseInfo)
 {
@@ -55,7 +56,7 @@ open class ExternalContactChangeEvent(baseInfo: BaseInfo, agentEvent: AgentEvent
     }
 }
 
-
+//<xml><ToUserName><![CDATA[wwb...f1c]]></ToUserName><FromUserName><![CDATA[sys]]></FromUserName><CreateTime>1631778573</CreateTime><MsgType><![CDATA[event]]></MsgType><Event><![CDATA[change_external_contact]]></Event><ChangeType><![CDATA[add_external_contact]]></ChangeType><UserID><![CDATA[Yg]]></UserID><ExternalUserID><![CDATA[wmNHB1CgAAelLahs7gi-AWi5z7qtHSsQ]]></ExternalUserID><WelcomeCode><![CDATA[S0Aspe-wGaOFXK-gojQfXS7WgkSK0S_ymE_WIcM9aqk]]></WelcomeCode></xml>
 open class ExternalContactAddEvent(baseInfo: BaseInfo, agentEvent: AgentEvent) : ExternalContactChangeEvent(baseInfo, agentEvent) {
     init{
         changeType = WorkEventType.EXTERNAL_CONTACT_ADD
