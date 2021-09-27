@@ -240,29 +240,33 @@ fun Routing.wxWorkOAuthApi(
         val agentId = call.request.queryParameters["agentId"]?.toInt()
 
         val redirect: String
-        val api = if (Work.isIsv) {
-            if (Work.isMulti) {
-                redirect = "$host${IsvWork.oauthNotifyPath}/$suiteId"
-                OAuthApi(corpId?:"", agentId, suiteId)
+        try{
+            val api = if (Work.isIsv) {
+                if (Work.isMulti) {
+                    redirect = "$host${IsvWork.oauthNotifyPath}/$suiteId"
+                    OAuthApi(corpId?:"", agentId, suiteId)
+                } else {
+                    redirect = "$host${IsvWork.oauthNotifyPath}"
+                    OAuthApi(corpId, agentId, suiteId)
+                }
             } else {
-                redirect = "$host${IsvWork.oauthNotifyPath}"
-                OAuthApi(corpId, agentId, suiteId)
+                if (Work.isMulti) {
+                    redirect = "$host${Work.oauthNotifyPath}/$corpId/$agentId"
+                    OAuthApi(corpId, agentId, suiteId)
+                } else {
+                    redirect = "$host${Work.oauthNotifyPath}"
+                    OAuthApi(corpId, agentId, suiteId)
+                }
             }
-        } else {
-            if (Work.isMulti) {
-                redirect = "$host${Work.oauthNotifyPath}/$corpId/$agentId"
-                OAuthApi(corpId, agentId, suiteId)
-            } else {
-                redirect = "$host${Work.oauthNotifyPath}"
-                OAuthApi(corpId, agentId, suiteId)
-            }
+
+
+            val oAuthInfo = api.prepareOAuthInfo(redirect, scope)
+            //log.info("oAuthInfo=${oAuthInfo.toString()}")
+            stateCache.put(oAuthInfo.state, scope.name)
+            call.respond(oAuthInfo)
+        }catch (e: Exception){
+            call.respond(HttpStatusCode.BadRequest, "invalid parameter: "+ e.message)
         }
-
-
-        val oAuthInfo = api.prepareOAuthInfo(redirect, scope)
-        //log.info("oAuthInfo=${oAuthInfo.toString()}")
-        stateCache.put(oAuthInfo.state, scope.name)
-        call.respond(oAuthInfo)
     }
 
     /**
@@ -288,7 +292,7 @@ fun Routing.wxWorkOAuthApi(
 
         if (code.isNullOrBlank() || state.isNullOrBlank()) {
             log.warn("code or state is null, code=$code, state=$state")
-            val box = DataBox<OAuthResult>("KO", "nullCodeOrState")
+            //val box = DataBox<OAuthResult>("KO", "nullCodeOrState")
             url = "$url?code=KO&msg=nullCodeOrState"
             call.respondRedirect(url, permanent = false)
         } else {
@@ -332,6 +336,7 @@ fun Routing.wxWorkOAuthApi(
                 url = "$url?code=KO&msg=${e.message}"
             }
 
+            log.info("respondRedirect: $url")
             call.respondRedirect(url, permanent = false)
         }
     }

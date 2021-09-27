@@ -54,10 +54,13 @@ open class Refresher(
         return runBlocking {
             val text: String = getResponse().readText()
 
-            KtorHttpClient.apiJson
+           val str = KtorHttpClient.apiJson
                 .parseToJsonElement(text)
                 .jsonObject[key]?.jsonPrimitive?.content
-                ?: throw WxException("fail refresh key=suite_access_token, not a jsonObject: $text")
+            if(str == null){
+                log.warn("");
+                throw WxException("fail refresh key=$key, not a jsonObject: $text")
+            }else str
         }
     }
     open fun url() = url?: urlBlock?.invoke()?: throw Throwable("not provide url")
