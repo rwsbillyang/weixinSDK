@@ -58,7 +58,7 @@ open class Refresher(
                 .parseToJsonElement(text)
                 .jsonObject[key]?.jsonPrimitive?.content
             if(str == null){
-                log.warn("");
+                log.warn("fail refresh key=$key, not a jsonObject: $text");
                 throw WxException("fail refresh key=$key, not a jsonObject: $text")
             }else str
         }

@@ -63,7 +63,7 @@ open class TimelyRefreshValue @JvmOverloads constructor(
             )
         } catch (e: Exception) {
             refreshingFlag.set(false)
-            log.error("Exception: fail to refresh: ${e.message}")
+            log.error("Exception: fail to refresh: ${e.localizedMessage}")
         }
     }
     /**

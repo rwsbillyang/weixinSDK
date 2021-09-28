@@ -237,7 +237,7 @@ fun Routing.wxWorkOAuthApi(
         val host = call.request.queryParameters["host"] ?: (call.request.origin.scheme +"://"+ call.request.host())
         val suiteId = call.request.queryParameters["suiteId"]
         val corpId = call.request.queryParameters["corpId"]
-        val agentId = call.request.queryParameters["agentId"]?.toInt()
+        val agentId = call.request.queryParameters["agentId"]?.trim()?.toInt()
 
         val redirect: String
         try{
@@ -359,7 +359,7 @@ fun Routing.workJsSdkSignature() {
     get(Work.jsSdkSignaturePath) { //默认路径： /api/wx/work/jssdk/signature?corpId=XXX&type=agent_config
         val suiteId = call.request.queryParameters["suiteId"]//IsvWorkMulti时需非空
         val corpId = call.request.queryParameters["corpId"] //均不能空
-        val agentId = call.request.queryParameters["agentId"]?.toInt()//内部多应用时提供
+        val agentId = call.request.queryParameters["agentId"]?.trim()?.toInt()//内部多应用时提供
         val isAgent = call.request.queryParameters["type"] == "agent_config" //agent_config
         val url = call.request.headers["Referer"] //非空
 
@@ -411,7 +411,7 @@ fun Routing.workJsSdkSignature() {
                                 WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.corpJsTicket?.get()
 
                             if (jsTicket == null)
-                                call.respond(HttpStatusCode.BadRequest, "WorkMulti: jsTicket is null")
+                                call.respond(HttpStatusCode.BadRequest, "WorkMulti: jsTicket is null, isAgent=$isAgent")
                             else
                                 call.respond(DataBox("OK", null, JsAPI.getSignature(corpId, jsTicket, url, agentId)))
                         }
@@ -422,7 +422,7 @@ fun Routing.workJsSdkSignature() {
                             WorkSingle.agentContext.corpJsTicket?.get()
 
                         if (jsTicket == null)
-                            call.respond(HttpStatusCode.BadRequest, "WorkSingle: jsTicket is null")
+                            call.respond(HttpStatusCode.BadRequest, "WorkSingle: jsTicket is null, isAgent=$isAgent")
                         else
                             call.respond(
                                 DataBox(

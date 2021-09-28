@@ -306,6 +306,12 @@ class ExternalContactsApi(corpId: String?, agentId: Int?, suiteId: String?)
      * https://work.weixin.qq.com/api/doc/90000/90135/92133
      * */
     fun getStatGroupChat(body: Map<String, Any?>) = doPost3("groupchat/statistic", body)
+
+    /**
+     * 暂不支持企业微信外部联系人（ExternalUserid为wo开头）的userid转openid。
+     * */
+    fun convertToOpenId(userId: String): ResponseToOpenId = doPost("convert_to_openid", mapOf("external_userid" to userId))
+
 }
 
 

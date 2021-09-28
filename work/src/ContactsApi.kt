@@ -67,7 +67,7 @@ class ContactsApi(corpId: String?, agentId: Int?, suiteId: String?)
             "list",
             mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString()))
 
-    fun convertToOpenId(userId: String) = doPost3("convert_to_openid", mapOf("userid" to userId))
+    fun convertToOpenId(userId: String): ResponseToOpenId = doPost("convert_to_openid", mapOf("userid" to userId))
 
     /**
      * 该接口主要应用于使用企业支付之后的结果查询。
@@ -120,6 +120,17 @@ class ContactsApi(corpId: String?, agentId: Int?, suiteId: String?)
      * */
     fun getSelectedTicket(selectedTicket: String):ResponseSelectedTicket = doGet("list_selected_ticket_user", mapOf("selected_ticket" to selectedTicket))
 }
+
+@Serializable
+class ResponseToOpenId(
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+
+    @SerialName("openid")
+    val openId: String? = null
+): IBase
 
 @Serializable
 class OpenUserId(val open_userid: String)

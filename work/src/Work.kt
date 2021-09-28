@@ -318,7 +318,7 @@ class AgentContext(
                     }, extra = agentId.toString())
             corpJsTicket = TimelyRefreshTicket(corpId,
                 TicketRefresher{
-                    "https://qyapi.weixin.qq.com/cgi-bin/ticket/get?access_token=${accessToken.get()}"
+                    "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${accessToken.get()}"
                 })
         }
 
