@@ -41,9 +41,7 @@ import kotlinx.serialization.json.*
  * 获取通讯录管理secret的方法如下：
 1、进入企业微信管理后台，在“管理工具” — “通讯录同步助手”开启“API接口同步”
  * */
-class ContactsApi(corpId: String?, agentId: Int?, suiteId: String?)
-    : WorkBaseApi(corpId, agentId,suiteId)
-{
+class ContactsApi(corpId: String?, agentId: Int?, suiteId: String?) : WorkBaseApi(corpId, agentId, suiteId) {
 
     override val group = "user"
     override var sysAccessTokenKey: String? = SysAccessTokenKey.Contact
@@ -51,7 +49,7 @@ class ContactsApi(corpId: String?, agentId: Int?, suiteId: String?)
 
     fun create(body: Map<String, Any?>) = doPost3("create", body)
 
-    fun detail(userId: String):ResponseUserDetail = doGet("get", mapOf("userid" to userId))
+    fun detail(userId: String): ResponseUserDetail = doGet("get", mapOf("userid" to userId))
 
     fun update(body: Map<String, Any?>) = doPost3("update", body)
 
@@ -59,13 +57,15 @@ class ContactsApi(corpId: String?, agentId: Int?, suiteId: String?)
 
     fun batchDelete(userIdList: List<String>) = doPost3("batchdelete", userIdList)
 
-    fun simpleList(departmentId: Int, fetchChild: Int) = doGet3(
-            "simplelist",
-            mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString()))
+    fun simpleList(departmentId: Int, fetchChild: Int): ResponseSimpleList = doGet(
+        "simplelist",
+        mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString())
+    )
 
     fun list(departmentId: Int, fetchChild: Int) = doGet3(
-            "list",
-            mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString()))
+        "list",
+        mapOf("department_id" to departmentId.toString(), "fetch_child" to fetchChild.toString())
+    )
 
     fun convertToOpenId(userId: String): ResponseToOpenId = doPost("convert_to_openid", mapOf("userid" to userId))
 
@@ -91,8 +91,9 @@ class ContactsApi(corpId: String?, agentId: Int?, suiteId: String?)
      * 支持企业获取手机号随机串，该随机串可直接在企业微信终端搜索手机号对应的微信用户。
      * */
     fun getMobileHashCode(mobile: String, state: String) = doPost3(
-            "get_mobile_hashcode",
-            mapOf("mobile" to mobile, "state" to state))
+        "get_mobile_hashcode",
+        mapOf("mobile" to mobile, "state" to state)
+    )
 
 
     /**
@@ -100,16 +101,16 @@ class ContactsApi(corpId: String?, agentId: Int?, suiteId: String?)
      * 获取成员授权列表
      * 当企业当前授权模式为成员授权时，可调用该接口获取成员授权列表。
      * */
-    fun getAuthMemberList(cursor: String? = null, limit: Int? = null): ResponseAuthMemberList
-     = doGet("list_member_auth", mapOf("cursor" to cursor, "limit" to limit.toString()))
+    fun getAuthMemberList(cursor: String? = null, limit: Int? = null): ResponseAuthMemberList =
+        doGet("list_member_auth", mapOf("cursor" to cursor, "limit" to limit.toString()))
 
     /**
      * 3rd服务商使用
      * 查询成员用户是否已授权
      * 当企业当前授权模式为成员授权时，可调用该接口查询成员用户是否已授权
      * */
-    fun checkMemberAuth(openUserId: String): ResponseCheckMemberAuth
-            = doGet("check_member_auth", mapOf("open_userid" to openUserId))
+    fun checkMemberAuth(openUserId: String): ResponseCheckMemberAuth =
+        doGet("check_member_auth", mapOf("open_userid" to openUserId))
 
 
     /**
@@ -118,8 +119,30 @@ class ContactsApi(corpId: String?, agentId: Int?, suiteId: String?)
      * 当第三方应用支持成员授权时，可调用该接口获取SelectedTicket对应的用户open_userid（只会返回应用可见范围内的用户open_userid）。
      * @param selectedTicket 选人sdk或者选人jsapi返回的ticket
      * */
-    fun getSelectedTicket(selectedTicket: String):ResponseSelectedTicket = doGet("list_selected_ticket_user", mapOf("selected_ticket" to selectedTicket))
+    fun getSelectedTicket(selectedTicket: String): ResponseSelectedTicket =
+        doGet("list_selected_ticket_user", mapOf("selected_ticket" to selectedTicket))
 }
+
+@Serializable
+class ResponseSimpleList(
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+    @SerialName("userlist")
+    val userList: List<SimpleUserListItem>? = null
+) : IBase
+
+@Serializable
+class SimpleUserListItem(
+    @SerialName("userid")
+    val userId: String,
+    val name: String,
+    val department: List<Int>?,
+    @SerialName("open_userid")
+    val openUserId: String? = null
+)
+
 
 @Serializable
 class ResponseToOpenId(
@@ -130,7 +153,7 @@ class ResponseToOpenId(
 
     @SerialName("openid")
     val openId: String? = null
-): IBase
+) : IBase
 
 @Serializable
 class OpenUserId(val open_userid: String)
@@ -146,7 +169,7 @@ class ResponseAuthMemberList(
     val nextCursor: String? = null,
     @SerialName("member_auth_list")
     val list: List<OpenUserId>? = null
-): IBase
+) : IBase
 
 @Serializable
 class ResponseCheckMemberAuth(
@@ -157,7 +180,7 @@ class ResponseCheckMemberAuth(
 
     @SerialName("is_member_auth")
     val isMemberAuth: Boolean? = null
-): IBase
+) : IBase
 
 
 @Serializable
@@ -170,13 +193,10 @@ class ResponseSelectedTicket(
     val operator_open_userid: String? = null, //选人用户的open_userid
     val open_userid_list: List<String>? = null, //应用可见范围内的用户open_userid
     val total: Int? = null //用户选择的总人数
-): IBase
+) : IBase
 
 
-
-class DepartmentApi(corpId: String?, agentId: Int?, suiteId: String?)
-    : WorkBaseApi(corpId, agentId,suiteId)
-{
+class DepartmentApi(corpId: String?, agentId: Int?, suiteId: String?) : WorkBaseApi(corpId, agentId, suiteId) {
 
     override val group = "department"
 
@@ -214,43 +234,30 @@ class DepartmentApi(corpId: String?, agentId: Int?, suiteId: String?)
 
 }
 
-class TagApi(corpId: String?, agentId: Int?, suiteId: String?)
-    : WorkBaseApi(corpId, agentId,suiteId)
-{
-
+class TagApi(corpId: String?, agentId: Int?, suiteId: String?) : WorkBaseApi(corpId, agentId, suiteId) {
     override val group = "tag"
-
-    companion object {
-        const val CREATE = "create"
-        const val UPDATE = "update"
-        const val DELETE = "delete"
-        const val LIST = "list"
-        const val DETAIL = "get"
-        const val ADD_TAG_USERS = "addtagusers"
-        const val DEL_TAG_USERS = "deltagusers"
-    }
 
     /**
      * 创建
      * https://work.weixin.qq.com/api/doc/90000/90135/90210
      * */
-    fun create(tagname: String, id: Int?) = doPost3(CREATE, mapOf("tagname" to tagname, "tagid" to id))
+    fun create(tagname: String, id: Int?) = doPost3("create", mapOf("tagname" to tagname, "tagid" to id))
 
     /**
      * https://work.weixin.qq.com/api/doc/90000/90135/90211
      * */
-    fun update(tagname: String, id: Int) = doPost3(UPDATE, mapOf("tagname" to tagname, "tagid" to id))
+    fun update(tagname: String, id: Int) = doPost3("update", mapOf("tagname" to tagname, "tagid" to id))
 
     /**
      * https://work.weixin.qq.com/api/doc/90000/90135/90212
      * */
-    fun delete(id: Int) = doGet3(DELETE, mapOf("tagid" to id.toString()))
+    fun delete(id: Int) = doGet3("delete", mapOf("tagid" to id.toString()))
 
     /**
      * 获取标签成员
      * https://work.weixin.qq.com/api/doc/90000/90135/90213
      * */
-    fun detail(id: Int) = doGet3(DETAIL, mapOf("tagid" to id.toString()))
+    fun detail(id: Int):ResponseTagDetail = doGet("get", mapOf("tagid" to id.toString()))
 
     /**
      * 增加标签成员
@@ -258,8 +265,9 @@ class TagApi(corpId: String?, agentId: Int?, suiteId: String?)
      * https://work.weixin.qq.com/api/doc/90000/90135/90214
      * */
     fun addTagUsers(id: Int, userlist: List<String>?, partylist: List<Int>?) = doPost3(
-            ADD_TAG_USERS,
-            mapOf("tagid" to id, "userlist" to userlist, "partylist" to partylist))
+        "addtagusers",
+        mapOf("tagid" to id, "userlist" to userlist, "partylist" to partylist)
+    )
 
 
     /**
@@ -268,21 +276,39 @@ class TagApi(corpId: String?, agentId: Int?, suiteId: String?)
      * https://work.weixin.qq.com/api/doc/90000/90135/90214
      * */
     fun delTagUsers(id: Int, userlist: List<String>?, partylist: List<Int>?) = doPost3(
-            DEL_TAG_USERS,
-            mapOf("tagid" to id, "userlist" to userlist, "partylist" to partylist))
+        "deltagusers",
+        mapOf("tagid" to id, "userlist" to userlist, "partylist" to partylist)
+    )
 
-    fun list() = doGet3(LIST, null)
+    /**
+     * 获取标签列表
+     * */
+    fun list() = doGet3("list", null)
 }
 
-class BatchUserCallback(val url: String?,
-                        val token: String?,
-                        val encodingaeskey: String?)
+@Serializable
+class ResponseTagDetail(
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+    @SerialName("tagname")
+    val tagName: String? = null,
+    @SerialName("userlist")
+    val userList: List<SimpleUserListItem>? = null,
+    @SerialName("partylist")
+    val partyList: List<Int>? = null
+) : IBase
+
+class BatchUserCallback(
+    val url: String?,
+    val token: String?,
+    val encodingaeskey: String?
+)
 
 class BatchUserBody(val mediaId: String, toInvite: Boolean?, callback: BatchUserCallback?)
 
-class UserBatchApi  (corpId: String?, agentId: Int?, suiteId: String?)
-    : WorkBaseApi(corpId, agentId,suiteId)
-{
+class UserBatchApi(corpId: String?, agentId: Int?, suiteId: String?) : WorkBaseApi(corpId, agentId, suiteId) {
 
     override val group = "batch"
 
@@ -304,22 +330,23 @@ class UserBatchApi  (corpId: String?, agentId: Int?, suiteId: String?)
      * 因为邀请频率是异步检查的，所以调用接口返回成功，并不代表接收者一定能收到邀请消息（可能受上述频率限制无法接收）。
      * */
     fun invite(user: List<Int>?, party: List<Int>?, tag: List<Int>?) = doPost3(
-            INVITE,
-            mapOf("user" to user, "party" to party, "tag" to tag))
+        INVITE,
+        mapOf("user" to user, "party" to party, "tag" to tag)
+    )
 
     fun syncUser(mediaId: String, toInvite: Boolean = true, callback: BatchUserCallback? = null) = doPost3(
-            SYNC_USER,
-            BatchUserBody(mediaId, toInvite, callback)
+        SYNC_USER,
+        BatchUserBody(mediaId, toInvite, callback)
     )
 
     fun replaceUser(mediaId: String, toInvite: Boolean = true, callback: BatchUserCallback? = null) = doPost3(
-            REPLACE_USER,
-            BatchUserBody(mediaId, toInvite, callback)
+        REPLACE_USER,
+        BatchUserBody(mediaId, toInvite, callback)
     )
 
     fun replaceParty(mediaId: String, callback: BatchUserCallback? = null) = doPost3(
-            REPLACE_PARTY,
-            BatchUserBody(mediaId, null, callback)
+        REPLACE_PARTY,
+        BatchUserBody(mediaId, null, callback)
     )
 
     fun getResult(jobId: String) = doPost3(GET_RESULT, mapOf("jobid" to jobId))
@@ -329,72 +356,78 @@ class UserBatchApi  (corpId: String?, agentId: Int?, suiteId: String?)
 
 @Serializable
 class ResponseUserDetail(
-        @SerialName("errcode")
-        override val errCode: Int = 0,
-        @SerialName("errmsg")
-        override val errMsg: String? = null,
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
 
-        val userid: String,
-        val name: String? = null,
-        val mobile: String? = null,
-        val avatar: String? = null,
-        val thumb_avatar: String? = null,
-        val telephone: String? = null,    //座机。第三方仅通讯录应用可获取
-        val alias: String? = null,
-        val status: Int? = null,//激活状态: 1=已激活，2=已禁用，4=未激活，5=退出企业。
-        val gender: String, //0表示未定义，1表示男性，2表示女性
-        val email: String? = null,
-        val address: String? = null,
-        val extattr: ExtAttr? = null,
+    val userid: String,
+    val name: String? = null,
+    val mobile: String? = null,
+    val avatar: String? = null,
+    val thumb_avatar: String? = null,
+    val telephone: String? = null,    //座机。第三方仅通讯录应用可获取
+    val alias: String? = null,
+    val status: Int? = null,//激活状态: 1=已激活，2=已禁用，4=未激活，5=退出企业。
+    val gender: String, //0表示未定义，1表示男性，2表示女性
+    val email: String? = null,
+    val address: String? = null,
+    val extattr: ExtAttr? = null,
 
-        val enable:Int? = null, //根据返回结果添加，文档中没有此字段说明
-        val hide_mobile: Int? =null, //根据返回结果添加，文档中没有此字段说明
+    val enable: Int? = null, //根据返回结果添加，文档中没有此字段说明
+    val hide_mobile: Int? = null, //根据返回结果添加，文档中没有此字段说明
 
-        val department: List<Int>? = null,
-        val main_department: Int? = null,
-        /**
-         * TODO:官方文档里没有此字段，但返回结果有此字段
-         * */
-        val isleader: Int? = null,
-        val is_leader_in_dept: List<Int>? = null,
-        val order: List<Int>? = null,
-        val position: String? = null,
+    val department: List<Int>? = null,
+    val main_department: Int? = null,
+    /**
+     * TODO:官方文档里没有此字段，但返回结果有此字段
+     * */
+    val isleader: Int? = null,
+    val is_leader_in_dept: List<Int>? = null,
+    val order: List<Int>? = null,
+    val position: String? = null,
 
-        val qr_code: String? = null,
-        val external_position: String? = null,
-        val external_profile: ExternalProfile? = null,
+    val qr_code: String? = null,
+    val external_position: String? = null,
+    val external_profile: ExternalProfile? = null,
 
-        val open_userid: String? = null
-): IBase
+    val open_userid: String? = null
+) : IBase
 
 @Serializable
 class ExternalProfile(
-        val external_corp_name: String? = null, //内部联系人拥有该属性,外部联系人无此属性
-        val external_attr: List<Attr>? = null,
-        val wechat_channels: WechatChannel? = null
+    val external_corp_name: String? = null, //内部联系人拥有该属性,外部联系人无此属性
+    val external_attr: List<Attr>? = null,
+    val wechat_channels: WechatChannel? = null
 )
 
 @Serializable
 class WechatChannel(
     val nickname: String,//对外展示视频号名称（即微信视频号名称）。第三方仅通讯录应用可获取；对于非第三方创建的成员，第三方通讯录应用也不可获取
     val status: Int//对外展示视频号状态。0表示企业视频号已被确认，可正常使用，1表示企业视频号待确认。第三方仅通讯录应用可获取；对于非第三方创建的成员，第三方通讯录应用也不可获取
-    )
+)
 
 @Serializable
 class Text(val value: String)
+
 @Serializable
 class Web(val url: String, val title: String)
+
 @Serializable
 class MiniProgram(val appid: String, val pagepath: String, val title: String)
+
 @Serializable(with = AttrSerializer::class)
 sealed class Attr {
     abstract val type: Int
     abstract val name: String
 }
+
 @Serializable
 class TextAttr(override val type: Int, override val name: String, val text: Text) : Attr()
+
 @Serializable
 class WebAttr(override val type: Int, override val name: String, val web: Web) : Attr()
+
 @Serializable
 class MiniProgramAttr(override val type: Int, override val name: String, val miniprogram: MiniProgram) : Attr()
 
