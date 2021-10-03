@@ -361,7 +361,7 @@ fun Routing.workJsSdkSignature() {
         val corpId = call.request.queryParameters["corpId"] //均不能空
         val agentId = call.request.queryParameters["agentId"]?.trim()?.toInt()//内部多应用时提供
         val isAgent = call.request.queryParameters["type"] == "agent_config" //agent_config
-        val url = call.request.headers["Referer"] //非空
+        val url = (call.request.queryParameters["url"]?: call.request.headers["Referer"])?.split('#')?.firstOrNull()
 
         val jsTicket: String?
         if (url == null) {

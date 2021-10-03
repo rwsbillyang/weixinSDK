@@ -295,28 +295,28 @@ fun Routing.oAuthApi(
 
 
 fun Routing.jsSdkSignature(path: String = OfficialAccount.jsSdkSignaturePath) {
-    val log = LoggerFactory.getLogger("jsSdkSignature")
+    //val log = LoggerFactory.getLogger("jsSdkSignature")
     get(path) {
         val appId = call.request.queryParameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
-        val url = call.request.queryParameters["url"]
-        val msg = if (appId.isNullOrBlank()) {
-            //call.respond(HttpStatusCode.BadRequest, "no appId in query parameters and no config oa")
-            "no appId in query parameters and no config oa"
-        } else {
-            val ticket = OfficialAccount.ApiContextMap[appId]?.ticket?.get()
-            if (ticket == null) {
-                "appId=$appId is configured?"
+        val url = (call.request.queryParameters["url"]?: call.request.headers["Referer"])?.split('#')?.firstOrNull()
+        val msg = if(url == null){
+            "request Referer is null"
+        }else{
+            if (appId.isNullOrBlank()) {
+                //call.respond(HttpStatusCode.BadRequest, "no appId in query parameters and no config oa")
+                "no appId in query parameters and no config oa"
             } else {
-                val referer = call.request.headers["Referer"]
-                if (referer == null) {
-                    "request Referer is null"
+                val ticket = OfficialAccount.ApiContextMap[appId]?.ticket?.get()
+                if (ticket == null) {
+                    "appId=$appId is configured?"
                 } else {
                     //log.info("url=$url, referer=$referer")
-                    call.respond(DataBox("OK", null, JsAPI.getSignature(appId, ticket, (url ?: referer).split('#')[0])))
+                    call.respond(DataBox("OK", null, JsAPI.getSignature(appId, ticket, url)))
                     null
                 }
             }
         }
+
         if (msg != null) {
             call.respond(HttpStatusCode.BadRequest, msg)
         }
