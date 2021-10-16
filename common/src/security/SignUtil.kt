@@ -41,16 +41,16 @@ object SignUtil {
     ): Boolean {
         val arr = arrayOf(token, timestamp, nonce)
         Arrays.sort(arr)
-        val content = StringBuffer()
+        val sb = StringBuffer()
         for (anArr in arr) {
-            content.append(anArr)
+            sb.append(anArr)
         }
 
         val signature3 = getSignature(token,timestamp,nonce)
 
         return if(signature3 == signature) true
         else{
-            log.warn("fail to check weixin signature:token=$token,timestamp=$timestamp,nonce=$nonce, signature=$signature,original content=$content")
+            log.warn("fail to check weixin signature:token=$token,timestamp=$timestamp,nonce=$nonce, signature=$signature,original content=$sb")
             false
         }
     }
