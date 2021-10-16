@@ -21,6 +21,7 @@ package com.github.rwsbillyang.wxSDK.work
 import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.work.outMsg.IOutWxWorkMsg
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 class MsgApi (corpId: String?, agentId: Int?, suiteId: String?)
     : WorkBaseApi(corpId, agentId,suiteId)
@@ -30,6 +31,7 @@ class MsgApi (corpId: String?, agentId: Int?, suiteId: String?)
     fun send(msg: IOutWxWorkMsg):SendMsgResponse = doPost("send", msg)
 }
 
+@Serializable
 class SendMsgResponse(
     @SerialName("errcode")
     override val errCode: Int = 0,

@@ -134,7 +134,7 @@ class WxWorkNewsMsg(
     val enable_duplicate_check: Int = 0,//是否开启重复消息检查，0表示否，1表示是，默认0
     val duplicate_check_interval: Int = 1800, //是否重复消息检查的时间间隔，默认1800s，最大不超过4小时
 ):IOutWxWorkMsg  {
-    constructor(articles: List<ArticleItem>, agentId: Int, touser: String?, title: String? = null, description: String? = null) :
+    constructor(articles: List<ArticleItem>, agentId: Int, touser: String) :
             this(touser, null, null, MsgType.NEWS, agentId, NewsContent(articles))
 }
 
@@ -152,7 +152,7 @@ class WxWorkMpNewsMsg(
     val enable_duplicate_check: Int = 0,//是否开启重复消息检查，0表示否，1表示是，默认0
     val duplicate_check_interval: Int = 1800, //是否重复消息检查的时间间隔，默认1800s，最大不超过4小时
 ):IOutWxWorkMsg  {
-    constructor(mediaId: String, agentId: Int, touser: String?, title: String? = null, description: String? = null) :
+    constructor(mediaId: String, agentId: Int, touser: String) :
             this(touser, null, null, MsgType.NEWS, agentId, MpNewsContent(mediaId))
 }
 

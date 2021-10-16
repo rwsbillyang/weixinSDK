@@ -81,7 +81,7 @@ open class ExtAttr(val name: String?, val type: Int?)
                 val event1 = reader.nextEvent()
                 if (event1.isStartElement && "item" == event1.asStartElement().name.toString())
                 {
-                    var name: String?
+                    //var name: String?
                     //val map = mutableMapOf<String, String?>()
                     while (reader.hasNext()){
                         val e2 = reader.nextEvent()

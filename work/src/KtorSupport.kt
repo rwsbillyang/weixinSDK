@@ -337,6 +337,7 @@ fun Routing.wxWorkOAuthApi(
             }
 
             log.info("respondRedirect: $url")
+            //通知到前端是使用http还是https，取决于微信公众号后台配置，若前端网页与后台配置不一致，将导致storage找不到对应的值，将会出问题
             call.respondRedirect(url, permanent = false)
         }
     }

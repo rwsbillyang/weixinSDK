@@ -14,29 +14,29 @@ open class WorkMsgHub(
     wxBizMsgCrypt: WXBizMsgCrypt
 ): WxMsgHub(wxBizMsgCrypt) {
 
-    override fun dispatchMsg(appId: String, agentId: Int?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
+    override fun dispatchMsg(appId: String, agentId: Int?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?{
         if(msgHandler == null) return null
-        return when(base.msgType){
+        return when(baseInfo.msgType){
             MsgType.TEXT -> msgHandler.onTextMsg(appId, agentId,
-                WorkTextMsg(base).apply { read(reader) }
+                WorkTextMsg(baseInfo).apply { read(reader) }
             )
             MsgType.IMAGE -> msgHandler.onImgMsg(appId, agentId,
-                WorkImgMSg(base).apply { read(reader) }
+                WorkImgMSg(baseInfo).apply { read(reader) }
             )
             MsgType.VOICE -> msgHandler.onVoiceMsg(appId, agentId,
-                WorkVoiceMsg(base).apply { read(reader) }
+                WorkVoiceMsg(baseInfo).apply { read(reader) }
             )
             MsgType.VIDEO -> msgHandler.onVideoMsg(appId, agentId,
-                WorkVideoMsg(base).apply { read(reader) }
+                WorkVideoMsg(baseInfo).apply { read(reader) }
             )
 
             MsgType.LOCATION -> msgHandler.onLocationMsg(appId, agentId,
-                WorkLocationMsg(base).apply { read(reader) }
+                WorkLocationMsg(baseInfo).apply { read(reader) }
             )
             MsgType.LINK -> msgHandler.onLinkMsg(appId, agentId,
-                WorkLinkMsg(base).apply { read(reader) }
+                WorkLinkMsg(baseInfo).apply { read(reader) }
             )
-            else -> msgHandler.onDispatch(appId, agentId,reader, base)?: msgHandler.onDefault(appId, agentId,WorkBaseMsg(base).apply { read(reader) })
+            else -> msgHandler.onDispatch(appId, agentId,reader, baseInfo)?: msgHandler.onDefault(appId, agentId,WorkBaseMsg(baseInfo).apply { read(reader) })
         }
     }
 
@@ -132,9 +132,9 @@ open class WorkMsgHub(
                 when(e.changeType){
                     WorkEventType.EXTERNAL_CONTACT_ADD -> eventHandler.onExternalContactAddEvent(appId, agentId, ExternalContactAddEvent(baseInfo, agentEvent).apply { read(reader) })
                     WorkEventType.EXTERNAL_CONTACT_ADD_HALF -> eventHandler.onExternalContactHalfAddEvent(appId, agentId, ExternalContactAddEvent(baseInfo, agentEvent).apply { read(reader) })
-                    WorkEventType.EXTERNAL_CONTACT_EDIT -> eventHandler.onExternalContactUpdateEvent(appId, agentId, ExternalContactUpdateEvent(baseInfo, agentEvent))
+                    WorkEventType.EXTERNAL_CONTACT_EDIT -> eventHandler.onExternalContactUpdateEvent(appId, agentId, ExternalContactUpdateEvent(baseInfo, agentEvent).apply { read(reader) })
                     WorkEventType.EXTERNAL_CONTACT_DEL -> eventHandler.onExternalContactDelEvent(appId, agentId, ExternalContactDelEvent(baseInfo, agentEvent).apply { read(reader) })
-                    WorkEventType.EXTERNAL_CONTACT_DEL_FOLLOW_USER -> eventHandler.onExternalContactDelFollowEvent(appId, agentId, ExternalContactUpdateEvent(baseInfo, agentEvent))
+                    WorkEventType.EXTERNAL_CONTACT_DEL_FOLLOW_USER -> eventHandler.onExternalContactDelFollowEvent(appId, agentId, ExternalContactUpdateEvent(baseInfo, agentEvent).apply { read(reader) })
                     WorkEventType.EXTERNAL_CONTACT_TRANSFER_FAIL -> eventHandler.onExternalContactTransferFailEvent(appId, agentId, ExternalContactTransferFailEvent(baseInfo, agentEvent).apply { read(reader) })
                     else -> {
                         log.warn("not support EXTERNAL_CHAT_CHANGE changeType: ${e.changeType}")

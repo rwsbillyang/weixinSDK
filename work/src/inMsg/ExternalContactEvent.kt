@@ -86,7 +86,7 @@ open class ExternalContactAddEvent(baseInfo: BaseInfo, agentEvent: AgentEvent) :
         }
     }
 }
-
+//<xml><ToUserName><![CDATA[ww5f4c472a66331eeb]]></ToUserName><FromUserName><![CDATA[sys]]></FromUserName><CreateTime>1634117861</CreateTime><MsgType><![CDATA[event]]></MsgType><Event><![CDATA[change_external_contact]]></Event><ChangeType><![CDATA[del_follow_user]]></ChangeType><UserID><![CDATA[ycg]]></UserID><ExternalUserID><![CDATA[wmFOeKDQAAuIIoxInKmpVmhxjrN3tHqA]]></ExternalUserID><State><![CDATA[YVbXo-8Rd3kMyAeF]]></State></xml>
 class ExternalContactUpdateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent) : ExternalContactChangeEvent(baseInfo, agentEvent)
 {
     override fun read(reader: XMLEventReader) {
