@@ -19,6 +19,7 @@
 package com.github.rwsbillyang.wxSDK
 
 
+
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.features.*
@@ -27,12 +28,11 @@ import io.ktor.client.features.json.serializer.*
 import io.ktor.client.features.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.utils.io.streams.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileInputStream
@@ -229,6 +229,27 @@ abstract class Api : KtorHttpClient() {
                     }
                 })
             }
+        }
+    }
+
+
+    /**
+     * 根据url下载文件，保存到filepath中
+     *
+     * @param url
+     * @param filepath
+     * @return
+     */
+    fun download(url: String, filepath: String) = runBlocking {
+        val response: HttpResponse = client.get(url)
+        if (response.status.isSuccess()) {
+            val content = ByteArrayContent(response.readBytes())
+            val file = File(filepath)
+            file.writeBytes(content.bytes())
+            true
+        }else{
+            println("fail to download from $url, status=${response.status.value}")
+            false
         }
     }
 

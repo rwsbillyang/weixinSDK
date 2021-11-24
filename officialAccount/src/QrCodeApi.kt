@@ -143,8 +143,8 @@ class ResponseCreate(
     override val errCode: Int = 0,
     @SerialName("errmsg")
     override val errMsg: String? = null,
-    val ticket: String,
+    val ticket: String? = null,
     @SerialName("expire_seconds")
-    val expire: Long,
-    val url: String
+    val expire: Long? = null,
+    val url: String? = null
 ) : IBase

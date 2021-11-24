@@ -216,9 +216,9 @@ fun Routing.oAuthApi(
             "&code=KO&msg=null_appId_or_code_or_state"
         } else {
             val owner = stateCache.getIfPresent(state)
-            if (owner == null) {
-                log.warn("state=$state for owner is not present in cache, ip=${call.request.origin.host},ua=${call.request.userAgent()}")
-            }
+//            if (owner == null) {
+//                log.warn("state=$state for owner is not present in cache, ip=${call.request.origin.host},ua=${call.request.userAgent()}")
+//            }
             val oauthAi = OAuthApi(appId)
             val res = oauthAi.getAccessToken(code)
             if (res.isOK()) {
