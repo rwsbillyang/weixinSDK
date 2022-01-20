@@ -56,7 +56,7 @@ fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
          * */
         get("/{appId}") {
             val appId = call.parameters["appId"]
-            var msg = ""
+            var msg: String
             if (appId.isNullOrBlank()) {
                 msg = "no appId, wrong uri"
                 log.warn(msg)

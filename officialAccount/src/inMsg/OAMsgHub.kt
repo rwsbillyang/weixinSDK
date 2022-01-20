@@ -12,11 +12,11 @@ class OAMsgHub(
          val eventHandler: IOAEventHandler?,
         wxBizMsgCrypt: WXBizMsgCrypt?
 ):WxMsgHub(wxBizMsgCrypt) {
-    override fun dispatchMsg(appId:String, agentId:Int?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
+    override fun dispatchMsg(appId:String, agentId:Int?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?{
         if(msgHandler == null) return null
-        return when(base.msgType){
+        return when(baseInfo.msgType){
             MsgType.TEXT -> {
-                val msg = OACustomerClickMenuMsg(base).apply { read(reader) }
+                val msg = OACustomerClickMenuMsg(baseInfo).apply { read(reader) }
                 if(msg.menuId.isNullOrBlank())
                     msgHandler.onOATextMsg(appId, msg)
                 else{
@@ -24,30 +24,30 @@ class OAMsgHub(
                 }
             }
             MsgType.IMAGE -> msgHandler.onOAImgMsg(appId,
-                OAImgMSg(base).apply { read(reader) }
+                OAImgMSg(baseInfo).apply { read(reader) }
             )
             MsgType.VOICE -> msgHandler.onOAVoiceMsg(appId,
-                OAVoiceMsg(base).apply { read(reader) }
+                OAVoiceMsg(baseInfo).apply { read(reader) }
             )
             MsgType.VIDEO -> msgHandler.onOAVideoMsg(appId,
-                OAVideoMsg(base).apply { read(reader) }
+                OAVideoMsg(baseInfo).apply { read(reader) }
             )
             MsgType.SHORT_VIDEO -> msgHandler.onOAShortVideoMsg(appId,
-                OAShortVideoMsg(base).apply { read(reader) }
+                OAShortVideoMsg(baseInfo).apply { read(reader) }
             )
             MsgType.LOCATION -> msgHandler.onOALocationMsg(appId,
-                OALocationMsg(base).apply { read(reader) }
+                OALocationMsg(baseInfo).apply { read(reader) }
             )
             MsgType.LINK -> msgHandler.onOALinkMsg(appId,
-                OALinkMsg(base).apply { read(reader) }
+                OALinkMsg(baseInfo).apply { read(reader) }
             )
-            else -> msgHandler.onDispatch(appId, agentId, reader, base)?: msgHandler.onDefault(appId,WxBaseMsg(base).apply { read(reader) })
+            else -> msgHandler.onDispatch(appId, agentId, reader, baseInfo)?: msgHandler.onDefault(appId,WxBaseMsg(baseInfo).apply { read(reader) })
         }
     }
 
-    override fun dispatchEvent(appId:String, agentId:Int?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg?{
+    override fun dispatchEvent(appId:String, agentId:Int?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?{
         if(eventHandler == null) return null
-        val baseEvent = WxBaseEvent(base).apply { read(reader) }
+        val baseEvent = WxBaseEvent(baseInfo).apply { read(reader) }
         return when (baseEvent.event) {
             InEventType.SUBSCRIBE -> {
                 val subscribeEvent = OAScanSubscribeEvent(baseEvent).apply { read(reader) }
@@ -100,7 +100,7 @@ class OAMsgHub(
             InEventType.TEMPLATE_SEND_JOB_FINISH -> eventHandler.onOATemplateSendJobFinish(appId,
                 OATemplateSendJobFinish(baseEvent).apply { read(reader) }
             )
-            else -> eventHandler.onDispatch(appId,null, reader, base)?: eventHandler.onDefault(appId,baseEvent)
+            else -> eventHandler.onDispatch(appId,null, reader, baseInfo)?: eventHandler.onDefault(appId,baseEvent)
         }
     }
 }

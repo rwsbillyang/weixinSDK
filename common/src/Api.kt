@@ -237,14 +237,19 @@ abstract class Api : KtorHttpClient() {
      * 根据url下载文件，保存到filepath中
      *
      * @param url
-     * @param filepath
+     * @param filepath such as: ./qrcode/${appId}
+     * @param filename: such as: abc.jpg
      * @return
      */
-    fun download(url: String, filepath: String) = runBlocking {
+    fun download(url: String, filepath: String,filename: String) = runBlocking {
         val response: HttpResponse = client.get(url)
         if (response.status.isSuccess()) {
             val content = ByteArrayContent(response.readBytes())
-            val file = File(filepath)
+            val path = File(filepath)
+            if(!path.exists()){
+                path.mkdirs()
+            }
+            val file = File("$filepath/$filename")
             file.writeBytes(content.bytes())
             true
         }else{

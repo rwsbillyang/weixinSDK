@@ -48,7 +48,7 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
                 wxBizMsgCrypt.decryptWxMsg(appId, msgSignature, timestamp, nonce, encryptText, encryptType)
             }
 
-            log.info("after decrypt: $decryptedXmlText")
+            //log.info("after decrypt: $decryptedXmlText")
 
             //优先使用xml中的agentId
            val reMsg = parseXmlThenDispatch(appId, agentIdInXml?:agentId, decryptedXmlText, map)
