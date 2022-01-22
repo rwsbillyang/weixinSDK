@@ -19,7 +19,7 @@ apply plugin: 'java-library'
 apply plugin: 'maven-publish'
 
 group 'com.github.rwsbillyang.wxSDK'
-version '0.2.0'
+version '0.3.0'
 //mainClassName = "io.ktor.server.netty.EngineMain"
 
 sourceSets {
@@ -57,7 +57,7 @@ dependencies {
     //implementation 'com.github.wechatpay-apiv3:wechatpay-apache-httpclient:0.2.1'
     //implementation "org.apache.httpcomponents:httpmime:4.5.12"
 
-    implementation ("com.github.rwsbillyang:wxSDK:0.2.0")
+    implementation ("com.github.rwsbillyang:wxSDK:0.3.0")
     //implementation project(":common")
 }
 

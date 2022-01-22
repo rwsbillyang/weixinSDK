@@ -39,7 +39,7 @@ object Work {
     //var initial = false
 
     /**
-     * 是否是多agent模式，在配置sdk参数时自动指定
+     * 单个agent应用支持部署到多个企业微信中，由app在配置sdk参数时自动指定
      * */
     var isMulti by Delegates.notNull<Boolean>()
 

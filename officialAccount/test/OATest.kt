@@ -18,10 +18,9 @@
 
 package com.github.rwsbillyang.wxSDK.officialAccount.test
 
-import ch.qos.logback.core.joran.spi.XMLUtil
+
 import com.github.rwsbillyang.wxSDK.security.AesException
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
-import com.github.rwsbillyang.wxSDK.security.XmlUtil
 import org.junit.Assert
 import org.junit.Test
 import org.xml.sax.InputSource

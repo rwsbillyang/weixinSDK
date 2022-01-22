@@ -54,11 +54,11 @@ dependencies {
     // https://mvnrepository.com/artifact/commons-codec/commons-codec
    //implementation group: 'commons-codec', name: 'commons-codec', version: '1.15'
 
-    compileOnly "io.ktor:ktor-server-netty:$ktor_version"
+    //compileOnly "io.ktor:ktor-server-netty:$ktor_version"
 
     compileOnly "com.github.ben-manes.caffeine:caffeine:2.7.0+"
 
-    //testImplementation('junit:junit:4.12')
+    testImplementation('junit:junit:4.12')
     testCompile "io.ktor:ktor-server-tests:$ktor_version"
     testCompile "com.github.ben-manes.caffeine:caffeine:2.7.0+"
 
