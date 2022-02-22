@@ -230,7 +230,7 @@ class DepartmentApi(corpId: String?, agentId: Int?, suiteId: String?) : WorkBase
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/90208
      * */
-    fun list(id: Int?) = doGet3(LIST, mapOf("id" to id.toString()))
+    fun list(id: Int? = null):ResponseDepartment = if(id != null) doGet(LIST, mapOf("id" to id.toString())) else doGet(LIST)
 
 }
 
@@ -464,3 +464,25 @@ class AttrSerializer : KSerializer<Attr> {
         encoder.encodeJsonElement(element)
     }
 }
+
+@Serializable
+class DepartmentItem(
+    val id: Int, //部门Id
+    val name: String? = null, //部门名称
+    @SerialName("name_en")
+    val nameEn: String? = null,
+    @SerialName("department_leader")
+    val leader: List<String>? = null,
+    @SerialName("parentid")
+    val parentId: Int? = null,  //父部门id
+    val order: Int? = null//部门排序
+)
+
+@Serializable
+class ResponseDepartment(
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+    val department: List<DepartmentItem>? = null
+    ) : IBase
