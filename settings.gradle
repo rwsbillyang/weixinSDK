@@ -1,13 +1,10 @@
 rootProject.name = "wxSDK"
 
 include "common", "officialAccount","work","wxPay"
-//project(':common').projectDir = file("$rootDir/common")
 
-include "officialAccount"
-//project(':officialAccount').projectDir = file("$rootDir/officialAccount")
+include "wxUser"
+include "wxOA"
+include "wxWork"
+include "wxMini"
 
-include "work"
-//project(':work').projectDir = file("$rootDir/work")
 
-include "wxPay"
-//project(':wxPay').projectDir = file("$rootDir/wxPay")

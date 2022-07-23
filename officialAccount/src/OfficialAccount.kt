@@ -53,7 +53,7 @@ object OfficialAccount {
      * 打开网页时，默认是否获取用户信息，也支持lambda中获取用户的设置
      * 优先级：前端请求中指明的值 > 用户设置的值 > 默认值
      * */
-    var defaultGetUserInfo = true
+    var defaultGetUserInfo = false
     /**
      * 配置公众号参数
      * */
