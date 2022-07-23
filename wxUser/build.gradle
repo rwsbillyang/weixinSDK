@@ -1,0 +1,29 @@
+
+dependencies {
+    implementation("io.ktor:ktor-auth-jwt:$ktor_version")
+    implementation("io.ktor:ktor-locations:$ktor_version")
+    implementation "io.ktor:ktor-websockets:$ktor_version"
+
+    // Koin for Kotlin
+    implementation ("org.koin:koin-core:$koin_version")
+    // Koin extended & experimental features
+    implementation ("org.koin:koin-core-ext:$koin_version")
+    // Koin for Ktor Kotlin
+    implementation ("org.koin:koin-ktor:$koin_version")
+
+
+    implementation ("com.github.jershell:kbson:$kbson_version")
+    implementation ("org.litote.kmongo:kmongo-coroutine-serialization:$kmongo_version")
+
+    implementation ("com.sun.mail:javax.mail:1.6.2")
+
+
+
+    implementation("com.github.rwsbillyang:ktorKit:1.0.0")
+
+    implementation project(":common")
+    implementation project(":wxPay")
+    //implementation ("com.github.rwsbillyang:wxSDK:0.3.0")
+    // implementation("com.github.rwsbillyang.wxSDK:wxPay:0.3.0")
+
+}
