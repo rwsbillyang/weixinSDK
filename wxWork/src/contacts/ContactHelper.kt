@@ -22,9 +22,9 @@ import com.github.rwsbillyang.ktorKit.apiJson.UmiPagination
 import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
 import com.github.rwsbillyang.wxSDK.work.ContactsApi
 import com.github.rwsbillyang.wxSDK.work.ExternalContactsApi
-import org.bson.types.ObjectId
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
 import org.slf4j.LoggerFactory
 import java.lang.IllegalArgumentException
 

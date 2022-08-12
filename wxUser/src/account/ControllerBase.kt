@@ -30,14 +30,14 @@ import com.github.rwsbillyang.wxUser.account.stats.LoginLog
 import com.github.rwsbillyang.wxUser.account.stats.StatsService
 import com.github.rwsbillyang.wxUser.fakeRpc.EditionLevel
 import com.github.rwsbillyang.wxUser.fakeRpc.FanInfo
-import io.ktor.http.cio.websocket.*
-import kotlinx.coroutines.GlobalScope
+import io.ktor.websocket.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import org.apache.commons.codec.digest.DigestUtils
 import org.bson.types.ObjectId
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.litote.kmongo.setValue
 import org.slf4j.LoggerFactory
 
@@ -56,12 +56,15 @@ abstract class AccountControllerBase(private val accountService: AccountServiceB
     }
 
     //用于添加统计数据，和生成authBean
-    fun insertStats(account: Account, ip: String?, ua: String?, loginType: Char, token: String) = GlobalScope.launch {
-        val now = System.currentTimeMillis()
-        val loginLog = LoginLog(ObjectId(), account._id, now, loginType, ip, md5(ua))
-        statsService.insertLoginLog(loginLog)
-        statsService.upsertLoginToken(account._id, now, token)
+    fun insertStats(account: Account, ip: String?, ua: String?, loginType: Char, token: String) = runBlocking {
+        launch {
+            val now = System.currentTimeMillis()
+            val loginLog = LoginLog(ObjectId(), account._id, now, loginType, ip, md5(ua))
+            statsService.insertLoginLog(loginLog)
+            statsService.upsertLoginToken(account._id, now, token)
+        }
     }
+
 
     suspend fun sentAuthBoxToPcBySocket(sessionId: String?, box: DataBox<AuthBean> ){
         if (sessionId != null) {

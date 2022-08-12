@@ -17,20 +17,26 @@
  */
 package com.github.rwsbillyang.wxOA.test
 
-import com.github.rwsbillyang.wxSDK.officialAccount.CustomerServiceApi
-
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import io.ktor.server.testing.*
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class ApiTest {
     @Test
-    fun testCustomerServiceApi() {
-        withTestApplication({ apiTest(testing = true) }) {
-            val res = CustomerServiceApi(AppIdForTest).getAccountList()
-            println(Json.encodeToString(res))
-            //assert(res.isOK())
+    fun testCustomerServiceApi() = testApplication {
+        application {
+            apiTest(testing = true)
         }
+        val response = client.get("/")
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("OK from wxSDK", response.bodyAsText())
+
+        //val res = CustomerServiceApi(AppIdForTest).getAccountList()
+        //println(Json.encodeToString(res))
+        //assert(res.isOK())
+
     }
 }

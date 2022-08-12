@@ -18,19 +18,20 @@
 
 package com.github.rwsbillyang.wxWork.agent
 
-import com.github.rwsbillyang.ktorKit.DataSource
 import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
+import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.wxSDK.work.ContactsApi
 import com.github.rwsbillyang.wxWork.wxWorkModule
 import kotlinx.coroutines.runBlocking
-import org.koin.core.inject
+import org.koin.core.component.inject
+
 import org.koin.core.qualifier.named
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineCollection
 
 class AgentService(cache: ICache) : CacheService(cache) {
-    private val dbSource: DataSource by inject(qualifier = named(wxWorkModule.dbName!!))
+    private val dbSource: MongoDataSource by inject(qualifier = named(wxWorkModule.dbName!!))
 
     private val agentCol: CoroutineCollection<Agent> by lazy {
         dbSource.mongoDb.getCollection()

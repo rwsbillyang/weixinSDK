@@ -28,10 +28,10 @@ import com.github.rwsbillyang.wxSDK.work.inMsg.*
 import com.github.rwsbillyang.wxWork.agent.AgentService
 import com.github.rwsbillyang.wxWork.contacts.*
 import com.github.rwsbillyang.wxWork.isv.IsvCorpService
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import kotlinx.coroutines.runBlocking
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 import javax.xml.stream.XMLEventReader
 
@@ -108,7 +108,7 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
     //内建应用：成员添加外部联系人， 将客户添加到自己的ContactExtra.ids列表里，同时获取ExternalContactDetail
     //关于重试的消息排重，有msgid的消息推荐使用msgid排重。事件类型消息推荐使用FromUserName + CreateTime排重。
     //客户扫码添加我时，也发生ExternalContactAddEvent事件，而非ExternalContactAddEvent。 <xml><ToUserName><![CDATA[ww5f4c472a66331eeb]]></ToUserName><FromUserName><![CDATA[sys]]></FromUserName><CreateTime>1632820219</CreateTime><MsgType><![CDATA[event]]></MsgType><Event><![CDATA[change_external_contact]]></Event><ChangeType><![CDATA[add_external_contact]]></ChangeType><UserID><![CDATA[ycg]]></UserID><ExternalUserID><![CDATA[wmFOeKDQAAPQofu3BfgwNDZFc1vQXGjg]]></ExternalUserID><State><![CDATA[YTxj4yDKAE_NFbc_]]></State><WelcomeCode><![CDATA[Ar_p4_nvAR-RdjEUVWWOnfChYLO31PAVOdAkeZHxg4o]]></WelcomeCode></xml>
-    override fun onExternalContactAddEvent(appId: String, agentId: Int?, e: ExternalContactAddEvent): ReBaseMSg? {
+    override fun onExternalContactAddEvent(appId: String, agentId: Int?, e: ExternalContactAddEvent): ReBaseMSg? = runBlocking{
         //ToUserName	企业微信CorpID
         val corpId = e.toUserName ?: appId
         if (corpId != appId) {
@@ -118,10 +118,10 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
         val userId = e.userId
         if (externalUserId == null || userId == null) {
             log.warn("onExternalContactAddEvent: externalUserId=${externalUserId}, e.userId=${userId}, do nothing")
-            return null
+            return@runBlocking null
         }
 
-        GlobalScope.launch {
+        launch {
             contactService.upsertContactCustomerId(corpId, userId, externalUserId)
             contactHelper.syncExternalDetail(corpId, e.agentId ?: agentId, null, externalUserId)
             val c = contactService.findContact(userId, corpId)
@@ -136,12 +136,12 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
             )
         }
 
-        return null
+        return@runBlocking null
     }
 
     //内建应用：外部联系人添加了配置了客户联系功能且开启了免验证的成员时（此时成员尚未确认添加对方为好友）
     //将客户添加到自己的ContactExtra.ids列表里，同时获取ExternalContactDetail
-    override fun onExternalContactHalfAddEvent(appId: String, agentId: Int?, e: ExternalContactAddEvent): ReBaseMSg? {
+    override fun onExternalContactHalfAddEvent(appId: String, agentId: Int?, e: ExternalContactAddEvent): ReBaseMSg? = runBlocking {
         //ToUserName	企业微信CorpID
         val corpId = e.toUserName ?: appId
         if (corpId != appId) {
@@ -151,10 +151,10 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
         val userId = e.userId
         if (externalUserId == null || userId == null) {
             log.warn("onExternalContactHalfAddEvent: externalUserId=${externalUserId}, e.userId=${userId}, do nothing")
-            return null
+            return@runBlocking null
         }
 
-        GlobalScope.launch {
+        launch {
             contactService.upsertContactCustomerId(corpId, userId, externalUserId)
             contactHelper.syncExternalDetail(corpId, e.agentId ?: agentId, null, externalUserId)
             val c = contactService.findContact(userId, corpId)
@@ -169,11 +169,11 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
             )
         }
 
-        return null
+        return@runBlocking null
     }
 
     //内建应用：配置了客户联系功能的成员删除外部联系人时,将客户从自己的ContactExtra.ids列表里移除，但ExternalContactDetail里的follow信息不变
-    override fun onExternalContactDelEvent(appId: String, agentId: Int?, e: ExternalContactDelEvent): ReBaseMSg? {
+    override fun onExternalContactDelEvent(appId: String, agentId: Int?, e: ExternalContactDelEvent): ReBaseMSg? = runBlocking{
         //ToUserName	企业微信CorpID
         val corpId = e.toUserName ?: appId
         if (corpId != appId) {
@@ -183,10 +183,10 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
         val userId = e.userId
         if (externalUserId == null || userId == null) {
             log.warn("onExternalContactDelEvent: externalUserId=${externalUserId}, e.userId=${userId}, do nothing")
-            return null
+            return@runBlocking null
         }
 
-        GlobalScope.launch {
+        launch {
             contactService.removeContactCustomerId(corpId, userId, externalUserId)//成员删除客户
             //contactHelper.syncExternalContactDetail(corpId, e.agentId?:agentId, null, externalUserId)
             val c = contactService.findContact(userId, corpId)
@@ -201,7 +201,7 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
             )
         }
 
-        return null
+        return@runBlocking null
     }
 
     //内建应用：配置了客户联系功能的成员被外部联系人删除时
@@ -210,7 +210,7 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
         appId: String,
         agentId: Int?,
         e: ExternalContactUpdateEvent
-    ): ReBaseMSg? {
+    ): ReBaseMSg?  = runBlocking{
         //ToUserName	企业微信CorpID
         val corpId = e.toUserName ?: appId
         if (corpId != appId) {
@@ -220,10 +220,10 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
         val userId = e.userId
         if (externalUserId == null || userId == null) {
             log.warn("onExternalContactDelFollowEvent: externalUserId=${externalUserId}, e.userId=${userId}, do nothing")
-            return null
+            return@runBlocking null
         }
 
-        GlobalScope.launch {
+        launch {
             val c = contactService.findContact(userId, corpId)
             contactService.addRelationChange(
                 e.createTime,
@@ -240,7 +240,7 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
             contactService.removeExternalContactFollow(corpId, externalUserId, userId)
         }
 
-        return null
+        return@runBlocking null
     }
 
 
@@ -249,7 +249,7 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
         appId: String,
         agentId: Int?,
         e: ExternalContactTransferFailEvent
-    ): ReBaseMSg? {
+    ): ReBaseMSg?  = runBlocking{
 
         log.info("onExternalContactTransferFailEvent: appId=$appId, agentId=$agentId, e.failReason=${e.failReason}, userId=${e.userId}, externalId=${e.externalUserId}")
 
@@ -262,10 +262,10 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
         val userId = e.userId
         if (externalUserId == null || userId == null) {
             log.warn("onExternalContactTransferFailEvent: externalUserId=${externalUserId}, e.userId=${userId}, do nothing")
-            return null
+            return@runBlocking null
         }
 
-        GlobalScope.launch {
+        launch {
             val c = contactService.findContact(userId, corpId)
             contactService.addRelationChange(
                 e.createTime,
@@ -279,11 +279,11 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
         }
 
 
-        return null
+        return@runBlocking null
     }
 
     //内建应用：成员修改外部联系人的备注、手机号或标签时
-    override fun onExternalContactUpdateEvent(appId: String, agentId: Int?, e: ExternalContactUpdateEvent): ReBaseMSg? {
+    override fun onExternalContactUpdateEvent(appId: String, agentId: Int?, e: ExternalContactUpdateEvent): ReBaseMSg? = runBlocking{
         //ToUserName	企业微信CorpID
         val corpId = e.toUserName ?: appId
         if (corpId != appId) {
@@ -293,25 +293,25 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
         val userId = e.userId
         if (externalUserId == null || userId == null) {
             log.warn("onExternalContactUpdateEvent: externalUserId=${externalUserId}, e.userId=${userId}, do nothing")
-            return null
+            return@runBlocking null
         }
 
-        GlobalScope.launch {
+        launch {
             contactHelper.syncExternalDetail(corpId, e.agentId ?: agentId, null, externalUserId)
         }
 
-        return null
+        return@runBlocking null
     }
 
 
     //内建应用：
-    override fun onUserCreateEvent(appId: String, agentId: Int?, e: WorkUserCreateEvent): ReBaseMSg? {
+    override fun onUserCreateEvent(appId: String, agentId: Int?, e: WorkUserCreateEvent): ReBaseMSg?  = runBlocking{
         //ToUserName	企业微信CorpID
         val corpId = e.toUserName ?: appId
         if (corpId != appId) {
             log.warn("onUserCreateEvent: appId=$appId, corpId=$corpId, not equal, agentId=$agentId,e.agentId=${e.agentId} ")
         }
-        GlobalScope.launch {
+        launch {
             val attrs: List<Attr>? = e.extAttrs?.mapNotNull { it.toAttr() }
             val contact = Contact(
                 null, corpId, e.userId ?: "", e.name, e.mobile,
@@ -321,17 +321,17 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
             )
             contactService.insertContact(contact)
         }
-        return null
+        return@runBlocking null
     }
 
     //内建应用
-    override fun onUserUpdateEvent(appId: String, agentId: Int?, e: WorkUserUpdateEvent): ReBaseMSg? {
+    override fun onUserUpdateEvent(appId: String, agentId: Int?, e: WorkUserUpdateEvent): ReBaseMSg? = runBlocking{
         //ToUserName	企业微信CorpID
         val corpId = e.toUserName ?: appId
         if (corpId != appId) {
             log.warn("onUserUpdateEvent: appId=$appId, corpId=$corpId, not equal, agentId=$agentId,e.agentId=${e.agentId} ")
         }
-        GlobalScope.launch {
+        launch {
             val attrs: List<Attr>? = e.extAttrs?.mapNotNull { it.toAttr() }
             val newContact = Contact(
                 null, corpId, e.userId ?: "", e.name, e.mobile,
@@ -345,7 +345,7 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
             // if(!e.newUserID.isNullOrBlank()){ }
 
         }
-        return null
+        return@runBlocking null
     }
 
     //内建应用：
@@ -412,26 +412,26 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
     }
 
     //内建应用：
-    override fun onUserDelEvent(appId: String, agentId: Int?, e: WorkUserDelEvent): ReBaseMSg? {
+    override fun onUserDelEvent(appId: String, agentId: Int?, e: WorkUserDelEvent): ReBaseMSg? = runBlocking{
         log.info("onUserDelEvent: appId=$appId, agentId=$agentId, e.userId=${e.userId}")
-        GlobalScope.launch {
+        launch {
             e.userId?.let {
                 contactService.delContact(it, e.toUserName ?: appId)
                 //contactService.delContactExtra(it, e.baseInfo.toUserName ?: appId)
             }
         }
-        return null
+        return@runBlocking null
     }
 
     //内建应用：
-    override fun onPartyCreateEvent(appId: String, agentId: Int?, e: WorkPartyCreateEvent): ReBaseMSg? {
+    override fun onPartyCreateEvent(appId: String, agentId: Int?, e: WorkPartyCreateEvent): ReBaseMSg? = runBlocking{
         val corpId = e.toUserName ?: appId
         val id = e.id
         if (id == null) {
             log.warn("onPartyCreateEvent: no id, corpId=$corpId")
-            return null
+            return@runBlocking null
         }
-        GlobalScope.launch {
+        launch {
             contactService.insertDepartment(
                 Department(
                     null,
@@ -443,35 +443,35 @@ class WxWorkEventHandler : IWorkEventHandler, KoinComponent {
                 )
             )
         }
-        return null
+        return@runBlocking null
     }
 
     //内建应用：
-    override fun onPartyDelEvent(appId: String, agentId: Int?, e: WorkPartyDelEvent): ReBaseMSg? {
+    override fun onPartyDelEvent(appId: String, agentId: Int?, e: WorkPartyDelEvent): ReBaseMSg? = runBlocking {
         val corpId = e.toUserName ?: appId
         val id = e.id
         if (id == null) {
             log.warn("onPartyDelEvent: no id, corpId=$corpId")
-            return null
+            return@runBlocking null
         }
-        GlobalScope.launch {
+        launch {
             contactService.delDepartment(corpId, id.toInt())
         }
-        return null
+        return@runBlocking null
     }
 
     //内建应用：
-    override fun onPartyUpdateEvent(appId: String, agentId: Int?, e: WorkPartyUpdateEvent): ReBaseMSg? {
+    override fun onPartyUpdateEvent(appId: String, agentId: Int?, e: WorkPartyUpdateEvent): ReBaseMSg? = runBlocking {
         val corpId = e.toUserName ?: appId
         val id = e.id
         if (id == null) {
             log.warn("onPartyUpdateEvent: no id, corpId=$corpId")
-            return null
+            return@runBlocking null
         }
-        GlobalScope.launch {
+        launch {
             contactService.upsertDepartment(corpId, id.toInt(), e.name, e.parentId?.toInt())
         }
-        return null
+        return@runBlocking null
     }
 
 

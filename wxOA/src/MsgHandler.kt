@@ -24,7 +24,8 @@ import com.github.rwsbillyang.wxSDK.msg.BaseInfo
 import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.msg.WxBaseMsg
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.*
-import org.koin.core.inject
+import org.koin.core.component.inject
+
 import javax.xml.stream.XMLEventReader
 
 class MsgHandler: IOAMsgHandler, MsgEventCommonHandler()  {

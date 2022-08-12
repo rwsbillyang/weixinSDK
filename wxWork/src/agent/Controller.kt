@@ -24,13 +24,11 @@ import com.github.rwsbillyang.wxSDK.work.ContactsApi
 import com.github.rwsbillyang.wxSDK.work.ExternalContactsApi
 import com.github.rwsbillyang.wxSDK.work.TagApi
 import com.github.rwsbillyang.wxWork.contacts.ContactHelper
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import kotlinx.coroutines.runBlocking
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
-import java.lang.IllegalArgumentException
 
 
 /**
@@ -90,51 +88,52 @@ class AgentController : KoinComponent {
     }
 
     //同步agent中所有可见用户详情及openId
-    fun syncAllowUsersDetail(agent: Agent) = GlobalScope.launch {
+    fun syncAllowUsersDetail(agent: Agent) = runBlocking {
+        launch {
+            //记录下tags标记的部门和成员
+            val departments = mutableSetOf<Int>()
+            val users = mutableSetOf<String>()
 
-        //记录下tags标记的部门和成员
-        val departments = mutableSetOf<Int>()
-        val users = mutableSetOf<String>()
+            val corpId = agent.corpId
+            val agentId = agent.id
+            val tagApi = TagApi(corpId, agentId, null)
 
-        val corpId = agent.corpId
-        val agentId = agent.id
-        val tagApi = TagApi(corpId, agentId, null)
-
-        agent.tagList?.forEach {
-            val res1 = tagApi.detail(it)//获取tag标签的所有部门和成员
-            if (res1.isOK()) {
-                res1.partyList?.let { departments.addAll(it) }
-                res1.userList?.let { users.addAll(it.map { it.userId }) }
+            agent.tagList?.forEach {
+                val res1 = tagApi.detail(it)//获取tag标签的所有部门和成员
+                if (res1.isOK()) {
+                    res1.partyList?.let { departments.addAll(it) }
+                    res1.userList?.let { users.addAll(it.map { it.userId }) }
+                }
             }
-        }
 
-        agent.depList?.let {
-            departments.addAll(it)
-        }
+            agent.depList?.let {
+                departments.addAll(it)
+            }
 
-        val contactsApi = ContactsApi(corpId, agentId, null)
-        val users2 = service.departmentsToUsers(contactsApi, departments)//获取部门的所有成员
-        if (!users2.isNullOrEmpty()) {
-            users += users2
-        }
+            val contactsApi = ContactsApi(corpId, agentId, null)
+            val users2 = service.departmentsToUsers(contactsApi, departments)//获取部门的所有成员
+            if (!users2.isNullOrEmpty()) {
+                users += users2
+            }
 
-        val externalContactsApi = ExternalContactsApi(corpId, agentId, null)
+            val externalContactsApi = ExternalContactsApi(corpId, agentId, null)
 
-        //tags和部门标识的可见成员
-        if (!users.isNullOrEmpty()) {
-            service.addAllowUsers(corpId, users.toList(), agentId)//更新agent可见范围成员
+            //tags和部门标识的可见成员
+            if (users.isNotEmpty()) {
+                service.addAllowUsers(corpId, users.toList(), agentId)//更新agent可见范围成员
+
+                //获取用户详情，及其外部联系人详情
+                users.forEach {
+                    contactHelper.syncContactDetail(contactsApi, it, corpId)
+                    contactHelper.syncExternalsOfUser(externalContactsApi, corpId, it, 0)
+                }
+            }
 
             //获取用户详情，及其外部联系人详情
-            users.forEach {
+            agent.userList?.forEach {
                 contactHelper.syncContactDetail(contactsApi, it, corpId)
                 contactHelper.syncExternalsOfUser(externalContactsApi, corpId, it, 0)
             }
-        }
-
-        //获取用户详情，及其外部联系人详情
-        agent.userList?.forEach {
-            contactHelper.syncContactDetail(contactsApi, it, corpId)
-            contactHelper.syncExternalsOfUser(externalContactsApi, corpId, it, 0)
         }
     }
 

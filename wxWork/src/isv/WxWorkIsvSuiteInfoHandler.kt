@@ -22,14 +22,14 @@ package com.github.rwsbillyang.wxWork.isv
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.isv.*
 import com.github.rwsbillyang.wxWork.agent.AgentController
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import kotlinx.coroutines.runBlocking
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 
 //suiteId来自于接收消息路径中的参数
-class WxWorkIsvSuiteInfoHandler: ISuiteInfoHandler,KoinComponent
+class WxWorkIsvSuiteInfoHandler: ISuiteInfoHandler, KoinComponent
 {
     private val log = LoggerFactory.getLogger("MySuiteInfoHandler")
 
@@ -102,8 +102,10 @@ class WxWorkIsvSuiteInfoHandler: ISuiteInfoHandler,KoinComponent
             //获取永久授权码，同时得到accessToken、授权企业信息
             val permanentCodeInfo = ThirdPartyApi(suiteId2).getPermanentCode(authCode)
             if(permanentCodeInfo.isOK()){
-                GlobalScope.launch {
-                    handlePermanentAuthInfo(suiteId2, permanentCodeInfo)
+                runBlocking {
+                    launch {
+                        handlePermanentAuthInfo(suiteId2, permanentCodeInfo)
+                    }
                 }
             }else{
                 log.warn("onAuthCode: fail to get permanentCode: " + permanentCodeInfo.errMsg)

@@ -19,14 +19,15 @@
 package com.github.rwsbillyang.wxOA.media
 
 import com.github.rwsbillyang.ktorKit.apiJson.UmiPagination
-import com.github.rwsbillyang.ktorKit.DataSource
+
 import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
+import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.wxOA.wxOaAppModule
 import com.github.rwsbillyang.wxSDK.officialAccount.Article
 import kotlinx.coroutines.runBlocking
 import org.bson.conversions.Bson
-import org.koin.core.inject
+import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import org.litote.kmongo.bson
 import org.litote.kmongo.coroutine.CoroutineCollection
@@ -36,7 +37,7 @@ import org.litote.kmongo.exclude
 
 class MediaService  (cache: ICache) : CacheService(cache){
 
-    private val dbSource: DataSource by inject(qualifier = named(wxOaAppModule.dbName!!))
+    private val dbSource: MongoDataSource by inject(qualifier = named(wxOaAppModule.dbName!!))
 
 
     private val newsCol: CoroutineCollection<MaterialNews> by lazy {

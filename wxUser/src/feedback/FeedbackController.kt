@@ -20,10 +20,11 @@ package com.github.rwsbillyang.wxUser.feedback
 
 
 import org.bson.types.ObjectId
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class FeedbackController: KoinComponent{
+
+class FeedbackController: KoinComponent {
     private val service: FeedbackService by inject()
 
     fun saveFeedback(feedback: Feedback) = service.insertFeedback(feedback)

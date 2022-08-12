@@ -28,8 +28,8 @@ import com.github.rwsbillyang.wxUser.fakeRpc.FanInfo
 import com.github.rwsbillyang.wxUser.fakeRpc.IFan
 
 import com.github.rwsbillyang.wxOA.fan.FanService
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 
 class FanRpcOA: IFan, KoinComponent {

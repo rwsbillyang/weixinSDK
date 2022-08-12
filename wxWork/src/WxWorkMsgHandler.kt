@@ -22,7 +22,7 @@ import com.github.rwsbillyang.wxSDK.msg.BaseInfo
 import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.msg.ReTextMsg
 import com.github.rwsbillyang.wxSDK.work.inMsg.*
-import org.koin.core.KoinComponent
+import org.koin.core.component.KoinComponent
 import org.slf4j.LoggerFactory
 import javax.xml.stream.XMLEventReader
 

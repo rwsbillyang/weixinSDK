@@ -24,11 +24,11 @@ import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
 import com.github.rwsbillyang.wxUser.account.Account
 import com.github.rwsbillyang.wxWork.config.ConfigService
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 
-open class MsgNotifierBase : KoinComponent{
+open class MsgNotifierBase : KoinComponent {
     private val log = LoggerFactory.getLogger("MsgNotifierBase")
 
     private val configService: ConfigService by inject()

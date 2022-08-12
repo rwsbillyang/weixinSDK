@@ -18,16 +18,16 @@
 
 package com.github.rwsbillyang.wxOA.test
 
-import com.github.rwsbillyang.wxSDK.security.SignUtil
+
 import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
+import com.github.rwsbillyang.wxSDK.security.SignUtil
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-
-
-
 import org.junit.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
 
 
 class ApplicationTest2 {
@@ -39,32 +39,34 @@ class ApplicationTest2 {
     private val toUser = "zhangsan"
 
     @Test
-    fun testRoot() {
-        withTestApplication({ testableModule(testing = true) }) {
-            handleRequest(HttpMethod.Get, "/").apply {
-                assertEquals(HttpStatusCode.OK, response.status())
-                assertEquals("OK from wxSDK", response.content)
-            }
+    fun testRoot() = testApplication  {
+        application {
+            testableModule(testing = true)
         }
+
+        val response = client.get("/")
+        assertEquals(HttpStatusCode.OK, response.status)
     }
 
     @Test
-    fun testOAUrlGet(){
-        withTestApplication({ apiTest(testing = true) }) {
-
-            val signature = SignUtil.getSignature(OfficialAccount.ApiContextMap[AppIdForTest]?.token!!,timestamp, nonce)
-            val getUrl  = "${OfficialAccount.msgUri}/$AppIdForTest?signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$echoStr"
-
-            handleRequest(HttpMethod.Get,getUrl).apply {
-                assertEquals(HttpStatusCode.OK, response.status())
-                assertEquals(echoStr, response.content)
-            }
+    fun testOAUrlGet() = testApplication {
+        application {
+            apiTest(testing = true)
         }
+        val signature = SignUtil.getSignature(OfficialAccount.ApiContextMap[AppIdForTest]?.token!!,timestamp, nonce)
+        val getUrl  = "${OfficialAccount.msgUri}/$AppIdForTest?signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$echoStr"
+
+        val response= client.get(getUrl)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(echoStr, response.bodyAsText())
     }
 
     @Test
-    fun testOAUrlPost(){
-        withTestApplication({ apiTest(testing = true) }) {
+    fun testOAUrlPost() = testApplication {
+        application {
+            apiTest(testing = true)
+        }
 
             //原始消息文本
             val originalTextMsg = "<xml><ToUserName><![CDATA[$toUser]]></ToUserName><FromUserName><![CDATA[${OfficialAccount.ApiContextMap[AppIdForTest]?.appId}]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[$content]]></Content><MsgId>${msgId}</MsgId></xml>"
@@ -73,12 +75,12 @@ class ApplicationTest2 {
             println("post: msgSignature=$msgSignature, xml=$xml")
 
             val postUrl = "${OfficialAccount.msgUri}/$AppIdForTest?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce&encrypt_type=aes"
-            handleRequest(HttpMethod.Post,postUrl){
+
+            val response= client.get(postUrl){
                 setBody(xml)
-            }.apply {
-                assertEquals(HttpStatusCode.OK, response.status())
             }
-        }
+            assertEquals(HttpStatusCode.OK, response.status)
+
     }
 
 }

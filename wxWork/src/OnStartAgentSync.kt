@@ -22,7 +22,7 @@ import com.github.rwsbillyang.ktorKit.LifeCycle
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.WorkSingle
 import com.github.rwsbillyang.wxWork.agent.AgentController
-import io.ktor.application.*
+import io.ktor.server.application.*
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 

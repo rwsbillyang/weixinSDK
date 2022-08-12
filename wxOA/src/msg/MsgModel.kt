@@ -13,7 +13,7 @@ package com.github.rwsbillyang.wxOA.msg
 import com.github.rwsbillyang.ktorKit.apiJson.Box
 import com.github.rwsbillyang.ktorKit.apiJson.IUmiListParams
 import com.github.rwsbillyang.wxSDK.msg.MsgBody
-import io.ktor.locations.*
+import io.ktor.resources.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseContextualSerialization
 import org.bson.conversions.Bson
@@ -61,7 +61,8 @@ class MyMsgListBox(
         val data: List<MyMsg>? = null
 ) : Box()
 
-@Location("/list")
+@Serializable
+@Resource("/list")
 data class MyMsgListParams(
         override val umi: String? = null,
         val _id: ObjectId? = null,

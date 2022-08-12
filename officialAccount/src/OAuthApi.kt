@@ -84,10 +84,7 @@ class OAuthApi(appId: String) : OABaseApi(appId){
      * privilege	用户特权信息，json 数组，如微信沃卡用户为（chinaunicom）
      * unionid	只有在用户将公众号绑定到微信开放平台帐号后，才会出现该字段。
      * */
-    fun getUserInfo(accessToken: String, openId: String,lang: String = "zh_CN"): ResponseUserInfo = doGet2{
-        "https://api.weixin.qq.com/sns/userinfo?access_token=$accessToken&openid=$openId&lang=$lang"
-    }
-
+    fun getUserInfo(accessToken: String, openId: String,lang: String = "zh_CN"): ResponseUserInfo = get("https://api.weixin.qq.com/sns/userinfo?access_token=$accessToken&openid=$openId&lang=$lang")
     /**
      * 检验授权凭证（access_token）是否有效
      * */

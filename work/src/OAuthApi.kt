@@ -112,21 +112,22 @@ class OAuthApi (corpId: String?, agentId: Int?, suiteId: String?)
      * https://work.weixin.qq.com/api/doc/90001/90143/91121
      *
      * */
-    fun getUserInfo3rd(code: String): ResponseOAuthUserInfo = doGet2{
+    fun getUserInfo3rd(code: String): ResponseOAuthUserInfo {
         val token = if(Work.isMulti){
             IsvWorkMulti.ApiContextMap[suiteId]?.suiteAccessToken?.get()
         }else
             IsvWorkSingle.ctx.suiteAccessToken?.get()
-        "https://qyapi.weixin.qq.com/cgi-bin/service/getuserinfo3rd?suite_access_token=$token&code=$code"
+
+        return get("https://qyapi.weixin.qq.com/cgi-bin/service/getuserinfo3rd?suite_access_token=$token&code=$code")
     }
 
-    fun getUserDetail3rd(userTicket: String):ResponseOauthUserDetail3rd = doPost("user_ticket" to userTicket){
+    fun getUserDetail3rd(userTicket: String):ResponseOauthUserDetail3rd {
         val token = if(Work.isMulti){
             IsvWorkMulti.ApiContextMap[suiteId]?.suiteAccessToken?.get()
         }else
             IsvWorkSingle.ctx.suiteAccessToken?.get()
 
-        "https://qyapi.weixin.qq.com/cgi-bin/service/getuserdetail3rd?suite_access_token=$token"
+        return post<Unit, ResponseOauthUserDetail3rd>("https://qyapi.weixin.qq.com/cgi-bin/service/getuserdetail3rd?suite_access_token=$token&user_ticket=$userTicket")
     }
 }
 

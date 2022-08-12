@@ -21,10 +21,10 @@ package com.github.rwsbillyang.wxUser.account
 
 import com.github.rwsbillyang.ktorKit.apiJson.to64String
 import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
-import com.github.rwsbillyang.ktorKit.DataSource
 import com.github.rwsbillyang.ktorKit.apiJson.UmiPagination
 import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
+import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.ktorKit.util.plusTime
 import com.github.rwsbillyang.wxUser.fakeRpc.EditionLevel
 
@@ -32,7 +32,8 @@ import com.github.rwsbillyang.wxUser.fakeRpc.EditionLevel
 import kotlinx.coroutines.runBlocking
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
-import org.koin.core.inject
+import org.koin.core.component.inject
+
 import org.koin.core.qualifier.named
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineCollection
@@ -45,7 +46,7 @@ abstract class AccountServiceBase(cache: ICache) : CacheService(cache) {
          * */
         var AccountDbName = "user"
     }
-    protected val dbSource: DataSource by inject(qualifier = named(AccountDbName))
+    protected val dbSource: MongoDataSource by inject(qualifier = named(AccountDbName))
 
     protected val accountCol: CoroutineCollection<Account> by lazy {
         dbSource.mongoDb.getCollection()

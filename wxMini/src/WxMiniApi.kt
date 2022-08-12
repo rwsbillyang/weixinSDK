@@ -18,16 +18,17 @@
 
 package com.github.rwsbillyang.wxSDK.wxMini
 
+import com.github.rwsbillyang.ktorKit.apiJson.KHttpClient
 import org.slf4j.LoggerFactory
 import com.github.rwsbillyang.wxSDK.IBase
-import com.github.rwsbillyang.wxSDK.KtorHttpClient
+
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.slf4j.Logger
 
 
-class WxMiniApi: KtorHttpClient() {
+class WxMiniApi: KHttpClient() {
     companion object {
         private val log: Logger = LoggerFactory.getLogger("WxMiniApi")
     }
@@ -37,7 +38,7 @@ class WxMiniApi: KtorHttpClient() {
             log.warn("not config Wx Mini Program for appId=$appId")
             return null
         }
-        return doGetByUrl( "https://api.weixin.qq.com/sns/jscode2session?appid=$appId&secret=$secret&js_code=$jsCode&grant_type=authorization_code")
+        return get( "https://api.weixin.qq.com/sns/jscode2session?appid=$appId&secret=$secret&js_code=$jsCode&grant_type=authorization_code")
     }
 }
 

@@ -1,17 +1,15 @@
 package com.github.rwsbillyang.wxWork
 
+
 import com.github.rwsbillyang.ktorKit.AppModule
 import com.github.rwsbillyang.ktorKit.installModule
-import com.github.rwsbillyang.wxUser.account.*
-import com.github.rwsbillyang.wxUser.account.stats.StatsService
 import com.github.rwsbillyang.wxSDK.work.Work
-
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler
+import com.github.rwsbillyang.wxUser.account.AccountServiceBase
+import com.github.rwsbillyang.wxUser.account.stats.StatsService
 import com.github.rwsbillyang.wxUser.fakeRpc.IPayWechatNotifier
-
 import com.github.rwsbillyang.wxWork.account.*
-
 import com.github.rwsbillyang.wxWork.agent.agentApi
 import com.github.rwsbillyang.wxWork.agent.agentModule
 import com.github.rwsbillyang.wxWork.config.ConfigController
@@ -20,14 +18,12 @@ import com.github.rwsbillyang.wxWork.config.wxWorkConfigApi
 import com.github.rwsbillyang.wxWork.contacts.contactApi
 import com.github.rwsbillyang.wxWork.contacts.contactModule
 import com.github.rwsbillyang.wxWork.fakeRpc.FanRpcWork
-
-
-import com.github.rwsbillyang.wxWork.isv.*
+import com.github.rwsbillyang.wxWork.isv.IsvCorpService
+import com.github.rwsbillyang.wxWork.isv.OnStartConfigWxWork3rd
+import com.github.rwsbillyang.wxWork.isv.UserDetail3rd
+import com.github.rwsbillyang.wxWork.isv.isvModule
 import com.github.rwsbillyang.wxWork.msg.PayMsgNotifier
-import io.ktor.application.*
-
-
-
+import io.ktor.server.application.*
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.ktor.ext.inject

@@ -49,5 +49,5 @@ class MenuApi (corpId: String?, agentId: Int?, suiteId: String?)
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/90233
      * */
-    fun delete(agentId: String) = doGet3("delete",  mapOf("agentid" to agentId))
+    fun delete(agentId: String) = doGetRaw("delete",  mapOf("agentid" to agentId))
 }

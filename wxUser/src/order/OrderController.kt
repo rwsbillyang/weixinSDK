@@ -21,20 +21,17 @@ package com.github.rwsbillyang.wxUser.order
 import com.github.rwsbillyang.ktorKit.apiJson.DataBox
 import com.github.rwsbillyang.ktorKit.apiJson.to64String
 import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
-import com.github.rwsbillyang.wxUser.account.AccountServiceBase
-
-import com.github.rwsbillyang.wxSDK.wxPay.util.NotifyAnswer
-
-import com.github.rwsbillyang.wxUser.product.ProductService
 import com.github.rwsbillyang.wxSDK.wxPay.*
+import com.github.rwsbillyang.wxSDK.wxPay.util.NotifyAnswer
 import com.github.rwsbillyang.wxUser.account.AccountExpire
+import com.github.rwsbillyang.wxUser.account.AccountServiceBase
 import com.github.rwsbillyang.wxUser.fakeRpc.IPayWechatNotifier
-
-import kotlinx.coroutines.GlobalScope
+import com.github.rwsbillyang.wxUser.product.ProductService
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.bson.types.ObjectId
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 
 class AccountOrderController : OrderHandler(), KoinComponent {
@@ -110,37 +107,39 @@ class AccountOrderController : OrderHandler(), KoinComponent {
             log.warn("duplicated notify? orderId=${orderPayDetail.orderId}")
             return NotifyAnswer.success()
         }
-        GlobalScope.launch{
-            log.info("success! update orderStatus, orderId=${orderPayDetail.orderId}")
-            service.updateOrder(order._id, OrderConstant.STATUS_TODO_DELIVER, orderPayDetail)
-            val attach = orderPayDetail.attach
-            if(attach == null){
-                log.warn("not found attach")
-            }else{
-                val product = order.product
+        runBlocking {
+            launch{
+                log.info("success! update orderStatus, orderId=${orderPayDetail.orderId}")
+                service.updateOrder(order._id, OrderConstant.STATUS_TODO_DELIVER, orderPayDetail)
+                val attach = orderPayDetail.attach
+                if(attach == null){
+                    log.warn("not found attach")
+                }else{
+                    val product = order.product
 
-                val array = attach.split("/")
-                val accountId = array.firstOrNull()
-                //val agentId = if(array.size == 2) array[1].toInt() else null
-                if(accountId != null){
-                    //update Edition and expiration: uId, openId, product snapshot
-                    val newExpire = accountHelper.updateAccountExpiration(accountId, order.agentId, product.edition, product.year, product.month, product.bonus)
+                    val array = attach.split("/")
+                    val accountId = array.firstOrNull()
+                    //val agentId = if(array.size == 2) array[1].toInt() else null
+                    if(accountId != null){
+                        //update Edition and expiration: uId, openId, product snapshot
+                        val newExpire = accountHelper.updateAccountExpiration(accountId, order.agentId, product.edition, product.year, product.month, product.bonus)
 
-                    val account = accountHelper.findById(accountId)
-                    if(account != null){
-                        if (newExpire > 0) {
-                            service.updateOrder(order._id, OrderConstant.STATUS_DONE)
-                            wechatNotifier.onPaySuccess(account, order.appId, order.agentId, product.name,"￥${product.actualPrice/100.0}元", newExpire, "支付成功")
-                        } else {
-                            log.warn("fail to update Edition and expiration: orderId=${orderPayDetail.orderId}")
+                        val account = accountHelper.findById(accountId)
+                        if(account != null){
+                            if (newExpire > 0) {
+                                service.updateOrder(order._id, OrderConstant.STATUS_DONE)
+                                wechatNotifier.onPaySuccess(account, order.appId, order.agentId, product.name,"￥${product.actualPrice/100.0}元", newExpire, "支付成功")
+                            } else {
+                                log.warn("fail to update Edition and expiration: orderId=${orderPayDetail.orderId}")
+                            }
+                        }else{
+                            log.warn("not found account: attach=$attach")
                         }
-                    }else{
-                        log.warn("not found account: attach=$attach")
                     }
                 }
             }
-
         }
+
 
         return NotifyAnswer.success()
     }

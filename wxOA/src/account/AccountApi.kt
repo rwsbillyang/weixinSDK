@@ -19,19 +19,18 @@ import com.github.rwsbillyang.ktorKit.apiJson.DataBox
 import com.github.rwsbillyang.wxUser.account.AccountListParams
 import com.github.rwsbillyang.wxUser.account.Group
 import com.github.rwsbillyang.wxUser.account.GroupListParams
-
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.features.*
 import io.ktor.http.*
-import io.ktor.locations.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import io.ktor.routing.get
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.plugins.*
+import io.ktor.server.request.*
+import io.ktor.server.resources.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.routing.get
+
 
 import org.koin.ktor.ext.inject
-
 
 
 internal fun Routing.oaUserApi() {

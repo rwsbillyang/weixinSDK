@@ -18,7 +18,7 @@
 
 package com.github.rwsbillyang.wxSDK.wxPay.util
 
-import com.github.rwsbillyang.wxSDK.KtorHttpClient
+import com.github.rwsbillyang.ktorKit.apiJson.KHttpClient
 import com.github.rwsbillyang.wxSDK.security.AesUtil
 import com.github.rwsbillyang.wxSDK.wxPay.EncryptData
 import com.github.rwsbillyang.wxSDK.wxPay.OrderPayDetail
@@ -116,7 +116,7 @@ object PayNotifyUtil {
             return block(null, null, WxPayNotifyErrorType.EmptyRequestBody)
         }
 
-        val notifyBean =  KtorHttpClient.apiJson.decodeFromString<PayNotifyBean>(parameters.body)
+        val notifyBean =  KHttpClient.apiJson.decodeFromString<PayNotifyBean>(parameters.body)
 
         if (!ctx.validator.validateParameters(parameters)) {
             // fix validateParameters fail
@@ -133,7 +133,7 @@ object PayNotifyUtil {
                 res.nonce.toByteArray(),
                 res.ciphertext
             )
-            val orderPayDetail = KtorHttpClient.apiJson.decodeFromString<OrderPayDetail>(json)
+            val orderPayDetail = KHttpClient.apiJson.decodeFromString<OrderPayDetail>(json)
             block(notifyBean, orderPayDetail, WxPayNotifyErrorType.SUCCESS)
         } else {
             log.warn("notifyBean.type is not TRANSACTION.SUCCESS, RequestParameters=$Parameters")

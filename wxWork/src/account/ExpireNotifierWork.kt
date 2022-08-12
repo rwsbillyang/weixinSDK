@@ -23,7 +23,8 @@ import com.github.rwsbillyang.ktorKit.LifeCycle
 import com.github.rwsbillyang.wxUser.account.Account
 import com.github.rwsbillyang.wxUser.fakeRpc.level2Name
 import com.github.rwsbillyang.wxWork.msg.PayMsgNotifier
-import io.ktor.application.*
+import io.ktor.server.application.*
+
 import it.justwrote.kjob.InMem
 import it.justwrote.kjob.KronJob
 import it.justwrote.kjob.kjob

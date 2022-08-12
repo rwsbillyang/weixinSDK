@@ -18,6 +18,7 @@
 
 package security;
 
+//Java
 public class BytesUtil {
     // 生成4个字节的网络字节序
     public static byte[] getNetworkBytesOrder(int sourceNumber) {

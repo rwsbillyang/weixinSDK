@@ -27,7 +27,7 @@ import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.ktorKit.util.toUtc
 import com.github.rwsbillyang.wxSDK.wxPay.OrderPayDetail
 import com.github.rwsbillyang.wxUser.product.Product
-import io.ktor.locations.*
+import io.ktor.resources.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseContextualSerialization
@@ -104,8 +104,8 @@ data class AccountOrder(
         )
 
 
-
-@Location("/list")
+@Serializable
+@Resource("/list")
 data class ListParams(
         override val umi: String,
         val type: Int? = null,

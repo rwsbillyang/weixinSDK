@@ -24,6 +24,8 @@ import com.github.rwsbillyang.wxSDK.security.XmlUtil
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.WorkMulti
 import com.github.rwsbillyang.wxSDK.work.WorkSingle
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 
 
 import io.ktor.http.*
@@ -43,94 +45,87 @@ class ApplicationTest2 {
     private val toUser = "zhangsan"
 
     @Test
-    fun testRoot() {
-        withTestApplication({ testableModule(testing = true) }) {
-            handleRequest(HttpMethod.Get, "/").apply {
-                assertEquals(HttpStatusCode.OK, response.status())
-                assertEquals("OK from wxSDK", response.content)
-            }
+    fun testRoot() = testApplication{
+        application {
+            testableModule(testing = true)
         }
+        val response = client.get("/")
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("OK from wxSDK", response.bodyAsText())
     }
 
     //@Test
-    fun testWorkUrlGet() {
-        withTestApplication({ WorkTestableModule(testing = true) }) {
-            val agentName = TestConstatns.KeyBase
+    fun testWorkUrlGet() = testApplication {
+        application { WorkTestableModule(testing = true) }
 
-            val ctx = if (Work.isMulti)
-                WorkMulti.ApiContextMap[TestConstatns.CorpId]!!.agentMap[agentName]!!
-            else WorkSingle.agentContext
+        val agentName = TestConstatns.KeyBase
 
-            //加密第二个参数: wxBizMsgCrypt中使用的是Base64.getEncoder()，导致生成的字符串可能不符合url规范，导致接收到的encryptEcho产生变化，因而签名验证失败
-            val encryptEcho = ctx.wxBizMsgCrypt!!.encrypt(TestConstatns.CorpId,echoStr)
+        val ctx = if (Work.isMulti)
+            WorkMulti.ApiContextMap[TestConstatns.CorpId]!!.agentMap[agentName]!!
+        else WorkSingle.agentContext
 
-            //对加密后的内容进行签名
-            val signature = SHA1.getSHA1(ctx.token!!, timestamp, nonce, encryptEcho)
+        //加密第二个参数: wxBizMsgCrypt中使用的是Base64.getEncoder()，导致生成的字符串可能不符合url规范，导致接收到的encryptEcho产生变化，因而签名验证失败
+        val encryptEcho = ctx.wxBizMsgCrypt!!.encrypt(TestConstatns.CorpId,echoStr)
 
-            val url = "${Work.msgNotifyUri}/${TestConstatns.CorpId}/${agentName}?msg_signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$encryptEcho"
-            println("getUrl=$url")
+        //对加密后的内容进行签名
+        val signature = SHA1.getSHA1(ctx.token!!, timestamp, nonce, encryptEcho)
 
-            handleRequest(HttpMethod.Get, url).apply {
-                assertEquals(HttpStatusCode.OK, response.status())
-                println("Tx: token=${ctx.token}, timestamp=$timestamp, nonce=$nonce, encryptEcho=$encryptEcho")
-                assertEquals(echoStr, response.content)
-            }
-        }
+        val url = "${Work.msgNotifyUri}/${TestConstatns.CorpId}/${agentName}?msg_signature=$signature&timestamp=$timestamp&nonce=$nonce&echostr=$encryptEcho"
+        println("getUrl=$url")
+
+        val response = client.get(url)
+        assertEquals(HttpStatusCode.OK, response.status)
+        println("Tx: token=${ctx.token}, timestamp=$timestamp, nonce=$nonce, encryptEcho=$encryptEcho")
+        assertEquals(echoStr, response.bodyAsText())
     }
 
 
     //@Test
-    fun testWorkUrlPost() {
-        withTestApplication({ WorkTestableModule(testing = true) }) {
-            val agentName = TestConstatns.KeyBase
-            val ctx = if (Work.isMulti)
-                WorkMulti.ApiContextMap[TestConstatns.CorpId]!!.agentMap[agentName]!!
-            else WorkSingle.agentContext
+    fun testWorkUrlPost()  = testApplication {
+        application { WorkTestableModule(testing = true) }
+
+        val agentName = TestConstatns.KeyBase
+        val ctx = if (Work.isMulti)
+            WorkMulti.ApiContextMap[TestConstatns.CorpId]!!.agentMap[agentName]!!
+        else WorkSingle.agentContext
 
 
-            //原始消息文本
-            val originalTextMsg =
-                "<xml><ToUserName><![CDATA[$toUser]]></ToUserName><FromUserName><![CDATA[${TestConstatns.CorpId}]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[$content]]></Content><MsgId>$msgId</MsgId><AgentID>128</AgentID></xml>"
+        //原始消息文本
+        val originalTextMsg =
+            "<xml><ToUserName><![CDATA[$toUser]]></ToUserName><FromUserName><![CDATA[${TestConstatns.CorpId}]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[$content]]></Content><MsgId>$msgId</MsgId><AgentID>128</AgentID></xml>"
 
-            //将原始文本用timestamp和nonce拼接后，用sha1加密，得到加密消息，再置于post data中的Encrypt的标签中
-            //这里使用的是Base64.getEncoder生成signature，有时候生成的signature不符合url规范，导致接收端接收的字符产生变化，因而不能通过验证
-            val (xml, msgSignature) = ctx.wxBizMsgCrypt!!.encryptMsg(
-                TestConstatns.CorpId,
-                originalTextMsg,
-                timestamp,
-                nonce,
-                toUser,
-                agentName
-            )
+        //将原始文本用timestamp和nonce拼接后，用sha1加密，得到加密消息，再置于post data中的Encrypt的标签中
+        //这里使用的是Base64.getEncoder生成signature，有时候生成的signature不符合url规范，导致接收端接收的字符产生变化，因而不能通过验证
+        val (xml, msgSignature) = ctx.wxBizMsgCrypt!!.encryptMsg(
+            TestConstatns.CorpId,
+            originalTextMsg,
+            timestamp,
+            nonce,
+            toUser,
+            agentName
+        )
 
-            //println("post Tx: msgSignature=$msgSignature, token=${ctx.token},timestamp=$timestamp,nonce=$nonce, encryptText=$xml")
-            val postUrl = "${Work.msgNotifyUri}/${TestConstatns.CorpId}/${agentName}?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce"
-            println("postUrl=$postUrl")
-            handleRequest(HttpMethod.Post, postUrl) {
-                setBody(xml)
-            }.apply {
-                assertEquals(HttpStatusCode.OK, response.status())
-                //val encryt = XmlUtil.extract(xml)
-                //val msg = ctx.wxBizMsgCrypt!!.decryptWxMsg(TestConstatns.CorpId, msgSignature, timestamp, nonce, encryt)
+        //println("post Tx: msgSignature=$msgSignature, token=${ctx.token},timestamp=$timestamp,nonce=$nonce, encryptText=$xml")
+        val postUrl = "${Work.msgNotifyUri}/${TestConstatns.CorpId}/${agentName}?msg_signature=$msgSignature&timestamp=$timestamp&nonce=$nonce"
+        println("postUrl=$postUrl")
 
-                val content = response.content
-                if (content.isNullOrBlank()) {
-                    println("in wx work post, get empty response")
-                } else {
-                    if (content.startsWith("<xml>")) {
-                        val map = XmlUtil.extract(xml)
-                        val reTimeStamp = map["TimeStamp"] ?: ""
-                        val reNonce = map["Nonce"] ?: ""
-                        val reEcrypt = map["Encrypt"] ?: ""
-                        val signature2 = SHA1.getSHA1(ctx.token!!, reTimeStamp, reNonce, reEcrypt)
-                        val msg = ctx.wxBizMsgCrypt!!.decryptWxMsg(TestConstatns.CorpId, signature2, reTimeStamp, reNonce, reEcrypt)
-                        println("Got wx work reply: $msg")
-                    } else {
-                        println("in wx work post, got response: $content")
-                    }
-                }
-            }
+        val response = client.post(postUrl){setBody(xml)}
 
+        assertEquals(HttpStatusCode.OK, response.status)
+        //val encryt = XmlUtil.extract(xml)
+        //val msg = ctx.wxBizMsgCrypt!!.decryptWxMsg(TestConstatns.CorpId, msgSignature, timestamp, nonce, encryt)
+
+        val content = response.bodyAsText()
+        if (content.startsWith("<xml>")) {
+            val map = XmlUtil.extract(xml)
+            val reTimeStamp = map["TimeStamp"] ?: ""
+            val reNonce = map["Nonce"] ?: ""
+            val reEcrypt = map["Encrypt"] ?: ""
+            val signature2 = SHA1.getSHA1(ctx.token!!, reTimeStamp, reNonce, reEcrypt)
+            val msg = ctx.wxBizMsgCrypt!!.decryptWxMsg(TestConstatns.CorpId, signature2, reTimeStamp, reNonce, reEcrypt)
+            println("Got wx work reply: $msg")
+        } else {
+            println("in wx work post, got response: $content")
         }
     }
 

@@ -18,19 +18,21 @@
 
 package com.github.rwsbillyang.wxUser.feedback
 
-import com.github.rwsbillyang.ktorKit.DataSource
+
 import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
+import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.wxUser.wxUserAppModule
 import kotlinx.coroutines.runBlocking
 import org.bson.types.ObjectId
-import org.koin.core.inject
+import org.koin.core.component.inject
+
 import org.koin.core.qualifier.named
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.setValue
 
 class FeedbackService(cache: ICache) : CacheService(cache) {
-    private val dbSource: DataSource by inject(qualifier = named(wxUserAppModule.dbName!!))
+    private val dbSource: MongoDataSource by inject(qualifier = named(wxUserAppModule.dbName!!))
 
     private val feedbackCol: CoroutineCollection<Feedback> by lazy {
         dbSource.mongoDb.getCollection()

@@ -22,21 +22,22 @@ import com.github.rwsbillyang.ktorKit.apiJson.Sort
 import com.github.rwsbillyang.ktorKit.apiJson.UmiPagination
 import com.github.rwsbillyang.ktorKit.apiJson.to64String
 import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
-import com.github.rwsbillyang.ktorKit.DataSource
+
 import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
+import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.wxUser.wxUserAppModule
 import com.github.rwsbillyang.wxSDK.wxPay.OrderPayDetail
 import kotlinx.coroutines.runBlocking
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
-import org.koin.core.inject
+import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineCollection
 
 class AccountOrderService(cache: ICache) : CacheService(cache){
-    private val dbSource: DataSource by inject(qualifier = named(wxUserAppModule.dbName!!))
+    private val dbSource: MongoDataSource by inject(qualifier = named(wxUserAppModule.dbName!!))
 
     private val orderCol: CoroutineCollection<AccountOrder> by lazy {
         dbSource.mongoDb.getCollection()

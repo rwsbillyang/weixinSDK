@@ -21,17 +21,11 @@ package com.github.rwsbillyang.wxSDK.work
 
 import com.github.rwsbillyang.wxSDK.ResponseCallbackIps
 import com.github.rwsbillyang.wxSDK.WxApi
-import com.github.rwsbillyang.wxSDK.accessToken.ITimelyRefreshValue
-import com.github.rwsbillyang.wxSDK.accessToken.TimelyRefreshAccessToken
-import com.github.rwsbillyang.wxSDK.accessToken.TimelyRefreshValue
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
-
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.slf4j.LoggerFactory
-import java.lang.IllegalArgumentException
-import javax.lang.model.element.NestingKind
 
 /**
  * 不同的api可能属于不同的agent，需要维护着自己的secret和accessToken
@@ -156,7 +150,7 @@ abstract class WorkBaseApi(val corpId: String?, val agentId: Int?, val suiteId: 
      * 若调用失败，会返回errcode及errmsg（判断是否调用失败，根据errcode存在并且值非0）
      * */
     suspend fun getCallbackIp(): ResponseCallbackIps
-            = doGetByUrl("$base/getcallbackip?access_token=${accessToken()}")
+            = get("$base/getcallbackip?access_token=${accessToken()}")
 }
 
 

@@ -6,9 +6,6 @@ import com.github.rwsbillyang.ktorKit.AppModule
 import com.github.rwsbillyang.ktorKit.installModule
 import com.github.rwsbillyang.wxOA.account.*
 import com.github.rwsbillyang.wxOA.fakeRpc.FanRpcOA
-
-import com.github.rwsbillyang.wxUser.account.*
-
 import com.github.rwsbillyang.wxOA.fan.*
 import com.github.rwsbillyang.wxOA.media.mediaApi
 import com.github.rwsbillyang.wxOA.media.mediaModule
@@ -22,16 +19,14 @@ import com.github.rwsbillyang.wxOA.qrcodeChannel.qrCodeChannelModule
 import com.github.rwsbillyang.wxOA.qrcodeChannel.qrcodeChannelApi
 import com.github.rwsbillyang.wxOA.stats.statsModule
 import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
-
+import com.github.rwsbillyang.wxUser.account.*
 import com.github.rwsbillyang.wxUser.account.stats.StatsService
 import com.github.rwsbillyang.wxUser.fakeRpc.IPayWechatNotifier
-
-import io.ktor.application.*
+import io.ktor.server.application.*
 import org.koin.dsl.bind
-
-
 import org.koin.dsl.module
 import org.koin.ktor.ext.inject
+
 
 /**
  * 公众号基础接入模块，包括消息接入、oauth认证、公众号管理配置、关注二维码生成、粉丝（包括列表查看）、公众号进入点击统计等功能

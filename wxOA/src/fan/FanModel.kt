@@ -17,7 +17,8 @@ import com.github.rwsbillyang.ktorKit.apiJson.Box
 import com.github.rwsbillyang.ktorKit.apiJson.IUmiListParams
 import com.github.rwsbillyang.wxSDK.officialAccount.ResponseOauthAccessToken
 import com.github.rwsbillyang.wxSDK.officialAccount.ResponseUserInfo
-import io.ktor.locations.*
+import io.ktor.resources.*
+
 import kotlinx.serialization.Serializable
 import org.bson.conversions.Bson
 import org.litote.kmongo.and
@@ -106,7 +107,8 @@ class FanListBox(
         val data: List<Fan>? = null
 ) : Box()
 
-@Location("/list")
+@Serializable
+@Resource("/list")
 data class FanListParams(
         override val umi: String? = null ,
         val _id: String? = null,//openid

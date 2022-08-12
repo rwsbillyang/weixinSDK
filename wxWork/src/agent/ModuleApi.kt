@@ -22,11 +22,12 @@ package com.github.rwsbillyang.wxWork.agent
 import com.github.rwsbillyang.ktorKit.apiJson.DataBox
 import com.github.rwsbillyang.ktorKit.AbstractJwtHelper
 import com.github.rwsbillyang.ktorKit.respondBox
-import io.ktor.application.*
-import io.ktor.auth.*
 import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+
 import org.koin.dsl.module
 import org.koin.ktor.ext.inject
 
@@ -40,7 +41,6 @@ val agentModule = module {
 fun Routing.agentApi() {
     val controller: AgentController by inject()
     val jwtHelper: AbstractJwtHelper by inject()
-
 
 
     authenticate {

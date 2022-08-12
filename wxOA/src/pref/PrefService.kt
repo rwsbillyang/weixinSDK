@@ -10,20 +10,22 @@ package com.github.rwsbillyang.wxOA.pref
 
 import com.github.rwsbillyang.ktorKit.apiJson.UmiPagination
 import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
-import com.github.rwsbillyang.ktorKit.DataSource
+
 import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
+import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.wxOA.wxOaAppModule
 import kotlinx.coroutines.runBlocking
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
-import org.koin.core.inject
+import org.koin.core.component.inject
+
 import org.koin.core.qualifier.named
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineCollection
 
 class PrefService(cache: ICache) : CacheService(cache){
-    private val dbSource: DataSource by inject(qualifier = named(wxOaAppModule.dbName!!))
+    private val dbSource: MongoDataSource by inject(qualifier = named(wxOaAppModule.dbName!!))
 
 
     private val officialAccountCol: CoroutineCollection<PrefOfficialAccount> by lazy {

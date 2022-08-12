@@ -21,7 +21,8 @@ package com.github.rwsbillyang.wxOA.qrcodeChannel
 
 import com.github.rwsbillyang.ktorKit.apiJson.IUmiListParams
 import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
-import io.ktor.locations.*
+import io.ktor.resources.*
+
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseContextualSerialization
 import org.bson.conversions.Bson
@@ -65,7 +66,8 @@ class QrCodeInfo(
  * 列表过滤查询
  * @param lastId 上一条记录中最后一条的id，用于分页  Limitation： lastId只有在基于_id排序时才可正确地工作，而且只支持上下一页
  * */
-@Location("/list")
+@Serializable
+@Resource("/list")
 data class ChannelListParams(
     override val umi: String? = null,
     val _id: String? = null,

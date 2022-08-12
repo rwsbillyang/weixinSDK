@@ -25,8 +25,8 @@ import com.github.rwsbillyang.wxUser.account.AccountExpire
 import com.github.rwsbillyang.wxUser.fakeRpc.IPayWechatNotifier
 import com.github.rwsbillyang.wxUser.fakeRpc.PayNotifierType
 import com.github.rwsbillyang.wxUser.fakeRpc.level2Name
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 
 
@@ -45,17 +45,18 @@ class PayMsgNotifier: MsgNotifierBase(), IPayWechatNotifier {
             return
         }
         msgApi(account, appId, agentId)?.let {
-            GlobalScope.launch {
-                val description = setupDescription(
-                    listOf("赠送${productName}",
-                        "到期日："+ DatetimeUtil.format(newExpire, "yyyy年MM月dd日")),
-                    "点击领取")
+            runBlocking{
+                launch {
+                    val description = setupDescription(
+                        listOf("赠送${productName}",
+                            "到期日："+ DatetimeUtil.format(newExpire, "yyyy年MM月dd日")),
+                        "点击领取")
 
-                val msg = WxWorkTextCardMsg(title ?: "续费成功", description, url(account,  appId, agentId, PayNotifierType.BonusNotify.name) , agentId!!, account.userId)
-                it.send(msg)
+                    val msg = WxWorkTextCardMsg(title ?: "续费成功", description, url(account,  appId, agentId, PayNotifierType.BonusNotify.name) , agentId!!, account.userId)
+                    it.send(msg)
+                }
             }
         }
-
     }
 
     override fun onExpire(
@@ -70,11 +71,13 @@ class PayMsgNotifier: MsgNotifierBase(), IPayWechatNotifier {
             return
         }
         msgApi(account, appId, agentId)?.let {
-            GlobalScope.launch {
-                val normal = level2Name(accountExpire?.level?:account.level) +"会员到期日："+ DatetimeUtil.format((accountExpire?.expire?:account.expire)!!, "yyyy年MM月dd日")
-                val description = setupDescription(normal, "到期后将影响使用，请点击续费")
-                val msg = WxWorkTextCardMsg(title ?: "会员到期提醒", description, url(account, appId, agentId, PayNotifierType.ExpireAlarm.name), agentId!!, account.userId)
-                it.send(msg)
+            runBlocking{
+                launch {
+                    val normal = level2Name(accountExpire?.level?:account.level) +"会员到期日："+ DatetimeUtil.format((accountExpire?.expire?:account.expire)!!, "yyyy年MM月dd日")
+                    val description = setupDescription(normal, "到期后将影响使用，请点击续费")
+                    val msg = WxWorkTextCardMsg(title ?: "会员到期提醒", description, url(account, appId, agentId, PayNotifierType.ExpireAlarm.name), agentId!!, account.userId)
+                    it.send(msg)
+                }
             }
         }
     }
@@ -93,17 +96,19 @@ class PayMsgNotifier: MsgNotifierBase(), IPayWechatNotifier {
             return
         }
         msgApi(account, appId,  agentId)?.let {
-            GlobalScope.launch {
+            runBlocking{
+                launch {
 //                val description = setupDescription(
 //                    listOf("您已成功支付${totalMoney}，感谢支持！",
 //                    "${productName}到期日："+ DatetimeUtil.format(newExpire, "yyyy年MM月dd日")),
 //                    "您可以试试分享素材哦")
 
-                val description = grayDiv("${productName}到期日："+ DatetimeUtil.format(newExpire, "yyyy年MM月dd日")) +
-                        normalDiv("您已成功支付${totalMoney}，感谢支持！") + grayDiv("您可以试试分享素材哦")
+                    val description = grayDiv("${productName}到期日："+ DatetimeUtil.format(newExpire, "yyyy年MM月dd日")) +
+                            normalDiv("您已成功支付${totalMoney}，感谢支持！") + grayDiv("您可以试试分享素材哦")
 
-                val msg = WxWorkTextCardMsg(title ?: "续费成功", description, url(account, appId,  agentId, PayNotifierType.PaySuccess.name), agentId!!, account.userId)
-                it.send(msg)
+                    val msg = WxWorkTextCardMsg(title ?: "续费成功", description, url(account, appId,  agentId, PayNotifierType.PaySuccess.name), agentId!!, account.userId)
+                    it.send(msg)
+                }
             }
         }
 

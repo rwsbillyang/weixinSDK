@@ -14,7 +14,7 @@ import com.github.rwsbillyang.ktorKit.apiJson.Box
 import com.github.rwsbillyang.ktorKit.apiJson.IUmiListParams
 import com.github.rwsbillyang.wxSDK.bean.MenuType
 import com.github.rwsbillyang.wxOA.msg.MyMsg
-import io.ktor.locations.*
+import io.ktor.resources.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseContextualSerialization
 import org.bson.conversions.Bson
@@ -93,7 +93,8 @@ class PrefReMsgBean(
         var msg: MyMsg? = null
 )
 
-@Location("/reMsgList")
+@Serializable
+@Resource("/reMsgList")
 data class PrefReMsgListParams(
         override val umi: String? = null,
         val cat: Int? = null,
@@ -154,8 +155,8 @@ class PrefMenuTree(
         val children: List<PrefMenuTree>? = null //与PrefMenu多了一个children
 )
 
-
-@Location("/menu/list")
+@Serializable
+@Resource("/menu/list")
 data class PrefMenuListParams(
     override val umi: String? = null,
     val appId: String? = null

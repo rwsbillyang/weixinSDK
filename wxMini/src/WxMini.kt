@@ -27,7 +27,8 @@ import com.github.rwsbillyang.wxSDK.wxMini.account.AccountServiceMini
 import com.github.rwsbillyang.wxSDK.wxMini.account.account
 import com.github.rwsbillyang.wxSDK.wxMini.config.MiniConfigService
 import com.github.rwsbillyang.wxSDK.wxMini.config.wxMiniConfigApi
-import io.ktor.application.*
+import io.ktor.server.application.*
+
 import org.koin.dsl.module
 import org.koin.ktor.ext.inject
 

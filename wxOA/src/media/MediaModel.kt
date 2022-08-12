@@ -22,7 +22,7 @@ package com.github.rwsbillyang.wxOA.media
 
 import com.github.rwsbillyang.ktorKit.apiJson.Box
 import com.github.rwsbillyang.ktorKit.apiJson.IUmiListParams
-import io.ktor.locations.*
+import io.ktor.resources.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseContextualSerialization
@@ -122,7 +122,8 @@ class MaterialMediaListBox(
         val data: List<MaterialMedia>? = null
 ) : Box()
 
-@Location("/news/list")
+@Serializable
+@Resource("/news/list")
 data class MaterialNewsListParams(
         override val umi: String? = null,
         val _id: String? = null,
@@ -137,7 +138,8 @@ data class MaterialNewsListParams(
                 return and(idFilter,nameFilter, appIdFilter)
         }
 }
-@Location("/video/list")
+@Serializable
+@Resource("/video/list")
 data class MaterialVideoListParams(
         override val umi: String? = null,
         val _id: String? = null,
@@ -152,7 +154,8 @@ data class MaterialVideoListParams(
         }
 }
 
-@Location("/media/list")
+@Serializable
+@Resource("/media/list")
 data class MaterialMediaListParams(
         override val umi: String? = null,
         val _id: String? = null,

@@ -26,9 +26,10 @@ import com.github.rwsbillyang.wxOA.pref.PrefService
 import com.github.rwsbillyang.wxSDK.msg.*
 import com.github.rwsbillyang.wxSDK.officialAccount.UserApi
 import com.github.rwsbillyang.wxSDK.officialAccount.outMsg.ReMusicMsg
-import kotlinx.coroutines.GlobalScope
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 
 open class MsgEventCommonHandler: KoinComponent {
@@ -54,8 +55,8 @@ open class MsgEventCommonHandler: KoinComponent {
      * */
     fun tryReMsg(appId: String, e: WxBaseEvent, upsertUserInfo: Boolean = false) = tryReMsg(appId, e.base.msgType, "defaultEvent", e.base.fromUserName, e.base.toUserName, upsertUserInfo)
 
-    private fun upsertFan(appId: String, openId: String) {
-        GlobalScope.run {
+    private fun upsertFan(appId: String, openId: String) = runBlocking {
+        launch {
             val res = UserApi(appId).getUserInfo(openId)
             if (res.isOK()) {
                 val f = res.toFan(appId)

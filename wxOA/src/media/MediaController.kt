@@ -26,11 +26,12 @@ import com.github.rwsbillyang.wxSDK.officialAccount.MaterialApi
 import com.github.rwsbillyang.wxSDK.officialAccount.MediaType
 import org.apache.commons.codec.digest.DigestUtils
 import org.bson.types.ObjectId
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
 import org.slf4j.LoggerFactory
 
-class MediaController : KoinComponent{
+class MediaController : KoinComponent {
     private val log = LoggerFactory.getLogger("MediaController")
     private val service: MediaService by inject()
 

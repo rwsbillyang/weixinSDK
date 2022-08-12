@@ -38,7 +38,7 @@ class MaterialApi(corpId: String?, agentId: Int?, suiteId: String?)
      * 视频（video） ：10MB，支持MP4格式
      * 普通文件（file）：20MB
      * */
-    fun upload(type: String, file: String) = doUpload3("upload", file, mapOf("type" to type))
+    fun upload(type: String, file: String) = doUploadRaw("upload", file, mapOf("type" to type))
 
 
     /**
@@ -49,13 +49,13 @@ class MaterialApi(corpId: String?, agentId: Int?, suiteId: String?)
      * 每个企业每天最多可上传100张图片,图片文件大小应在 5B ~ 2MB 之间
      * TODO: POST的请求包中，form-data中媒体文件标识，应包含有filename、content-type等信息
      * */
-    fun uploadImg(file: String) = doUpload3("uploadimg", file)
+    fun uploadImg(file: String) = doUploadRaw("uploadimg", file)
 
     /**
      * TODO: 本接口支持通过在http header里指定Range来分块下载。
      * 在文件很大，可能下载超时的情况下，推荐使用分块下载。
      * */
-    fun getMaterial(mediaId: String) = doGet3("get", mapOf("media_id" to mediaId))
+    fun getMaterial(mediaId: String) = doGetRaw("get", mapOf("media_id" to mediaId))
 
     /**
      * 获取高清语音素材
@@ -64,5 +64,5 @@ class MaterialApi(corpId: String?, agentId: Int?, suiteId: String?)
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/90255
      * */
-    fun getHDVoice(mediaId: String) = doGet3("get/jssdk", mapOf("media_id" to mediaId))
+    fun getHDVoice(mediaId: String) = doGetRaw("get/jssdk", mapOf("media_id" to mediaId))
 }

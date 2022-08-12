@@ -20,17 +20,9 @@ package com.github.rwsbillyang.wxSDK.wxPay.auth
 
 
 
-import com.github.rwsbillyang.wxSDK.wxPay.WxPay
 import com.github.rwsbillyang.wxSDK.wxPay.util.Parameters
-import com.github.rwsbillyang.wxSDK.wxPay.util.PayNotifyUtil
-
 import io.ktor.client.statement.*
-import io.ktor.client.statement.HttpResponse
-
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-
 import org.slf4j.LoggerFactory
 import java.time.DateTimeException
 import java.time.Duration
@@ -110,7 +102,7 @@ class WechatPayValidator(private val verifier: Verifier) : Validator {
 
 
     private fun response2Parameters(response: HttpResponse): Parameters{
-        val bodyText = runBlocking { response.readText() }
+        val bodyText = runBlocking { response.bodyAsText() }
 
         return Parameters(
             response.headers["Request-ID"],

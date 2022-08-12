@@ -1,24 +1,25 @@
 package com.github.rwsbillyang.wxWork.test
 
-import com.github.rwsbillyang.ktorKit.testModule
 import com.github.rwsbillyang.wxSDK.work.Work
-import com.github.rwsbillyang.wxWork.wxWorkModule
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlin.test.*
 import io.ktor.server.testing.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class ApplicationTest {
     @Test
-    fun testRoot() {
-        withTestApplication({
+    fun testRoot() = testApplication {
+        application {
             Work.isMulti = false
             Work.isIsv = false
-            testModule(wxWorkModule)
-        }) {
-            handleRequest(HttpMethod.Get, "/").apply {
-                assertEquals(HttpStatusCode.OK, response.status())
-                assertEquals("HELLO WORLD!", response.content)
-            }
+            testableModule(true)
         }
+
+        val response = client.get("/")
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("OK from wxSDK", response.bodyAsText())
     }
+
 }

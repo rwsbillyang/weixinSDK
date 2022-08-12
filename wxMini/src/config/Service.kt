@@ -18,18 +18,19 @@
 
 package com.github.rwsbillyang.wxSDK.wxMini.config
 
-import com.github.rwsbillyang.ktorKit.DataSource
+
 import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
+import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.wxSDK.wxMini.wxMiniProgramModule
 import kotlinx.coroutines.runBlocking
-import org.koin.core.inject
+import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.eq
 
 class MiniConfigService(cache: ICache) : CacheService(cache) {
-    private val dbSource: DataSource by inject(qualifier = named(wxMiniProgramModule.dbName!!))
+    private val dbSource: MongoDataSource by inject(qualifier = named(wxMiniProgramModule.dbName!!))
 
     private val wxMiniConfigCol: CoroutineCollection<MiniConfig> by lazy {
         dbSource.mongoDb.getCollection()

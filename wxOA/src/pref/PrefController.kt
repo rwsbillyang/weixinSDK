@@ -27,10 +27,12 @@ import com.github.rwsbillyang.wxOA.EventHandler
 import com.github.rwsbillyang.wxOA.MsgHandler
 import com.github.rwsbillyang.wxOA.msg.MsgService
 import com.github.rwsbillyang.wxSDK.bean.MenuType
-import io.ktor.application.*
+import io.ktor.server.application.*
+
 import org.bson.types.ObjectId
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
 import org.koin.ktor.ext.inject
 import org.litote.kmongo.eq
 import org.slf4j.LoggerFactory

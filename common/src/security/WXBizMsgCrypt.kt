@@ -3,6 +3,7 @@ package com.github.rwsbillyang.wxSDK.security
 
 import org.apache.commons.codec.binary.Base64
 import security.BytesUtil
+
 import java.nio.charset.Charset
 import java.util.Random
 import javax.crypto.Cipher

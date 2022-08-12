@@ -19,15 +19,8 @@
 package com.github.rwsbillyang.wxSDK.officialAccount
 
 import com.github.rwsbillyang.wxSDK.IBase
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.descriptors.element
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.encoding.encodeStructure
 import java.net.URLEncoder
 
 /**
@@ -72,10 +65,12 @@ class QrCodeApi(appId: String) : OABaseApi(appId) {
      * 将一条长链接转成短链接。
      * 主要使用场景： 开发者用于生成二维码的原链接（商品、支付二维码等）太长导致扫码速度和成功率下降，
      * 将原长链接通过此接口转成短链接再生成二维码将大大提升扫码速度和成功率。
+     * @return HttpResponse，自行解析出：["short_url"]?.toString()
      * */
-    fun shortUrl(url: String): String? = doPost4(mapOf("action" to "long2short", "long_url" to url)) {
-        "https://api.weixin.qq.com/cgi-bin/shorturl?access_token=${accessToken()}"
-    }["short_url"]?.toString()
+    fun shortUrl(url: String) = postByRaw(
+        "https://api.weixin.qq.com/cgi-bin/shorturl?access_token=${accessToken()}",
+        mapOf("action" to "long2short", "long_url" to url))
+
 }
 
 /**

@@ -21,26 +21,23 @@ package com.github.rwsbillyang.wxWork.contacts
 import com.github.rwsbillyang.ktorKit.apiJson.Sort
 import com.github.rwsbillyang.ktorKit.apiJson.UmiPagination
 import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
-import com.github.rwsbillyang.ktorKit.DataSource
 import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
+import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.wxSDK.work.DepartmentItem
-
 import com.github.rwsbillyang.wxSDK.work.FollowUser
 import com.github.rwsbillyang.wxWork.wxWorkModule
-import com.mongodb.client.model.ReplaceOptions
-
 import kotlinx.coroutines.runBlocking
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
-import org.koin.core.inject
+import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineCollection
 
 class ContactService(cache: ICache) : CacheService(cache) {
-    private val dbSource: DataSource by inject(qualifier = named(wxWorkModule.dbName!!))
+    private val dbSource: MongoDataSource by inject(qualifier = named(wxWorkModule.dbName!!))
 
     private val contactCol: CoroutineCollection<Contact> by lazy {
         dbSource.mongoDb.getCollection()

@@ -1,20 +1,21 @@
 package com.github.rwsbillyang.wxOA.test
 
-import com.github.rwsbillyang.ktorKit.testModule
-import com.github.rwsbillyang.wxOA.wxOaAppModule
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlin.test.*
 import io.ktor.server.testing.*
+import kotlin.test.*
 
 
 class ApplicationTest {
     @Test
-    fun testRoot() {
-        withTestApplication({ testModule(wxOaAppModule) }) {
-            handleRequest(HttpMethod.Get, "/").apply {
-                assertEquals(HttpStatusCode.OK, response.status())
-                assertEquals("HELLO WORLD!", response.content)
-            }
+    fun testRoot() = testApplication {
+        application {
+            testableModule()
         }
+
+        val response = client.get("/")
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("OK from wxSDK", response.bodyAsText())
     }
 }

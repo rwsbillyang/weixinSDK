@@ -2,7 +2,8 @@ package com.github.rwsbillyang.wxSDK.accessToken
 
 
 
-import com.github.rwsbillyang.wxSDK.KtorHttpClient
+import com.github.rwsbillyang.ktorKit.apiJson.KHttpClient
+
 import com.github.rwsbillyang.wxSDK.WxException
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -41,6 +42,7 @@ open class Refresher(
     companion object {
         private val log: Logger = LoggerFactory.getLogger("Refresher")
     }
+
     init {
         require(url != null || urlBlock != null){
             "one of url or urlBlock should not null"
@@ -52,9 +54,9 @@ open class Refresher(
      */
     override  fun refresh(): String {
         return runBlocking {
-            val text: String = getResponse().readText()
+            val text: String = getResponse().bodyAsText()
 
-           val str = KtorHttpClient.apiJson
+           val str = KHttpClient.apiJson
                 .parseToJsonElement(text)
                 .jsonObject[key]?.jsonPrimitive?.content
             if(str == null){
@@ -64,34 +66,26 @@ open class Refresher(
         }
     }
     open fun url() = url?: urlBlock?.invoke()?: throw Throwable("not provide url")
-    open suspend fun getResponse() = KtorHttpClient.DefaultClient.get<HttpResponse>(url())
+    open suspend fun getResponse() = KHttpClient.DefaultClient.get(url())
 }
-/**
- * post请求所用data，使用静态数据
- * */
-open class PostRefresher<T>(key: String,
-                    private val postData: T? = null,
-                    url: String? = null,
-                    urlBlock: (() -> String)? = null)
-:Refresher(key,url, urlBlock)
-{
-    override suspend fun getResponse() = KtorHttpClient.DefaultClient.post<HttpResponse>(url()){
-        postData?.let { body = it }
-    }
-}
+
 
 /**
  * post请求所用data，使用实时数据
+ * @param key 用于从请求结果中解析提取它的值
+ * @param block 用于构建请求体，如：{ setBody(body)}
+ * @param url 请求url
+ * @param urlBlock 构造url的函数，与url二者选其一
  * */
-open class VariableDataPostRefresher<T>(key: String,
-                            private val postDataBlock: ()->T?,
-                            url: String? = null,
-                            urlBlock: (() -> String)? = null)
-    :Refresher(key,url, urlBlock)
+open class PostRefresher(
+    key: String,
+    //private val postDataBlock: ()->T?,
+    private val block: HttpRequestBuilder.() -> Unit = {},
+    url: String? = null,
+    urlBlock: (() -> String)? = null):Refresher(key,url, urlBlock)
 {
-    override suspend fun getResponse() = KtorHttpClient.DefaultClient.post<HttpResponse>(url()){
-        postDataBlock()?.let { body = it }
-    }
+    override suspend fun getResponse() = KHttpClient.DefaultClient.post(url(), block)
+    //{ setBody(postDataBlock())}
 }
 
 /**

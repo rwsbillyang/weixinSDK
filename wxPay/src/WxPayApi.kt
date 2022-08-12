@@ -74,7 +74,7 @@ class WxPayApi(private val appId: String): WxApi() {
             val response: HttpResponse = client.post(url) {
                 header("Authorization", getAuthorizationHeader("POST", url.substringAfter("weixin.qq.com"),
                     data?.let { apiJson.encodeToString(data) }?:""))
-                data?.let { body = data }
+                data?.let { setBody(data) }
             }
             val bodyText = ctx.validator.validate(response)
             apiJson.decodeFromString(bodyText)

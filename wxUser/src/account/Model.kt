@@ -25,8 +25,9 @@ import com.github.rwsbillyang.ktorKit.uId
 import com.github.rwsbillyang.wxUser.externalUserId
 import com.github.rwsbillyang.wxUser.fakeRpc.EditionLevel
 import com.github.rwsbillyang.wxUser.userId
-import io.ktor.application.*
-import io.ktor.locations.*
+import io.ktor.resources.*
+import io.ktor.server.application.*
+
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseContextualSerialization
 import org.apache.commons.codec.digest.DigestUtils
@@ -204,7 +205,8 @@ data class Account(
 
 }
 
-@Location("/list")
+@Serializable
+@Resource("/list")
 data class AccountListParams(
     override val umi: String? = null,
     val _id: String? = null,
@@ -395,7 +397,8 @@ class GroupBean(
     val time: Long = System.currentTimeMillis() //创建时间
 )
 
-@Location("/list")
+@Serializable
+@Resource("/list")
 data class GroupListParams(
     override val umi: String? = null,
     val _id: String? = null,

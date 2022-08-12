@@ -15,7 +15,7 @@ import com.github.rwsbillyang.wxUser.payConfig.PayConfigService
 import com.github.rwsbillyang.wxUser.payConfig.WxPayConfigInstallation
 import com.github.rwsbillyang.wxUser.product.ProductService
 import com.github.rwsbillyang.wxUser.product.productApi
-import io.ktor.application.*
+import io.ktor.server.application.*
 
 
 import org.koin.dsl.module

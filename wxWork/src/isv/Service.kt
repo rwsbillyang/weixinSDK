@@ -18,23 +18,22 @@
 
 package com.github.rwsbillyang.wxWork.isv
 
-import com.github.rwsbillyang.ktorKit.DataSource
 import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
+import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.wxSDK.work.isv.AgentInfo
 import com.github.rwsbillyang.wxSDK.work.isv.AgentPrivilege
 import com.github.rwsbillyang.wxSDK.work.isv.AuthInfo
 import com.github.rwsbillyang.wxWork.wxWorkModule
-
 import kotlinx.coroutines.runBlocking
-import org.koin.core.inject
+import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineCollection
 
 class IsvCorpService (cache: ICache) : CacheService(cache) {
 
-    private val dbSource: DataSource by inject(qualifier = named(wxWorkModule.dbName!!))
+    private val dbSource: MongoDataSource by inject(qualifier = named(wxWorkModule.dbName!!))
 
     private val corpInfoCol: CoroutineCollection<CorpInfo> by lazy {
         dbSource.mongoDb.getCollection()

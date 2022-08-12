@@ -9,6 +9,13 @@ wechat(weixin) SDK for Ktor in Kotlin
 - 基于ktor-cio的Http client的http请求封装
 
 引入依赖
+repositories中添加：`maven { url 'https://jitpack.io' }`:
+```groovy
+repositories {
+			maven { url 'https://jitpack.io' }
+		}
+```
+
 ```groovy
 implementation ("com.github.rwsbillyang.wxSDK:common:$wxSdkVersion")
 ```
@@ -31,7 +38,7 @@ implementation ("com.github.rwsbillyang.wxSDK:common:$wxSdkVersion")
 引入依赖
 ```groovy
 implementation ("com.github.rwsbillyang.wxSDK:common:$wxSdkVersion")
-implementation ("com.github.rwsbillyang:wxUSer:$wxSdkVersion")
+implementation ("com.github.rwsbillyang.wxSDK:wxUSer:$wxSdkVersion")
 ```
 
 # 公众号（officialAccount）
@@ -44,7 +51,7 @@ implementation ("com.github.rwsbillyang:wxUSer:$wxSdkVersion")
 引入依赖
 ```groovy
 implementation ("com.github.rwsbillyang.wxSDK:common:$wxSdkVersion")
-implementation ("com.github.rwsbillyang:officialAccount:$wxSdkVersion")
+implementation ("com.github.rwsbillyang.wxSDK:officialAccount:$wxSdkVersion")
 ```
 
 ## 基于ktor+MongoDB的公众号通用解决方案
@@ -59,9 +66,9 @@ implementation ("com.github.rwsbillyang:officialAccount:$wxSdkVersion")
 引入依赖
 ```groovy
 implementation ("com.github.rwsbillyang.wxSDK:common:$wxSdkVersion")
-implementation ("com.github.rwsbillyang:officialAccount:$wxSdkVersion")
-implementation ("com.github.rwsbillyang:wxUser:$wxSdkVersion")
-implementation ("com.github.rwsbillyang:wxOA:$wxSdkVersion")
+implementation ("com.github.rwsbillyang.wxSDK:officialAccount:$wxSdkVersion")
+implementation ("com.github.rwsbillyang.wxSDK:wxUser:$wxSdkVersion")
+implementation ("com.github.rwsbillyang.wxSDK:wxOA:$wxSdkVersion")
 ```
 
 ### 公众号后台配置
@@ -588,7 +595,7 @@ A CDATA section is "a section of element content that is marked for the parser t
 
 ```groovy
 implementation ("com.github.rwsbillyang.wxSDK:common:$wxSdkVersion")
-implementation ("com.github.rwsbillyang:work:$wxSdkVersion")
+implementation ("com.github.rwsbillyang.wxSDK:work:$wxSdkVersion")
 ```
 
 ## 基于ktor+MongoDB的公众号通用解决方案
@@ -602,9 +609,9 @@ implementation ("com.github.rwsbillyang:work:$wxSdkVersion")
 引入依赖
 ```groovy
 implementation ("com.github.rwsbillyang.wxSDK:common:$wxSdkVersion")
-implementation ("com.github.rwsbillyang:work:$wxSdkVersion")
-implementation ("com.github.rwsbillyang:wxUser:$wxSdkVersion")
-implementation ("com.github.rwsbillyang:wxWork:$wxSdkVersion")
+implementation ("com.github.rwsbillyang.wxSDK:work:$wxSdkVersion")
+implementation ("com.github.rwsbillyang.wxSDK:wxUser:$wxSdkVersion")
+implementation ("com.github.rwsbillyang.wxSDK:wxWork:$wxSdkVersion")
 ```
 
 ### 关于secret
@@ -857,11 +864,11 @@ implementation ("com.github.rwsbillyang.wxSDK:wxPay:$wxSdkVersion")
 
 ```groovy
 implementation ("com.github.rwsbillyang.wxSDK:common:$wxSdkVersion")
-implementation ("com.github.rwsbillyang:wxUser:$wxSdkVersion")
-implementation ("com.github.rwsbillyang:wxMini:$wxSdkVersion")
+implementation ("com.github.rwsbillyang.wxSDK:wxUser:$wxSdkVersion")
+implementation ("com.github.rwsbillyang.wxSDK:wxMini:$wxSdkVersion")
 ```
 
 # 前端wxWebApp
 
-基于Framework7 react+ typeScript的微信web app样板程序
+基于Framework7 react+ typeScript的微信web app样板程序，参见：https://github.com/rwsbillyang/wxWebAppBoilerPlate
 

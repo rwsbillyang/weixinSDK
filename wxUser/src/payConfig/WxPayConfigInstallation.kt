@@ -20,7 +20,7 @@ package com.github.rwsbillyang.wxUser.payConfig
 
 import com.github.rwsbillyang.ktorKit.LifeCycle
 import com.github.rwsbillyang.wxSDK.wxPay.WxPay
-import io.ktor.application.*
+import io.ktor.server.application.*
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 

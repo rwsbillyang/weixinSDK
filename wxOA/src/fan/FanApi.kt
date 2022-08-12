@@ -13,19 +13,18 @@
 
 package com.github.rwsbillyang.wxOA.fan
 
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
+
 import com.github.rwsbillyang.ktorKit.AbstractJwtHelper
-
+import com.github.rwsbillyang.ktorKit.apiJson.DataBox
 import com.github.rwsbillyang.ktorKit.respondBox
-import com.github.rwsbillyang.wxUser.fakeRpc.FanInfo
 import com.github.rwsbillyang.wxOA.fakeRpc.FanRpcOA
-
-import io.ktor.application.*
-import io.ktor.auth.*
+import com.github.rwsbillyang.wxUser.fakeRpc.FanInfo
 import io.ktor.http.*
-import io.ktor.locations.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.resources.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import org.koin.dsl.module
 import org.koin.ktor.ext.inject
 

@@ -19,7 +19,6 @@
 package com.github.rwsbillyang.wxSDK.security
 
 import kotlinx.serialization.Serializable
-import org.bson.types.ObjectId
 import java.util.*
 
 /**

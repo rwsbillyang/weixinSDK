@@ -18,18 +18,20 @@
 
 package com.github.rwsbillyang.wxUser.payConfig
 
-import com.github.rwsbillyang.ktorKit.DataSource
+
+import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.wxUser.wxUserAppModule
 
 
 import kotlinx.coroutines.runBlocking
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
 import org.koin.core.qualifier.named
 import org.litote.kmongo.coroutine.CoroutineCollection
 
-class PayConfigService: KoinComponent{
-    private val dbSource: DataSource by inject(qualifier = named(wxUserAppModule.dbName!!))
+class PayConfigService: KoinComponent {
+    private val dbSource: MongoDataSource by inject(qualifier = named(wxUserAppModule.dbName!!))
 
     private val wxPayConfigCol: CoroutineCollection<WxPayConfig> by lazy {
         dbSource.mongoDb.getCollection()

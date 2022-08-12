@@ -10,14 +10,13 @@ package com.github.rwsbillyang.wxOA.msg
 
 import com.github.rwsbillyang.ktorKit.AbstractJwtHelper
 import com.github.rwsbillyang.ktorKit.respondBox
-
-import io.ktor.application.*
-import io.ktor.auth.*
 import io.ktor.http.*
-import io.ktor.locations.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.request.*
+import io.ktor.server.resources.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import org.koin.dsl.module
 import org.koin.ktor.ext.inject
 

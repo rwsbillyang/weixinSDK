@@ -22,28 +22,25 @@ package com.github.rwsbillyang.wxOA.account
 
 import com.github.rwsbillyang.ktorKit.apiJson.to64String
 import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
-import com.github.rwsbillyang.ktorKit.DataSource
+import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.wxOA.fakeRpc.FanRpcOA
 import com.github.rwsbillyang.wxOA.msg.TemplatePayMsgNotifier
-
 import com.github.rwsbillyang.wxUser.account.Account
 import com.github.rwsbillyang.wxUser.account.AccountServiceBase
-
 import com.github.rwsbillyang.wxUser.account.Recommend
-import com.github.rwsbillyang.wxUser.fakeRpc.*
-
-import kotlinx.coroutines.GlobalScope
+import com.github.rwsbillyang.wxUser.fakeRpc.EditionLevel
+import com.github.rwsbillyang.wxUser.fakeRpc.level2Name
 import kotlinx.coroutines.launch
-
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.UseContextualSerialization
 import org.bson.types.ObjectId
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import org.litote.kmongo.coroutine.CoroutineCollection
 
 
-class RecommendHelper: KoinComponent{
+class RecommendHelper: KoinComponent {
     companion object{
         const val isBonus = true //开关控制是否推荐奖励
         const val bonusDays = 30
@@ -51,7 +48,7 @@ class RecommendHelper: KoinComponent{
     }
 
 
-    private val dbSource: DataSource by inject(qualifier = named(AccountServiceBase.AccountDbName))
+    private val dbSource: MongoDataSource by inject(qualifier = named(AccountServiceBase.AccountDbName))
 
     private val recommendCol: CoroutineCollection<Recommend> by lazy {
         dbSource.mongoDb.getCollection("RecommendOA")
@@ -65,31 +62,30 @@ class RecommendHelper: KoinComponent{
      * @param account 被推荐人Account
      * @param rcm 推荐人Account._id
      * */
-    fun bonus(account: Account, rcm: String?, agentId:Int?){
+    fun bonus(account: Account, rcm: String?, agentId:Int?) {
         if(!isBonus || rcm == null){
             return
         }
         val rcmId = rcm.toObjectId()
         //val now = System.currentTimeMillis()
+        runBlocking{
+            launch{
+                recommendCol.save(Recommend(account._id, rcmId))
 
-        GlobalScope.launch{
-
-            //runBlocking {}
-            recommendCol.save(Recommend(account._id, rcmId))
-
-            var nick: String? = ""
-            val newExpire = accountService.updateAccountExpiration(account._id.to64String(),null, bonusLevel, 0,0, bonusDays)
-            if(account.openId1 != null){
-                nick = fanClient.getFanInfo(account.openId1!!, null).nick?:""
-                //wechat notify
-                wechatNotifier.onBonusSuccess(account, account.appId, agentId, level2Name(bonusLevel), newExpire, "我接受好友邀请，赠送30天VIP到账")
-            }
+                var nick: String? = ""
+                val newExpire = accountService.updateAccountExpiration(account._id.to64String(),null, bonusLevel, 0,0, bonusDays)
+                if(account.openId1 != null){
+                    nick = fanClient.getFanInfo(account.openId1!!, null).nick?:""
+                    //wechat notify
+                    wechatNotifier.onBonusSuccess(account, account.appId, agentId, level2Name(bonusLevel), newExpire, "我接受好友邀请，赠送30天VIP到账")
+                }
 
 
-            //奖励推荐人
-            accountService.findOne(rcmId)?.let {
-                val newExpire2 = accountService.updateAccountExpiration(rcm, null, bonusLevel, 0,0, bonusDays)
-                wechatNotifier.onBonusSuccess(it, account.appId, null, level2Name(bonusLevel), newExpire2, "我邀请的好友 $nick 开通使用， 赠送30天VIP到账")
+                //奖励推荐人
+                accountService.findOne(rcmId)?.let {
+                    val newExpire2 = accountService.updateAccountExpiration(rcm, null, bonusLevel, 0,0, bonusDays)
+                    wechatNotifier.onBonusSuccess(it, account.appId, null, level2Name(bonusLevel), newExpire2, "我邀请的好友 $nick 开通使用， 赠送30天VIP到账")
+                }
             }
         }
     }

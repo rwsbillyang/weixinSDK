@@ -23,20 +23,18 @@ import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler
 import com.github.rwsbillyang.wxWork.agent.AgentController
 import com.github.rwsbillyang.wxWork.configWxWorkMulti
+import io.ktor.server.application.*
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-import io.ktor.application.*
 
-
-
-import org.koin.core.KoinComponent
-import org.koin.core.inject
 import org.koin.ktor.ext.inject
 
 
 /**
  * 用于多应用的管理后台配置
  * */
-class ConfigController : KoinComponent{
+class ConfigController : KoinComponent {
    // private val log = LoggerFactory.getLogger("ConfigController")
     private val service: ConfigService by inject()
     private val agentController: AgentController by inject()

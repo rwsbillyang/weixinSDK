@@ -8,3 +8,5 @@ include "wxWork"
 include "wxMini"
 
 
+//include "wxUser"
+//project(':wxUser').projectDir = file("$rootDir/modules/wxUser")

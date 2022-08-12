@@ -20,19 +20,21 @@ package com.github.rwsbillyang.wxUser.product
 
 import com.github.rwsbillyang.ktorKit.apiJson.to64String
 import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
-import com.github.rwsbillyang.ktorKit.DataSource
+
 import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
+import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.wxUser.wxUserAppModule
 import kotlinx.coroutines.runBlocking
-import org.koin.core.inject
+import org.koin.core.component.inject
+
 import org.koin.core.qualifier.named
 import org.litote.kmongo.and
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.eq
 
 class ProductService(cache: ICache) : CacheService(cache){
-    private val dbSource: DataSource by inject(qualifier = named(wxUserAppModule.dbName!!))
+    private val dbSource: MongoDataSource by inject(qualifier = named(wxUserAppModule.dbName!!))
 
     private val col: CoroutineCollection<Product> by lazy {
         dbSource.mongoDb.getCollection()

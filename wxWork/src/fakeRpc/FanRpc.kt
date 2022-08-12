@@ -38,10 +38,9 @@ import com.github.rwsbillyang.wxWork.isv.IsvCorpService
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-
-import org.koin.core.KoinComponent
-import org.koin.core.inject
 
 //从未登录过的可见范围内部成员提交的VID中将无openID，需从agent初始化时获取到的客户信息中提取openId
 private fun Contact.toFanInfo(vId: VID) = FanInfo(vId.openId?:openId?:"noOpenId",null, thumb?:avatar, name, gender?.toInt(), address)

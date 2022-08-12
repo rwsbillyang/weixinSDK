@@ -24,6 +24,7 @@ import com.github.rwsbillyang.wxSDK.security.PemUtil
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler
+import io.ktor.client.request.*
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -318,11 +319,12 @@ class SuiteApiContext(
  * suite_access_token刷新请求器
  * 注意：需要等suite ticket推送过来后才可创建
  * */
-class SuiteRefresher(suiteId: String?) : VariableDataPostRefresher<SuiteParameters>(
+class SuiteRefresher(suiteId: String?) : PostRefresher(
     "suite_access_token",
     {
-        if(suiteId == null) SuiteParameters(IsvWorkSingle.suiteId, IsvWorkSingle.ctx.secret, IsvWorkSingle.ctx.ticket!!)
+        val body = if(suiteId == null) SuiteParameters(IsvWorkSingle.suiteId, IsvWorkSingle.ctx.secret, IsvWorkSingle.ctx.ticket!!)
         else IsvWorkMulti.ApiContextMap[suiteId]?.let { SuiteParameters(suiteId, it.secret, it.ticket!!) }
+         setBody(body)
     },
     "https://qyapi.weixin.qq.com/cgi-bin/service/get_suite_token"
 )
@@ -360,10 +362,12 @@ class TimelyRefreshSuiteToken @JvmOverloads constructor(
  * 第三方访问企业api的accessToken刷新请求器
  * */
 class AccessToken3rdRefresher(corpId: String, permanentCode: String, suiteAccessToken: ITimelyRefreshValue?) :
-    PostRefresher<Map<String, String>>(
+    PostRefresher(
         "access_token",
-        mapOf("auth_corpid" to corpId, "permanent_code" to permanentCode),
-        " https://qyapi.weixin.qq.com/cgi-bin/service/get_corp_token?suite_access_token=${suiteAccessToken?.get()}"
+        {
+            setBody(mapOf("auth_corpid" to corpId, "permanent_code" to permanentCode))
+        } ,
+        "https://qyapi.weixin.qq.com/cgi-bin/service/get_corp_token?suite_access_token=${suiteAccessToken?.get()}"
     )
 
 /**
@@ -393,9 +397,11 @@ class TimelyRefreshAccessToken3rd @JvmOverloads constructor(
  * @param corpid    是	服务商的corpid
  * @param provider_secret    是	服务商的secret，在服务商管理后台可见
  * */
-class ProviderTokenRefresher(corpid: String, provider_secret: String) : PostRefresher<Map<String, String>>(
+class ProviderTokenRefresher(corpid: String, provider_secret: String) : PostRefresher(
     "provider_access_token",
-    mapOf("corpid" to corpid, "provider_secret" to provider_secret),
+    {
+        setBody(mapOf("corpid" to corpid, "provider_secret" to provider_secret))
+    },
     "https://qyapi.weixin.qq.com/cgi-bin/service/get_provider_token"
 )
 

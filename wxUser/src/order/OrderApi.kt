@@ -18,19 +18,18 @@
 
 package com.github.rwsbillyang.wxUser.order
 
+
 import com.github.rwsbillyang.ktorKit.AbstractJwtHelper
 import com.github.rwsbillyang.ktorKit.respondBox
 import com.github.rwsbillyang.wxSDK.wxPay.WxPay
-
 import com.github.rwsbillyang.wxUser.agentId
-
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.features.*
 import io.ktor.http.*
-import io.ktor.locations.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.plugins.*
+import io.ktor.server.resources.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
 
@@ -55,7 +54,7 @@ fun Routing.accountOrderApi(){
         authenticate {
             intercept(ApplicationCallPipeline.Call) {
                 when (jwtHelper.isAuthorized(call)) {
-                    true, null -> proceed()
+                    true -> proceed()
                     else -> {
                         call.respond(HttpStatusCode.Forbidden)
                         return@intercept finish()

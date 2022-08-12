@@ -22,7 +22,7 @@ import com.github.rwsbillyang.wxOA.stats.StatsEvent
 import com.github.rwsbillyang.wxOA.stats.StatsService
 import com.github.rwsbillyang.wxSDK.msg.*
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.*
-import org.koin.core.inject
+import org.koin.core.component.inject
 import javax.xml.stream.XMLEventReader
 
 class EventHandler: IOAEventHandler, MsgEventCommonHandler() {

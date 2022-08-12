@@ -105,9 +105,9 @@ class MsgApi(appId: String) : OABaseApi(appId){
      * 查询群发消息发送状态【订阅号与服务号认证后均可用】
      *
      * @param msgId msg_id	群发消息后返回的消息id
-     * @return    消息发送后的状态，SEND_SUCCESS表示发送成功，SENDING表示发送中，SEND_FAIL表示发送失败，DELETE表示已删除
+     * @return   HttpResponse 消息发送后的状态，SEND_SUCCESS表示发送成功，SENDING表示发送中，SEND_FAIL表示发送失败，DELETE表示已删除
      * */
-    fun getStatus(msgId: Long): String = doPost3("mass/get", mapOf("msg_id" to msgId))["msg_status"].toString()
+    fun getStatus(msgId: Long) = doPostRaw("mass/get", mapOf("msg_id" to msgId))
 
 
     /**
@@ -124,7 +124,7 @@ class MsgApi(appId: String) : OABaseApi(appId){
     /**
      * 获取群发速度
      * */
-    fun getSpeed(): ResponseSpeed = doPost("speed/get", null)
+    fun getSpeed(): ResponseSpeed = doPost<Unit, ResponseSpeed>("speed/get", null)
 
 
 

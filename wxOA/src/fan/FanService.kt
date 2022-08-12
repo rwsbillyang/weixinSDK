@@ -14,13 +14,15 @@
 package com.github.rwsbillyang.wxOA.fan
 
 import com.github.rwsbillyang.ktorKit.apiJson.UmiPagination
-import com.github.rwsbillyang.ktorKit.DataSource
+
 import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
+import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.wxOA.wxOaAppModule
 import kotlinx.coroutines.runBlocking
 import org.bson.conversions.Bson
-import org.koin.core.inject
+import org.koin.core.component.inject
+
 import org.koin.core.qualifier.named
 import org.litote.kmongo.bson
 
@@ -31,7 +33,7 @@ import org.litote.kmongo.setValue
 
 
 class FanService(cache: ICache) : CacheService(cache) {
-    private val dbSource: DataSource by inject(qualifier = named(wxOaAppModule.dbName!!))
+    private val dbSource: MongoDataSource by inject(qualifier = named(wxOaAppModule.dbName!!))
 
     /**
      * 关注的粉丝

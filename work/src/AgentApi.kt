@@ -38,7 +38,7 @@ class AgentApi (corpId: String?, agentId: Int?, suiteId: String?)
      *
      * https://work.weixin.qq.com/api/doc/90000/90135/90227
      * */
-    fun list() = doGet3("list", null)
+    fun list() = doGetRaw("list", null)
 
     /**
      * 获取指定的应用详情
@@ -49,7 +49,7 @@ class AgentApi (corpId: String?, agentId: Int?, suiteId: String?)
      * 设置应用
      * https://work.weixin.qq.com/api/doc/90000/90135/90228
      * */
-    fun setAgent(body: Map<String, Any?>) = doPost3("set",body)
+    fun setAgent(body: Map<String, Any?>) = doPostRaw("set",body)
 }
 
 /**

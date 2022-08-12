@@ -29,7 +29,7 @@ import com.github.rwsbillyang.wxUser.account.stats.LoginLog
 import com.github.rwsbillyang.wxUser.fakeRpc.FanInfo
 
 import org.bson.types.ObjectId
-import org.koin.core.inject
+import org.koin.core.component.inject
 import org.litote.kmongo.*
 
 

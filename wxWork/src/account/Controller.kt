@@ -18,36 +18,29 @@
 
 package com.github.rwsbillyang.wxWork.account
 
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
+
 import com.github.rwsbillyang.ktorKit.AuthUserInfo
 import com.github.rwsbillyang.ktorKit.IAuthUserInfo
 import com.github.rwsbillyang.ktorKit.Role
-
-
+import com.github.rwsbillyang.ktorKit.apiJson.DataBox
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.isv.AgentInfo
-
 import com.github.rwsbillyang.wxUser.account.*
 import com.github.rwsbillyang.wxUser.account.stats.LoginLog
-
 import com.github.rwsbillyang.wxUser.fakeRpc.FanInfo
-
-
 import com.github.rwsbillyang.wxWork.agent.AgentService
 import com.github.rwsbillyang.wxWork.contacts.ContactHelper
 import com.github.rwsbillyang.wxWork.contacts.ContactService
 import com.github.rwsbillyang.wxWork.fakeRpc.FanRpcWork
 import com.github.rwsbillyang.wxWork.isv.CorpInfo
-
 import com.github.rwsbillyang.wxWork.isv.IsvCorpService
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.bson.types.ObjectId
-import org.koin.core.inject
+import org.koin.core.component.inject
 import org.litote.kmongo.combine
 import org.litote.kmongo.setValue
-
 
 
 /**
@@ -132,9 +125,10 @@ class AccountControllerWork(private val accountService: AccountServiceWxWork): A
                         //当用户登录时，获取其外部用户列表: 对于channelHelper应用来说，需要登录用户的全部联系人，而对于zhike来说可能不需要
                         //若是启动时执行同步，将无法确定是哪个用户，如果遍历所有用户，量可能会比较大
                         //登录时执行同步：一是每次登录时同步，二是首次登录时同步
-                        GlobalScope.launch {
+                        runBlocking {
+                            launch {
                             contactHelper.syncExternalsOfUser(corpId,agentId,bean.suiteId,userId, 1)
-                        }
+                        } }
                     }
                 })
         val box = getAuthBeanBox(account, agentId, LoginLog.LoginType_WXWORK,ip, ua)
@@ -224,7 +218,7 @@ class AccountControllerWork(private val accountService: AccountServiceWxWork): A
     }
 
     override fun bonus(account: Account, rcm: String?, agentId: Int?) = recommendHelper.bonus(account, rcm, agentId)
-    override fun getFanInfo(account: Account): FanInfo? {
+    override fun getFanInfo(account: Account): FanInfo {
         return fanClient.getFanInfo(account.toVID())
     }
     override fun getJwtToken(account: Account, agentId: Int?, uId: String, role: String, level: String): String?{

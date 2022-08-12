@@ -22,11 +22,9 @@ import com.github.rwsbillyang.wxOA.pref.PrefService
 import com.github.rwsbillyang.wxSDK.officialAccount.MsgApi
 import com.github.rwsbillyang.wxSDK.officialAccount.outMsg.ColoredValue
 import com.github.rwsbillyang.wxSDK.officialAccount.outMsg.TemplateMsg
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import org.koin.core.KoinComponent
-import org.koin.core.inject
-import org.koin.ktor.ext.inject
+import kotlinx.coroutines.*
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 
 open class TemplateMsgBase: KoinComponent {
@@ -45,32 +43,36 @@ open class TemplateMsgBase: KoinComponent {
      *
      * @return 成功进行发送，返回true，否则返回false
      * */
-    fun sendTemplateMsg(openId: String, appId: String?, key: String, data: MutableMap<String, ColoredValue>): Boolean {
+    fun sendTemplateMsg(openId: String, appId: String?, key: String, data: MutableMap<String, ColoredValue>): Boolean = runBlocking{
         if(appId == null){
             log.warn("no appId")
-            return false
+            return@runBlocking false
         }
         val cfg = msgService.findTemplateMsgConfig(appId)
         if (cfg == null) {
             log.warn("not config TemplateMsgConfig for appId=$appId?")
-            return false
+            return@runBlocking false
         }
 
         val templateId = cfg.templateIdMap[key]
         if (templateId == null) {
             log.warn("not config templateId for key=$key ?")
-            return false
+            return@runBlocking false
         }
         val host = prefService.findOfficialAccount(appId)?.host?:""
-        GlobalScope.launch {
-            val templateMsg = TemplateMsg(
-                openId,
-                templateId,
-                data,
-                host+cfg.urlMap?.get(key)
-            )
-            MsgApi(appId).sendTemplateMsg(templateMsg)
+
+
+        launch {
+            withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+                val templateMsg = TemplateMsg(
+                    openId,
+                    templateId,
+                    data,
+                    host+cfg.urlMap?.get(key)
+                )
+                MsgApi(appId).sendTemplateMsg(templateMsg)
+            }
         }
-        return true
+        return@runBlocking true
     }
 }

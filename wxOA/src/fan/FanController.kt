@@ -15,8 +15,9 @@ package com.github.rwsbillyang.wxOA.fan
 
 
 import com.github.rwsbillyang.ktorKit.apiJson.DataBox
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
 
 class FanController : KoinComponent {
     private val service: FanService by inject()

@@ -28,11 +28,11 @@ import com.github.rwsbillyang.wxSDK.work.inMsg.WorkBaseMsg
 import com.github.rwsbillyang.wxSDK.work.inMsg.WorkTextMsg
 import com.github.rwsbillyang.wxWork.dispatchAgentMsgApi
 
-import io.ktor.application.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import io.ktor.features.*
 import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 //fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -59,19 +59,18 @@ fun Application.testableModule(testing: Boolean = false) {
     class AuthenticationException : RuntimeException()
     class AuthorizationException : RuntimeException()
 
+    install(StatusPages) {
+        exception<AuthenticationException> { call, cause ->
+            call.respond(HttpStatusCode.Unauthorized)
+        }
+        exception<AuthorizationException> { call, cause ->
+            call.respond(HttpStatusCode.Forbidden)
+        }
+    }
+
     routing {
         get("/") {
             call.respondText("OK from wxSDK", contentType = ContentType.Text.Plain)
-        }
-
-        install(StatusPages) {
-            exception<AuthenticationException> { cause ->
-                call.respond(HttpStatusCode.Unauthorized)
-            }
-            exception<AuthorizationException> { cause ->
-                call.respond(HttpStatusCode.Forbidden)
-            }
-
         }
     }
 }

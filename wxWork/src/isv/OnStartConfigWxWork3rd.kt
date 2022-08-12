@@ -26,9 +26,8 @@ import com.github.rwsbillyang.wxSDK.work.isv.ISuiteInfoHandler
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWork
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
+import io.ktor.server.application.*
 
-
-import io.ktor.application.*
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 

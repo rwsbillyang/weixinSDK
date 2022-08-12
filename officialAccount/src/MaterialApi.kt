@@ -42,13 +42,13 @@ class MaterialApi(appId: String) : OABaseApi(appId){
      *
      * 媒体文件类型，分别有图片（image）、语音（voice）和缩略图（thumb）
      * */
-    fun addMedia(file: String, type: MediaType): ResponseAddMaterial = doUpload("add_material",file, mapOf("type" to type.value))
+    fun addMedia(file: String, type: MediaType): ResponseAddMaterial = doUpload("add_material",file,  mapOf("type" to type.value))
 
     /**
      * @param title	是	视频素材的标题
      * @param introduction	是	视频素材的描述
      * */
-    fun addVideo(file: String, title: String, introduction: String): ResponseAddMaterial = doUpload("add_material",file,null,
+    fun addVideo(file: String, title: String, introduction: String): ResponseAddMaterial = doUpload("add_material",file, null,
             mapOf("description" to apiJson.encodeToString(VideoDescription(title, introduction))))
 
 

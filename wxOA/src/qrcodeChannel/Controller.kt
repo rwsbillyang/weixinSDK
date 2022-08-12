@@ -20,16 +20,16 @@ package com.github.rwsbillyang.wxOA.qrcodeChannel
 
 import com.github.rwsbillyang.ktorKit.apiJson.DataBox
 import com.github.rwsbillyang.wxSDK.officialAccount.QrCodeApi
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+
 import org.slf4j.LoggerFactory
 import java.lang.IllegalArgumentException
 
 
 class QrCodeChannelController: KoinComponent {
     private val log = LoggerFactory.getLogger("ChannelController")
-    private val QrCodeChannelPath = "./static/qrCodeChannel" //nginx配置： upload 开始的资源映射到 static下面
 
     private val service: QrCodeChannelService by inject()
 
@@ -78,12 +78,16 @@ class QrCodeChannelController: KoinComponent {
 
             return if(res.isOK() && res.ticket != null && res.url != null) {
                 val filename = channel.code + "-"+System.currentTimeMillis() + ".jpg"
-                val filePath = "$QrCodeChannelPath/${channel.appId}"
+
+                //生成的公众号渠道二维码路径，nginx配置需要对应上
+                val nginxRoot = System.getProperty("NginxStaticRoot","./frontEnd/static")
+
+                val filePath = "$nginxRoot/qrCodeChannel/${channel.appId}"
                 val downUrl = api.qrCodeUrl(res.ticket!!)
                 log.info("download from $downUrl")
                 val ok = api.download(downUrl, filePath,filename)
                 if(ok){
-                    val path = "$filePath/$filename".removePrefix(".")
+                    val path = "$filePath/$filename".removePrefix(nginxRoot)
                     service.updateQrcode(channel._id, res.url!!, path)
                     DataBox.ok(QrCodeInfo(res.url, path))
                 }else{

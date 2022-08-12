@@ -24,8 +24,8 @@ import com.github.rwsbillyang.ktorKit.apiJson.IUmiListParams
 import com.github.rwsbillyang.ktorKit.apiJson.to64String
 import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
 import com.github.rwsbillyang.wxSDK.work.*
-import io.ktor.locations.*
-import kotlinx.serialization.SerialName
+import io.ktor.resources.*
+
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseContextualSerialization
 import org.bson.conversions.Bson
@@ -116,8 +116,8 @@ class ContactBean(
     val remark: String? = null
 )
 
-
-@Location("/list")
+@Serializable
+@Resource("/list")
 data class ContactListParams(
     val corpId: String,
     override val umi: String? = null,
@@ -190,8 +190,8 @@ data class ExternalContact(
 
     }
 }
-
-@Location("/external/list")
+@Serializable
+@Resource("/external/list")
 data class ExternalListParams(
     val corpId: String,
 
