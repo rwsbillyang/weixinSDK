@@ -18,11 +18,11 @@
 
 package com.github.rwsbillyang.wxWork.contacts
 
-import com.github.rwsbillyang.ktorKit.AbstractJwtHelper
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
-import com.github.rwsbillyang.ktorKit.corpId
-import com.github.rwsbillyang.ktorKit.respondBox
-import com.github.rwsbillyang.ktorKit.uId
+import com.github.rwsbillyang.ktorKit.server.AbstractJwtHelper
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.server.corpId
+import com.github.rwsbillyang.ktorKit.server.respondBox
+import com.github.rwsbillyang.ktorKit.server.uId
 import com.github.rwsbillyang.wxUser.agentId
 import com.github.rwsbillyang.wxUser.fakeRpc.FanInfo
 import com.github.rwsbillyang.wxUser.suiteId

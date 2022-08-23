@@ -20,9 +20,9 @@
 
 package com.github.rwsbillyang.wxWork.contacts
 
-import com.github.rwsbillyang.ktorKit.apiJson.IUmiListParams
-import com.github.rwsbillyang.ktorKit.apiJson.to64String
-import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
+import com.github.rwsbillyang.ktorKit.to64String
+import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.wxSDK.work.*
 import io.ktor.resources.*
 

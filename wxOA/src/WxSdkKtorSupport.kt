@@ -19,7 +19,7 @@
 package com.github.rwsbillyang.wxOA
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.wxSDK.bean.OAuthInfo
 import com.github.rwsbillyang.wxSDK.officialAccount.OAuthApi
 import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
@@ -29,6 +29,7 @@ import com.github.rwsbillyang.wxSDK.security.JsAPI
 import com.github.rwsbillyang.wxSDK.security.SignUtil
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -37,15 +38,6 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
 
-//class OfficialAccountFeature {
-//    companion object Feature : ApplicationFeature<ApplicationCallPipeline, OAConfiguration, OfficialAccountFeature> {
-//        override val key = AttributeKey<OfficialAccountFeature>("OfficialAccountFeature")
-//        override fun install(pipeline: ApplicationCallPipeline, configure: OAConfiguration.() -> Unit): OfficialAccountFeature {
-//            OfficialAccount.config(configure)
-//            return OfficialAccountFeature()
-//        }
-//    }
-//}
 
 
 fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
@@ -216,7 +208,7 @@ fun Routing.oAuthApi(
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]
 
-        //log.info("wxOA oauth, notify1 schema=${call.request.origin.scheme}")
+        log.info("wxOA oauth, notify1 schema=${call.request.origin.scheme}")
 
         var url = "$notifyWebAppUrl?state=$state&step=1&appId=${appId}"
 
@@ -244,6 +236,7 @@ fun Routing.oAuthApi(
                     "&code=OK&openId=${res.openId}&needUserInfo=$isNeedUserInfoInt" //通知前端是否跳转到第二步获取userInfo
                 }
             } else {
+                log.warn("fail when oauthAi.getAccessToken: ${res.errMsg}")
                 "&code=KO&msg=${res.errMsg}"
             }
         }
@@ -268,10 +261,10 @@ fun Routing.oAuthApi(
 //            }
 
             val oauthAi = OAuthApi(appId)
-            val res = oauthAi.getAccessToken(code)
+            val res:ResponseOauthAccessToken = oauthAi.getAccessToken(code)
             url += if (res.isOK() && res.openId != null) {
                 onGetOauthAccessToken?.let { run { it.invoke(res, appId) } }
-                if (res.accessToken != null && res.accessToken != null && res.openId != null) {
+                if (res.accessToken != null ) {
                     val resUserInfo = oauthAi.getUserInfo(res.accessToken!!, res.openId!!)
                     if (resUserInfo.isOK()) {
                         onGetUserInfo?.let { run { it.invoke(resUserInfo, appId) } }//async save fan user info

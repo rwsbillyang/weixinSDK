@@ -20,7 +20,10 @@ package com.github.rwsbillyang.wxOA.account
 
 import com.github.rwsbillyang.ktorKit.*
 
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.server.AuthUserInfo
+import com.github.rwsbillyang.ktorKit.server.BizException
+import com.github.rwsbillyang.ktorKit.server.IAuthUserInfo
 import com.github.rwsbillyang.wxOA.fakeRpc.FanRpcOA
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxUser.account.*

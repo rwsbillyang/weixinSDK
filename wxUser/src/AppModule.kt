@@ -1,7 +1,8 @@
 package com.github.rwsbillyang.wxUser
 
 
-import com.github.rwsbillyang.ktorKit.*
+
+import com.github.rwsbillyang.ktorKit.server.AppModule
 import com.github.rwsbillyang.wxSDK.wxPay.wxPayNotify
 
 import com.github.rwsbillyang.wxUser.feedback.FeedbackController

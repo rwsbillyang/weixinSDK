@@ -18,7 +18,8 @@
 
 package com.github.rwsbillyang.wxOA.qrcodeChannel
 
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.client.doDownload
 import com.github.rwsbillyang.wxSDK.officialAccount.QrCodeApi
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -85,7 +86,7 @@ class QrCodeChannelController: KoinComponent {
                 val filePath = "$nginxRoot/qrCodeChannel/${channel.appId}"
                 val downUrl = api.qrCodeUrl(res.ticket!!)
                 log.info("download from $downUrl")
-                val ok = api.download(downUrl, filePath,filename)
+                val ok = doDownload(downUrl, filePath,filename)
                 if(ok){
                     val path = "$filePath/$filename".removePrefix(nginxRoot)
                     service.updateQrcode(channel._id, res.url!!, path)

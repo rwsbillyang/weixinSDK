@@ -19,7 +19,7 @@
 package com.github.rwsbillyang.wxWork.account
 
 
-import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
+import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 

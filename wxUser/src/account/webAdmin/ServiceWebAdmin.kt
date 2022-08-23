@@ -18,7 +18,7 @@
 
 package com.github.rwsbillyang.wxUser.account.webAdmin
 
-import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
+import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.wxUser.account.Account
 import com.github.rwsbillyang.wxUser.account.AccountServiceBase

@@ -18,7 +18,8 @@
 
 package com.github.rwsbillyang.wxSDK.wxMini
 
-import com.github.rwsbillyang.ktorKit.apiJson.KHttpClient
+
+import com.github.rwsbillyang.wxSDK.Api
 import org.slf4j.LoggerFactory
 import com.github.rwsbillyang.wxSDK.IBase
 
@@ -28,7 +29,7 @@ import kotlinx.serialization.Serializable
 import org.slf4j.Logger
 
 
-class WxMiniApi: KHttpClient() {
+class WxMiniApi: Api() {
     companion object {
         private val log: Logger = LoggerFactory.getLogger("WxMiniApi")
     }
@@ -38,7 +39,11 @@ class WxMiniApi: KHttpClient() {
             log.warn("not config Wx Mini Program for appId=$appId")
             return null
         }
-        return get( "https://api.weixin.qq.com/sns/jscode2session?appid=$appId&secret=$secret&js_code=$jsCode&grant_type=authorization_code")
+        return doGetByUrl( "https://api.weixin.qq.com/sns/jscode2session?appid=$appId&secret=$secret&js_code=$jsCode&grant_type=authorization_code")
+    }
+
+    override fun url(name: String, requestParams: Map<String, String?>?, needAccessToken: Boolean): String {
+        TODO("Not yet implemented")
     }
 }
 

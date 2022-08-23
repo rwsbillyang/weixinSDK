@@ -2,8 +2,8 @@ package com.github.rwsbillyang.wxOA
 
 
 
-import com.github.rwsbillyang.ktorKit.AppModule
-import com.github.rwsbillyang.ktorKit.installModule
+import com.github.rwsbillyang.ktorKit.server.AppModule
+import com.github.rwsbillyang.ktorKit.server.installModule
 import com.github.rwsbillyang.wxOA.account.*
 import com.github.rwsbillyang.wxOA.fakeRpc.FanRpcOA
 import com.github.rwsbillyang.wxOA.fan.*

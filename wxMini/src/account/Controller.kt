@@ -18,9 +18,10 @@
 
 package com.github.rwsbillyang.wxSDK.wxMini.account
 
-import com.github.rwsbillyang.ktorKit.AuthUserInfo
-import com.github.rwsbillyang.ktorKit.IAuthUserInfo
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
+
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.server.AuthUserInfo
+import com.github.rwsbillyang.ktorKit.server.IAuthUserInfo
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.wxMini.WxMiniApi
 import com.github.rwsbillyang.wxUser.account.Account

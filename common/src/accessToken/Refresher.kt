@@ -2,8 +2,8 @@ package com.github.rwsbillyang.wxSDK.accessToken
 
 
 
-import com.github.rwsbillyang.ktorKit.apiJson.KHttpClient
-
+import com.github.rwsbillyang.ktorKit.ApiJson
+import com.github.rwsbillyang.ktorKit.client.DefaultClient
 import com.github.rwsbillyang.wxSDK.WxException
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -56,7 +56,7 @@ open class Refresher(
         return runBlocking {
             val text: String = getResponse().bodyAsText()
 
-           val str = KHttpClient.apiJson
+           val str = ApiJson.clientApiJson
                 .parseToJsonElement(text)
                 .jsonObject[key]?.jsonPrimitive?.content
             if(str == null){
@@ -66,7 +66,7 @@ open class Refresher(
         }
     }
     open fun url() = url?: urlBlock?.invoke()?: throw Throwable("not provide url")
-    open suspend fun getResponse() = KHttpClient.DefaultClient.get(url())
+    open suspend fun getResponse() = DefaultClient.get(url())
 }
 
 
@@ -84,7 +84,7 @@ open class PostRefresher(
     url: String? = null,
     urlBlock: (() -> String)? = null):Refresher(key,url, urlBlock)
 {
-    override suspend fun getResponse() = KHttpClient.DefaultClient.post(url(), block)
+    override suspend fun getResponse() = DefaultClient.post(url(), block)
     //{ setBody(postDataBlock())}
 }
 

@@ -20,7 +20,7 @@ package com.github.rwsbillyang.wxWork
 
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.wxSDK.bean.OAuthInfo
 import com.github.rwsbillyang.wxSDK.security.AesException
 import com.github.rwsbillyang.wxSDK.security.JsAPI

@@ -18,6 +18,7 @@
 
 package com.github.rwsbillyang.wxSDK.work.chatMsg
 
+import com.github.rwsbillyang.ktorKit.ApiJson
 import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.accessToken.ITimelyRefreshValue
 import com.github.rwsbillyang.wxSDK.security.RsaCryptoUtil
@@ -158,7 +159,7 @@ class ChatMsgApi (corpId: String?, agentId: Int?, suiteId: String?)
                     }else{
                         val chatRecordJsonStr = Finance.GetContentFromSlice(msg)
                         if(!chatRecordJsonStr.isNullOrBlank()){
-                            list.add(apiJson.decodeFromString(ChatMsgSerializer,chatRecordJsonStr).apply { this.seq = it.seq })
+                            list.add(ApiJson.clientApiJson.decodeFromString(ChatMsgSerializer,chatRecordJsonStr).apply { this.seq = it.seq })
                         }else{
                             log.warn("chatRecordJsonStr isNullOrBlank, msgId=${it.msgId}, seq=${it.seq}")
                         }

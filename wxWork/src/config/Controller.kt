@@ -18,7 +18,7 @@
 
 package com.github.rwsbillyang.wxWork.config
 
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler
 import com.github.rwsbillyang.wxWork.agent.AgentController

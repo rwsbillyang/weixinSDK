@@ -67,7 +67,7 @@ class QrCodeApi(appId: String) : OABaseApi(appId) {
      * 将原长链接通过此接口转成短链接再生成二维码将大大提升扫码速度和成功率。
      * @return HttpResponse，自行解析出：["short_url"]?.toString()
      * */
-    fun shortUrl(url: String) = postByRaw(
+    fun shortUrl(url: String) = doPostRaw(
         "https://api.weixin.qq.com/cgi-bin/shorturl?access_token=${accessToken()}",
         mapOf("action" to "long2short", "long_url" to url))
 

@@ -19,13 +19,15 @@
 package com.github.rwsbillyang.wxUser.account
 
 
-import com.github.rwsbillyang.ktorKit.AbstractJwtHelper
-import com.github.rwsbillyang.ktorKit.Role
-import com.github.rwsbillyang.ktorKit.WsSessions
-import com.github.rwsbillyang.ktorKit.apiJson.ApiJson
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
-import com.github.rwsbillyang.ktorKit.apiJson.to64String
-import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
+import com.github.rwsbillyang.ktorKit.server.AbstractJwtHelper
+
+
+import com.github.rwsbillyang.ktorKit.ApiJson
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.server.Role
+import com.github.rwsbillyang.ktorKit.server.WsSessions
+import com.github.rwsbillyang.ktorKit.to64String
+import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.wxUser.account.stats.LoginLog
 import com.github.rwsbillyang.wxUser.account.stats.StatsService
 import com.github.rwsbillyang.wxUser.fakeRpc.EditionLevel
@@ -69,7 +71,7 @@ abstract class AccountControllerBase(private val accountService: AccountServiceB
     suspend fun sentAuthBoxToPcBySocket(sessionId: String?, box: DataBox<AuthBean> ){
         if (sessionId != null) {
             //手机显示登录成功，PC显示登录登录成功后跳转到后台，需给PC发送登录认证消息
-            val text = ApiJson.json.encodeToString(box)
+            val text = ApiJson.serverSerializeJson.encodeToString(box)
             wsSessions.session(sessionId)?.send(Frame.Text("json=$text"))
             wsSessions.removeSession(sessionId)
         }else{

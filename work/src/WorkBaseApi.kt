@@ -150,7 +150,7 @@ abstract class WorkBaseApi(val corpId: String?, val agentId: Int?, val suiteId: 
      * 若调用失败，会返回errcode及errmsg（判断是否调用失败，根据errcode存在并且值非0）
      * */
     suspend fun getCallbackIp(): ResponseCallbackIps
-            = get("$base/getcallbackip?access_token=${accessToken()}")
+            = doGetByUrl("$base/getcallbackip?access_token=${accessToken()}")
 }
 
 

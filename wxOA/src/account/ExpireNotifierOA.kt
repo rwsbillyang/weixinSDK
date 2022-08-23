@@ -19,7 +19,7 @@
 package com.github.rwsbillyang.wxOA.account
 
 
-import com.github.rwsbillyang.ktorKit.LifeCycle
+import com.github.rwsbillyang.ktorKit.server.LifeCycle
 import com.github.rwsbillyang.wxOA.msg.TemplatePayMsgNotifier
 
 import com.github.rwsbillyang.wxUser.fakeRpc.level2Name

@@ -18,9 +18,9 @@
 
 package com.github.rwsbillyang.wxOA.media
 
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
-import com.github.rwsbillyang.ktorKit.AbstractJwtHelper
-import com.github.rwsbillyang.ktorKit.respondBox
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.server.AbstractJwtHelper
+import com.github.rwsbillyang.ktorKit.server.respondBox
 import com.github.rwsbillyang.wxSDK.officialAccount.MediaType
 import io.ktor.http.*
 import io.ktor.server.application.*

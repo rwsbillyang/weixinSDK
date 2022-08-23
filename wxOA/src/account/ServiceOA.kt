@@ -19,7 +19,7 @@
 package com.github.rwsbillyang.wxOA.account
 
 
-import com.github.rwsbillyang.ktorKit.apiJson.to64String
+import com.github.rwsbillyang.ktorKit.to64String
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.wxUser.account.Account

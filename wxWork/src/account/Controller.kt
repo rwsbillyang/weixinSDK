@@ -19,10 +19,10 @@
 package com.github.rwsbillyang.wxWork.account
 
 
-import com.github.rwsbillyang.ktorKit.AuthUserInfo
-import com.github.rwsbillyang.ktorKit.IAuthUserInfo
-import com.github.rwsbillyang.ktorKit.Role
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
+import com.github.rwsbillyang.ktorKit.server.AuthUserInfo
+import com.github.rwsbillyang.ktorKit.server.IAuthUserInfo
+import com.github.rwsbillyang.ktorKit.server.Role
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.isv.AgentInfo

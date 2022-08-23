@@ -10,8 +10,8 @@
 
 package com.github.rwsbillyang.wxOA.msg
 
-import com.github.rwsbillyang.ktorKit.apiJson.Box
-import com.github.rwsbillyang.ktorKit.apiJson.IUmiListParams
+import com.github.rwsbillyang.ktorKit.apiBox.Box
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
 import com.github.rwsbillyang.wxSDK.msg.MsgBody
 import io.ktor.resources.*
 import kotlinx.serialization.Serializable

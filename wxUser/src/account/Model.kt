@@ -16,12 +16,12 @@
 package com.github.rwsbillyang.wxUser.account
 
 
-import com.github.rwsbillyang.ktorKit.apiJson.IUmiListParams
-import com.github.rwsbillyang.ktorKit.apiJson.to64String
-import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
-import com.github.rwsbillyang.ktorKit.corpId
-import com.github.rwsbillyang.ktorKit.oId
-import com.github.rwsbillyang.ktorKit.uId
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
+import com.github.rwsbillyang.ktorKit.to64String
+import com.github.rwsbillyang.ktorKit.toObjectId
+import com.github.rwsbillyang.ktorKit.server.corpId
+import com.github.rwsbillyang.ktorKit.server.oId
+import com.github.rwsbillyang.ktorKit.server.uId
 import com.github.rwsbillyang.wxUser.externalUserId
 import com.github.rwsbillyang.wxUser.fakeRpc.EditionLevel
 import com.github.rwsbillyang.wxUser.userId

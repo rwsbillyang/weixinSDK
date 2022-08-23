@@ -18,6 +18,8 @@
 
 package com.github.rwsbillyang.wxSDK.wxPay
 
+import com.github.rwsbillyang.ktorKit.ApiJson
+import com.github.rwsbillyang.ktorKit.client.DefaultClient
 import com.github.rwsbillyang.wxSDK.WxApi
 
 import io.ktor.client.request.*
@@ -55,11 +57,11 @@ class WxPayApi(private val appId: String): WxApi() {
 
 
         withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
-            val response: HttpResponse = client.get(url){
+            val response: HttpResponse = DefaultClient.get(url){
                 header("Authorization", getAuthorizationHeader("GET", url.substringAfter("weixin.qq.com"), ""))
             }
             val bodyText = ctx.validator.validate(response)
-            apiJson.decodeFromString(bodyText)
+            ApiJson.clientApiJson.decodeFromString(bodyText)
         }
     }
 
@@ -71,13 +73,13 @@ class WxPayApi(private val appId: String): WxApi() {
 
         val url = url(name, parameters)
         withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
-            val response: HttpResponse = client.post(url) {
+            val response: HttpResponse = DefaultClient.post(url) {
                 header("Authorization", getAuthorizationHeader("POST", url.substringAfter("weixin.qq.com"),
-                    data?.let { apiJson.encodeToString(data) }?:""))
+                    data?.let { ApiJson.clientApiJson.encodeToString(data) }?:""))
                 data?.let { setBody(data) }
             }
             val bodyText = ctx.validator.validate(response)
-            apiJson.decodeFromString(bodyText)
+            ApiJson.clientApiJson.decodeFromString(bodyText)
         }
     }
 

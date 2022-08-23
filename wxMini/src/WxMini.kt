@@ -20,8 +20,8 @@ package com.github.rwsbillyang.wxSDK.wxMini
 
 import org.slf4j.LoggerFactory
 
-import com.github.rwsbillyang.ktorKit.AppModule
-import com.github.rwsbillyang.ktorKit.LifeCycle
+import com.github.rwsbillyang.ktorKit.server.AppModule
+import com.github.rwsbillyang.ktorKit.server.LifeCycle
 import com.github.rwsbillyang.wxSDK.wxMini.account.AccountController
 import com.github.rwsbillyang.wxSDK.wxMini.account.AccountServiceMini
 import com.github.rwsbillyang.wxSDK.wxMini.account.account

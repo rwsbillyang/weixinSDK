@@ -19,7 +19,7 @@
 package com.github.rwsbillyang.wxWork.config
 
 
-import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
+import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.db.MongoDataSource

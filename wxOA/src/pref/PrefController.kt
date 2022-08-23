@@ -13,11 +13,11 @@
 
 package com.github.rwsbillyang.wxOA.pref
 
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
-import com.github.rwsbillyang.ktorKit.apiJson.to64String
-import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
-import com.github.rwsbillyang.ktorKit.BizException
-import com.github.rwsbillyang.ktorKit.LifeCycle
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.to64String
+import com.github.rwsbillyang.ktorKit.toObjectId
+import com.github.rwsbillyang.ktorKit.server.BizException
+import com.github.rwsbillyang.ktorKit.server.LifeCycle
 import com.github.rwsbillyang.wxSDK.bean.Menu
 import com.github.rwsbillyang.wxSDK.msg.InEventType
 import com.github.rwsbillyang.wxSDK.msg.MsgType

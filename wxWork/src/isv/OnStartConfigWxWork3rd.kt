@@ -18,7 +18,7 @@
 
 package com.github.rwsbillyang.wxWork.isv
 
-import com.github.rwsbillyang.ktorKit.LifeCycle
+import com.github.rwsbillyang.ktorKit.server.LifeCycle
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler

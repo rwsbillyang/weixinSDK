@@ -18,8 +18,8 @@
 
 package com.github.rwsbillyang.wxWork.contacts
 
-import com.github.rwsbillyang.ktorKit.apiJson.UmiPagination
-import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
+import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
+import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.wxSDK.work.ContactsApi
 import com.github.rwsbillyang.wxSDK.work.ExternalContactsApi
 import org.koin.core.component.KoinComponent

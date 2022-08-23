@@ -118,7 +118,7 @@ class OAuthApi (corpId: String?, agentId: Int?, suiteId: String?)
         }else
             IsvWorkSingle.ctx.suiteAccessToken?.get()
 
-        return get("https://qyapi.weixin.qq.com/cgi-bin/service/getuserinfo3rd?suite_access_token=$token&code=$code")
+        return doGet("https://qyapi.weixin.qq.com/cgi-bin/service/getuserinfo3rd?suite_access_token=$token&code=$code")
     }
 
     fun getUserDetail3rd(userTicket: String):ResponseOauthUserDetail3rd {
@@ -127,7 +127,7 @@ class OAuthApi (corpId: String?, agentId: Int?, suiteId: String?)
         }else
             IsvWorkSingle.ctx.suiteAccessToken?.get()
 
-        return post<Unit, ResponseOauthUserDetail3rd>("https://qyapi.weixin.qq.com/cgi-bin/service/getuserdetail3rd?suite_access_token=$token&user_ticket=$userTicket")
+        return doPost<Unit, ResponseOauthUserDetail3rd>("https://qyapi.weixin.qq.com/cgi-bin/service/getuserdetail3rd?suite_access_token=$token&user_ticket=$userTicket")
     }
 }
 

@@ -14,9 +14,9 @@
 package com.github.rwsbillyang.wxOA.fan
 
 
-import com.github.rwsbillyang.ktorKit.AbstractJwtHelper
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
-import com.github.rwsbillyang.ktorKit.respondBox
+import com.github.rwsbillyang.ktorKit.server.AbstractJwtHelper
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.server.respondBox
 import com.github.rwsbillyang.wxOA.fakeRpc.FanRpcOA
 import com.github.rwsbillyang.wxUser.fakeRpc.FanInfo
 import io.ktor.http.*

@@ -18,9 +18,9 @@
 
 package com.github.rwsbillyang.wxWork.contacts
 
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
-import com.github.rwsbillyang.ktorKit.apiJson.UmiPagination
-import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
+import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.wxSDK.work.DepartmentApi
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

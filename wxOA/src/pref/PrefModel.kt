@@ -10,8 +10,8 @@
 package com.github.rwsbillyang.wxOA.pref
 
 
-import com.github.rwsbillyang.ktorKit.apiJson.Box
-import com.github.rwsbillyang.ktorKit.apiJson.IUmiListParams
+import com.github.rwsbillyang.ktorKit.apiBox.Box
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
 import com.github.rwsbillyang.wxSDK.bean.MenuType
 import com.github.rwsbillyang.wxOA.msg.MyMsg
 import io.ktor.resources.*

@@ -19,12 +19,21 @@
 package com.github.rwsbillyang.wxSDK.officialAccount
 
 
+import com.github.rwsbillyang.ktorKit.ApiJson
+import com.github.rwsbillyang.ktorKit.client.DefaultClient
 import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.Response
 import com.github.rwsbillyang.wxSDK.bean.OAuthInfo
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import java.net.URLEncoder
 
 /**
@@ -56,11 +65,28 @@ class OAuthApi(appId: String) : OABaseApi(appId){
      *
      *  注意：此API返回的响应头包含：Content-Type: text/plain
      *  需特别处理，在install JsonFeature时添加accept(ContentType.Text.Any)
-     *  否则出现NoTransformationFoundException异常：io.ktor.client.call.NoTransformationFoundException: No transformation found: class io.ktor.utils.io.ByteBufferChannel -> class com.github.rwsbillyang.wxSDK.officialAccount.ResponseOauthAccessToken
+     *  否则出现NoTransformationFoundException异常：
+     *  io.ktor.client.call.NoTransformationFoundException: No transformation found: class io.ktor.utils.io.ByteBufferChannel -> class com.github.rwsbillyang.wxSDK.officialAccount.ResponseOauthAccessToken
      *
      * https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code"
      * */
-    fun getAccessToken(code: String): ResponseOauthAccessToken = doGet("access_token", mapOf("appid" to appId, "secret" to OfficialAccount.ApiContextMap[appId]?.secret, "code" to code, "grant_type" to "authorization_code"))
+    fun getAccessToken(code: String): ResponseOauthAccessToken = runBlocking {
+        withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+            val str = DefaultClient.get(
+                url("access_token",
+                    mapOf(
+                        "appid" to appId,
+                        "secret" to OfficialAccount.ApiContextMap[appId]?.secret,
+                        "code" to code,
+                        "grant_type" to "authorization_code"
+                    )
+                )
+            ).bodyAsText()
+            //响应头包含：Content-Type: text/plain ktor2.x中，设置accept不生效，单独处理
+            ApiJson.clientApiJson.decodeFromString(str)
+        }
+    }
+
 
     /**
      * 第三步：刷新access_token（如果需要）
@@ -84,7 +110,7 @@ class OAuthApi(appId: String) : OABaseApi(appId){
      * privilege	用户特权信息，json 数组，如微信沃卡用户为（chinaunicom）
      * unionid	只有在用户将公众号绑定到微信开放平台帐号后，才会出现该字段。
      * */
-    fun getUserInfo(accessToken: String, openId: String,lang: String = "zh_CN"): ResponseUserInfo = get("https://api.weixin.qq.com/sns/userinfo?access_token=$accessToken&openid=$openId&lang=$lang")
+    fun getUserInfo(accessToken: String, openId: String,lang: String = "zh_CN"): ResponseUserInfo = doGetByUrl("https://api.weixin.qq.com/sns/userinfo?access_token=$accessToken&openid=$openId&lang=$lang")
     /**
      * 检验授权凭证（access_token）是否有效
      * */

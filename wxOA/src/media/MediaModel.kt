@@ -20,8 +20,8 @@
 
 package com.github.rwsbillyang.wxOA.media
 
-import com.github.rwsbillyang.ktorKit.apiJson.Box
-import com.github.rwsbillyang.ktorKit.apiJson.IUmiListParams
+import com.github.rwsbillyang.ktorKit.apiBox.Box
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
 import io.ktor.resources.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

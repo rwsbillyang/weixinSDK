@@ -28,7 +28,7 @@ class ApiTest {
     @Test
     fun testCustomerServiceApi() = testApplication {
         application {
-            apiTest(testing = true)
+            apiTest()
         }
         val response = client.get("/")
         assertEquals(HttpStatusCode.OK, response.status)

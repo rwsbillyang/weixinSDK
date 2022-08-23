@@ -486,7 +486,7 @@ open class Refresher(private val urlProvider: IUrlProvider, private val key: Str
         return runBlocking {
             val text: String = client.get<HttpResponse>(url).readText()
             log.debug("got text: $text")
-            val jsonElement = apiJson.parseToJsonElement(text)
+            val jsonElement = apiBox.parseToJsonElement(text)
             if(jsonElement is JsonObject){
                 val valueElement = jsonElement[key]
                 if(valueElement == null || valueElement is JsonNull)

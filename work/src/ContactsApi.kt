@@ -81,7 +81,7 @@ class ContactsApi(corpId: String?, agentId: Int?, suiteId: String?) : WorkBaseAp
      * 支持企业用户获取实时成员加入二维码。
      *  https://work.weixin.qq.com/api/doc/90000/90135/91714
      * */
-    fun getJoinQrCode(sizeType: Int) = getByRaw("$base/corp/get_join_qrcode?access_token=${accessToken()}&size_type=$sizeType")
+    fun getJoinQrCode(sizeType: Int) = doGetRawByUrl("$base/corp/get_join_qrcode?access_token=${accessToken()}&size_type=$sizeType")
 
 
     /**

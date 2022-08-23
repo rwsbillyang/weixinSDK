@@ -20,8 +20,8 @@
 package com.github.rwsbillyang.wxOA.account
 
 
-import com.github.rwsbillyang.ktorKit.apiJson.to64String
-import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
+import com.github.rwsbillyang.ktorKit.to64String
+import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.wxOA.fakeRpc.FanRpcOA
 import com.github.rwsbillyang.wxOA.msg.TemplatePayMsgNotifier

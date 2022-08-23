@@ -18,50 +18,60 @@
 
 package com.github.rwsbillyang.wxSDK
 
-import com.github.rwsbillyang.ktorKit.apiJson.KHttpClient
+import com.github.rwsbillyang.ktorKit.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 
+abstract class Api  {
 
-abstract class Api: KHttpClient()  {
-
-    abstract fun url(name: String, requestParams: Map<String, String?>?=null, needAccessToken: Boolean = true): String
-
-    /**
-     * 返回R泛型类型结果
-     * */
-    inline fun <reified R> doGet(name: String, parameters: Map<String, String?>? = null): R =
-        get(url(name, parameters))
-
-    /**
-     * 返回HttpResponse，需自行解析
-     * */
-    fun doGetRaw(name: String, parameters: Map<String, String?>? = null) =
-        getByRaw(url(name, parameters))
-
+    abstract fun url(name: String, requestParams: Map<String, String?>? = null, needAccessToken: Boolean = true): String
 
     /**
      * 返回R泛型类型结果
      * */
-    inline fun <reified T,  reified R> doPost(name: String, data: T?, parameters: Map<String, String?>? = null):R =
-        post(url(name, parameters), data)
+    inline fun <reified R> doGet(name: String, parameters: Map<String, String?>? = null, headerPair: Pair<String,String>? = null): R
+        = doGetByUrl(url(name, parameters),headerPair)
+
+
+    inline fun <reified R> doGetByUrl(url: String, headerPair: Pair<String,String>? = null): R = runBlocking{
+        withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+            DefaultClient.get(url){ headerPair?.let { header(headerPair.first, headerPair.second) }}.body()
+        }
+    }
 
     /**
      * 返回HttpResponse，需自行解析
      * */
-    inline fun <reified T> doPostRaw(name: String, data: T?, parameters: Map<String, String?>? = null) =
-        postByRaw(url(name, parameters), data)
+    fun doGetRaw(name: String, parameters: Map<String, String?>? = null, headerPair: Pair<String,String>? = null)
+        = doGetRawByUrl(url(name, parameters),headerPair)
+    fun doGetRawByUrl(url: String, headerPair: Pair<String,String>? = null) = runBlocking {
+        DefaultClient.get(url){ headerPair?.let { header(headerPair.first, headerPair.second) }}
+    }
 
-    inline fun <reified R>  doUpload(
-        name: String, filePath: String,
-        parameters: Map<String, String?>? = null,
-        formData: Map<String, String>? = null
-    ):R = upload(url(name, parameters),filePath,formData)
 
-   fun doUploadRaw(
-        name: String, filePath: String,
-        parameters: Map<String, String?>? = null,
-        formData: Map<String, String>? = null
-    ) = uploadByRaw(url(name, parameters),filePath,formData)
+
+    /**
+     * 返回R泛型类型结果
+     * */
+    inline fun <reified T,  reified R> doPost(name: String, data: T? = null, parameters: Map<String, String?>? = null, headerPair: Pair<String,String>? = null):R = runBlocking{
+        withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
+            doPostRaw(name, data, parameters).body()
+        }
+    }
+    /**
+     * 返回HttpResponse，需自行解析
+     * */
+    inline fun <reified T> doPostRaw(name: String, data: T? = null, parameters: Map<String, String?>? = null, headerPair: Pair<String,String>? = null) = runBlocking {
+        DefaultClient.post(url(name, parameters)) {
+            headerPair?.let { header(headerPair.first, headerPair.second)}
+            setBody(data)
+        }
+    }
 
 }
 

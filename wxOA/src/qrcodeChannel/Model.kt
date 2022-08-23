@@ -19,8 +19,8 @@
 @file:UseContextualSerialization(ObjectId::class)
 package com.github.rwsbillyang.wxOA.qrcodeChannel
 
-import com.github.rwsbillyang.ktorKit.apiJson.IUmiListParams
-import com.github.rwsbillyang.ktorKit.apiJson.toObjectId
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
+import com.github.rwsbillyang.ktorKit.toObjectId
 import io.ktor.resources.*
 
 import kotlinx.serialization.Serializable

@@ -18,7 +18,9 @@
 
 package com.github.rwsbillyang.wxOA.qrcodeChannel
 
-import com.github.rwsbillyang.ktorKit.*
+
+import com.github.rwsbillyang.ktorKit.server.AbstractJwtHelper
+import com.github.rwsbillyang.ktorKit.server.respondBox
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*

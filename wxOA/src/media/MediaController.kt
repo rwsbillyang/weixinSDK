@@ -19,7 +19,7 @@
 package com.github.rwsbillyang.wxOA.media
 
 
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 
 
 import com.github.rwsbillyang.wxSDK.officialAccount.MaterialApi

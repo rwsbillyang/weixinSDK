@@ -20,7 +20,7 @@ package com.github.rwsbillyang.wxWork.fakeRpc
 
 
 
-import com.github.rwsbillyang.ktorKit.apiJson.ApiJson
+import com.github.rwsbillyang.ktorKit.ApiJson
 import com.github.rwsbillyang.wxSDK.work.Work
 
 import com.github.rwsbillyang.wxUser.account.VID
@@ -55,9 +55,9 @@ class AgentAllowUsersInfo(
     val agentId: Int?,
     val suiteId: String? = null
 ){
-    fun toJson() = ApiJson.json.encodeToString(this)
+    fun toJson() = ApiJson.serializeJson.encodeToString(this)
     companion object{
-        fun fromJson(str: String) = ApiJson.json.decodeFromString<AgentAllowUsersInfo>(str)
+        fun fromJson(str: String) = ApiJson.serializeJson.decodeFromString<AgentAllowUsersInfo>(str)
     }
 }
 

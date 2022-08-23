@@ -7,7 +7,7 @@
 
 package com.github.rwsbillyang.wxOA.msg
 
-import com.github.rwsbillyang.ktorKit.apiJson.DataBox
+import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 

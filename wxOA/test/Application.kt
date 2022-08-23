@@ -20,11 +20,13 @@ package com.github.rwsbillyang.wxOA.test
 
 
 import com.github.rwsbillyang.wxOA.dispatchMsgApi
+import com.github.rwsbillyang.wxOA.oAuthApi
 import com.github.rwsbillyang.wxSDK.accessToken.ITimelyRefreshValue
 import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.msg.ReTextMsg
 import com.github.rwsbillyang.wxSDK.msg.WxBaseEvent
 import com.github.rwsbillyang.wxSDK.msg.WxBaseMsg
+import com.github.rwsbillyang.wxSDK.officialAccount.ApiContext
 import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.DefaultOAEventHandler
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.DefaultOAMsgHandler
@@ -42,9 +44,37 @@ import io.ktor.server.routing.*
 
 val AppIdForTest = "wx2ea341a3b3871d23"
 
+fun configTestOA(){
+
+//    OfficialAccount.config {
+//        appId = AppIdForTest
+//        secret = "89d147ef8e83c4cd097e96992127f0bc"
+//        encodingAESKey = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG"
+//        token = "com.github.rwsbillyang.wxSDK.test.testToken"
+//        wechatId = "gh_b2f9163a8000"
+//        wechatName = "测试号"
+//        msgHandler = TestOAMsgHandler()
+//        eventHandler = OAEventTestHandler()
+//
+//        accessToken = TestAccessTokenValue()
+//        ticket = TestJsTicketValue()
+//    }
+    OfficialAccount.ApiContextMap[AppIdForTest] = ApiContext(
+        AppIdForTest,
+        "89d147ef8e83c4cd097e96992127f0bc",
+        "com.github.rwsbillyang.wxSDK.test.testToken",
+        "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG",
+        "gh_b2f9163a8000",
+        "测试号",
+        TestOAMsgHandler(),
+        OAEventTestHandler(),
+        TestAccessTokenValue(),
+        TestJsTicketValue()
+    )
+}
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
-fun Application.testableModule(testing: Boolean = false) {
+fun Application.testableModule() {
     class AuthenticationException : RuntimeException()
     class AuthorizationException : RuntimeException()
 
@@ -67,23 +97,12 @@ fun Application.testableModule(testing: Boolean = false) {
 
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
-fun Application.apiTest(testing: Boolean = false){
-    testableModule(testing)
-    OfficialAccount.config {
-        appId = AppIdForTest
-        secret = "89d147ef8e83c4cd097e96992127f0bc"
-        encodingAESKey = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG"
-        token = "com.github.rwsbillyang.wxSDK.test.testToken"
-        wechatId = "gh_b2f9163a8000"
-        wechatName = "测试号"
-        msgHandler = TestOAMsgHandler()
-        eventHandler = OAEventTestHandler()
+fun Application.apiTest(){
+    testableModule()
 
-        accessToken = TestAccessTokenValue()
-        ticket = TestJsTicketValue()
-    }
     routing {
         dispatchMsgApi()
+        oAuthApi()
     }
 }
 

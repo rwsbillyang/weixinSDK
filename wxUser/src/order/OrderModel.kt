@@ -20,8 +20,8 @@
 
 package com.github.rwsbillyang.wxUser.order
 
-import com.github.rwsbillyang.ktorKit.apiJson.Box
-import com.github.rwsbillyang.ktorKit.apiJson.IUmiListParams
+import com.github.rwsbillyang.ktorKit.apiBox.Box
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
 
 import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.ktorKit.util.toUtc

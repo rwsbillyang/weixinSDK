@@ -1,8 +1,8 @@
 package com.github.rwsbillyang.wxWork
 
 
-import com.github.rwsbillyang.ktorKit.AppModule
-import com.github.rwsbillyang.ktorKit.installModule
+import com.github.rwsbillyang.ktorKit.server.AppModule
+import com.github.rwsbillyang.ktorKit.server.installModule
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler

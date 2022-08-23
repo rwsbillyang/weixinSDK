@@ -18,6 +18,7 @@
 
 package com.github.rwsbillyang.wxSDK.officialAccount
 
+import com.github.rwsbillyang.ktorKit.client.doUpload
 import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.Response
 import io.ktor.client.call.*

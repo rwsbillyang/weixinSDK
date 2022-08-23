@@ -13,8 +13,8 @@
 
 package com.github.rwsbillyang.wxOA.fan
 
-import com.github.rwsbillyang.ktorKit.apiJson.Box
-import com.github.rwsbillyang.ktorKit.apiJson.IUmiListParams
+import com.github.rwsbillyang.ktorKit.apiBox.Box
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
 import com.github.rwsbillyang.wxSDK.officialAccount.ResponseOauthAccessToken
 import com.github.rwsbillyang.wxSDK.officialAccount.ResponseUserInfo
 import io.ktor.resources.*
