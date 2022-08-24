@@ -20,12 +20,14 @@ package com.github.rwsbillyang.wxOA.qrcodeChannel
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.client.doDownload
+import com.github.rwsbillyang.ktorKit.util.NginxStaticRootUtil
 import com.github.rwsbillyang.wxSDK.officialAccount.QrCodeApi
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.lang.IllegalArgumentException
 
 
@@ -36,7 +38,7 @@ class QrCodeChannelController: KoinComponent {
 
     fun getChannelList(listParams: ChannelListParams): DataBox<List<QrCodeChannel>> {
 
-        val filter =listParams.toFilter()
+        val filter = listParams.toFilter()
 
         val list = service.findList(filter, listParams.pagination, listParams.lastId)
 
@@ -52,7 +54,14 @@ class QrCodeChannelController: KoinComponent {
     }
 
     fun delChannel(id: String?, appId: String?): DataBox<Int> {
-        if(id == null || appId == null) return DataBox.ko("invalid parameter: channel id or appId")
+        if(id == null) return DataBox.ko("invalid parameter: channel id or appId")
+
+        //删除本地二维码文件
+        val channel = service.findOne(id)
+        if(channel?.imgUrl != null){
+            File("${NginxStaticRootUtil.nginxRoot()}/${channel.imgUrl}").delete()
+        }
+
         service.delChannel(id, appId)
         return DataBox.ok(1)
 
@@ -63,7 +72,18 @@ class QrCodeChannelController: KoinComponent {
     fun generateChannelQrCode(channelId: String?, appId: String?): DataBox<QrCodeInfo> {
         if(channelId == null || appId == null) return DataBox.ko("getChannelQrCode invalid parameter: channel id or appId")
         val channel = service.findOne(channelId) ?: return DataBox.ko("not found channel")
-        if(channel.qrCode != null) return DataBox.ok(QrCodeInfo(channel.qrCode, channel.imgUrl))
+        if(channel.qrCode != null){
+            if(channel.type == 1){
+                return if(channel.imgUrl == null){ //重新下载
+                    log.info("TODO: re-download")
+                    DataBox.ok(QrCodeInfo(channel.qrCode, null))
+                }else
+                    DataBox.ok(QrCodeInfo(channel.qrCode, channel.imgUrl))
+            }else if(channel.type == 0){//临时重新生成
+                log.info("TODO: re-generate ")
+                return DataBox.ok(QrCodeInfo(channel.qrCode, channel.imgUrl))
+            }
+        }
 
         val api = QrCodeApi(appId)
         return try {
@@ -78,22 +98,23 @@ class QrCodeChannelController: KoinComponent {
             }
 
             return if(res.isOK() && res.ticket != null && res.url != null) {
+                service.updateQrcode(channel._id, res.url!!, null)
+
                 val filename = channel.code + "-"+System.currentTimeMillis() + ".jpg"
 
                 //生成的公众号渠道二维码路径，nginx配置需要对应上
-                val nginxRoot = System.getProperty("NginxStaticRoot","./frontEnd/static")
+                val myPath = "qrCodeChannel/${channel.appId}"
+                val filePath = NginxStaticRootUtil.getTotalPath(myPath)
 
-                val filePath = "$nginxRoot/qrCodeChannel/${channel.appId}"
                 val downUrl = api.qrCodeUrl(res.ticket!!)
                 log.info("download from $downUrl")
                 val ok = doDownload(downUrl, filePath,filename)
                 if(ok){
-                    val path = "$filePath/$filename".removePrefix(nginxRoot)
-                    service.updateQrcode(channel._id, res.url!!, path)
-                    DataBox.ok(QrCodeInfo(res.url, path))
+                    val url = "${NginxStaticRootUtil.getUrlPrefix(myPath)}/$filename"
+                    service.updateQrcode(channel._id, res.url!!, url)
+                    DataBox.ok(QrCodeInfo(res.url, url))
                 }else{
                     log.warn("fail to download for filePath=$filePath")
-                    service.updateQrcode(channel._id, res.url!!, null)
                     DataBox.ko("fail to download from $downUrl")
                 }
             }else{
@@ -106,6 +127,5 @@ class QrCodeChannelController: KoinComponent {
             DataBox.ko("generateChannelQrCode fail: "+ e.message)
         }
     }
-
 
 }

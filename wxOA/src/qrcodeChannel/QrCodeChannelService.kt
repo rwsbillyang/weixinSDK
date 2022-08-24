@@ -101,9 +101,12 @@ class QrCodeChannelService(cache: ICache) : CacheService(cache){
         }
     }
 
-    fun delChannel(id: String, appId: String) = evict(id){
+    fun delChannel(id: String, appId: String?) = evict(id){
         runBlocking {
-            channelCol.deleteOne(QrCodeChannel::_id eq id.toObjectId(), QrCodeChannel::appId eq appId)
+            if(appId == null)
+                channelCol.deleteOneById(id.toObjectId())
+            else
+                channelCol.deleteOne(QrCodeChannel::_id eq id.toObjectId(), QrCodeChannel::appId eq appId)
         }
     }
 }

@@ -22,11 +22,11 @@ import org.koin.core.component.inject
 class FanController : KoinComponent {
     private val service: FanService by inject()
 
-    fun findFanList(fanListParams: FanListParams): FanListBox {
-        val filter = fanListParams.toFilter()
-        val total = service.countFan(filter)
-        val list = service.findFanList(filter, fanListParams.pagination)
-        return FanListBox(total,list)
+    fun findFanList(fanListParams: FanListParams):  DataBox<List<Fan>>  {
+        //val filter = fanListParams.toFilter()
+        //val total = service.countFan(filter)
+        val list = service.findFanList(fanListParams.toFilter(), fanListParams.pagination, fanListParams.lastId)
+        return DataBox.ok(list)
     }
 
     fun findFan(openId: String?): DataBox<Fan> {

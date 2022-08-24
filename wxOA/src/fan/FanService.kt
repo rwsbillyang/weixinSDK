@@ -24,12 +24,9 @@ import org.bson.conversions.Bson
 import org.koin.core.component.inject
 
 import org.koin.core.qualifier.named
-import org.litote.kmongo.bson
+import org.litote.kmongo.*
 
 import org.litote.kmongo.coroutine.CoroutineCollection
-import org.litote.kmongo.eq
-import org.litote.kmongo.include
-import org.litote.kmongo.setValue
 
 
 class FanService(cache: ICache) : CacheService(cache) {
@@ -69,10 +66,13 @@ class FanService(cache: ICache) : CacheService(cache) {
     fun countFan(filter: Bson) = runBlocking{
         fanCol.countDocuments(filter)
     }
-    fun findFanList(filter: Bson, pagination: UmiPagination) = runBlocking{
-        val sort = pagination.sortJson.bson
-        //TODO: skip分页排序性能慢
-        fanCol.find(filter).skip((pagination.current - 1) * pagination.pageSize).limit(pagination.pageSize).sort(sort).toList()
+    fun findFanList(filter: Bson, pagination: UmiPagination, lastId: String?) = runBlocking{
+        val sort =  pagination.sortJson.bson
+        if(lastId == null)
+            fanCol.find(filter).skip((pagination.current - 1) * pagination.pageSize).limit(pagination.pageSize).sort(sort).toList()
+        else{
+            fanCol.find(and(filter,pagination.lastIdFilter(lastId))).limit(pagination.pageSize).sort(sort).toList()
+        }
     }
 
 

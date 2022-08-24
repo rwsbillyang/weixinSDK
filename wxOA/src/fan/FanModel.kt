@@ -123,8 +123,8 @@ data class FanListParams(
         val ss: String? = null,
         val qr: Int? = null,
         val qrs: String? = null,
-        val appId: String? = null
-
+        val appId: String? = null,
+        val lastId: String? = null
 ) : IUmiListParams {
     fun toFilter(): Bson {
         val idFilter = _id?.let { Fan::_id eq it }

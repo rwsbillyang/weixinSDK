@@ -75,7 +75,7 @@ data class ChannelListParams(
     val type: Int? = null,
     val appId: String? = null,
     val keyword: String? = null,
-    val lastId: String? = null,
+    val lastId: String? = null
 ): IUmiListParams {
     fun toFilter(): Bson {
         val idFilter = _id?.let { QrCodeChannel::_id eq it.toObjectId() }
