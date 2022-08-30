@@ -42,7 +42,8 @@ data class QrCodeChannel(
     val remark: String? = null, //备注
     val qrCode:String? = null, //qrcode 解析后的url，可自行生成
     val imgUrl: String? = null, //下载到本地文件系统中的二维码，若被删除只能通过qrCode生成
-    val time: Long //创建时间
+    val time: Long, //创建时间
+    val msgId: ObjectId? = null //通过渠道码关注后的响应的消息，优先级最高
     )
 
 //编辑或新增时提交上来的数据

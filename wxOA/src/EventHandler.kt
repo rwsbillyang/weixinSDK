@@ -18,6 +18,8 @@
 
 package com.github.rwsbillyang.wxOA
 
+import com.github.rwsbillyang.wxOA.msg.MsgService
+import com.github.rwsbillyang.wxOA.qrcodeChannel.QrCodeChannelService
 import com.github.rwsbillyang.wxOA.stats.StatsEvent
 import com.github.rwsbillyang.wxOA.stats.StatsService
 import com.github.rwsbillyang.wxSDK.msg.*
@@ -28,6 +30,10 @@ import javax.xml.stream.XMLEventReader
 class EventHandler: IOAEventHandler, MsgEventCommonHandler() {
 
     private val statsService: StatsService by inject()
+
+    //用于关注后，查询关注渠道二维码设置的响应消息ID
+    private val qrCodeChannelService: QrCodeChannelService by inject()
+    private val msgService: MsgService by inject()//用于查询配置的消息
 
     override fun onDefault(appId:String, e: WxBaseEvent): ReBaseMSg? {
         val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event)
@@ -136,7 +142,9 @@ class EventHandler: IOAEventHandler, MsgEventCommonHandler() {
         statsService.insertEvent(event)
 
         log.info("onOAScanEvent from ${event.from}")
-        return tryReMsg(appId, e,false) //腾讯收回权限，干脆不获取
+
+        val scene = e.eventKey
+        return tryUseQrcodeMsgConfig(appId, scene,e.base.fromUserName, e.base.toUserName)?:tryReMsg(appId, e,false)
     }
 
     /**
@@ -150,7 +158,9 @@ class EventHandler: IOAEventHandler, MsgEventCommonHandler() {
         statsService.insertEvent(event)
 
         log.info("onOAScanSubscribeEvent from ${event.from}")
-        return tryReMsg(appId, e,false) //腾讯收回权限，干脆不获取
+
+        val scene = e.eventKey?.removePrefix("qrscene_")
+        return tryUseQrcodeMsgConfig(appId, scene,e.base.fromUserName, e.base.toUserName)?:tryReMsg(appId, e,false)
     }
 
     /**
@@ -165,7 +175,9 @@ class EventHandler: IOAEventHandler, MsgEventCommonHandler() {
         val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event)
         statsService.insertEvent(event)
         log.info("onOASubscribeEvent from ${event.from}")
-        return tryReMsg(appId, e,false) //腾讯收回权限，干脆不获取
+
+
+        return tryReMsg(appId, e,true) //腾讯收回权限，插入一条记录
     }
 
 
@@ -182,5 +194,32 @@ class EventHandler: IOAEventHandler, MsgEventCommonHandler() {
         statsService.insertEvent(event)
         e.base.fromUserName?.let { fanService.subscribeOrUnsubscribe(it, 0) }
         return tryReMsg(appId, e, false)
+    }
+
+    //插入一条FAN记录, 并检查该qrcode是否配置有回复消息
+    private fun tryUseQrcodeMsgConfig(appId: String, scene: String?, from: String?, to: String?): ReBaseMSg?{
+        //腾讯收回权限，但用于获取其它信息，并插入一条FAN记录
+        if(from != null)
+            upsertFan(appId, from)
+        else {
+            log.warn("from(openId) should not null")
+        }
+
+        if(scene != null){
+            val msgId = qrCodeChannelService.findMsgId(appId, scene)
+            if(msgId != null){
+                val msg = msgService.findMyMsg(msgId)
+                if(msg != null){
+                    return myMsgToReMsg(msg, from, to)
+                }else{
+                    log.warn("not found msg for msgId=${msgId.toHexString()}, to check event type config")
+                }
+            }else{
+                log.info("no config re-msg for qrcode: ${scene}, to check event type config")
+            }
+        }else{
+            log.warn("onOAScanSubscribeEvent: no scene? eventKey=${scene}, to check event type config")
+        }
+        return null
     }
 }

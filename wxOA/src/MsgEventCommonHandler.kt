@@ -55,7 +55,7 @@ open class MsgEventCommonHandler: KoinComponent {
      * */
     fun tryReMsg(appId: String, e: WxBaseEvent, upsertUserInfo: Boolean = false) = tryReMsg(appId, e.base.msgType, "defaultEvent", e.base.fromUserName, e.base.toUserName, upsertUserInfo)
 
-    private fun upsertFan(appId: String, openId: String) = runBlocking {
+    fun upsertFan(appId: String, openId: String) = runBlocking {
         launch {
             val res = UserApi(appId).getUserInfo(openId)
             if (res.isOK()) {
@@ -85,34 +85,37 @@ open class MsgEventCommonHandler: KoinComponent {
             ?: prefService.findPrefReInMsg(appId, defaultType))
             ?.let { msgService.findMyMsg(it.msgId) } ?: return null
 
-        return try {
-            when (myMsg.msg) {
-                is TextContent -> ReTextMsg(myMsg.msg.content, from, to)
-                is ImageContent -> ReImgMsg(myMsg.msg.mediaId, from, to)
-                is VoiceContent -> ReVoiceMsg(myMsg.msg.mediaId, from, to)
-                is MusicContent -> {
-                    val music = myMsg.msg
-                    ReMusicMsg(
-                        music.thumbMediaId, music.musicUrl, music.hqMusicUrl, music.title, music.description,
-                        from, to
-                    )
-                }
-                is VideoContent -> {
-                    val video = myMsg.msg
-                    ReVideoMsg(video.mediaId, video.title, video.description, from, to)
-                }
-                is NewsContent -> {
-                    val list = myMsg.msg.articles
-                    ReNewsMsg(list, list.size, from, to)
-                }
-                else -> {
-                    log.warn("not support type=${myMsg.msg}")
-                    null
-                }
-            }
-        } catch (e: Exception) {
-            log.warn(e.message)
-            null
-        }
+        return myMsgToReMsg(myMsg, from, to)
     }
+
+    fun myMsgToReMsg(myMsg: MyMsg, from: String?, to: String?) = try {
+        when (myMsg.msg) {
+            is TextContent -> ReTextMsg(myMsg.msg.content, from, to)
+            is ImageContent -> ReImgMsg(myMsg.msg.mediaId, from, to)
+            is VoiceContent -> ReVoiceMsg(myMsg.msg.mediaId, from, to)
+            is MusicContent -> {
+                val music = myMsg.msg
+                ReMusicMsg(
+                    music.thumbMediaId, music.musicUrl, music.hqMusicUrl, music.title, music.description,
+                    from, to
+                )
+            }
+            is VideoContent -> {
+                val video = myMsg.msg
+                ReVideoMsg(video.mediaId, video.title, video.description, from, to)
+            }
+            is NewsContent -> {
+                val list = myMsg.msg.articles
+                ReNewsMsg(list, list.size, from, to)
+            }
+            else -> {
+                log.warn("not support type=${myMsg.msg}")
+                null
+            }
+        }
+    } catch (e: Exception) {
+        log.warn(e.message)
+        null
+    }
+
 }
