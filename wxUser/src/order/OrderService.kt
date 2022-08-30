@@ -19,14 +19,12 @@
 package com.github.rwsbillyang.wxUser.order
 
 
-import com.github.rwsbillyang.ktorKit.apiBox.Sort
-import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
 import com.github.rwsbillyang.ktorKit.to64String
 import com.github.rwsbillyang.ktorKit.toObjectId
 
-import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.db.MongoDataSource
+import com.github.rwsbillyang.ktorKit.db.MongoGenericService
 import com.github.rwsbillyang.wxUser.wxUserAppModule
 import com.github.rwsbillyang.wxSDK.wxPay.OrderPayDetail
 import kotlinx.coroutines.runBlocking
@@ -37,7 +35,7 @@ import org.koin.core.qualifier.named
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineCollection
 
-class AccountOrderService(cache: ICache) : CacheService(cache){
+class AccountOrderService(cache: ICache) : MongoGenericService(cache){
     private val dbSource: MongoDataSource by inject(qualifier = named(wxUserAppModule.dbName!!))
 
     private val orderCol: CoroutineCollection<AccountOrder> by lazy {
@@ -45,16 +43,8 @@ class AccountOrderService(cache: ICache) : CacheService(cache){
     }
 
     fun count(filter: Bson) = runBlocking { orderCol.countDocuments(filter) }
-    fun findList(filter: Bson, pagination: UmiPagination, lastId: ObjectId?) = runBlocking {
-        val sort = pagination.sortJson.bson
-        if(lastId == null)
-            orderCol.find(filter).skip((pagination.current - 1) * pagination.pageSize).limit(pagination.pageSize).sort(sort).toList()
-        else{
-            val f = if(pagination.sort == Sort.ASC) AccountOrder::_id gt lastId
-            else AccountOrder::_id lt lastId
-            orderCol.find(and(filter,f)).limit(pagination.pageSize).sort(sort).toList()
-        }
-    }
+    fun findList(params: AccountOrderListParams)
+    = findPage(orderCol,params)
 
     fun insert(order: AccountOrder) = cacheable("order/${order._id.to64String()}") {
         runBlocking {

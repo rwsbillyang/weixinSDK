@@ -13,8 +13,7 @@
 
 package com.github.rwsbillyang.wxOA.fan
 
-import com.github.rwsbillyang.ktorKit.apiBox.Box
-import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
 import com.github.rwsbillyang.wxSDK.officialAccount.ResponseOauthAccessToken
 import com.github.rwsbillyang.wxSDK.officialAccount.ResponseUserInfo
 import io.ktor.resources.*
@@ -101,11 +100,11 @@ fun ResponseUserInfo.toGuest(appId: String) = if(isOK() && openid != null) Guest
 /**
  * 返回的列表数据
  * */
-@Serializable
-class FanListBox(
-        val total: Long,
-        val data: List<Fan>? = null
-) : Box()
+//@Serializable
+//class FanListBox(
+//        val total: Long,
+//        val data: List<Fan>? = null
+//) : Box()
 
 @Serializable
 @Resource("/list")
@@ -123,10 +122,9 @@ data class FanListParams(
         val ss: String? = null,
         val qr: Int? = null,
         val qrs: String? = null,
-        val appId: String? = null,
-        val lastId: String? = null
-) : IUmiListParams {
-    fun toFilter(): Bson {
+        val appId: String? = null
+) : IUmiPaginationParams {
+    override fun toFilter(): Bson {
         val idFilter = _id?.let { Fan::_id eq it }
         val uidFilter = uId?.let { Fan::uId eq it }
         val nameFilter = name?.let { Fan::name regex ".*$it.*" }

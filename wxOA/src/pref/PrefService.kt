@@ -8,23 +8,21 @@
 package com.github.rwsbillyang.wxOA.pref
 
 
-import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
-import com.github.rwsbillyang.ktorKit.toObjectId
-
-import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.db.MongoDataSource
+import com.github.rwsbillyang.ktorKit.db.MongoGenericService
+import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.wxOA.wxOaAppModule
 import kotlinx.coroutines.runBlocking
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.koin.core.component.inject
-
 import org.koin.core.qualifier.named
-import org.litote.kmongo.*
+import org.litote.kmongo.and
 import org.litote.kmongo.coroutine.CoroutineCollection
+import org.litote.kmongo.eq
 
-class PrefService(cache: ICache) : CacheService(cache){
+class PrefService(cache: ICache) : MongoGenericService(cache){
     private val dbSource: MongoDataSource by inject(qualifier = named(wxOaAppModule.dbName!!))
 
 
@@ -89,11 +87,7 @@ class PrefService(cache: ICache) : CacheService(cache){
         prefReInMsgCol.countDocuments(f)
     }
 
-    fun findPrefReMsgList(f: Bson, pagination: UmiPagination) = runBlocking {
-        //val sort = pagination.sKey?.let { "{${pagination.sKey}:${pagination.sort}}".bson }?:"{_id:-1}".bson
-        val sort = pagination.sortJson.bson
-        prefReInMsgCol.find(f).skip(pagination.pageSize * (pagination.current-1)).limit(pagination.pageSize).sort(sort).toList()
-    }
+    fun findPrefReMsgList(params: PrefReMsgListParams) = findPage(prefReInMsgCol, params)
     fun findPrefReMsgList(appId: String, cat: Int) = runBlocking {
         prefReInMsgCol.find(and(PrefReInMsg::appId eq appId, PrefReInMsg::cat eq cat) ).toList()
     }

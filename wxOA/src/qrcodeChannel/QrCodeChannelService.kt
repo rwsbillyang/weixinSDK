@@ -18,26 +18,22 @@
 
 package com.github.rwsbillyang.wxOA.qrcodeChannel
 
-import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
-import com.github.rwsbillyang.ktorKit.to64String
-import com.github.rwsbillyang.ktorKit.toObjectId
-
-import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.db.MongoDataSource
+import com.github.rwsbillyang.ktorKit.db.MongoGenericService
+import com.github.rwsbillyang.ktorKit.to64String
+import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.wxOA.wxOaAppModule
-
 import com.mongodb.client.model.ReturnDocument
 import kotlinx.coroutines.runBlocking
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.koin.core.component.inject
-
 import org.koin.core.qualifier.named
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineCollection
 
-class QrCodeChannelService(cache: ICache) : CacheService(cache){
+class QrCodeChannelService(cache: ICache) : MongoGenericService(cache){
     private val dbSource: MongoDataSource by inject(qualifier = named(wxOaAppModule.dbName!!))
 
 
@@ -47,14 +43,7 @@ class QrCodeChannelService(cache: ICache) : CacheService(cache){
 
 
 
-    fun findList(filter: Bson, pagination: UmiPagination, lastId: String? ): List<QrCodeChannel> = runBlocking {
-        val sort =  pagination.sortJson.bson
-        if(lastId == null)
-            channelCol.find(filter).skip((pagination.current - 1) * pagination.pageSize).limit(pagination.pageSize).sort(sort).toList()
-        else{
-            channelCol.find(and(filter,pagination.lastIdFilter(lastId))).limit(pagination.pageSize).sort(sort).toList()
-        }
-    }
+    fun findList(params: ChannelListParams) = findPage(channelCol, params)
 
     /**
      * 获取总数量用于分页

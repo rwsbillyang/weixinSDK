@@ -20,8 +20,8 @@
 
 package com.github.rwsbillyang.wxOA.media
 
-import com.github.rwsbillyang.ktorKit.apiBox.Box
-import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
+
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
 import io.ktor.resources.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -103,24 +103,24 @@ data class MaterialMedia(
 )
 
 
-/**
- * 返回的列表数据
- * */
-@Serializable
-class MaterialNewsListBox(
-        val total: Long,
-        val data: List<MaterialNews>? = null
-) : Box()
-@Serializable
-class MaterialVideoListBox(
-        val total: Long,
-        val data: List<MaterialVideo>? = null
-) : Box()
-@Serializable
-class MaterialMediaListBox(
-        val total: Long,
-        val data: List<MaterialMedia>? = null
-) : Box()
+///**
+// * 返回的列表数据
+// * */
+//@Serializable
+//class MaterialNewsListBox(
+//        val total: Long,
+//        val data: List<MaterialNews>? = null
+//) : Box()
+//@Serializable
+//class MaterialVideoListBox(
+//        val total: Long,
+//        val data: List<MaterialVideo>? = null
+//) : Box()
+//@Serializable
+//class MaterialMediaListBox(
+//        val total: Long,
+//        val data: List<MaterialMedia>? = null
+//) : Box()
 
 @Serializable
 @Resource("/news/list")
@@ -129,8 +129,8 @@ data class MaterialNewsListParams(
         val _id: String? = null,
         val title: String? = null,
         val appId: String? = null
-) : IUmiListParams {
-        fun toFilter(): Bson {
+) : IUmiPaginationParams {
+        override fun toFilter(): Bson {
                 val idFilter = _id?.let{ MaterialNews::_id eq it }
                 val nameFilter = title?.let {  " { \"content.news_item.0.title\": { \$regex: /.*$it.*/ } }".bson  }
                 //MaterialNews::content / ArticleContent::list / 0 / Article::title regex ".*$it.*"
@@ -145,8 +145,8 @@ data class MaterialVideoListParams(
         val _id: String? = null,
         val name: String? = null,
         val appId: String? = null
-) : IUmiListParams {
-        fun toFilter(): Bson {
+) : IUmiPaginationParams {
+        override fun toFilter(): Bson {
                 val idFilter = _id?.let { MaterialVideo::_id eq it }
                 val nameFilter = name?.let { MaterialVideo::name regex ".*$it.*" }
                 val appIdFilter = appId?.let{ MaterialVideo::appId eq appId}
@@ -162,8 +162,8 @@ data class MaterialMediaListParams(
         val name: String? = null,
         val type: String? = null,
         val appId: String? = null
-) : IUmiListParams {
-        fun toFilter(): Bson {
+) : IUmiPaginationParams {
+        override fun toFilter(): Bson {
                 val idFilter = _id?.let { MaterialMedia::_id eq it }
                 val nameFilter = name?.let { MaterialMedia::name regex ".*$it.*" }
                 val typeFilter = type?.let { MaterialMedia::type eq it }

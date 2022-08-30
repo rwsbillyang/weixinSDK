@@ -20,9 +20,8 @@
 
 package com.github.rwsbillyang.wxUser.order
 
-import com.github.rwsbillyang.ktorKit.apiBox.Box
-import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
 
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
 import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.ktorKit.util.toUtc
 import com.github.rwsbillyang.wxSDK.wxPay.OrderPayDetail
@@ -106,7 +105,7 @@ data class AccountOrder(
 
 @Serializable
 @Resource("/list")
-data class ListParams(
+data class AccountOrderListParams(
         override val umi: String,
         val type: Int? = null,
         val status: Int? = null,
@@ -117,8 +116,8 @@ data class ListParams(
         val appId: String? = null,
         val agentId: Int? = null,
         val lastId: ObjectId? = null
-): IUmiListParams {
-        fun toFilter(): Bson {
+): IUmiPaginationParams {
+        override fun toFilter(): Bson {
                 val typeFilter = type?.let { AccountOrder::type eq it }
                 val statusFilter = status?.let { AccountOrder::status eq it }
                 val fromFilter = from?.let { AccountOrder::from eq it }
@@ -132,7 +131,7 @@ data class ListParams(
         }
 }
 
-class OrderList(
-        val data: List<AccountOrder>? = null,
-        val total: Long? = 0L
-): Box()
+//class OrderList(
+//        val data: List<AccountOrder>? = null,
+//        val total: Long? = 0L
+//): Box()

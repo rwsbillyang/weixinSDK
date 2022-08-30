@@ -21,6 +21,7 @@ package com.github.rwsbillyang.wxUser.order
 
 import com.github.rwsbillyang.ktorKit.server.AbstractJwtHelper
 import com.github.rwsbillyang.ktorKit.server.respondBox
+import com.github.rwsbillyang.ktorKit.server.respondBoxOK
 import com.github.rwsbillyang.wxSDK.wxPay.WxPay
 import com.github.rwsbillyang.wxUser.agentId
 import io.ktor.http.*
@@ -35,6 +36,7 @@ import org.koin.ktor.ext.inject
 
 fun Routing.accountOrderApi(){
     val controller: AccountOrderController by inject()
+    val service: AccountOrderService by inject()
     val jwtHelper: AbstractJwtHelper by inject()
 
     route("/api/sale/order") {
@@ -61,8 +63,8 @@ fun Routing.accountOrderApi(){
                     }
                 }
             }
-            get<ListParams>  {
-                call.respond(controller.list(it))
+            get<AccountOrderListParams>  {
+                call.respondBoxOK(service.findList(it))
             }
         }
 

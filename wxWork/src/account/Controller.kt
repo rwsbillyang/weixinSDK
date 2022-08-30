@@ -266,8 +266,5 @@ class AccountControllerWork(private val accountService: AccountServiceWxWork): A
         return agent
 
     }
-    fun findAccountList(params: AccountListParams): DataBox<List<AccountBean>>{
-        val list = accountService.findAccountList(params.toFilter(), params.pagination, params.lastId)
-        return DataBox.ok(list)
-    }
+    fun findAccountList(params: AccountListParams) = DataBox.ok(accountService.findAccountList(params))
 }

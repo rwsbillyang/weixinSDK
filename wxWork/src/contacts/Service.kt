@@ -20,10 +20,10 @@ package com.github.rwsbillyang.wxWork.contacts
 
 import com.github.rwsbillyang.ktorKit.apiBox.Sort
 import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
-import com.github.rwsbillyang.ktorKit.toObjectId
-import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.db.MongoDataSource
+import com.github.rwsbillyang.ktorKit.db.MongoGenericService
+import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.wxSDK.work.DepartmentItem
 import com.github.rwsbillyang.wxSDK.work.FollowUser
@@ -36,7 +36,7 @@ import org.koin.core.qualifier.named
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineCollection
 
-class ContactService(cache: ICache) : CacheService(cache) {
+class ContactService(cache: ICache) : MongoGenericService(cache) {
     private val dbSource: MongoDataSource by inject(qualifier = named(wxWorkModule.dbName!!))
 
     private val contactCol: CoroutineCollection<Contact> by lazy {
@@ -94,18 +94,7 @@ class ContactService(cache: ICache) : CacheService(cache) {
     fun findAllContactList(filter: Bson) = runBlocking {
         contactCol.find(filter).toList()
     }
-    fun findPaginationContactList(filter: Bson, pagination: UmiPagination, lastId: String?) = runBlocking {
-        val sort = pagination.sortJson.bson
-
-        if(lastId == null)
-            contactCol.find(filter).skip((pagination.current - 1) * pagination.pageSize).limit(pagination.pageSize).sort(sort).toList()
-        else{
-            val lastId_ = lastId.toObjectId()
-            val f = if(pagination.sort == Sort.ASC) Contact::_id gt lastId_
-            else Contact::_id lt lastId_
-            contactCol.find(and(filter,f)).limit(pagination.pageSize).sort(sort).toList()
-        }
-    }
+    fun findPaginationContactList(params: ContactListParams) = findPage(contactCol, params)
 
     fun findContactExtra(_id: String) = runBlocking { contactExtraCol.findOneById(_id.toObjectId()) }
     fun findContactExtra(_id: ObjectId) = runBlocking { contactExtraCol.findOneById(_id) }

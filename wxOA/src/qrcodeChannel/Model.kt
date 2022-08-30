@@ -19,7 +19,7 @@
 @file:UseContextualSerialization(ObjectId::class)
 package com.github.rwsbillyang.wxOA.qrcodeChannel
 
-import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
 import com.github.rwsbillyang.ktorKit.toObjectId
 import io.ktor.resources.*
 
@@ -77,8 +77,8 @@ data class ChannelListParams(
     val appId: String? = null,
     val keyword: String? = null,
     val lastId: String? = null
-): IUmiListParams {
-    fun toFilter(): Bson {
+): IUmiPaginationParams {
+    override fun toFilter(): Bson {
         val idFilter = _id?.let { QrCodeChannel::_id eq it.toObjectId() }
         val codeFilter = code?.let { QrCodeChannel::code eq it }
         val appIdFilter = appId?.let { QrCodeChannel::appId eq it }

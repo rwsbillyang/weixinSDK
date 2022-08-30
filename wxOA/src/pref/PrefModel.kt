@@ -10,10 +10,9 @@
 package com.github.rwsbillyang.wxOA.pref
 
 
-import com.github.rwsbillyang.ktorKit.apiBox.Box
-import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
-import com.github.rwsbillyang.wxSDK.bean.MenuType
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
 import com.github.rwsbillyang.wxOA.msg.MyMsg
+import com.github.rwsbillyang.wxSDK.bean.MenuType
 import io.ktor.resources.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseContextualSerialization
@@ -99,9 +98,10 @@ data class PrefReMsgListParams(
         override val umi: String? = null,
         val cat: Int? = null,
         val type: String? = null,
-        val appId: String? = null
-) : IUmiListParams {
-    fun toFilter(): Bson {
+        val appId: String? = null,
+        val lastId: String? = null
+) : IUmiPaginationParams {
+    override fun toFilter(): Bson {
         val idFilter = cat?.let { PrefReInMsg::cat eq it }
         val typeFilter = type?.let { PrefReInMsg::type eq it }
         val appIdFilter = appId?.let { PrefReInMsg::appId eq it }
@@ -109,11 +109,11 @@ data class PrefReMsgListParams(
     }
 }
 
-@Serializable
-class PrefReInMsgList(
-    val data: List<PrefReMsgBean>,
-    val total: Long
-) : Box()
+//@Serializable
+//class PrefReInMsgList(
+//    val data: List<PrefReMsgBean>,
+//    val total: Long
+//) : Box()
 
 /**
  * 保存到数据库的自定义菜单配置
@@ -159,9 +159,9 @@ class PrefMenuTree(
 @Resource("/menu/list")
 data class PrefMenuListParams(
     override val umi: String? = null,
-    val appId: String? = null
-) : IUmiListParams {
-    fun toFilter(): Bson? {
-        return appId?.let { PrefReInMsg::appId eq it }
+    val appId: String
+) : IUmiPaginationParams {
+    override fun toFilter(): Bson {
+        return PrefReInMsg::appId eq appId
     }
 }

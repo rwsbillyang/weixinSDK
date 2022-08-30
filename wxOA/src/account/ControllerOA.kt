@@ -168,7 +168,7 @@ class AccountControllerOA(private val service: AccountServiceOA) : AccountContro
     }
 
     fun findAccountList(params: AccountListParams): DataBox<List<AccountBean>> {
-        val list = service.findAccountList(params.toFilter(), params.pagination, params.lastId)
+        val list = service.findAccountList(params)
         list.forEach {
             if (it.name == null && it.openId1 != null) {
                 val f = fanClient.getFanInfo(it.openId1!!, null)

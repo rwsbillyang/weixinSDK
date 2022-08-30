@@ -25,6 +25,7 @@ import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
 import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.db.MongoDataSource
+import com.github.rwsbillyang.ktorKit.db.MongoGenericService
 import com.github.rwsbillyang.ktorKit.util.plusTime
 import com.github.rwsbillyang.wxUser.fakeRpc.EditionLevel
 
@@ -39,7 +40,7 @@ import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineCollection
 
 
-abstract class AccountServiceBase(cache: ICache) : CacheService(cache) {
+abstract class AccountServiceBase(cache: ICache) : MongoGenericService(cache) {
     companion object{
         /**
          * 用于支持配置到单独的db中，如各个agent共享的account。注：登录统计数据配置到agent自己的库中
@@ -55,18 +56,15 @@ abstract class AccountServiceBase(cache: ICache) : CacheService(cache) {
         dbSource.mongoDb.getCollection()
     }
 
-    fun findAccountList(filter: Bson, pagination: UmiPagination, lastId: String?): List<AccountBean> = runBlocking {
-        val sort =  pagination.sortJson.bson
-        if(lastId == null)
-            accountCol.find(filter).skip((pagination.current - 1) * pagination.pageSize).limit(pagination.pageSize).sort(sort).toList()
-        else{
-            accountCol.find(and(filter,pagination.lastIdFilter(lastId))).limit(pagination.pageSize).sort(sort).toList()
-        }.map { AccountBean(it._id.to64String(),it.state,it.time,it.tel,it.name,it.openId1,it.needUserInfo,
-            it.appId,it.userId, it.corpId, it.suiteId, it.openId2, it.expire, it.role, it.level,
-            it.gId?.mapNotNull {
-                val id = it.to64String()
-                findGroup(id)?.let { IdName(id, it.name) }
-            }, it.ext) }
+    fun findAccountList(params: AccountListParams): List<AccountBean> {
+        return findPage(accountCol, params).map{
+            AccountBean(it._id.to64String(),it.state,it.time,it.tel,it.name,it.openId1,it.needUserInfo,
+                it.appId,it.userId, it.corpId, it.suiteId, it.openId2, it.expire, it.role, it.level,
+                it.gId?.mapNotNull {
+                    val id = it.to64String()
+                    findGroup(id)?.let { IdName(id, it.name) }
+                }, it.ext)
+        }
     }
 
     fun findById(id: String) = cacheable("u/id/$id") {
@@ -185,13 +183,8 @@ abstract class AccountServiceBase(cache: ICache) : CacheService(cache) {
     }
 
 
-    fun findGroupList(filter: Bson, pagination: UmiPagination, lastId: String?): List<GroupBean> = runBlocking {
-        val sort =  pagination.sortJson.bson
-        if(lastId == null)
-            groupCol.find(filter).skip((pagination.current - 1) * pagination.pageSize).limit(pagination.pageSize).sort(sort).toList()
-        else{
-            groupCol.find(and(filter,pagination.lastIdFilter(lastId))).limit(pagination.pageSize).sort(sort).toList()
-        }.map { GroupBean(it._id.to64String(), it.name, it.status, it.appId, it.corpId,
+    fun findGroupList(params: GroupListParams): List<GroupBean>  {
+            return findPage(groupCol, params).map { GroupBean(it._id.to64String(), it.name, it.status, it.appId, it.corpId,
             it.creator?.to64String(), accountIdToIdName(it.creator)?.name, it.admins?.mapNotNull { accountIdToIdName(it) }, it.time ) }
     }
 

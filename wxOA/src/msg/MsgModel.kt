@@ -10,8 +10,8 @@
 
 package com.github.rwsbillyang.wxOA.msg
 
-import com.github.rwsbillyang.ktorKit.apiBox.Box
-import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
+
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
 import com.github.rwsbillyang.wxSDK.msg.MsgBody
 import io.ktor.resources.*
 import kotlinx.serialization.Serializable
@@ -52,14 +52,14 @@ data class MyMsg(
 
 
 
-/**
- * 返回的列表数据
- * */
-@Serializable
-class MyMsgListBox(
-        val total: Long,
-        val data: List<MyMsg>? = null
-) : Box()
+///**
+// * 返回的列表数据
+// * */
+//@Serializable
+//class MyMsgListBox(
+//        val total: Long,
+//        val data: List<MyMsg>? = null
+//) : Box()
 
 @Serializable
 @Resource("/list")
@@ -71,8 +71,8 @@ data class MyMsgListParams(
         val type: String? = null,
         val appId: String? = null,
         val lastId: String? = null
-) : IUmiListParams {
-    fun toFilter(): Bson {
+) : IUmiPaginationParams {
+    override fun toFilter(): Bson {
         val idFilter = _id?.let { MyMsg::_id eq it }
         val nameFilter = name?.let { MyMsg::name regex ".*$it.*" }
         val flagFilter = flag?.let { "{\"msg.flag\": \"$it\"}".bson }

@@ -16,7 +16,7 @@
 package com.github.rwsbillyang.wxUser.account
 
 
-import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
 import com.github.rwsbillyang.ktorKit.to64String
 import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.ktorKit.server.corpId
@@ -217,8 +217,8 @@ data class AccountListParams(
     val userId: String? = null,//企业微信
     val gId: String? = null,
     val lastId: String? = null
-) : IUmiListParams { //实现IUmiListParams接口目的在于继承一个函数：将umi字符串转换成UmiPagination对象
-    fun toFilter(): Bson {
+) : IUmiPaginationParams { //实现IUmiPaginationParams接口目的在于继承一个函数：将umi字符串转换成UmiPagination对象
+    override fun toFilter(): Bson {
         val idFilter = _id?.let { Account::_id eq it.toObjectId() }
         val statusF = if (status != "-1") Account::state eq status else null
         val corpIdF = corpId?.let { Account::corpId eq it }
@@ -407,8 +407,8 @@ data class GroupListParams(
     val appId: String? = null, //某个公众号的
     val corpId: String? = null,//某个企业的
     val lastId: String? = null
-) : IUmiListParams { //实现IUmiListParams接口目的在于继承一个函数：将umi字符串转换成UmiPagination对象
-    fun toFilter(): Bson {
+) : IUmiPaginationParams { //实现IUmiPaginationParams接口目的在于继承一个函数：将umi字符串转换成UmiPagination对象
+    override fun toFilter(): Bson {
         val idFilter = _id?.let { Group::_id eq it.toObjectId() }
         val statusF = if (status > 0) Group::status eq status else null
         val corpIdF = corpId?.let { Group::corpId eq it }

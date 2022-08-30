@@ -14,25 +14,22 @@
 package com.github.rwsbillyang.wxOA.pref
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
-import com.github.rwsbillyang.ktorKit.to64String
-import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.ktorKit.server.BizException
 import com.github.rwsbillyang.ktorKit.server.LifeCycle
+import com.github.rwsbillyang.ktorKit.toObjectId
+import com.github.rwsbillyang.wxOA.EventHandler
+import com.github.rwsbillyang.wxOA.MsgHandler
+import com.github.rwsbillyang.wxOA.msg.MsgService
 import com.github.rwsbillyang.wxSDK.bean.Menu
+import com.github.rwsbillyang.wxSDK.bean.MenuType
 import com.github.rwsbillyang.wxSDK.msg.InEventType
 import com.github.rwsbillyang.wxSDK.msg.MsgType
 import com.github.rwsbillyang.wxSDK.officialAccount.MenuApi
 import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
-import com.github.rwsbillyang.wxOA.EventHandler
-import com.github.rwsbillyang.wxOA.MsgHandler
-import com.github.rwsbillyang.wxOA.msg.MsgService
-import com.github.rwsbillyang.wxSDK.bean.MenuType
 import io.ktor.server.application.*
-
 import org.bson.types.ObjectId
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-
 import org.koin.ktor.ext.inject
 import org.litote.kmongo.eq
 import org.slf4j.LoggerFactory
@@ -163,7 +160,7 @@ class PrefController(application: Application) : LifeCycle(application), KoinCom
     }
 
 
-    fun findPrefReMsgList(appId: String?,cat: Int?): PrefReInMsgList {
+    fun findPrefReMsgList(appId: String?,cat: Int?): DataBox<List<PrefReMsgBean>> {
         if(cat == null ||appId == null) throw BizException("invalid parameter")
 
         val typeList = when(cat) {
@@ -172,23 +169,23 @@ class PrefController(application: Application) : LifeCycle(application), KoinCom
             else -> throw BizException("invalid parameter")
         }
 
-        val count = typeList.size
+        //val count = typeList.size
         val map = mutableMapOf<String, PrefReMsgBean>()
         service.findPrefReMsgList(appId, cat)
                 .map { map[it.type] = PrefReMsgBean(it.appId,it.type,it.msgId,it.cat, it._id, msgService.findMyMsg(it.msgId)) }
 
         val list = typeList.map { map[it]?: PrefReMsgBean(appId,it, null, cat, null, null) }
 
-        return PrefReInMsgList(list, count.toLong())
+        return DataBox.ok(list)
     }
 
-    fun findPrefReMsgList(param: PrefReMsgListParams): PrefReInMsgList {
-        val f = param.toFilter()
-        val count = service.countPrefReMsgList(f)
-        val list = service.findPrefReMsgList(f, param.pagination).map {
+    fun findPrefReMsgList(param: PrefReMsgListParams): DataBox<List<PrefReMsgBean>> {
+        val filter = param.toFilter()
+        //val count = service.countPrefReMsgList(filter)
+        val list = service.findPrefReMsgList(param).map {
             PrefReMsgBean(it.appId,it.type,it.msgId,it.cat, it._id, msgService.findMyMsg(it.msgId))
         }
-        return PrefReInMsgList(list, count)
+        return DataBox.ok(list)
     }
 
     fun savePrefReInMsg(param: PrefReInMsg): DataBox<PrefReMsgBean> {

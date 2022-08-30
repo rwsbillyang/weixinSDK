@@ -18,24 +18,21 @@
 
 package com.github.rwsbillyang.wxOA.media
 
-import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
-
-import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.db.MongoDataSource
+import com.github.rwsbillyang.ktorKit.db.MongoGenericService
 import com.github.rwsbillyang.wxOA.wxOaAppModule
 import com.github.rwsbillyang.wxSDK.officialAccount.Article
 import kotlinx.coroutines.runBlocking
 import org.bson.conversions.Bson
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
-import org.litote.kmongo.bson
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.eq
 import org.litote.kmongo.exclude
 
 
-class MediaService  (cache: ICache) : CacheService(cache){
+class MediaService  (cache: ICache) : MongoGenericService(cache){
 
     private val dbSource: MongoDataSource by inject(qualifier = named(wxOaAppModule.dbName!!))
 
@@ -95,23 +92,11 @@ class MediaService  (cache: ICache) : CacheService(cache){
         mediaCol.countDocuments(filter)
     }
 
-    fun findNewsPage(filter: Bson, pagination: UmiPagination) = runBlocking {
-        val sort = pagination.sortJson.bson
-        //TODO: skip分页排序性能慢
-        newsCol.find(filter).skip((pagination.current - 1) * pagination.pageSize).limit(pagination.pageSize).sort(sort).toList()
-    }
+    fun findNewsPage(listParam: MaterialNewsListParams) = findPage(newsCol, listParam)
 
-    fun findVideoPage(filter: Bson, pagination: UmiPagination) = runBlocking {
-        val sort = pagination.sortJson.bson
-        //TODO: skip分页排序性能慢
-        videoCol.find(filter).skip((pagination.current - 1) * pagination.pageSize).limit(pagination.pageSize).sort(sort).toList()
-    }
+    fun findVideoPage(listParam: MaterialVideoListParams) = findPage(videoCol, listParam)
 
-    fun findMediaPage(filter: Bson, pagination: UmiPagination) = runBlocking {
-        val sort = pagination.sortJson.bson
-        //TODO: skip分页排序性能慢
-        mediaCol.find(filter).skip((pagination.current - 1) * pagination.pageSize).limit(pagination.pageSize).sort(sort).toList()
-    }
+    fun findMediaPage(listParam: MaterialMediaListParams) = findPage(mediaCol, listParam)
 
     fun delNewsById(id: String) = runBlocking{
         newsCol.deleteOneById(id)

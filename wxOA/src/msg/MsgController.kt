@@ -15,12 +15,7 @@ import org.koin.core.component.inject
 class MsgController : KoinComponent {
     private val service: MsgService by inject()
 
-    fun findMyMsgList(listParam: MyMsgListParams): MyMsgListBox {
-        val filter = listParam.toFilter()
-        val total = service.countMyMsg(filter)
-        val list = service.findMyMsgList(filter, listParam.pagination, listParam.lastId)
-        return MyMsgListBox(total,list)
-    }
+    fun findMyMsgList(listParam: MyMsgListParams) = DataBox.ok(service.findMyMsgList(listParam))
     fun saveMyMsg(doc: MyMsg): DataBox<MyMsg> {
         service.saveMyMsg(doc)
         return DataBox.ok(doc)

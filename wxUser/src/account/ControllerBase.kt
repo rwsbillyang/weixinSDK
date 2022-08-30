@@ -177,7 +177,7 @@ abstract class AccountControllerBase(private val accountService: AccountServiceB
     //登录时nick和avatar
     abstract fun getFanInfo(account: Account): FanInfo?
 
-    fun findGroupList(params: GroupListParams) = accountService.findGroupList(params.toFilter(), params.pagination, params.lastId)
+    fun findGroupList(params: GroupListParams) = accountService.findGroupList(params)
     fun findGroup(id: String) = accountService.findGroup(id)
     fun saveGroup(doc: GroupBean) = accountService.saveGroup(doc)
     fun delGroup(id: String) = accountService.delGroup(id)

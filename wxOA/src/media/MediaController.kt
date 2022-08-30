@@ -148,23 +148,23 @@ class MediaController : KoinComponent {
     fun findAllVideo() = DataBox.ok(service.findAllVideo())
     fun findAllByType(type: String) = DataBox.ok(service.findAllByType(type))
 
-    fun findMaterialNewsList(listParam: MaterialNewsListParams): MaterialNewsListBox {
-        val filter = listParam.toFilter()
-        val total = service.countNews(filter)
-        val list = service.findNewsPage(filter, listParam.pagination)
-        return MaterialNewsListBox(total,list)
+    fun findMaterialNewsList(listParam: MaterialNewsListParams): DataBox<List<MaterialNews>> {
+//        val filter = listParam.toFilter()
+//        val total = service.countNews(filter)
+        val list = service.findNewsPage(listParam)
+        return DataBox.ok(list)
     }
-    fun findMaterialVideoList(listParam: MaterialVideoListParams): MaterialVideoListBox {
-        val filter = listParam.toFilter()
-        val total = service.countVideo(filter)
-        val list = service.findVideoPage(filter, listParam.pagination)
-        return MaterialVideoListBox(total,list)
+    fun findMaterialVideoList(listParam: MaterialVideoListParams): DataBox<List<MaterialVideo>> {
+//        val filter = listParam.toFilter()
+//        val total = service.countVideo(filter)
+        val list = service.findVideoPage(listParam)
+        return DataBox.ok(list)
     }
-    fun findMaterialMediaList(listParam: MaterialMediaListParams): MaterialMediaListBox {
-        val filter = listParam.toFilter()
-        val total = service.countMedia(filter)
-        val list = service.findMediaPage(filter, listParam.pagination)
-        return MaterialMediaListBox(total,list)
+    fun findMaterialMediaList(listParam: MaterialMediaListParams): DataBox<List<MaterialMedia>> {
+//        val filter = listParam.toFilter()
+//        val total = service.countMedia(filter)
+        val list = service.findMediaPage(listParam)
+        return DataBox.ok(list)
     }
 
     fun del(appId: String?, type: String, id: String, delType: Int): DataBox<Int> {

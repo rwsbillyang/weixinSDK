@@ -20,7 +20,7 @@
 
 package com.github.rwsbillyang.wxWork.contacts
 
-import com.github.rwsbillyang.ktorKit.apiBox.IUmiListParams
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
 import com.github.rwsbillyang.ktorKit.to64String
 import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.wxSDK.work.*
@@ -129,8 +129,8 @@ data class ContactListParams(
     val gender: String? = null, //0表示未定义，1表示男性，2表示女性
     val children: Int = 0, //是否获取其客户列表,默认不获取
     val lastId: String? = null
-) : IUmiListParams {
-    fun toFilter(): Bson {
+) : IUmiPaginationParams {
+    override fun toFilter(): Bson {
 
         val idFilter = id?.let { Contact::_id eq it.toObjectId() }
         val nameFilter = name?.let { Contact::name regex ".*$it.*" }
@@ -206,8 +206,8 @@ data class ExternalListParams(
     val type: Int? = null,
     val gender: Int? = null, //0表示未定义，1表示男性，2表示女性
     val lastId: String? = null
-) : IUmiListParams {
-    fun toFilter(): Bson {
+) : IUmiPaginationParams {
+    override fun toFilter(): Bson {
         val corpIdFilter = ExternalContact::corpId eq corpId
 
         val userChannelFilter = if(channelId != null)

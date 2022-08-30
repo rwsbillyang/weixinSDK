@@ -7,13 +7,11 @@
 
 package com.github.rwsbillyang.wxOA.msg
 
-import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
-import com.github.rwsbillyang.ktorKit.to64String
-import com.github.rwsbillyang.ktorKit.toObjectId
-
-import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.db.MongoDataSource
+import com.github.rwsbillyang.ktorKit.db.MongoGenericService
+import com.github.rwsbillyang.ktorKit.to64String
+import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.wxOA.wxOaAppModule
 import com.github.rwsbillyang.wxSDK.msg.MsgBody
 import kotlinx.coroutines.runBlocking
@@ -21,10 +19,12 @@ import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
-import org.litote.kmongo.*
+import org.litote.kmongo.bitsAnySet
 import org.litote.kmongo.coroutine.CoroutineCollection
+import org.litote.kmongo.div
+import org.litote.kmongo.eq
 
-class MsgService (cache: ICache) : CacheService(cache){
+class MsgService (cache: ICache) : MongoGenericService(cache){
     private val dbSource: MongoDataSource by inject(qualifier = named(wxOaAppModule.dbName!!))
 
 
@@ -64,14 +64,7 @@ class MsgService (cache: ICache) : CacheService(cache){
         msgCol.countDocuments(filter)
     }
 
-    fun findMyMsgList(filter: Bson, pagination: UmiPagination, lastId: String? ) = runBlocking {
-        val sort =  pagination.sortJson.bson
-        if(lastId == null)
-            msgCol.find(filter).skip((pagination.current - 1) * pagination.pageSize).limit(pagination.pageSize).sort(sort).toList()
-        else{
-            msgCol.find(and(filter,pagination.lastIdFilter(lastId))).limit(pagination.pageSize).sort(sort).toList()
-        }
-    }
+    fun findMyMsgList(params: MyMsgListParams) = findPage(msgCol, params)
     
     fun findMyMsgListByFlag(appId: String, flag: Long) = runBlocking {
         msgCol.find(MyMsg::appId eq appId, MyMsg::msg / MsgBody::flag bitsAnySet flag ).toList()

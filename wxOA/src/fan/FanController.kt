@@ -25,7 +25,7 @@ class FanController : KoinComponent {
     fun findFanList(fanListParams: FanListParams):  DataBox<List<Fan>>  {
         //val filter = fanListParams.toFilter()
         //val total = service.countFan(filter)
-        val list = service.findFanList(fanListParams.toFilter(), fanListParams.pagination, fanListParams.lastId)
+        val list = service.findFanList(fanListParams)
         return DataBox.ok(list)
     }
 

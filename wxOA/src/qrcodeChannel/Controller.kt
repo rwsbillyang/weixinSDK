@@ -18,17 +18,15 @@
 
 package com.github.rwsbillyang.wxOA.qrcodeChannel
 
+
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.client.doDownload
 import com.github.rwsbillyang.ktorKit.util.NginxStaticRootUtil
 import com.github.rwsbillyang.wxSDK.officialAccount.QrCodeApi
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-
-
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.lang.IllegalArgumentException
 
 
 class QrCodeChannelController: KoinComponent {
@@ -36,15 +34,7 @@ class QrCodeChannelController: KoinComponent {
 
     private val service: QrCodeChannelService by inject()
 
-    fun getChannelList(listParams: ChannelListParams): DataBox<List<QrCodeChannel>> {
-
-        val filter = listParams.toFilter()
-
-        val list = service.findList(filter, listParams.pagination, listParams.lastId)
-
-        return DataBox.ok(list)
-    }
-
+    fun getChannelList(listParams: ChannelListParams) = DataBox.ok(service.findList(listParams))
     fun saveChannel(info: ChannelBean): DataBox<QrCodeChannel?> {
         val doc = if(info._id == null)
             service.addChannel(info)

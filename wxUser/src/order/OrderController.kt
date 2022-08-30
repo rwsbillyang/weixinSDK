@@ -43,12 +43,6 @@ class AccountOrderController : OrderHandler(), KoinComponent {
     private val accountHelper: AccountServiceBase by inject()//具体类型取决于上层业务库中哪个子类绑定了接口
     private val wechatNotifier: IPayWechatNotifier by inject()//具体类型取决于上层业务库中哪个子类绑定了接口
 
-    fun list(listParams: ListParams): OrderList {
-        val filter = listParams.toFilter()
-        val total = service.count(filter)
-        val list = service.findList(filter, listParams.pagination, listParams.lastId)
-        return OrderList(list, total)
-    }
 
     /**
      * @param appId
