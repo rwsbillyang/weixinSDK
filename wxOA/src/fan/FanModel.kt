@@ -52,13 +52,13 @@ data class Fan(
         val appId: String? = null,//为null，表示向前兼容没该字段的老系统
         val _id: String, //openId
         val uId: String? = null, //unionid
-        val name: String? = null,
+        var name: String? = null,
         val sex: Int? = null,
         val city: String? = null,
         val cty: String? = null,
         val pro: String? = null,
         val lang: String? = null,
-        val img: String? = null,
+        var img: String? = null,
         val sub: Int? = null,
         val st: Long? = null,
         val re: String? = null,
@@ -154,6 +154,7 @@ data class FanListParams(
 @Serializable
 data class OauthToken(
         val _id: String,
+        val appId: String,
         val aToken: String? = null,
         val expire: Int? = null,
         val rToken: String? = null,
@@ -161,4 +162,4 @@ data class OauthToken(
         val time: Long = System.currentTimeMillis()
 )
 
-fun ResponseOauthAccessToken.toOauthToken() = if(isOK() && openId != null) OauthToken(openId!!, accessToken, expire, refreshToken, scope) else null
+fun ResponseOauthAccessToken.toOauthToken(appId: String) = if(isOK() && openId != null) OauthToken(openId!!, appId, accessToken, expire, refreshToken, scope) else null

@@ -53,7 +53,7 @@ object JsAPI {
 
         val nonce = nonceStr?:UUID.randomUUID().toString().replace("-".toRegex(), "")
         //val nonce: String = nonceStr?:RandomStringUtils.randomAlphanumeric(32)
-        val time = timestamp?:System.currentTimeMillis() / 1000
+        val time = timestamp ?: (System.currentTimeMillis() / 1000)
         val signature = SignUtil.jsApiSignature(jsApiTicket, nonce, time, url)
 
         return JsApiSignature(appId, nonce, time, signature, agentId)

@@ -6,7 +6,9 @@ import com.github.rwsbillyang.ktorKit.server.AppModule
 import com.github.rwsbillyang.ktorKit.server.installModule
 import com.github.rwsbillyang.wxOA.account.*
 import com.github.rwsbillyang.wxOA.fakeRpc.FanRpcOA
-import com.github.rwsbillyang.wxOA.fan.*
+import com.github.rwsbillyang.wxOA.fan.FanService
+import com.github.rwsbillyang.wxOA.fan.fanApi
+import com.github.rwsbillyang.wxOA.fan.fanModule
 import com.github.rwsbillyang.wxOA.media.mediaApi
 import com.github.rwsbillyang.wxOA.media.mediaModule
 import com.github.rwsbillyang.wxOA.msg.TemplatePayMsgNotifier
@@ -18,8 +20,7 @@ import com.github.rwsbillyang.wxOA.pref.prefModule
 import com.github.rwsbillyang.wxOA.qrcodeChannel.qrCodeChannelModule
 import com.github.rwsbillyang.wxOA.qrcodeChannel.qrcodeChannelApi
 import com.github.rwsbillyang.wxOA.stats.statsModule
-import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
-import com.github.rwsbillyang.wxUser.account.*
+import com.github.rwsbillyang.wxUser.account.AccountServiceBase
 import com.github.rwsbillyang.wxUser.account.stats.StatsService
 import com.github.rwsbillyang.wxUser.fakeRpc.IPayWechatNotifier
 import io.ktor.server.application.*
@@ -50,22 +51,23 @@ val wxOaAppModule = AppModule(
 ) {
     dispatchMsgApi()//  "/api/wx/oa/app/{appId}"
 
-    oAuthApi( needUserInfo = {owner, openId ->
+    oAuthApi( needUserInfoSettingsBlock = {owner, openId ->
         val accountService: AccountServiceOA by inject()
         val fanService: FanService by inject()
 
-        val needUserInfo = owner?.let { accountService.findById(it) }?.needUserInfo?: OfficialAccount.defaultGetUserInfo
-        val hasInfo = fanService.findGuest(openId) != null || fanService.findFan(openId) != null
-        needUserInfo && !hasInfo
-    },
-        onGetOauthAccessToken = { res, appId ->
-        val fanService: FanService by inject()
-        res.toOauthToken()?.let { fanService.saveOauthToken(it) }
-    })
-    { res, appId ->
-        val fanService: FanService by inject()
-        res.toGuest(appId)?.let { fanService.saveGuest(it) }
+        val needUserInfo = owner?.let { accountService.findById(it) }?.needUserInfo?:false
+        needUserInfo && (fanService.findGuest(openId) == null && fanService.findFan(openId) == null)
     }
+      /* , onGetOauthAccessToken = { res, appId ->
+        val fanService: FanService by inject()
+        res.toOauthToken(appId)?.let { fanService.saveOauthToken(it) }
+    },
+        onGetUserInfo =  { res, appId ->
+            val fanService: FanService by inject()
+            res.toGuest(appId)?.let { fanService.saveGuest(it) }
+        }*/
+    )
+
     
     jsSdkSignature()
 

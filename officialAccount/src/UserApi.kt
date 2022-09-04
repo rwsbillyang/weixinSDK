@@ -34,6 +34,7 @@ class UserApi(appId: String) : OABaseApi(appId){
      * @param lang 国家地区语言版本，zh_CN 简体，zh_TW 繁体，en 英语，默认为zh-CN
      *
      * https://developers.weixin.qq.com/doc/offiaccount/User_Management/Get_users_basic_information_UnionID.html#UinonId
+     * 返回请求头：Content-Type: text/plain
      * */
     fun getUserInfo(openId: String, lang: String = "zh_CN"): ResponseUserInfo = doGet("info", mapOf("openid" to openId,"lang" to lang))
 
@@ -104,7 +105,6 @@ class ResponseUserInfo(
         override val errCode: Int = 0,
         @SerialName("errmsg")
         override val errMsg: String? = null,
-
 
         val subscribe: Int? = null,
         val openid: String? = null,

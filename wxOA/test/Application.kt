@@ -134,7 +134,6 @@ class OAEventTestHandler: DefaultOAEventHandler(){
     override fun onDefault(appId:String, e: WxBaseEvent): ReBaseMSg? {
         println("got event: ${e.event}")
         return null
-
     }
 }
 

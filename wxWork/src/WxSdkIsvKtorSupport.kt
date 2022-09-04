@@ -20,6 +20,7 @@ package com.github.rwsbillyang.wxWork
 
 
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.rwsbillyang.wxSDK.security.AesException
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.work.Work
@@ -32,6 +33,7 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
 
 //当为多应用模式时，提供suiteId
 fun Routing.isvDispatchMsgApi(){
@@ -109,6 +111,10 @@ fun Routing.isvDispatchMsgApi(){
  * @param onGetPermanentAuthInfo 成功获取到永久授权码后的回调
  */
 fun Routing.isvAuthFromOutsideApi(onGetPermanentAuthInfo: (suiteId: String, info: ResponsePermanentCodeInfo)->Unit){
+    val stateCache = Caffeine.newBuilder().maximumSize(Long.MAX_VALUE)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .expireAfterAccess(10, TimeUnit.MINUTES)
+        .build<String, String>()
     /**
      * 前端请求该endpoint，从服务商网站发起应用授权
      * */

@@ -19,24 +19,21 @@
 package com.github.rwsbillyang.wxWork
 
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
-import com.github.rwsbillyang.wxSDK.bean.OAuthInfo
 import com.github.rwsbillyang.wxSDK.security.AesException
 import com.github.rwsbillyang.wxSDK.security.JsAPI
 import com.github.rwsbillyang.wxSDK.work.*
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWork
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
+import com.github.rwsbillyang.wxUser.NeedUserInfoType
 import io.ktor.http.*
-
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 
 
 /**
@@ -182,30 +179,42 @@ fun Routing.dispatchAgentMsgApi() {
                 else
                     call.respondText(reXml, ContentType.Text.Xml, HttpStatusCode.OK)
             }
-
-
         }
     }
 }
 
 
-internal val stateCache = Caffeine.newBuilder()
-    .maximumSize(Long.MAX_VALUE)
-    .expireAfterWrite(10, TimeUnit.MINUTES)
-    .expireAfterAccess(1, TimeUnit.SECONDS)
-    .build<String, String>()
-
-private val DefaultSnsApiScope = SnsApiScope.PrivateInfo
 
 class OAuthResult(
-    val corpId: String?,
-    val userId: String?,
-    val externalUserId: String?,
-    val openId: String?,
-    val deviceId: String?,
-    val agentId: Int?, //内建应用才有值，ISV第三方应用则为空
-    val suiteId: String?
-)
+    var code: String,// OK or KO
+    val state: String?,//回传给前端用于校验
+    var errMsg: String? = null,
+    var unionId: String? = null,
+    var deviceId: String? = null,
+    var openId: String? = null,
+    var userId: String? = null,
+    var externalUserId: String? = null,
+    var corpId: String? = null,
+    var agentId: String? = null, //内建应用才有值，ISV第三方应用则为空
+    var suiteId: String? = null
+){
+    fun serialize(): String{
+        val map = mutableMapOf<String, String>()
+
+        map["code"] = code
+        if(state != null ) map["state"] = state
+        if(errMsg != null )map["errMsg"] = errMsg!!
+        if(unionId != null ) map["unionId"] = unionId!!
+        if(deviceId != null ) map["deviceId"] = deviceId!!
+        if(openId != null ) map["openId"] = openId!!
+        if(userId != null ) map["userId"] = userId!!
+        if(externalUserId != null ) map["externalUserId"] = externalUserId!!
+        if(corpId != null ) map["corpId"] = corpId!!
+        if(agentId != null ) map["agentId"] = agentId!!
+        if(suiteId != null ) map["suiteId"] = suiteId!!
+        return map.toList().joinToString("&"){"${it.first}=${it.second}"}
+    }
+}
 
 
 
@@ -213,60 +222,11 @@ class OAuthResult(
  * 企业微信oauth用户认证登录的api
  * */
 fun Routing.wxWorkOAuthApi(
+    notifyWebAppUrl: String = Work.oauthNotifyWebAppUrl,
     onResponseOauthUserDetail3rd: ((res: ResponseOauthUserDetail3rd) -> Unit)? = null //第三方应用需要获取用户敏感信息（头像和二维码）时提供，一般情况下没必要
 ) {
     val log = LoggerFactory.getLogger("wxWorkOAuthApi")
 
-    /**
-     * 请求地址："/api/wx/work/oauth/info?scope=2&corpId=CORPID&agentId=AGENTID&suiteId=SUITEID&host=HOST" scope可选默认为2
-     * 前端webapp请求该api获取appid，state等信息，然后重定向到腾讯的授权页面，用户授权之后将重定向到下面的notify
-     * scope： 0， 1， 2 分别对应：snsapi_base, snsapi_userinfo, snsapi_privateinfo
-     * host 跳转host，如："www.example.com"
-     * 前端重定向地址：https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect" 然后重定向到该url
-     * "/api/wx/work/oauth/info"
-     * */
-    get(Work.oauthInfoPath) {//默认路径： /api/wx/work/oauth/info?scope=2&corpId=CORPID&agentId=AGENTID
-        val scope = when (call.request.queryParameters["scope"]) {
-            "0" -> SnsApiScope.Base
-            "1" -> SnsApiScope.UserInfo
-            "2" -> SnsApiScope.PrivateInfo
-            else -> DefaultSnsApiScope
-        }
-        //call.request.origin.scheme总得到是https,故通过指定的方式强行使用http or https
-        val host = call.request.queryParameters["host"] ?: ( OAuthInfo.schema + "://"+ call.request.host())
-        val suiteId = call.request.queryParameters["suiteId"]
-        val corpId = call.request.queryParameters["corpId"]
-        val agentId = call.request.queryParameters["agentId"]?.trim()?.toInt()
-
-        val redirect: String
-        try{
-            val api = if (Work.isIsv) {
-                if (Work.isMulti) {
-                    redirect = "$host${IsvWork.oauthNotifyPath}/$suiteId"
-                    OAuthApi(corpId?:"", agentId, suiteId)
-                } else {
-                    redirect = "$host${IsvWork.oauthNotifyPath}"
-                    OAuthApi(corpId, agentId, suiteId)
-                }
-            } else {
-                if (Work.isMulti) {
-                    redirect = "$host${Work.oauthNotifyPath}/$corpId/$agentId"
-                    OAuthApi(corpId, agentId, suiteId)
-                } else {
-                    redirect = "$host${Work.oauthNotifyPath}"
-                    OAuthApi(corpId, agentId, suiteId)
-                }
-            }
-
-            //log.info("wxwork oauth: notify url=$redirect")
-            val oAuthInfo = api.prepareOAuthInfo(redirect, scope)
-            //log.info("oAuthInfo=${oAuthInfo.toString()}")
-            stateCache.put(oAuthInfo.state, scope.name)
-            call.respond(oAuthInfo)
-        }catch (e: Exception){
-            call.respond(HttpStatusCode.BadRequest, "invalid parameter: "+ e.message)
-        }
-    }
 
     /**
      * 腾讯在用户授权之后，将调用下面的api通知code，并附带上原state。
@@ -278,67 +238,79 @@ fun Routing.wxWorkOAuthApi(
      * code作为换取access_token的票据，每次用户授权带上的code将不一样，code只能使用一次，5分钟未被使用自动过期。
      * "/api/wx/work/oauth/notify/{corpId?}/{agentId?}" or /api/wx/work/isv/oauth/notify/{suiteId?}
      * */
-    get(if(Work.isIsv) IsvWork.oauthNotifyPath + "/{suiteId?}"
-        else Work.oauthNotifyPath + "/{corpId?}/{agentId?}")
+    get(if(Work.isIsv) IsvWork.oauthNotifyPath + "/{suiteId}/{needUserInfo}"
+        else Work.oauthNotifyPath + "/{corpId}/{agentId}/{needUserInfo}")
     { //默认路径： /api/wx/work/oauth/notify/{corpId}/{agentId} or /api/wx/work/isv/oauth/notify/{suiteId}
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]
 
-        //log.info("get oauth notify from tencent: schema=${call.request.origin.scheme},path=${call.request.origin.uri}")
-        //val host = call.request.origin.scheme +"://"+ call.request.host()
-        //前端若是SPA，通知路径可能需要添加browserHistorySeparator: /wxwork/authNotify  or /#!/wxwork/authNotify
-        var url = if (Work.browserHistorySeparator.isEmpty()) Work.oauthNotifyWebAppUrl
-                else "/${Work.browserHistorySeparator}${Work.oauthNotifyWebAppUrl}"
-
+        val result = OAuthResult("OK", state)
         if (code.isNullOrBlank() || state.isNullOrBlank()) {
             log.warn("code or state is null, code=$code, state=$state")
-            //val box = DataBox<OAuthResult>("KO", "nullCodeOrState")
-            url = "$url?code=KO&msg=nullCodeOrState"
-            call.respondRedirect(url, permanent = false)
+            result.code = "KO"
+            result.errMsg = "nullCodeOrState"
         } else {
-            val scope = stateCache.getIfPresent(state)?.let { SnsApiScope.valueOf(it) } ?: DefaultSnsApiScope
-            stateCache.invalidate(state)
-
             val suiteId = call.parameters["suiteId"]
             val corpId = call.parameters["corpId"]
-            val agentId = call.parameters["agentId"]?.toInt()
+            val agentId = call.parameters["agentId"]
 
             try {
-                val api = OAuthApi(corpId, agentId, suiteId)
+                val api = OAuthApi(corpId, agentId?.toInt(), suiteId)
                 val res = if(Work.isIsv){
                     api.getUserInfo3rd(code)
                 }else{
                     api.getUserInfo(code)
                 }
 
-                if (Work.isIsv && onResponseOauthUserDetail3rd != null && scope == SnsApiScope.PrivateInfo && res.userTicket != null) {
-                    launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket!!)) }
+                if(Work.isIsv && onResponseOauthUserDetail3rd != null && res.userTicket != null){
+                    when(val needUserInfo = call.parameters["needUserInfo"]?.toInt()?: NeedUserInfoType.Force_Not_Need){
+                        NeedUserInfoType.Force_Not_Need -> {
+                            //do nothing
+                        }
+                        NeedUserInfoType.NeedIfNo -> {
+                            //TODO: 暂时都获取
+                            launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket!!)) }
+                        }
+                        NeedUserInfoType.NeedIfNoNameOrImg -> {
+                            //TODO: 暂时都获取
+                            launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket!!)) }
+                        }
+                        NeedUserInfoType.NeedByUserSettings -> {
+                            //TODO: 暂时都获取
+                            launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket!!)) }
+                        }
+                        NeedUserInfoType.ForceNeed -> {
+                            launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket!!)) }
+                        }
+                        else -> {
+                            log.warn("Not support needUserInfoType:$needUserInfo")
+                        }
+                    }
                 }
 
-                val params = listOf(
-                    Pair("code", "OK"),
-                    Pair("state", state),
-                    Pair("corpId", res.corpId?:corpId),
-                    Pair("userId", res.userId),
-                    Pair("externalUserId", res.externalUserId),
-                    Pair("openId", res.openId),
-                    Pair("deviceId", res.deviceId),
-                    Pair("agentId", agentId?.toString()),
-                    Pair("suiteId", suiteId),
-                )
-                    .filter{ !it.second.isNullOrBlank() }
-                    .joinToString("&"){
-                        "${it.first}=${it.second}"
-                    }
+                result.code = "OK"
+                result.corpId = res.corpId?:corpId
+                result.suiteId = suiteId
+                result.agentId = agentId
+                result.userId = res.userId
+                result.externalUserId = res.externalUserId
+                result.openId = res.openId
+                result.deviceId = res.deviceId
+                //result.unionId = res.u
 
-                url = "$url?$params"
             }catch(e: IllegalArgumentException) {
-                url = "$url?code=KO&msg=${e.message}"
+                result.code = "KO"
+                result.errMsg = e.message
             }
 
-            //log.info("respondRedirect: $url")
+            //log.info("get oauth notify from tencent: schema=${call.request.origin.scheme},path=${call.request.origin.uri}")
             //通知到前端是使用http还是https，取决于微信公众号后台配置，若前端网页与后台配置不一致，将导致storage找不到对应的值，将会出问题
-            call.respondRedirect(url, permanent = false)
+            //val host = call.request.origin.scheme +"://"+ call.request.host()
+
+            //前端若是SPA，通知路径可能需要添加browserHistorySeparator: /wxwork/authNotify  or /#!/wxwork/authNotify
+            val path = if (Work.browserHistorySeparator.isEmpty()) notifyWebAppUrl
+            else "/${Work.browserHistorySeparator}${notifyWebAppUrl}"
+            call.respondRedirect("$path?${result.serialize()}", permanent = false)
         }
     }
 }

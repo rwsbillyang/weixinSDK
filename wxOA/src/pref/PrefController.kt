@@ -99,7 +99,7 @@ class PrefController(application: Application) : LifeCycle(application), KoinCom
             prefService.findOfficialAccounts().forEach {
 
                 //SPA单页应用，目的在于ios中微信wx.config验证时只使用#之前的字符进行验证,否则ios总是验证失败, 数据库中配置
-                if(it.oauthWebUrl != null) OfficialAccount.oauthNotifyWebAppUrl = it.oauthWebUrl
+                //if(it.oauthWebUrl != null) OfficialAccount.oauthNotifyWebAppUrl = it.oauthWebUrl
                 //OfficialAccount.oauthNotifyWebAppUrl = "/#!" + OfficialAccount.oauthNotifyWebAppUrl
 
                 OfficialAccount.config{
@@ -147,7 +147,7 @@ class PrefController(application: Application) : LifeCycle(application), KoinCom
         return DataBox.ok(oa)
     }
     fun findAllOfficialAccount() = DataBox.ok(service.findOfficialAccounts().map {
-        OfficialAccountBean(it._id, it.name, it.wechatId,it.enable, it.host, it.oauthWebUrl)
+        OfficialAccountBean(it._id, it.name, it.wechatId,it.enable, it.host)
     })
 
     fun findOfficialAccount(appId: String?): DataBox<PrefOfficialAccount> {

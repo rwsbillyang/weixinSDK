@@ -24,6 +24,7 @@ import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.*
 
 
+
 object OfficialAccount {
     /**
      * 微信消息接入点"/api/wx/oa/app/{appId}"
@@ -43,17 +44,18 @@ object OfficialAccount {
     var oauthNotifyPath2: String = "/api/wx/oa/oauth/notify2"
 
     /**
+     * 一些前端SPA应用路径通常使用"#!"进行隔离，若为正常路径，可赋值为""
+     * */
+    var browserHistorySeparator = "#!"
+
+    /**
      * 授权后经过后端再跳转到前端，前端记录下授权结果路径
      * */
     var oauthNotifyWebAppUrl: String = "/wxoa/authNotify"
 
+
     var jsSdkSignaturePath: String =  "/api/wx/oa/jssdk/signature"
 
-    /**
-     * 打开网页时，默认是否获取用户信息，也支持lambda中获取用户的设置
-     * 优先级：前端请求中指明的值 > 用户设置的值 > 默认值
-     * */
-    var defaultGetUserInfo = false
     /**
      * 配置公众号参数
      * */

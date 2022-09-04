@@ -18,26 +18,23 @@
 
 package com.github.rwsbillyang.wxOA
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
-import com.github.rwsbillyang.wxSDK.bean.OAuthInfo
-import com.github.rwsbillyang.wxSDK.officialAccount.OAuthApi
-import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
-import com.github.rwsbillyang.wxSDK.officialAccount.ResponseOauthAccessToken
-import com.github.rwsbillyang.wxSDK.officialAccount.ResponseUserInfo
+import com.github.rwsbillyang.wxOA.fan.FanService
+import com.github.rwsbillyang.wxOA.fan.toGuest
+import com.github.rwsbillyang.wxOA.fan.toOauthToken
+import com.github.rwsbillyang.wxSDK.officialAccount.*
 import com.github.rwsbillyang.wxSDK.security.JsAPI
 import com.github.rwsbillyang.wxSDK.security.SignUtil
+import com.github.rwsbillyang.wxUser.NeedUserInfoType
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-
+import kotlinx.coroutines.launch
+import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
-
-
 
 
 fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
@@ -144,147 +141,192 @@ fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
     }
 }
 
+/**
+ * 通知给前端的结果
+ * */
+class OAuthNotifyResult(
+    val step: Int,// 1 or 2
+    var code: String,// OK or KO
+    val appId: String? = null,
+    val state: String? = null,//回传给前端用于校验
+    var openId: String? = null,
+    var msg: String? = null,
+    var unionId: String? = null, //for step2
+    var needEnterStep2: Int? = null // for step1: 1 enter step2, or else ends
+){
+    fun serialize(): String{
+        val map = mutableMapOf<String, String>()
+        map["step"] = step.toString()
+        map["code"] = code
+        if(appId != null ) map["appId"] = appId
+        if(state != null ) map["state"] = state
+        if(openId != null ) map["openId"] = openId!!
+        if(msg != null )map["msg"] = msg!!
+        if(unionId != null ) map["unionId"] = unionId!!
+        if(needEnterStep2 != null ) map["needEnterStep2"] = needEnterStep2!!.toString()
 
+        return map.toList().joinToString("&"){"${it.first}=${it.second}"}
+    }
+}
 fun Routing.oAuthApi(
-    oauthInfoPath: String = OfficialAccount.oauthInfoPath,
     notifyPath1: String = OfficialAccount.oauthNotifyPath1,
     notifyPath2: String = OfficialAccount.oauthNotifyPath2,
     notifyWebAppUrl: String = OfficialAccount.oauthNotifyWebAppUrl,
-    needUserInfo: ((String?, String) -> Boolean?)? = null, //第一个参数时owner，系统注册用户id，用于查询用户设置，第二个参数是访客的openId
+    needUserInfoSettingsBlock: ((String?, String) -> Boolean?)? = null, //第一个参数时owner，系统注册用户id，用于查询用户设置，第二个参数是访客的openId
     onGetOauthAccessToken: ((ResponseOauthAccessToken, appId: String) -> Unit)? = null,
     onGetUserInfo: ((info: ResponseUserInfo, appId: String) -> Unit)? = null
 ) {
+    val fanService: FanService by inject()
+
     val log = LoggerFactory.getLogger("oAuthApi")
-    //保存state，用于校验非法请求,只是前端校验
-    val stateCache = Caffeine.newBuilder().maximumSize(Int.MAX_VALUE.toLong())
-        .expireAfterWrite(10, TimeUnit.MINUTES)
-        .build<String, String>()
+
     /**
-     * 当不能明确需要是否获取用户信息时，调用此API，上传owner参数，用于与notify1中获取的openId决定是否需要获取用户信息
-     * owner用于获取用户设置，openId用于查询是否已经有值
-     *
-     * 前端webapp请求该api获取appid，state等信息，然后重定向到腾讯的授权页面，用户授权之后将重定向到下面的notify
-     * @param owner 系统注册用户id，用于获取用户设置
-     * @param host 跳转host，如："https：//www.example.com"，用于构建跳转url
-     * 前端重定向地址：https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect" 然后重定向到该url
-     *
-     * */
-    get(oauthInfoPath) {
-        val appId = call.request.queryParameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
-        val owner = call.request.queryParameters["owner"] //系统用户注册id，传递该参数，目的在于notify1中使用它确定是否获取用户信息，然后通知前端跳转
-        val openId = call.request.queryParameters["openId"]//若已经登录过只有openId，若再需获取用户信息时，上传openId即可，有可能直接进入第二步
-        if (appId.isNullOrBlank()) {
-            log.warn("no appId in query parameters for oauth and no config oa")
-            call.respond(HttpStatusCode.BadRequest, "no appId in query parameters and no config oa")
-        } else {
-            //call.request.origin.scheme总得到是https,故通过指定的方式强行使用http or https
-            val host = call.request.queryParameters["host"] ?: (OAuthInfo.schema +"://"+ call.request.host())
-            log.info("wxOA oauth, host=$host")
-            if (openId.isNullOrBlank()) {
-                //第一次只获取openId，不获取用户信息
-                val oAuthInfo = OAuthApi(appId).prepareOAuthInfo("$host$notifyPath1/$appId", false)
-                if (owner != null) stateCache.put(oAuthInfo.state, owner)
-                call.respond(oAuthInfo)
-            } else {
-                val isNeedUserInfo =
-                    needUserInfo?.let { needUserInfo(owner, openId) } ?: OfficialAccount.defaultGetUserInfo
-                val oAuthInfo = OAuthApi(appId).prepareOAuthInfo("$host$notifyPath2/$appId", isNeedUserInfo)
-                call.respond(oAuthInfo)
-            }
-        }
+     * Step1: 无需用户授权，只获取openId
+     * 此地址为前端authorize时，编码后的redirect_uri参数，供腾讯通知调用
+    //前端LoginParam中的公众号部分：
+    export interface LoginParam {
+        appId?: string //公众号
+        corpId?: string //企业微信
+        suiteId?: string //企业微信ISV
+        agentId?: string //企业微信
+        from?: string //需要登录的页面
+        owner?: string //用于公众号 用于判断用户设置是否获取用户信息
+        needUserInfo: number // 用于公众号 或企业微信
+        authStorageType?: number //authBean存储类型
     }
-    /**
-     * 腾讯在用户授权之后，将调用下面的api通知code，并附带上原state。
-     *
-     * 第二步：通过code换取网页授权access_token，然后必要的话获取用户信息。
-     * 然后将一些登录信息通知到前端（调用前端提供的url）
-     *
-     * 用户同意授权后, 如果用户同意授权，页面将跳转至此处的redirect_uri/?code=CODE&state=STATE。
-     * code作为换取access_token的票据，每次用户授权带上的code将不一样，code只能使用一次，5分钟未被使用自动过期。
-     *
+    //前端构建callback notify的url
+    const url = `${Host}${notifyPath}/${params.appId}/${params.needUserInfo}/${params.openId}/${params.owner}`
      * */
-    get("$notifyPath1/{appId}") {
-        val appId = call.parameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
+    get("$notifyPath1/{appId}/{needUserInfo}/{openId?}/{owner?}") {
+        //code作为换取access_token的票据，每次用户授权带上的code将不一样，
+        // code只能使用一次，5分钟未被使用自动过期。
         val code = call.request.queryParameters["code"]
+
+        //前端生成随机state，并传递给腾讯authroizeUrl，腾讯再传递回来
         val state = call.request.queryParameters["state"]
+
+        val appId = call.parameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
+        val needUserInfo = call.parameters["needUserInfo"]?.toInt()?: NeedUserInfoType.Force_Not_Need
+
+        var tmp = call.parameters["openId"]
+        val guestOpenId = if(tmp == null || tmp == "null") null else tmp //前端中的缓存
+        tmp = call.parameters["owner"]
+        val owner = if(tmp == null || tmp == "null") null else tmp//前端中的url中的uId，用户获取是否获取用户信息的配置
 
         log.info("wxOA oauth, notify1 schema=${call.request.origin.scheme}")
 
-        var url = "$notifyWebAppUrl?state=$state&step=1&appId=${appId}"
+        val result = OAuthNotifyResult(1,"OK", appId, state)
 
-        url += if (appId == null || code.isNullOrBlank() || state.isNullOrBlank()) {
-            "&code=KO&msg=null_appId_or_code_or_state"
+        if (appId == null || code.isNullOrBlank() || state.isNullOrBlank()) {
+            result.code = "KO"
+            result.msg = "no appId or no code or no state"
         } else {
-            val owner = stateCache.getIfPresent(state)
-//            if (owner == null) {
-//                log.warn("state=$state for owner is not present in cache, ip=${call.request.origin.host},ua=${call.request.userAgent()}")
-//            }
             val oauthAi = OAuthApi(appId)
             val res = oauthAi.getAccessToken(code)
             if (res.isOK()) {
-                if (res.openId.isNullOrBlank()) {
-                    log.warn("openid is blank: openid=${res.openId}")
-                    // "&code=KO&msg=微信出错了，请重新打开"
-                    "&code=OK&needUserInfo=1"
-                } else {
-                    val isNeedUserInfo =
-                        needUserInfo?.let { needUserInfo(owner, res.openId!!) } ?: OfficialAccount.defaultGetUserInfo
-                    if (!isNeedUserInfo) {
-                        stateCache.invalidate(state)
+                val openId = res.openId?:guestOpenId
+                if(openId.isNullOrEmpty()){
+                    result.code = "KO"
+                    result.msg = "no openId from weixin"
+                }else{
+                    val isNeedEnterStep2 = when(needUserInfo){
+                        NeedUserInfoType.Force_Not_Need -> false
+                        NeedUserInfoType.NeedIfNo -> fanService.findFan(openId) == null && fanService.findGuest(openId) == null
+                        NeedUserInfoType.NeedIfNoNameOrImg -> {
+                            val guest = fanService.findGuest(openId)
+                            val fan = fanService.findFan(openId)
+                            (fan?.name.isNullOrEmpty() || fan?.img.isNullOrEmpty() ) && (guest?.name.isNullOrEmpty()  || guest?.img.isNullOrEmpty())
+                        }
+                        NeedUserInfoType.NeedByUserSettings -> (needUserInfoSettingsBlock?.let{ it(owner, openId) })?: false
+                        NeedUserInfoType.ForceNeed -> {
+                            log.warn("Should not come here, ForceNeed getUserInfo should get in notify2")
+                            true
+                        }
+                        else -> {
+                            log.warn("Not support needUserInfoType:$needUserInfo")
+                            false
+                        }
                     }
-                    val isNeedUserInfoInt = if (isNeedUserInfo) 1 else 0
-                    "&code=OK&openId=${res.openId}&needUserInfo=$isNeedUserInfoInt" //通知前端是否跳转到第二步获取userInfo
+
+                    val needEnterStep2 = if (isNeedEnterStep2) 1 else 0
+                    result.code = "OK"
+                    result.openId = openId
+                    result.needEnterStep2 = needEnterStep2
+                    //通知前端是否跳转到第二步获取userInfo
                 }
+
             } else {
                 log.warn("fail when oauthAi.getAccessToken: ${res.errMsg}")
-                "&code=KO&msg=${res.errMsg}"
+                result.code = "KO"
+                result.msg = res.errMsg
             }
         }
-
-        call.respondRedirect(url, permanent = false)
+        //前端若是SPA，通知路径可能需要添加browserHistorySeparator: /wxoa/authNotify  or /#!/wxoa/authNotify
+        //已注释掉PrefOfficialAccount中的oauthWebUrl，不再支持不同公众号拥有自定义的配置，否则此处需额外查询
+        //各公众号各自的配置通知路径，也就是说 不同的公众号不同的通知路径，没必要再支持自定义，而是统一一致使用OfficialAccount中的配置
+        val path = if (OfficialAccount.browserHistorySeparator.isEmpty()) notifyWebAppUrl
+        else "/${OfficialAccount.browserHistorySeparator}${notifyWebAppUrl}"
+        call.respondRedirect("$path?${result.serialize()}", permanent = false)
     }
 
-    get("$notifyPath2/{appId}") {
+    /**
+     * notify2: 用户授权后得到通知回调，获取用户信息，并重定向通知给前端
+     * 引入needUserInfo完全是与notify1兼容，没有其它意义
+     * */
+    get("$notifyPath2/{appId}/{needUserInfo}") {
         val appId = call.parameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]
 
-        var url = "$notifyWebAppUrl?state=$state&step=2&appId=$appId"
-
+        val result = OAuthNotifyResult(2,"OK", appId, state)
         if (appId == null || code.isNullOrBlank() || state.isNullOrBlank()) {
-            url += "&code=KO&msg=null_appId_or_code_or_state"
+            result.code = "KO"
+            result.msg = "no appId or no code or no state"
         } else {
-            //val owner = stateCache.getIfPresent(state)
-            stateCache.invalidate(state)
-//            if(owner == null){
-//                log.warn("step2: state=$state for owner is not present in cache, ip=${call.request.origin.host},ua=${call.request.userAgent()}")
-//            }
-
             val oauthAi = OAuthApi(appId)
             val res:ResponseOauthAccessToken = oauthAi.getAccessToken(code)
-            url += if (res.isOK() && res.openId != null) {
-                onGetOauthAccessToken?.let { run { it.invoke(res, appId) } }
+            if (res.isOK() && res.openId != null) {
+                launch {
+                    if(onGetOauthAccessToken != null){
+                        onGetOauthAccessToken(res, appId)
+                    }else{
+                        res.toOauthToken(appId)?.let { fanService.saveOauthToken(it) }
+                    }
+                }
+
                 if (res.accessToken != null ) {
                     val resUserInfo = oauthAi.getUserInfo(res.accessToken!!, res.openId!!)
+                    result.unionId = resUserInfo.unionId
                     if (resUserInfo.isOK()) {
-                        onGetUserInfo?.let { run { it.invoke(resUserInfo, appId) } }//async save fan user info
+                        launch{
+                            if(onGetUserInfo != null){
+                                onGetUserInfo(resUserInfo, appId)
+                            }else{
+                                resUserInfo.toGuest(appId)?.let { fanService.saveGuest(it) }
+                            }
+                        }
                     } else {
                         log.warn("fail getUserInfo: $resUserInfo")
                     }
                 }
-                "&code=OK&openId=${res.openId}"
+                result.code = "OK"
+                result.openId = res.openId
             } else {
-                "&code=KO&msg=${res.errMsg}"
+                result.code = "KO"
+                result.openId = res.errMsg
             }
         }
         //notify webapp
-        call.respondRedirect(url, permanent = false)
+        //前端若是SPA，通知路径可能需要添加browserHistorySeparator: /wxoa/authNotify  or /#!/wxoa/authNotify
+        val path = if (OfficialAccount.browserHistorySeparator.isEmpty()) notifyWebAppUrl
+        else "/${OfficialAccount.browserHistorySeparator}${notifyWebAppUrl}"
+        call.respondRedirect("$path?${result.serialize()}", permanent = false)
     }
 }
 
 
 fun Routing.jsSdkSignature(path: String = OfficialAccount.jsSdkSignaturePath) {
-    //val log = LoggerFactory.getLogger("jsSdkSignature")
+
     get(path) {
         val appId = call.request.queryParameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
         val url = (call.request.queryParameters["url"]?: call.request.headers["Referer"])?.split('#')?.firstOrNull()

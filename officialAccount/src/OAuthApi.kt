@@ -69,24 +69,10 @@ class OAuthApi(appId: String) : OABaseApi(appId){
      *  io.ktor.client.call.NoTransformationFoundException: No transformation found: class io.ktor.utils.io.ByteBufferChannel -> class com.github.rwsbillyang.wxSDK.officialAccount.ResponseOauthAccessToken
      *
      * https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code"
+     *
+     * Content-Type: text/plain
      * */
-    fun getAccessToken(code: String): ResponseOauthAccessToken = runBlocking {
-        withContext(CoroutineScope(Dispatchers.IO).coroutineContext) {
-            val str = DefaultClient.get(
-                url("access_token",
-                    mapOf(
-                        "appid" to appId,
-                        "secret" to OfficialAccount.ApiContextMap[appId]?.secret,
-                        "code" to code,
-                        "grant_type" to "authorization_code"
-                    )
-                )
-            ).bodyAsText()
-            //响应头包含：Content-Type: text/plain ktor2.x中，设置accept不生效，单独处理
-            ApiJson.clientApiJson.decodeFromString(str)
-        }
-    }
-
+    fun getAccessToken(code: String): ResponseOauthAccessToken = doGet("access_token", mapOf("appid" to appId, "secret" to OfficialAccount.ApiContextMap[appId]?.secret, "code" to code, "grant_type" to "authorization_code"))
 
     /**
      * 第三步：刷新access_token（如果需要）

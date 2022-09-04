@@ -23,15 +23,26 @@ class FanController : KoinComponent {
     private val service: FanService by inject()
 
     fun findFanList(fanListParams: FanListParams):  DataBox<List<Fan>>  {
-        //val filter = fanListParams.toFilter()
-        //val total = service.countFan(filter)
         val list = service.findFanList(fanListParams)
+        list.forEach{
+            val f = it
+            service.findGuest(it._id)?.let {
+               f.name = it.name
+               f.img = it.img
+            }
+        }
         return DataBox.ok(list)
     }
 
     fun findFan(openId: String?): DataBox<Fan> {
         return if(openId.isNullOrBlank()) DataBox.ko("no openId")
-        else DataBox.ok(service.findFan(openId))
+        else DataBox.ok(service.findFan(openId)?.also {
+            val f = it
+            service.findGuest(it._id)?.let {
+                f.name = it.name
+                f.img = it.img
+            }
+        })
     }
 
     /**

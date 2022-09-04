@@ -34,7 +34,7 @@ import org.litote.kmongo.eq
  * @param wechatId 比如公众号的微信号，客服系统中需要设置
  * @param enable 方便多个公众号（比如测试）进行切换，只有一个是enable的，多个的话，则会查询列表时最后一个为准
  * @param host 用于拼接公众号菜单中的url和模板消息中的url，如：http://test.yangjiafang.com, https://youke.niukid.com
- * @param oauthWebUrl 微信oauth登录时，前端url，用于通知前端, 可在数据库中配置修改默认配置
+ * //@param oauthWebUrl 微信oauth登录时，前端url，用于通知前端, 可在数据库中配置修改默认配置
  * */
 @Serializable
 data class PrefOfficialAccount(
@@ -45,8 +45,8 @@ data class PrefOfficialAccount(
         val aesKey: String? = null,
         val wechatId: String? = null,
         val enable: Boolean? = null, //使用true时，api请求返回结果将移除默认值
-        val host: String, // http://test.yangjiafang.com, https://youke.niukid.com
-        val oauthWebUrl: String? = null //微信oauth登录时，前端url，用于通知前端, 可在数据库中配置修改默认配置
+        val host: String // http://test.yangjiafang.com, https://youke.niukid.com
+        //val oauthWebUrl: String? = null //微信oauth登录时，前端url，用于通知前端, 可在数据库中配置修改默认配置
 )
 
 //返回列表时，去掉敏感信息
@@ -57,7 +57,7 @@ class OfficialAccountBean(
     val wechatId: String? = null,
     val enable: Boolean? = null, //使用true时，api请求返回结果将移除默认值
     val host: String, // http://test.yangjiafang.com, https://youke.niukid.com
-    val oauthWebUrl: String? = null //微信oauth登录时，前端url，用于通知前端, 可在数据库中配置修改默认配置
+    //val oauthWebUrl: String? = null //微信oauth登录时，前端url，用于通知前端, 可在数据库中配置修改默认配置
 )
 
 /**

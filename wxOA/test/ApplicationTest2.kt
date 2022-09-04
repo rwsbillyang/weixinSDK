@@ -108,7 +108,7 @@ class ApplicationTest2 {
     }
 
     @Test
-    fun testJsonSerialize() = testApplication {
+    fun testJsonDeserialize() = testApplication {
         val box1 = ResponseOauthAccessToken(accessToken = "This_is_accessToken", expire = 7200)
 
         application {
@@ -116,53 +116,29 @@ class ApplicationTest2 {
                 json(ApiJson.serverSerializeJson)
             }
             routing {
-                get("/") {
+                get("/json") {
                     call.respond(box1)
+                }
+                get("/text") {
+                    call.respondText(ApiJson.serializeJson.encodeToString(box1), ContentType.Text.Plain, HttpStatusCode.OK)
                 }
             }
         }
         val client = createClient {
-            //this@testApplication.
             install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-                //json(ApiJson.clientApiJson, ContentType.Application.Json)
                 json(ApiJson.clientApiJson)
+                json(ApiJson.clientApiJson, ContentType.Text.Plain)
             }
         }
 
 
-        val box2: ResponseOauthAccessToken = client.get("/").body()
+        val box2: ResponseOauthAccessToken = client.get("/json").body()
         assertEquals(box1.accessToken, box2.accessToken)
         assertEquals(box1.expire, box2.expire)
+
+        val box3: ResponseOauthAccessToken = client.get("/text").body()
+        assertEquals(box1.accessToken, box3.accessToken)
+        assertEquals(box1.expire, box3.expire)
     }
 
-    //@Test
-    fun testResponseOauthAccessToken() = testApplication {
-        application {
-            apiTest()
-        }
-        configTestOA()
-
-        val oauthAi = OAuthApi(AppIdForTest)
-        val res = oauthAi.getAccessToken("code")
-        //val url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code"
-        //val res: ResponseOauthAccessToken = oauthAi.doGetByUrl(url)
-        //val res: ResponseOauthAccessToken = DefaultClient.get(url).body()
-        println("testResponseOauthAccessToken: res.errCode=${ApiJson.serializeJson.encodeToString(res)}")
-        assertEquals(true, res.isOK())
-    }
-
-    //@Test
-    fun testResponseOauthAccessToken2() = testApplication {
-        println("====================enter  testResponseOauthAccessToken2====================")
-        application {
-            apiTest()
-        }
-        configTestOA()
-
-        val res = client.get("/api/wx/oa/oauth/notify1/$AppIdForTest?code=CODE&state=STATE")
-
-        //println("testResponseOauthAccessToken: res.errCode=${res.errCode},res.errMsg=${res.errMsg}")
-        assertEquals(HttpStatusCode.OK, res.status)
-        println("====================end  testResponseOauthAccessToken2====================")
-    }
 }
