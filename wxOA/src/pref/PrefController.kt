@@ -13,6 +13,7 @@
 
 package com.github.rwsbillyang.wxOA.pref
 
+import com.github.rwsbillyang.ktorKit.ApiJson
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.server.BizException
 import com.github.rwsbillyang.ktorKit.server.LifeCycle
@@ -27,6 +28,7 @@ import com.github.rwsbillyang.wxSDK.msg.MsgType
 import com.github.rwsbillyang.wxSDK.officialAccount.MenuApi
 import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
 import io.ktor.server.application.*
+import kotlinx.serialization.encodeToString
 import org.bson.types.ObjectId
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -254,7 +256,7 @@ class PrefController(application: Application) : LifeCycle(application), KoinCom
                     val sub = if(it.type == MenuType.Parent) getSubs(subs, it._id, host) else null
                     Menu(it.name,if(sub!=null) null else it.type, it.key, if(it.url?.startsWith("http") != false) it.url else host+it.url, it.mediaId, it.pagePath,it.miniId,sub)
                 }
-
+                log.info("menus: ${ApiJson.clientApiJson.encodeToString(menus)}")
                 val res = MenuApi(appId).create(menus)
                 return if (res.isOK()) DataBox.ok(null) else DataBox.ko("${res.errCode}: ${res.errMsg}")
             }
@@ -264,7 +266,9 @@ class PrefController(application: Application) : LifeCycle(application), KoinCom
             }
             "get" -> {
                 val res = MenuApi(appId).detail()
-                return if (res.isOK()) DataBox.ok(null) else DataBox.ko("${res.errCode}: ${res.errMsg}")
+                val str = ApiJson.clientApiJson.encodeToString(res)
+                log.info("get menu response: ${str}")
+                return if (res.isOK()) DataBox.ok(str) else DataBox.ko("${res.errCode}: ${res.errMsg}")
             }
             else -> {
                 log.warn("not support: $cmd")

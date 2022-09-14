@@ -38,8 +38,8 @@ enum class MenuType(val value: String) {
     PicWeiXin("pic_weixin"),
     @SerialName("location_select")
     LocationSelect("location_select"),
-    @SerialName("view_miniprogram")
-    ViewMiniProgram("view_miniprogram"),
+    @SerialName("miniprogram")
+    MiniProgram("miniprogram"),
     @SerialName("media_id") MediaId("media_id"),
     @SerialName("view_limited") ViewLimited("view_limited"),
     @SerialName("parent")
@@ -51,9 +51,9 @@ enum class MenuType(val value: String) {
  * @param name	是	菜单的名字。不能为空，主菜单不能超过16字节，子菜单不能超过40字节。
  * @param key	click等点击类型必须	菜单KEY值，用于消息接口推送，不超过128字节
  * @param url	view类型必须	网页链接，成员点击菜单可打开链接，不超过1024字节。为了提高安全性，建议使用https的url
- * @param pagepath	view_miniprogram类型必须	小程序的页面路径
- * @param appid	view_miniprogram类型必须	小程序的appid（仅认证公众号可配置）
- * @param sub_button	否	二级菜单数组，个数应为1~5个
+ * @param pagePath	miniprogram类型必须	小程序的页面路径
+ * @param appId	miniprogram类型必须	小程序的appid（仅认证公众号可配置）
+ * @param subButtons	否	二级菜单数组，个数应为1~5个
  * */
 @Serializable
 data class Menu(val name: String,
@@ -73,9 +73,9 @@ data class Menu(val name: String,
         when (type) {
             MenuType.Click -> requireNotNull(key) { "key  click等点击类型必须" }
             MenuType.View -> requireNotNull(url) { "view类型必须 网页链接" }
-            MenuType.ViewMiniProgram -> {
-                requireNotNull(pagePath) { "pagepath view_miniprogram类型必须" }
-                requireNotNull(appId) { "appid\tview_miniprogram类型必须\t小程序的appid（仅认证公众号可配置）" }
+            MenuType.MiniProgram -> {
+                requireNotNull(pagePath) { "pagepath miniprogram类型必须" }
+                requireNotNull(appId) { "appid\tminiprogram类型必须\t小程序的appid（仅认证公众号可配置）" }
             }
             MenuType.MediaId, MenuType.ViewLimited -> requireNotNull(mediaId) { "media_id\tmedia_id类型和view_limited类型必须\t调用新增永久素材接口返回的合法media_id" }
             null -> require(!subButtons.isNullOrEmpty() && subButtons.size < 6) { "二级菜单数组，个数应为1~5个" }
