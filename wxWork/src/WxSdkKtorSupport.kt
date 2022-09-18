@@ -236,10 +236,10 @@ fun Routing.wxWorkOAuthApi(
      *
      * 用户同意授权后, 如果用户同意授权，页面将跳转至此处的redirect_uri/?code=CODE&state=STATE。
      * code作为换取access_token的票据，每次用户授权带上的code将不一样，code只能使用一次，5分钟未被使用自动过期。
-     * "/api/wx/work/oauth/notify/{corpId?}/{agentId?}" or /api/wx/work/isv/oauth/notify/{suiteId?}
+     * "/api/wx/work/oauth/notify/{corpId}/{agentId}/{needUserInfo?}" or /api/wx/work/isv/oauth/notify/{suiteId}/{needUserInfo?}
      * */
-    get(if(Work.isIsv) IsvWork.oauthNotifyPath + "/{suiteId}/{needUserInfo}"
-        else Work.oauthNotifyPath + "/{corpId}/{agentId}/{needUserInfo}")
+    get(if(Work.isIsv) IsvWork.oauthNotifyPath + "/{suiteId}/{needUserInfo?}"
+        else Work.oauthNotifyPath + "/{corpId}/{agentId}/{needUserInfo?}")
     { //默认路径： /api/wx/work/oauth/notify/{corpId}/{agentId} or /api/wx/work/isv/oauth/notify/{suiteId}
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]

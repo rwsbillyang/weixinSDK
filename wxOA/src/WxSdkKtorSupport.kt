@@ -33,6 +33,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
@@ -306,7 +308,7 @@ fun Routing.oAuthApi(
                             }
                         }
                     } else {
-                        log.warn("fail getUserInfo: $resUserInfo")
+                        log.warn("fail getUserInfo: ${Json.encodeToString(resUserInfo)}")
                     }
                 }
                 result.code = "OK"
