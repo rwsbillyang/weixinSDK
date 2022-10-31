@@ -99,7 +99,7 @@ class QrCodeChannelController: KoinComponent {
                 val downUrl = api.qrCodeUrl(res.ticket!!)
                 log.info("download from $downUrl")
                 val ok = doDownload(downUrl, filePath,filename)
-                if(ok){
+                if(ok != null){
                     val url = "${NginxStaticRootUtil.getUrlPrefix(myPath)}/$filename"
                     service.updateQrcode(channel._id, res.url!!, url)
                     DataBox.ok(QrCodeInfo(res.url, url))

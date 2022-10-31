@@ -38,13 +38,16 @@ class OAuthInfo(
         val agentId: Int?,
         var authorizeUrl: String? = null
 ){
-    companion object{
-        /**
-         * 因ktor部署到nginx后，但通过call.request.origin.scheme获取的总是http,即使是https请求也得到是http
-         * 故通过配置的方式指定 http 还是 https, 注意数据库中的一些配置也得与其一致
-         * */
-        var schema = "http"  //
-    }
+//    companion object{
+//        /**
+//         * 因ktor部署到nginx后，但通过call.request.origin.scheme获取的总是http,即使是https请求也得到是http
+//         * 故通过配置的方式指定 http 还是 https, 注意数据库中的一些配置也得与其一致
+//         * */
+    //添加配置后，proxy_set_header X-Forwarded-Scheme  $scheme;
+//        proxy_set_header X-Forwarded-Proto $scheme;
+//    以及install xForawardedHeaders后，可以正确获取到call.request.origin.scheme
+//        var schema = "http"  //
+//    }
     init {
         if(agentId == null)
             authorizeUrl = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}" +

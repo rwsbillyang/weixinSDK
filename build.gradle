@@ -1,10 +1,10 @@
 buildscript {
     repositories {
         mavenLocal()
-        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+        //maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
         mavenCentral()
         maven { url 'https://jitpack.io' }
-        //jcenter()
+        jcenter()
         google()
     }
 
@@ -49,9 +49,14 @@ subprojects {
     // 指定编码格式
     [compileJava,compileTestJava,javadoc]*.options*.encoding = 'UTF-8'
     repositories {
-        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+        mavenLocal()
+        //maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
         mavenCentral()
         maven { url 'https://jitpack.io' }
+        jcenter()
+        google()
+        //maven { url 'https://kotlin.bintray.com/ktor' }
+        //maven { url "https://kotlin.bintray.com/kotlinx" }
     }
 
     sourceSets {
@@ -65,15 +70,7 @@ subprojects {
         java.srcDirs("build/generated/ksp/main/kotlin")
     }
 
-    repositories {
-        mavenLocal()
-        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
-        mavenCentral()
-        maven { url 'https://jitpack.io' }
-        //jcenter()
-        maven { url 'https://kotlin.bintray.com/ktor' }
-        maven { url "https://kotlin.bintray.com/kotlinx" }
-    }
+
 
     dependencies {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
