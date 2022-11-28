@@ -36,22 +36,11 @@ fun Routing.feedbackApi(){
     val controller: FeedbackController by inject()
     val jwtHelper: AbstractJwtHelper by inject()
 
-    route("/api/feedback/admin"){
-        authenticate{
-            intercept(ApplicationCallPipeline.Call) {
-                //log.info("intercept admin save: ${call.request.uri}")
-                when(jwtHelper.isAuthorized(call, listOf("user", "admin"))){
-                    false ->{
-                        call.respond(HttpStatusCode.Forbidden)
-                        return@intercept finish()
-                    }
-                    true -> proceed()
-                }
-            }
-            post("/save") {
-                controller.saveFeedback(call.receive())
-                call.respondBox(DataBox.ok<Int>(1))
-            }
+
+    route("/api/feedback/"){
+        post("/save") {
+            controller.saveFeedback(call.receive())
+            call.respondBox(DataBox.ok<Int>(1))
         }
 
         authenticate{

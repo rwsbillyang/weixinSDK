@@ -81,7 +81,7 @@ fun Routing.wxWorkConfigApi() {
                     }
 
                 }
-                get("/save"){
+                post("/save"){
                     call.respondBox(controller.saveWxWorkConfig(call.receive()))
                 }
 

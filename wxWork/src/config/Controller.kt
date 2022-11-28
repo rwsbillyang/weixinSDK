@@ -24,6 +24,7 @@ import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler
 import com.github.rwsbillyang.wxWork.agent.AgentController
 import com.github.rwsbillyang.wxWork.configWxWorkMulti
 import io.ktor.server.application.*
+import org.bson.types.ObjectId
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -43,12 +44,13 @@ class ConfigController : KoinComponent {
    private val eventHandler: IWorkEventHandler by application.inject()
     private val msgHandler: IWorkMsgHandler by application.inject()
 
-    fun saveWxWorkConfig(doc: WxWorkConfig): DataBox<Int> {
+    fun saveWxWorkConfig(doc: WxWorkConfig): DataBox<WxWorkConfig> {
+        if(doc._id == null) doc._id = ObjectId()
         service.saveWxWorkConfig(doc)
 
         configWxWorkMulti(doc, msgHandler, eventHandler, agentController, true)
 
-        return DataBox.ok(1)
+        return DataBox.ok(doc)
     }
 
     fun findWxWorkConfig(corpId: String) = service.findWxWorkConfigByCorpId(corpId)

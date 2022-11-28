@@ -49,7 +49,7 @@ import org.bson.types.ObjectId
  * */
 @Serializable
 data class WxWorkConfig(
-    val _id: ObjectId? = null,
+    var _id: ObjectId? = null,
     val name: String? = null, //便于记忆标识
     val url: String? = null, //从管理后台直接进入
     val corpId: String, //corpId 不是有corpID作为唯一ID：一个企业可以配置多个agent应用
