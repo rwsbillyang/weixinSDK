@@ -20,20 +20,19 @@ package com.github.rwsbillyang.wxWork.msg
 
 import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.wxSDK.work.outMsg.WxWorkTextCardMsg
-import com.github.rwsbillyang.wxUser.account.Account
-import com.github.rwsbillyang.wxUser.account.AccountExpire
-import com.github.rwsbillyang.wxUser.fakeRpc.IPayWechatNotifier
-import com.github.rwsbillyang.wxUser.fakeRpc.PayNotifierType
-import com.github.rwsbillyang.wxUser.fakeRpc.level2Name
+import com.github.rwsbillyang.wxUser.account.EditionLevel.level2Name
+import com.github.rwsbillyang.wxUser.account.ExpireInfo
+import com.github.rwsbillyang.wxUser.account.PayNotifierType
+import com.github.rwsbillyang.wxWork.account.WxWorkAccount
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 
 
-class PayMsgNotifier: MsgNotifierBase(), IPayWechatNotifier {
+class PayMsgNotifier: MsgNotifierBase() {
     private val log = LoggerFactory.getLogger("PayMsgNotifier")
-    override fun onBonusSuccess(
-        account: Account,
+    fun onBonusSuccess(
+        account: WxWorkAccount,
         appId: String?,
         agentId: Int?,
         productName: String,
@@ -59,11 +58,11 @@ class PayMsgNotifier: MsgNotifierBase(), IPayWechatNotifier {
         }
     }
 
-    override fun onExpire(
-        account: Account,
+    fun onExpire(
+        account: WxWorkAccount,
         appId: String?,
         agentId: Int?,
-        accountExpire: AccountExpire?,
+        expire: ExpireInfo?,
         title: String?
     ) {
         if(appId == null){
@@ -73,7 +72,7 @@ class PayMsgNotifier: MsgNotifierBase(), IPayWechatNotifier {
         msgApi(account, appId, agentId)?.let {
             runBlocking{
                 launch {
-                    val normal = level2Name(accountExpire?.level?:account.level) +"会员到期日："+ DatetimeUtil.format((accountExpire?.expire?:account.expire)!!, "yyyy年MM月dd日")
+                    val normal = level2Name(expire?.level) +"会员到期日："+ DatetimeUtil.format((expire?.expire)!!, "yyyy年MM月dd日")
                     val description = setupDescription(normal, "到期后将影响使用，请点击续费")
                     val msg = WxWorkTextCardMsg(title ?: "会员到期提醒", description, url(account, appId, agentId, PayNotifierType.ExpireAlarm.name), agentId!!, account.userId)
                     it.send(msg)
@@ -82,8 +81,8 @@ class PayMsgNotifier: MsgNotifierBase(), IPayWechatNotifier {
         }
     }
 
-    override fun onPaySuccess(
-        account: Account,
+    fun onPaySuccess(
+        account: WxWorkAccount,
         appId: String?,
         agentId: Int?,
         productName: String,

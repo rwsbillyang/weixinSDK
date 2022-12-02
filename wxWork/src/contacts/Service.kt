@@ -35,8 +35,11 @@ import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineCollection
+import org.slf4j.LoggerFactory
 
 class ContactService(cache: ICache) : MongoGenericService(cache) {
+    private val log = LoggerFactory.getLogger("ContactService")
+
     private val dbSource: MongoDataSource by inject(qualifier = named(wxWorkModule.dbName!!))
 
     private val contactCol: CoroutineCollection<Contact> by lazy {
@@ -62,7 +65,9 @@ class ContactService(cache: ICache) : MongoGenericService(cache) {
 //    }
 
 
-    fun findContact(userId: String, corpId: String) = runBlocking { contactCol.findOne( Contact::userId eq userId, Contact::corpId eq corpId) }
+    fun findContact(userId: String, corpId: String) = cacheable("contact/$corpId/$userId") {
+        runBlocking { contactCol.findOne( Contact::userId eq userId, Contact::corpId eq corpId) }
+    }
     fun findContactByOpenId(openId: String, corpId: String) = runBlocking { contactCol.findOne( Contact::openId eq openId, Contact::corpId eq corpId) }
     fun findContact(_id: String) = runBlocking { contactCol.findOneById(_id.toObjectId()) }
     fun findContact(_id: ObjectId) = runBlocking { contactCol.findOneById(_id) }
@@ -81,12 +86,16 @@ class ContactService(cache: ICache) : MongoGenericService(cache) {
         contactCol.insertOne(doc)
     }
     fun updateContact(newContact: Contact, newUserId: String?) = runBlocking {
-        val old = findContact(newContact.userId, newContact.corpId)
+        if(newContact.userId == null){
+            log.warn("newContact.userId is null, ignore updateContact")
+            0L
+        }
+        val old = findContact(newContact.userId!!, newContact.corpId)
         newContact._id = old?._id
         if(!newUserId.isNullOrBlank()){
             newContact.userId = newUserId
         }
-        contactCol.save(newContact)
+        contactCol.save(newContact)?.modifiedCount
     }
     fun delContact(userId: String, corpId: String) = runBlocking{
         contactCol.deleteOne(Contact::userId eq userId, Contact:: corpId eq corpId)

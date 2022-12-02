@@ -15,12 +15,16 @@ package com.github.rwsbillyang.wxOA.fan
 
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.toObjectId
+import com.github.rwsbillyang.wxOA.account.WxOaAccountService
+import com.github.rwsbillyang.wxUser.account.Profile
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 
 class FanController : KoinComponent {
     private val service: FanService by inject()
+    private val wxOaAccountService: WxOaAccountService by inject()
 
     fun findFanList(fanListParams: FanListParams):  DataBox<List<Fan>>  {
         val list = service.findFanList(fanListParams)
@@ -54,4 +58,14 @@ class FanController : KoinComponent {
     }
 
 
+    fun getProfileByUId(uId: String): DataBox<Profile>{
+       val a = wxOaAccountService.findWxOaAccount(uId.toObjectId())
+        return if(a != null){
+            DataBox.ok(service.getProfile(a.openId, a.unionId))
+        }else
+        {
+            DataBox.ko("no account for uId=$uId")
+        }
+    }
+    fun getProfileByOpenId(openId: String)=DataBox.ok(service.getProfile(openId, null))
 }

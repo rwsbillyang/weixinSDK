@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.wxUser.payConfig
+package com.github.rwsbillyang.wxOA.account.payConfig
 
 import kotlinx.serialization.Serializable
 

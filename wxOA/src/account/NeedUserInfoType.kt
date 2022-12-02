@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.wxUser
+package com.github.rwsbillyang.wxOA.account
 
 /**
  * 前后端共同协调完成下列策略，后端已在ktorKit中实现

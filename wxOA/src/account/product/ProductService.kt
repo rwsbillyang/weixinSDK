@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.wxUser.product
+package com.github.rwsbillyang.wxOA.account.product
 
 import com.github.rwsbillyang.ktorKit.to64String
 import com.github.rwsbillyang.ktorKit.toObjectId

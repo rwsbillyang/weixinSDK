@@ -17,8 +17,7 @@ package com.github.rwsbillyang.wxOA.fan
 import com.github.rwsbillyang.ktorKit.server.AbstractJwtHelper
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.server.respondBox
-import com.github.rwsbillyang.wxOA.fakeRpc.FanRpcOA
-import com.github.rwsbillyang.wxUser.fakeRpc.FanInfo
+import com.github.rwsbillyang.wxUser.account.Profile
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -35,7 +34,7 @@ internal val fanModule = module {
 
 fun Routing.fanApi() {
     val controller: FanController by inject()
-    val fanInfoController: FanRpcOA by inject()
+    val fanController: FanController by inject()
     val jwtHelper: AbstractJwtHelper by inject()
 
 
@@ -43,17 +42,17 @@ fun Routing.fanApi() {
         get("/fanInfo/uId/{uId}"){
             val uId = call.parameters["uId"]
             if(uId == null){
-                call.respondBox(DataBox.ko<FanInfo>("no uId"))
+                call.respondBox(DataBox.ko<Profile>("no uId"))
             }else{
-                call.respondBox(DataBox.ok(fanInfoController.getFanInfoByUId(uId)))
+                call.respondBox(DataBox.ok(fanController.getProfileByUId(uId)))
             }
         }
         get("/fanInfo/get/{openId}"){
             val openId = call.parameters["openId"]
             if(openId == null){
-                call.respondBox(DataBox.ko<FanInfo>("no openId"))
+                call.respondBox(DataBox.ko<Profile>("no openId"))
             }else{
-                call.respondBox(DataBox.ok(fanInfoController.getFanInfo(openId, null)))
+                call.respondBox(DataBox.ok(fanController.getProfileByUId(openId)))
             }
         }
         get("/isSubscribed/{openId}"){

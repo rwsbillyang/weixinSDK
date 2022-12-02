@@ -16,24 +16,58 @@
  * limitations under the License.
  */
 
+
 package com.github.rwsbillyang.wxSDK.wxMini.account
 
 import com.github.rwsbillyang.ktorKit.cache.ICache
-import com.github.rwsbillyang.wxUser.account.Account
-import com.github.rwsbillyang.wxUser.account.AccountServiceBase
+import com.github.rwsbillyang.ktorKit.db.MongoDataSource
+import com.github.rwsbillyang.ktorKit.db.MongoGenericService
+import com.github.rwsbillyang.ktorKit.toObjectId
+import com.github.rwsbillyang.wxSDK.wxMini.wxMiniProgramModule
+import com.github.rwsbillyang.wxUser.account.ExpireInfo
 import kotlinx.coroutines.runBlocking
+import org.bson.types.ObjectId
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
+import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.eq
+import org.litote.kmongo.setValue
 
-class AccountServiceMini(cache: ICache): AccountServiceBase(cache){
-    fun findByUnionId(unionId: String) = cacheable("u/unionId/$unionId") {
-        runBlocking {
-            accountCol.findOne(Account::unionId eq unionId)
-        }
+class WxMiniAccountService(cache: ICache): MongoGenericService(cache) {
+    private val dbSource: MongoDataSource by inject(qualifier = named(wxMiniProgramModule.dbName!!))
+
+    private val wxMiniAccountCol: CoroutineCollection<WxMiniAccount> by lazy {
+        dbSource.mongoDb.getCollection()
     }
 
-    fun findByOpenId(openId: String) = cacheable("u/openId/$openId") {
-        runBlocking {
-            accountCol.findOne(Account::openId1 eq openId)
-        }
+//    private val wxMiniAccountRecommendCol: CoroutineCollection<Recommend> by lazy {
+//        dbSource.mongoDb.getCollection("wxMiniRecommend")
+//    }
+
+    fun findWxMiniAccount(id: ObjectId) = runBlocking { wxMiniAccountCol.findOneById(id) }
+    fun findWxMiniAccount(unionId: String?, openId: String?, appId: String) = runBlocking {
+        if(unionId != null)
+            wxMiniAccountCol.findOne(WxMiniAccount::unionId eq unionId)
+        else
+            wxMiniAccountCol.findOne(WxMiniAccount::openId eq openId, WxMiniAccount::appId eq appId)
     }
+
+    fun insertMiniAccount(doc: WxMiniAccount) = runBlocking {
+        wxMiniAccountCol.insertOne(doc)
+    }
+
+    fun updateSystemAccountId(id: ObjectId, systemAccountId: String) = runBlocking {
+        wxMiniAccountCol.updateOneById(id,  setValue(WxMiniAccount::sysId, systemAccountId.toObjectId()),)
+    }
+
+    fun updateExpireInfo(id: ObjectId, expire: ExpireInfo) = runBlocking {
+        wxMiniAccountCol.updateOneById(id,  setValue(WxMiniAccount::expire, expire),)
+    }
+
+
+//    fun insertRecommend(doc: Recommend) = runBlocking {
+//        wxMiniAccountRecommendCol.insertOne(doc)
+//    }
+
+    fun findWxAccountList(params: WxMiniAccountListParams) = findPage(wxMiniAccountCol, params)
 }

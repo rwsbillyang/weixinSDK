@@ -19,8 +19,7 @@
 package com.github.rwsbillyang.wxOA.msg
 
 
-
-import com.github.rwsbillyang.wxUser.fakeRpc.PayNotifierType
+import com.github.rwsbillyang.wxUser.account.PayNotifierType
 import kotlinx.serialization.Serializable
 
 /**

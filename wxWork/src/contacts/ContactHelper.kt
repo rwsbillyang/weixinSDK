@@ -22,6 +22,8 @@ import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
 import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.wxSDK.work.ContactsApi
 import com.github.rwsbillyang.wxSDK.work.ExternalContactsApi
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -80,17 +82,23 @@ class ContactHelper: KoinComponent {
      * @return 返回失败数量
      * */
     fun syncContactDetail(contactApi: ContactsApi, userId: String, corpId: String): Int{
-        val res = contactApi.detail(userId)
-        return if(res.isOK()){
-            service.upsertContact(res.toDoc(corpId))
-            val res2 = contactApi.convertToOpenId(userId)
-            if(res2.isOK() && res2.openId != null){
-                service.updateContactOpenId(userId, corpId, res2.openId!!)
+        return try{
+            val res = contactApi.detail(userId)
+            return if(res.isOK()){
+                service.upsertContact(res.toDoc(corpId))
+                val res2 = contactApi.convertToOpenId(userId)
+                if(res2.isOK() && res2.openId != null){
+                    service.updateContactOpenId(userId, corpId, res2.openId!!)
+                }
+                0
+            }else{
+                1
             }
-            0
-        }else{
-            1
+        }catch (e:Exception){
+            log.warn("contactApi.detail fail, Exception: ${e.message}} ")
+           1
         }
+
     }
 
 
@@ -130,7 +138,7 @@ class ContactHelper: KoinComponent {
        }
     }
     fun syncExternalsOfUser(api: ExternalContactsApi, corpId: String, userId: String, refreshType: Int): String?{
-        val res = api.list(userId)
+        val res = api.list(userId)//有可能无权限
         return if(res.isOK()){
             val list = res.external_userid
             service.upsertContactCustomerIds(corpId, userId, list)

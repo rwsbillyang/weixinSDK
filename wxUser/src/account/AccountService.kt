@@ -21,13 +21,12 @@ package com.github.rwsbillyang.wxUser.account
 
 import com.github.rwsbillyang.ktorKit.to64String
 import com.github.rwsbillyang.ktorKit.toObjectId
-import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
-import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.ktorKit.db.MongoGenericService
 import com.github.rwsbillyang.ktorKit.util.plusTime
-import com.github.rwsbillyang.wxUser.fakeRpc.EditionLevel
+import com.github.rwsbillyang.wxUser.wxUserAppModule
+import com.mongodb.client.model.FindOneAndUpdateOptions
 
 
 import kotlinx.coroutines.runBlocking
@@ -40,30 +39,27 @@ import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineCollection
 
 
-abstract class AccountServiceBase(cache: ICache) : MongoGenericService(cache) {
-    companion object{
-        /**
-         * 用于支持配置到单独的db中，如各个agent共享的account。注：登录统计数据配置到agent自己的库中
-         * */
-        var AccountDbName = "user"
-    }
-    protected val dbSource: MongoDataSource by inject(qualifier = named(AccountDbName))
+class AccountService(cache: ICache) : MongoGenericService(cache) {
 
-    protected val accountCol: CoroutineCollection<Account> by lazy {
+    private val dbSource: MongoDataSource by inject(qualifier = named(wxUserAppModule.dbName!!))
+
+    private val accountCol: CoroutineCollection<Account> by lazy {
         dbSource.mongoDb.getCollection()
     }
-    protected val groupCol: CoroutineCollection<Group> by lazy {
+    private val groupCol: CoroutineCollection<Group> by lazy {
         dbSource.mongoDb.getCollection()
     }
+
+    fun insertOne(doc: Account) = runBlocking { accountCol.insertOne(doc) }
 
     fun findAccountList(params: AccountListParams): List<AccountBean> {
-        return findPage(accountCol, params).map{
-            AccountBean(it._id.to64String(),it.state,it.time,it.tel,it.name,it.openId1,it.needUserInfo,
-                it.appId,it.userId, it.corpId, it.suiteId, it.openId2, it.expire, it.role, it.level,
+        return findPage(accountCol, params).map {
+            AccountBean(it._id.to64String(), it.state, it.time, it.tel, it.name,
                 it.gId?.mapNotNull {
                     val id = it.to64String()
                     findGroup(id)?.let { IdName(id, it.name) }
-                }, it.ext)
+                }, it.expire, it.profile
+            )
         }
     }
 
@@ -78,19 +74,64 @@ abstract class AccountServiceBase(cache: ICache) : MongoGenericService(cache) {
             accountCol.findOneById(id)
         }
     }
-    /**
-     * 通过前端企业微信jssdk中的选人，得到内部联系人userId，然后再获取account及其_id
-     * */
-    fun findByCorpIdAndUserId(corpId: String, userId: String) = runBlocking {
-        accountCol.findOne(Account::userId eq userId, Account::corpId eq corpId)
+
+    fun findByTel(tel: String) = cacheable("u/tel/$tel") {
+        runBlocking {
+            accountCol.findOne(Account::tel eq tel)
+        }
     }
 
+    fun findByName(name: String) = cacheable("u/name/$name") {
+        runBlocking {
+            accountCol.findOne(Account::name eq name)
+        }
+    }
+
+
+
     //for update openId1, openId2 etc.
-    fun updateOneById(id: String, update: Bson) = evict("u/id/$id"){
+    fun updateOneById(id: String, update: Bson) = evict("u/id/$id") {
         runBlocking {
             accountCol.updateOneById(id.toObjectId(), update)//setValue(Account::openId1, "")
         }
     }
+
+    /**
+     * insert时将返回null
+     * */
+    fun findUpsertByTel(tel: String) = runBlocking {
+        accountCol.findOneAndUpdate(
+            Account::tel eq tel,
+            combine(
+                setOnInsert(Account::state, Account.STATE_ENABLED),
+                setOnInsert(Account::time, System.currentTimeMillis())
+            ), FindOneAndUpdateOptions().upsert(true)
+        )
+    }
+
+
+    /**
+     * insert时将返回null
+     * */
+    fun findUpsertByName(name: String, encryptPwd: String?, salt: String?) = runBlocking {
+        accountCol.findOneAndUpdate(
+            Account::name eq name,
+            combine(
+                setOnInsert(Account::pwd, encryptPwd),
+                setOnInsert(Account::salt, salt),
+                setOnInsert(Account::state, Account.STATE_ENABLED),
+                setOnInsert(Account::time, System.currentTimeMillis())
+            ), FindOneAndUpdateOptions().upsert(true)
+        )
+    }
+
+
+    fun updatePwdAndSalt(account: Account, pwd: String?, salt: String?) = evict("u/name/${account.name}") {
+        runBlocking {
+            accountCol.updateOneById(account._id, set(SetTo(Account::pwd, pwd), SetTo(Account::salt, salt)))
+        }
+    }
+
 
 
     /**
@@ -104,15 +145,14 @@ abstract class AccountServiceBase(cache: ICache) : MongoGenericService(cache) {
      * @param month 添加的月
      * @param bonusDays 添加的天数
      * */
-    fun updateAccountExpiration(
-        accountId: String, agentId: Int?, edition: Int, year: Int,
+    fun calculateNewExpireInfo(
+        oldExpireInfo: ExpireInfo?, edition: Int, year: Int,
         month: Int, bonusDays: Int
-    ): Long {
-        val oldAccountExpire = getExpireInfo(accountId, agentId)
+    ): ExpireInfo {
         val months = (year * 12 + month).toLong()
 
         val now = System.currentTimeMillis()
-        val oldExpire = oldAccountExpire?.expire
+        val oldExpire = oldExpireInfo?.expire
         val newExpire = if (oldExpire == null) {
             now.plusTime(months = months, days = bonusDays.toLong())
         } else {
@@ -121,13 +161,13 @@ abstract class AccountServiceBase(cache: ICache) : MongoGenericService(cache) {
             } else {
                 //还有剩余期限
                 when {
-                    edition == oldAccountExpire.level -> oldExpire.plusTime(
+                    edition == oldExpireInfo.level -> oldExpire.plusTime(
                         months = months,
                         days = bonusDays.toLong()
                     )
 
                     //原仍有剩余期限，期限在原基础上相加 TODO: 折算期限
-                    edition < oldAccountExpire.level -> oldExpire.plusTime(
+                    edition < oldExpireInfo.level -> oldExpire.plusTime(
                         months = months,
                         days = bonusDays.toLong()
                     )
@@ -141,81 +181,62 @@ abstract class AccountServiceBase(cache: ICache) : MongoGenericService(cache) {
             }
         }
 
-
-        updateExpireInfo(accountId, agentId, edition, newExpire)
-        return newExpire
+        return ExpireInfo(newExpire,  edition)
     }
 
-    //wxWork各agent若有自己的权限信息需要重载
-    open fun getExpireInfo(accountId: String, agentId: Int?): ExpireInfo? {
-        return findById(accountId)?.toExpireInfo()
-    }
 
-    //wxWork各agent若有自己的权限信息需要重载
-    open fun updateExpireInfo(accountId: String, agentId: Int?, edition: Int, newExpire: Long)= evict("u/id/$accountId"){
+
+
+    fun joinGroup(uId: String, groupId: String) = evict("u/id/$uId") {
         runBlocking {
-            accountCol.updateOneById(accountId.toObjectId(), combine(
-                setValue(Account::level, edition),
-                setValue(Account::expire, newExpire)
-            ))//setValue(Account::openId1, "")
+            accountCol.updateOneById(
+                uId.toObjectId(),
+                addToSet(Account::gId, groupId.toObjectId())
+            ).matchedCount//setValue(Account::openId1, "")
         }
     }
 
 
-    /**
-     * 检查用户权限后的重新设置后的level
-     * */
-    fun permittedLevel(uId: String?, agentId: Int?): Int {
-        if (uId == null) return EditionLevel.Free
-
-        val ae = getExpireInfo(uId, agentId)
-        if(ae == null) return EditionLevel.Free
-        else {
-            if (ae.expire == null) return EditionLevel.Free
-            val now = System.currentTimeMillis()
-            return if (ae.expire < now) EditionLevel.Free else ae.level
-        }
-    }
-    fun joinGroup(uId:String, groupId: String)  = evict("u/id/$uId"){
-        runBlocking {
-            accountCol.updateOneById(uId.toObjectId(), addToSet(Account::gId, groupId.toObjectId())).matchedCount//setValue(Account::openId1, "")
-        }
-    }
-
-
-    fun findGroupList(params: GroupListParams): List<GroupBean>  {
-            return findPage(groupCol, params).map { GroupBean(it._id.to64String(), it.name, it.status, it.appId, it.corpId,
-            it.creator?.to64String(), accountIdToIdName(it.creator)?.name, it.admins?.mapNotNull { accountIdToIdName(it) }, it.time ) }
-    }
-
-
-    private fun accountIdToIdName(id: ObjectId?):IdName?{
-        if(id == null) return null
+    private fun accountIdToIdName(id: ObjectId?): IdName? {
+        if (id == null) return null
         val idStr = id.to64String()
         val a = findById(idStr)
-        //TODO: OfficialAccount时获取fanInfo得到name
-        val name = if(a!=null) a.name?:a.userId?:a.openId1?:"" else ""
+        val name = a?.profile?.nick ?: a?.name
         return IdName(idStr, name)
     }
 
-    fun findGroup(id: String) = cacheable("group/$id"){
+    fun findGroupList(params: GroupListParams): List<GroupBean> {
+        return findPage(groupCol, params).map {
+            GroupBean(it._id.to64String(),
+                it.name, it.appId,
+                it.status,
+                it.creator?.to64String(),
+                accountIdToIdName(it.creator)?.name,
+                it.admins?.mapNotNull { accountIdToIdName(it) },
+                it.time
+            )
+        }
+    }
+
+    fun findGroup(id: String) = cacheable("group/$id") {
         runBlocking { groupCol.findOneById(id.toObjectId()) }
     }
 
     //前端实际传递的数据结构与
-    fun saveGroup(bean: GroupBean) = evict("group/${bean._id}"){
+    fun saveGroup(bean: GroupBean) = evict("group/${bean._id}") {
         runBlocking {
-            if(bean._id == null){
-                val g = Group(ObjectId(), bean.name, bean.status,bean.appId, bean.corpId, bean.creator?.toObjectId())
+            if (bean._id == null) {
+                val g = Group(ObjectId(), bean.name,bean.appId, bean.status, bean.creator?.toObjectId())
                 groupCol.insertOne(g)
                 bean._id = g._id.to64String()
-            }else{
+            } else {
                 groupCol.updateOneById(bean._id!!.toObjectId(), setValue(Group::name, bean.name))
             }
             bean
         }
     }
-    fun delGroup(id: String)= evict("group/$id"){
+
+    fun delGroup(id: String) = evict("group/$id") {
         runBlocking { groupCol.deleteOneById(id.toObjectId()) }
     }
 

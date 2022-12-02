@@ -1,7 +1,7 @@
 /*
- * Copyright © 2021 rwsbillyang@qq.com
+ * Copyright © 2022 rwsbillyang@qq.com
  *
- * Written by rwsbillyang@qq.com at Beijing Time: 2021-10-08 14:06
+ * Written by rwsbillyang@qq.com at Beijing Time: 2022-11-29 15:42
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.wxUser.account.webAdmin
+package com.github.rwsbillyang.wxUser.account
 
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
@@ -26,26 +26,16 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
+import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.routing.get
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
-import org.koin.dsl.module
+
 import org.koin.ktor.ext.inject
 
-
-val wxWebAdminAppModule = AppModule(
-    listOf(
-        module {
-            single { AccountControllerWebAdmin(get(), get()) }
-            single { AccountServiceWebAdmin(get()) }
-            single { WsSessions() }
-        }
-    ), "user")
-{
-    webUserAdminApi()
-}
 /**
  * 传统web网页用户登录以及系统管理后台的api
  * */
@@ -140,6 +130,40 @@ internal fun Routing.webUserAdminApi() {
 
                 get("/notices"){
                     call.respondBox(DataBox.ko<Unit>( "not implement"))
+                }
+
+                route("/group"){
+                    get<GroupListParams>{
+                        call.respondBox(DataBox.ok(controller.findGroupList(it)))
+                    }
+                    get("/get/{id}"){
+                        val id = call.parameters["id"]
+                        if(id == null)
+                            call.respondBox(DataBox.ko<Group>("invalid parameter: no id"))
+                        else
+                            call.respondBox(DataBox.ok(controller.findGroup(id)))
+                    }
+                    post("/save") {
+                        val doc = controller.saveGroup(call.receive())
+                        call.respondBox(DataBox.ok(doc))
+                    }
+
+                    get("/del/{id}"){
+                        val id = call.parameters["id"]
+                        if(id == null)
+                            call.respondBox(DataBox.ko<Int>("invalid parameter: no id"))
+                        else
+                            call.respondBox(DataBox.ok(controller.delGroup(id).deletedCount))
+                    }
+
+                    get("/join/{groupId}"){
+                        val groupId = call.parameters["groupId"]
+                        val uId = call.uId
+                        if(groupId == null || uId == null)
+                            call.respondBox(DataBox.ko<Int>("invalid parameter: no groupId or uId"))
+                        else
+                            call.respondBox(DataBox.ok(controller.joinGroup(uId, groupId)))
+                    }
                 }
             }
         }

@@ -18,16 +18,9 @@
 
 package com.github.rwsbillyang.wxWork.contacts
 
-import com.github.rwsbillyang.ktorKit.server.AbstractJwtHelper
-import com.github.rwsbillyang.ktorKit.apiBox.DataBox
-import com.github.rwsbillyang.ktorKit.server.corpId
-import com.github.rwsbillyang.ktorKit.server.respondBox
-import com.github.rwsbillyang.ktorKit.server.uId
-import com.github.rwsbillyang.wxUser.agentId
-import com.github.rwsbillyang.wxUser.fakeRpc.FanInfo
-import com.github.rwsbillyang.wxUser.suiteId
-import com.github.rwsbillyang.wxUser.userId
-import com.github.rwsbillyang.wxWork.fakeRpc.FanRpcWork
+import com.github.rwsbillyang.ktorKit.server.*
+import com.github.rwsbillyang.wxWork.agentId
+import com.github.rwsbillyang.wxWork.userId
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -48,16 +41,16 @@ val contactModule = module {
 fun Routing.contactApi() {
     val controller: ContactController by inject()
     val jwtHelper: AbstractJwtHelper by inject()
-    val fanRpc: FanRpcWork by inject()
+    //val fanRpc: FanRpcWork by inject()
 
-    get("/api/wx/admin/work/contact/fanInfo/uId/{uId}"){
-        val uId = call.parameters["uId"]
-        if(uId == null){
-            call.respondBox(DataBox.ko<FanInfo>("no uId"))
-        }else{
-            call.respondBox(DataBox.ok(fanRpc.getFanInfoByUId(uId)))
-        }
-    }
+//    get("/api/wx/admin/work/contact/fanInfo/uId/{uId}"){
+//        val uId = call.parameters["uId"]
+//        if(uId == null){
+//            call.respondBox(DataBox.ko<FanInfo>("no uId"))
+//        }else{
+//            call.respondBox(DataBox.ok(fanRpc.getFanInfoByUId(uId)))
+//        }
+//    }
     authenticate {
         intercept(ApplicationCallPipeline.Call) {
             when (jwtHelper.isAuthorized(call)) {
@@ -86,21 +79,22 @@ fun Routing.contactApi() {
                 call.respondBox(controller.getExternalDetail(call.parameters["id"]))
             }
             get("/external/relationChanges/{externalId}"){
-                call.respondBox(controller.getRelationChanges(call.parameters["externalId"], call.userId, call.corpId))
+                call.respondBox(controller.getRelationChanges(call.parameters["externalId"], call.userId, call.appId))
             }
             // 同步当前登录用户的所有外部联系人列表
             get("/syncExternalContact/{refreshType}"){
                 //val userId = call.request.queryParameters["userId"]
-                call.respondBox(controller.syncExternalsOfUser(call.corpId, call.agentId, call.suiteId, call.uId, call.parameters["refreshType"]?.toInt()))
+                val appId = call.appId
+                call.respondBox(controller.syncExternalsOfUser(appId, call.agentId, appId, call.uId, call.parameters["refreshType"]?.toInt()))
             }
 
             get<ExternalListParams>{
-                call.respondBox(controller.getExternalListByPage(it, call.uId, call.corpId))
+                call.respondBox(controller.getExternalListByPage(it, call.uId, call.appId))
             }
 
             get("/syncDepartment"){
                 val agentId = call.request.queryParameters["agentId"]?.toInt()
-                call.respondBox(controller.syncDepartment(call.corpId, agentId))
+                call.respondBox(controller.syncDepartment(call.appId, agentId))
             }
         }
     }

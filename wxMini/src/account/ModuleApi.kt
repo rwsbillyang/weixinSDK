@@ -31,15 +31,15 @@ import org.koin.ktor.ext.inject
 
 
 fun Routing.account() {
-    val controller: AccountController by inject()
+    val controller: WxMiniAccountController by inject()
     val jwtHelper: AbstractJwtHelper by inject()
 
     route("/api/wx/mini") {
         get("/code2Session") {
             val appId = call.request.queryParameters["appId"]
             val jsCode = call.request.queryParameters["jsCode"]
-            val needRegister = call.request.queryParameters["needRegister"]?.toInt()?:0
-            call.respondBox(DataBox.ok(controller.code2Session(appId, jsCode, needRegister, call.request.origin.remoteHost, call.request.userAgent())))
+            val registerType = call.request.queryParameters["registerType"]?.toInt()
+            call.respondBox(DataBox.ok(controller.code2Session(appId, jsCode, registerType, call.request.origin.remoteHost, call.request.userAgent())))
         }
     }
 }

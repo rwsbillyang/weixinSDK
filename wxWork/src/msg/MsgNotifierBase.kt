@@ -22,7 +22,7 @@ import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.wxSDK.work.MsgApi
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
-import com.github.rwsbillyang.wxUser.account.Account
+import com.github.rwsbillyang.wxWork.account.WxWorkAccount
 import com.github.rwsbillyang.wxWork.config.ConfigService
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -36,7 +36,7 @@ open class MsgNotifierBase : KoinComponent {
 
 
     // 点击后跳转的链接。最长2048字节，请确保包含了协议头(http/https)
-    fun url(account: Account, corpId: String, agentId: Int?, type: String): String{
+    fun url(account: WxWorkAccount, corpId: String, agentId: Int?, type: String): String{
         // val url = urlConfigMap?.get(type)?:defaultUrl
         val url = configService.findMsgNotifyConfig(corpId, agentId)?.pathMap?.get(type)?:defaultUrl
         return "$url?corpId=${account.corpId}&agentId=$agentId"
@@ -62,7 +62,7 @@ open class MsgNotifierBase : KoinComponent {
     }
 
 
-    fun msgApi(account: Account, appId: String?, agentId: Int?): MsgApi?{
+    fun msgApi(account: WxWorkAccount, appId: String?, agentId: Int?): MsgApi?{
         if(appId == null || agentId == null || account.userId == null)
         {
             log.warn("appId, agentId or userId is null in account, do nothing")

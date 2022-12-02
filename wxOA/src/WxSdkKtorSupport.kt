@@ -19,13 +19,13 @@
 package com.github.rwsbillyang.wxOA
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.wxOA.account.NeedUserInfoType
 import com.github.rwsbillyang.wxOA.fan.FanService
 import com.github.rwsbillyang.wxOA.fan.toGuest
 import com.github.rwsbillyang.wxOA.fan.toOauthToken
 import com.github.rwsbillyang.wxSDK.officialAccount.*
 import com.github.rwsbillyang.wxSDK.security.JsAPI
 import com.github.rwsbillyang.wxSDK.security.SignUtil
-import com.github.rwsbillyang.wxUser.NeedUserInfoType
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*

@@ -18,14 +18,14 @@
 
 @file:UseContextualSerialization(ObjectId::class)
 
-package com.github.rwsbillyang.wxUser.order
+package com.github.rwsbillyang.wxOA.account.order
 
 
 import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
 import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.ktorKit.util.toUtc
+import com.github.rwsbillyang.wxOA.account.product.Product
 import com.github.rwsbillyang.wxSDK.wxPay.OrderPayDetail
-import com.github.rwsbillyang.wxUser.product.Product
 import io.ktor.resources.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -89,10 +89,10 @@ object OrderConstant{
 data class AccountOrder(
         val _id: ObjectId,
         val product: Product,
-        val uId: ObjectId?,
-        val oId: String?,
-        val appId: String? = null,
-        val agentId: Int? = null,
+        val uId: ObjectId?,//用户id 已注册用户的付款
+        val oId: String, //付款人openID 未注册用户的付款
+        val appId: String,
+        //val agentId: Int? = null,
         val time: Long = System.currentTimeMillis(),
         val type: Int = OrderConstant.TYPE_WECHAT,
         val from: Int = OrderConstant.FROM_DEFAULT,
@@ -114,7 +114,6 @@ data class AccountOrderListParams(
         val end: String? = null,
         val transactionId: String? = null,
         val appId: String? = null,
-        val agentId: Int? = null,
         val lastId: ObjectId? = null
 ): IUmiPaginationParams {
         override fun toFilter(): Bson {
@@ -126,8 +125,7 @@ data class AccountOrderListParams(
                 val startFilter = start?.let { DatetimeUtil.parse(it)}?.toUtc()?.let { AccountOrder::time gte it }
                 val endFilter = end?.let { DatetimeUtil.parse(it)}?.toUtc()?.let { AccountOrder::time lte it }
                 val appIdF = appId?.let{  AccountOrder::appId eq it }
-                val agentIdF = agentId?.let{  AccountOrder::agentId eq it }
-                return and(typeFilter, statusFilter, fromFilter, transactionIdFilter, appIdF, agentIdF, startFilter, endFilter)
+                return and(typeFilter, statusFilter, fromFilter, transactionIdFilter, appIdF,  startFilter, endFilter)
         }
 }
 

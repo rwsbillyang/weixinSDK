@@ -18,45 +18,38 @@
 
 package com.github.rwsbillyang.wxOA.msg
 
-import com.github.rwsbillyang.wxUser.account.Account
-import com.github.rwsbillyang.wxUser.fakeRpc.level2Name
+
 import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.wxSDK.officialAccount.outMsg.ColoredValue
-import com.github.rwsbillyang.wxUser.account.AccountExpire
-import com.github.rwsbillyang.wxUser.fakeRpc.IPayWechatNotifier
-import com.github.rwsbillyang.wxUser.fakeRpc.PayNotifierType
-
-
-
+import com.github.rwsbillyang.wxUser.account.EditionLevel.level2Name
+import com.github.rwsbillyang.wxUser.account.ExpireInfo
+import com.github.rwsbillyang.wxUser.account.PayNotifierType
 import org.slf4j.LoggerFactory
 
 
-class TemplatePayMsgNotifier : TemplateMsgBase(), IPayWechatNotifier {
+class TemplatePayMsgNotifier : TemplateMsgBase() {
     private val log = LoggerFactory.getLogger("WechatNotifier")
 
 
     /**
      * 续费通知
      * */
-    override fun onExpire(
-        account: Account,
+    fun onExpire(
+        openId: String?,
         appId: String?,
-        agentId: Int?,
-        accountExpire: AccountExpire?,
+        expireInfo: ExpireInfo,
         title: String?
     ) {
-        val openId = account.openId1
-        val expire = accountExpire?.expire ?: account.expire
-        val level = accountExpire?.level ?: account.level
-        if (openId == null || expire == null) {
+
+        if (openId == null || expireInfo.expire == null) {
             log.warn("onExpire: openId or expire is null, ignore ")
             return
         }
 
         val data = mutableMapOf<String, ColoredValue>()
         data["first"] = ColoredValue(title ?: "亲，您的会员即将到期")
-        data["keynote1"] = ColoredValue(DatetimeUtil.format(expire, "yyyy年MM月dd日"), color)
-        data["keynote2"] = ColoredValue(level2Name(level) + "会员到期后，影响使用", color)
+        data["keynote1"] = ColoredValue(DatetimeUtil.format(expireInfo.expire!!, "yyyy年MM月dd日"), color)
+        data["keynote2"] = ColoredValue(level2Name(expireInfo.level) + "会员到期后，影响使用", color)
         data["remark"] = ColoredValue("点击续费!", color)
 
         sendTemplateMsg(openId, appId, PayNotifierType.ExpireAlarm.name, data)
@@ -70,16 +63,14 @@ class TemplatePayMsgNotifier : TemplateMsgBase(), IPayWechatNotifier {
      * @param newExpire 新到期时间
      * @param title 标题，不提供使用默认。在赠送时可以单独提供：如邀请有礼30天赠送
      * */
-    override fun onPaySuccess(
-        account: Account,
+    fun onPaySuccess(
+        openId: String?,
         appId: String?,
-        agentId: Int?,
         productName: String,
         totalMoney: String,
         newExpire: Long,
         title: String?
     ) {
-        val openId = account.openId1
         if (openId == null) {
             log.warn("onPaySuccess: onPaySuccess  is null, ignore ")
             return
@@ -95,15 +86,14 @@ class TemplatePayMsgNotifier : TemplateMsgBase(), IPayWechatNotifier {
     }
 
 
-    override fun onBonusSuccess(
-        account: Account,
+    fun onBonusSuccess(
+        openId: String?,
         appId: String?,
-        agentId: Int?,
         productName: String,
         newExpire: Long,
         title: String?
     ) {
-        val openId = account.openId1
+
         if (openId == null) {
             log.warn("onBonusSuccess: onPaySuccess  is null, ignore ")
             return

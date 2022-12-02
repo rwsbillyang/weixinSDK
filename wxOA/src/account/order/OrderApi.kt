@@ -16,14 +16,13 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.wxUser.order
+package com.github.rwsbillyang.wxOA.account.order
 
 
 import com.github.rwsbillyang.ktorKit.server.AbstractJwtHelper
 import com.github.rwsbillyang.ktorKit.server.respondBox
 import com.github.rwsbillyang.ktorKit.server.respondBoxOK
 import com.github.rwsbillyang.wxSDK.wxPay.WxPay
-import com.github.rwsbillyang.wxUser.agentId
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -48,7 +47,7 @@ fun Routing.accountOrderApi(){
             val uId = call.request.queryParameters["uId"]
             //val uId = call.uId
 
-            call.respondBox(controller.wxPrepay(appId,pId, uId, oId, call.request.origin.remoteHost, call.agentId))
+            call.respondBox(controller.wxPrepay(appId,pId, uId, oId, call.request.origin.remoteHost))
         }
 
 

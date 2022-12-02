@@ -3,67 +3,42 @@ package com.github.rwsbillyang.wxUser
 
 
 import com.github.rwsbillyang.ktorKit.server.AppModule
-import com.github.rwsbillyang.wxSDK.wxPay.wxPayNotify
+import com.github.rwsbillyang.ktorKit.server.WsSessions
+import com.github.rwsbillyang.wxUser.account.AccountControllerWebAdmin
+import com.github.rwsbillyang.wxUser.account.AccountService
+import com.github.rwsbillyang.wxUser.account.stats.StatsService
+import com.github.rwsbillyang.wxUser.account.webUserAdminApi
 
 import com.github.rwsbillyang.wxUser.feedback.FeedbackController
 import com.github.rwsbillyang.wxUser.feedback.FeedbackService
 
 import com.github.rwsbillyang.wxUser.feedback.feedbackApi
-import com.github.rwsbillyang.wxUser.order.AccountOrderController
-import com.github.rwsbillyang.wxUser.order.AccountOrderService
-import com.github.rwsbillyang.wxUser.order.accountOrderApi
-import com.github.rwsbillyang.wxUser.payConfig.PayConfigService
-import com.github.rwsbillyang.wxUser.payConfig.WxPayConfigInstallation
-import com.github.rwsbillyang.wxUser.product.ProductService
-import com.github.rwsbillyang.wxUser.product.productApi
-import io.ktor.server.application.*
-
 
 import org.koin.dsl.module
-import org.koin.ktor.ext.inject
-
-val ApplicationCall.userId
-    get() = this.request.headers["X-Auth-UserId"]
-
-val ApplicationCall.externalUserId
-    get() = this.request.headers["X-Auth-ExternalUserId"]
-
-val ApplicationCall.suiteId
-    get() = this.request.headers["X-Auth-SuiteId"]
-
-val ApplicationCall.agentId
-    get() = this.request.headers["X-Auth-AgentId"]?.toInt()
 
 
 
 /**
- * 包含了订单和产品，对于企业微信建议配置到agent自己的数据库中;
- * 用户反馈功能，建议配置到agent自己的数据库中;
- * 支付配置，可配置agent自己的库中，也可共享的wxWork中（暂不支持）
+ * 1.系统级账号，web登录，其它第三方登录可绑定关联成一个统一的账号
+ * 2. feedback
+ * 3. 登录统计功能
  * */
 val wxUserAppModule = AppModule(
     listOf(
         module {
-            single { AccountOrderService(get()) }
-            single { AccountOrderController() }
-            single { ProductService(get()) }
+            single { AccountControllerWebAdmin(get(), get()) }
+            single { AccountService(get()) }
+            single { WsSessions() }
+            single { StatsService(get()) }
 
             single { FeedbackController() }
             single { FeedbackService(get()) }
 
-            single { PayConfigService() }
-        }, module(createdAtStart = true) {
-            single { WxPayConfigInstallation(get()) }
-        },
+
+        }
     ), "user")
 {
-    accountOrderApi()
-    //"/api/sale/wx/payNotify/{appId}" //default  /api/sale/wx/payNotify/
-    wxPayNotify { appId, payNotifyBean, orderPayDetail, errType ->
-        val orderController: AccountOrderController by inject()
-        orderController.onWxPayNotify(appId, payNotifyBean, orderPayDetail, errType)
-    }
-    productApi()
+    webUserAdminApi()
     feedbackApi()
 }
 

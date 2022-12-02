@@ -26,13 +26,14 @@ import com.github.rwsbillyang.wxSDK.work.*
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWork
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
-import com.github.rwsbillyang.wxUser.NeedUserInfoType
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 
 
@@ -262,41 +263,49 @@ fun Routing.wxWorkOAuthApi(
                     api.getUserInfo(code)
                 }
 
-                if(Work.isIsv && onResponseOauthUserDetail3rd != null && res.userTicket != null){
-                    when(val needUserInfo = call.parameters["needUserInfo"]?.toInt()?: NeedUserInfoType.Force_Not_Need){
-                        NeedUserInfoType.Force_Not_Need -> {
-                            //do nothing
-                        }
-                        NeedUserInfoType.NeedIfNo -> {
-                            //TODO: 暂时都获取
-                            launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket!!)) }
-                        }
-                        NeedUserInfoType.NeedIfNoNameOrImg -> {
-                            //TODO: 暂时都获取
-                            launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket!!)) }
-                        }
-                        NeedUserInfoType.NeedByUserSettings -> {
-                            //TODO: 暂时都获取
-                            launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket!!)) }
-                        }
-                        NeedUserInfoType.ForceNeed -> {
-                            launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket!!)) }
-                        }
-                        else -> {
-                            log.warn("Not support needUserInfoType:$needUserInfo")
-                        }
-                    }
-                }
+                if(!res.isOK()){
+                    log.info("OAuthApi.getUserInfo:${Json.encodeToString(res)}")
+                    result.code = "KO"
+                    result.errMsg = "${res.errCode}: ${res.errMsg}"
+                }else{
+                    if(Work.isIsv && onResponseOauthUserDetail3rd != null && res.userTicket != null){
+                        launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket!!)) }
 
-                result.code = "OK"
-                result.corpId = res.corpId?:corpId
-                result.suiteId = suiteId
-                result.agentId = agentId
-                result.userId = res.userId
-                result.externalUserId = res.externalUserId
-                result.openId = res.openId
-                result.deviceId = res.deviceId
-                //result.unionId = res.u
+//                    when(val needUserInfo = call.parameters["needUserInfo"]?.toInt()?: NeedUserInfoType.Force_Not_Need){
+//                        NeedUserInfoType.Force_Not_Need -> {
+//                            //do nothing
+//                        }
+//                        NeedUserInfoType.NeedIfNo -> {
+//                            //TODO: 暂时都获取
+//                            launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket!!)) }
+//                        }
+//                        NeedUserInfoType.NeedIfNoNameOrImg -> {
+//                            //TODO: 暂时都获取
+//                            launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket!!)) }
+//                        }
+//                        NeedUserInfoType.NeedByUserSettings -> {
+//                            //TODO: 暂时都获取
+//                            launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket!!)) }
+//                        }
+//                        NeedUserInfoType.ForceNeed -> {
+//                            launch { onResponseOauthUserDetail3rd(api.getUserDetail3rd(res.userTicket!!)) }
+//                        }
+//                        else -> {
+//                            log.warn("Not support needUserInfoType:$needUserInfo")
+//                        }
+//                    }
+                    }
+
+                    result.code = "OK"
+                    result.corpId = res.corpId?:corpId
+                    result.suiteId = suiteId
+                    result.agentId = agentId
+                    result.userId = res.userId
+                    result.externalUserId = res.externalUserId
+                    result.openId = res.openId
+                    result.deviceId = res.deviceId
+                    //result.unionId = res.u
+                }
 
             }catch(e: IllegalArgumentException) {
                 result.code = "KO"

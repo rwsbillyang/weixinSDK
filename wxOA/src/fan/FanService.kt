@@ -17,6 +17,7 @@ import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.ktorKit.db.MongoGenericService
 import com.github.rwsbillyang.wxOA.wxOaAppModule
+import com.github.rwsbillyang.wxUser.account.Profile
 import kotlinx.coroutines.runBlocking
 import org.bson.conversions.Bson
 import org.koin.core.component.inject
@@ -85,4 +86,15 @@ class FanService(cache: ICache) : MongoGenericService(cache) {
         }
     }
 
+    fun getProfile(openId: String, unionId: String?): Profile? {
+        val f = findFan(openId)
+        if(f != null) return Profile(f.name, f.img,f.sex?:0,
+            "${f.cty} ${f.pro} ${f.city}".trim())
+
+        val g = findGuest(openId)
+        if(g != null) return Profile(g.name,  g.img, g.sex?:0,
+            "${g.cty} ${g.pro} ${g.city}".trim())
+
+        return null
+    }
 }

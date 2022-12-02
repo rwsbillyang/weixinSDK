@@ -47,4 +47,5 @@ dependencies {
     implementation project(":common")
     implementation project(":wxUser")
     implementation project(":officialAccount")
+    implementation project(":wxPay")
 }

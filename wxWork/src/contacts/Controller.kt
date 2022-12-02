@@ -80,10 +80,11 @@ class ContactController: KoinComponent {
                 list.map {
                     val contact = it
                     val customers = service.findContactExtra(contact._id!!)?.ids?.mapNotNull {
-                        service.findExternalContact(it, param.corpId)?.toBean(
+                        val it1 = it
+                        service.findExternalContact(it1, param.corpId)?.toBean(
                             contact.userId,
                             0  /*chatMsgController.countChatMsg(param.corpId, contactId, it)*/,
-                            service.findRelationChanges(contact.corpId, contact.userId,contact._id, it))
+                            contact.userId?.let { service.findRelationChanges(contact.corpId, it,contact._id, it1) })
                     }
                     it.toBean(customers)
                 }

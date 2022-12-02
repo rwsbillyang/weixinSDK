@@ -16,38 +16,28 @@
  * limitations under the License.
  */
 
-package com.github.rwsbillyang.wxUser.account.webAdmin
+package com.github.rwsbillyang.wxUser.account
+
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
-
-
 import com.github.rwsbillyang.ktorKit.cache.ICache
-import com.github.rwsbillyang.ktorKit.server.AuthUserInfo
 import com.github.rwsbillyang.ktorKit.server.BizException
-import com.github.rwsbillyang.ktorKit.server.IAuthUserInfo
-import com.github.rwsbillyang.ktorKit.toObjectId
-
-
-import com.github.rwsbillyang.wxUser.account.stats.LoginLog
 import com.github.rwsbillyang.ktorKit.util.EmailSender
 import com.github.rwsbillyang.ktorKit.util.isEmail
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
-import com.github.rwsbillyang.wxUser.account.*
-import com.github.rwsbillyang.wxUser.fakeRpc.FanInfo
-
 
 
 /**
  * 普通网页的账户密码，手机号登录和注册
  * */
-class AccountControllerWebAdmin(private val cache: ICache, private val service: AccountServiceWebAdmin): AccountControllerBase(service) {
+class AccountControllerWebAdmin(private val cache: ICache, private val accountService: AccountService): AccountControllerBase(accountService) {
 
     private val emailSender = EmailSender("qh_noreply@mail.github.rwsbillyang.com")
 
     /**
      * 支持账号密码登录、手机号+验证码登录、微信openId和unionId登录
      * */
-    fun login(loginParam: LoginParamBean, ip: String?, ua: String?): DataBox<AuthBean> {
+    fun login(loginParam: LoginParamBean, ip: String?, ua: String?): DataBox<SysAccountAuthBean> {
         log.info("param: $loginParam")
         val user = when (loginParam.type) {
             LoginParamBean.MOBILE -> {
@@ -56,10 +46,10 @@ class AccountControllerWebAdmin(private val cache: ICache, private val service: 
                     log.warn("wrong verify code: ${loginParam.pwd}, correct code=$code")
                     return DataBox.ko("wrong verify code:${loginParam.pwd}")
                 }
-                service.findByTel(loginParam.name)
+                accountService.findByTel(loginParam.name)
             }
             LoginParamBean.ACCOUNT -> {
-                service.findByName(loginParam.name)
+                accountService.findByName(loginParam.name)
             }
             else -> {
                 return DataBox.ko("not support type:${loginParam.type}")
@@ -75,7 +65,13 @@ class AccountControllerWebAdmin(private val cache: ICache, private val service: 
             }
         }
 
-        return getAuthBeanBox(user, null, LoginLog.fromLoginParam(loginParam), ip, ua)
+        if (user.state == Account.STATE_DISABLED) {
+            return DataBox.ko("account is disabled")
+        }
+
+        val auth = getAuthBean(user.roles, user, user.expire, user.profile, user.gId,
+            loginParam.type, null, user._id, ip, ua) ?: return DataBox.ko("fail to generate auth bean / token")
+        return DataBox.ok(SysAccountAuthBean(auth))
     }
 
 
@@ -86,32 +82,35 @@ class AccountControllerWebAdmin(private val cache: ICache, private val service: 
      * */
     fun register(loginParam: LoginParamBean, rcm: String?, ip: String?, ua: String?): DataBox<AuthBean> {
         log.info("loginParam=$loginParam")
-        var isInsert = false
-        val user: Account? = when (loginParam.type) {
+        //var isInsert = false
+        val user: Account = when (loginParam.type) {
             LoginParamBean.MOBILE -> {
                 val code = cache["phone/${loginParam.name}"]
                 if (loginParam.pwd != code) {
                     log.warn("wrong verify code: ${loginParam.pwd}, correct code=$code")
                     throw BizException("wrong verify code:${loginParam.pwd}")
                 }
-                val a = service.findUpsertByTel(loginParam.name)
-                if(a == null) isInsert = true
-                a?:service.findByTel(loginParam.name)
+                val a = accountService.findUpsertByTel(loginParam.name)
+                //if(a == null) isInsert = true
+                a?:accountService.findByTel(loginParam.name)
             }
             LoginParamBean.ACCOUNT -> {
                 if (loginParam.pwd == null) return DataBox.ko("wrong pwd")
                 val salt = WXBizMsgCrypt.getRandomStr(8)
-                val a = service.findUpsertByName(loginParam.name, Account.encryptPwd(loginParam.pwd, salt), salt)
-                if(a == null) isInsert = true
-                a?:service.findByName(loginParam.name)
+                val a = accountService.findUpsertByName(loginParam.name, Account.encryptPwd(loginParam.pwd, salt), salt)
+                //if(a == null) isInsert = true
+                a?:accountService.findByName(loginParam.name)
             }
 
             else -> {
                 throw BizException("not support type:${loginParam.type}")
             }
-        }
+        } ?: return DataBox.ko("fal to register")
 
-        return tryBonus(user, isInsert, rcm, null, LoginLog.LoginType_ACCOUNT, ip, ua)
+        //bonus rcm
+
+        return DataBox.ok(getAuthBean(user.roles, user, user.expire, user.profile,user.gId,
+            loginParam.type, null, user._id, ip, ua))
     }
 
 
@@ -130,7 +129,7 @@ class AccountControllerWebAdmin(private val cache: ICache, private val service: 
         return DataBox.ok(code)
     }
 
-
+   //发送邮件
     private fun sendCodeByEmail(name: String, email: String, code: String): Boolean {
         val pair = subjectAndBody(name, code)
         return emailSender.sendEmail(
@@ -139,6 +138,7 @@ class AccountControllerWebAdmin(private val cache: ICache, private val service: 
         )
     }
 
+    //构建邮件内容
     private fun subjectAndBody(name: String, code: String, isReset: Boolean = false): Pair<String, String> {
         val str = if (isReset) "reset" else "created"
         return Pair(
@@ -155,7 +155,7 @@ class AccountControllerWebAdmin(private val cache: ICache, private val service: 
         if (!email.isEmail()) {
             return DataBox.ko("invalid email")
         }
-        val u = service.findByName(email)
+        val u = accountService.findByName(email)
         if (u == null) {
             return DataBox.ko("not found account: $email")
         } else {
@@ -166,7 +166,7 @@ class AccountControllerWebAdmin(private val cache: ICache, private val service: 
             val pair = subjectAndBody(u.name ?: "", rawCode, true)
             val ret = emailSender.sendEmail(pair.first, pair.second, email, emailSender.smtpHost != null)
             return if (ret) {
-                val result = service.updatePwdAndSalt(u, pwd, salt)
+                val result = accountService.updatePwdAndSalt(u, pwd, salt)
                 DataBox.ok(result.modifiedCount)
             } else {
                 log.error("fail to send email when reset pwd: $email ")
@@ -179,51 +179,24 @@ class AccountControllerWebAdmin(private val cache: ICache, private val service: 
         return if (uId.isNullOrBlank())
             DataBox.ko("invalid parameter")
         else {
-            //antd admin 必须返回有数据，否则导致重新登录
-            val p = service.findProfile(uId)
-                ?: service.findById(uId)?.let {
-                    val account = it
-//                    val p2 = it.oId?.let {
-//                        fanClient.getFanInfo(it, account.uId)?.let {
-//                            Profile(account._id, it.nick, it.avatar)
-//                        }
-//                    }
-//                    p2 ?: Profile(uId.toObjectId(), account.name)
-                    Profile(uId.toObjectId(), account.name)
-                } ?: return DataBox.ko("not found account: id=$uId")
-
-            DataBox.ok(p)
+            val a = accountService.findById(uId)?: return DataBox.ko("no account for uId= $uId")
+            DataBox.ok(accountService.findById(uId)?.profile?: Profile(a.name))
         }
 
     }
 
     fun isUser(loginParam: LoginParamBean): DataBox<Boolean> {
-        val user: Account? = when (loginParam.type) {
+        return when (loginParam.type) {
             LoginParamBean.MOBILE -> {
-                service.findByTel(loginParam.name)
+                DataBox.ok(accountService.findByTel(loginParam.name) != null)
             }
             LoginParamBean.ACCOUNT -> {
-                service.findByName(loginParam.name)
+                DataBox.ok(accountService.findByName(loginParam.name) != null)
             }
             else -> {
-                throw BizException("not support type:${loginParam.type}")
+                DataBox.ko("not support type:${loginParam.type}")
             }
         }
-        return DataBox.ok(user != null)
     }
 
-    override fun bonus(account: Account, rcm: String?, agentId: Int?) {
-        log.info("Not yet implemented")
-    }
-    override fun getJwtToken(account: Account, agentId: Int?, uId: String, role: String, level: String): String? {
-        val jti = WXBizMsgCrypt.getRandomStr(8)
-        return jwtHelper.generateToken(
-            jti, hashMapOf(
-                IAuthUserInfo.KEY_UID to uId,
-                AuthUserInfo.KEY_ROLE to role,
-                AuthUserInfo.KEY_LEVEL to level
-            )
-        )
-    }
-    override fun getFanInfo(account: Account) = FanInfo(account.openId1?:"noOpenId", account.unionId, null, account.name)
 }

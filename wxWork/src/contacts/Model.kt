@@ -42,7 +42,7 @@ import org.litote.kmongo.regex
 data class Contact(
     var _id: ObjectId?, // 因为userId可能会改变，故不能以corpId/userId作为键值
     val corpId: String,
-    var userId: String, //userid
+    var userId: String?, //userid
     val name: String? = null,//成员名称；第三方不可获取，调用时返回userid以代替name；代开发自建应用需要管理员授权才返回；对于非第三方创建的成员，第三方通讯录应用也不可获取；未返回name的情况需要通过通讯录展示组件来展示名字
     val mobile: String? = null,//手机号码，代开发自建应用需要管理员授权才返回；第三方仅通讯录应用可获取；对于非第三方创建的成员，第三方通讯录应用也不可获取
     val department: List<Int>? = null,//成员所属部门id列表，仅返回该应用有查看权限的部门id；成员授权模式下，固定返回根部门id，即固定为1
@@ -98,7 +98,7 @@ data class ContactExtra(
 @Serializable
 class ContactBean(
     val _id: String,// Contact._id or ExternalContact._id  因为userId可能会改变，故不能以corpId/userId作为键值
-    val userId: String, //Contact.userId or ExternalContact.external_userId
+    val userId: String?, //Contact.userId or ExternalContact.external_userId
     val name: String? = null,
     val mobile: String? = null,
     val thumb: String? = null,

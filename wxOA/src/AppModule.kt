@@ -3,9 +3,17 @@ package com.github.rwsbillyang.wxOA
 
 
 import com.github.rwsbillyang.ktorKit.server.AppModule
-import com.github.rwsbillyang.ktorKit.server.installModule
-import com.github.rwsbillyang.wxOA.account.*
-import com.github.rwsbillyang.wxOA.fakeRpc.FanRpcOA
+import com.github.rwsbillyang.wxOA.account.RecommendHelper
+import com.github.rwsbillyang.wxOA.account.WxOaAccountController
+import com.github.rwsbillyang.wxOA.account.WxOaAccountService
+import com.github.rwsbillyang.wxOA.account.oaUserApi
+import com.github.rwsbillyang.wxOA.account.order.AccountOrderController
+import com.github.rwsbillyang.wxOA.account.order.AccountOrderService
+import com.github.rwsbillyang.wxOA.account.order.accountOrderApi
+import com.github.rwsbillyang.wxOA.account.payConfig.PayConfigService
+import com.github.rwsbillyang.wxOA.account.payConfig.WxPayConfigInstallation
+import com.github.rwsbillyang.wxOA.account.product.ProductService
+import com.github.rwsbillyang.wxOA.account.product.productApi
 import com.github.rwsbillyang.wxOA.fan.FanService
 import com.github.rwsbillyang.wxOA.fan.fanApi
 import com.github.rwsbillyang.wxOA.fan.fanModule
@@ -20,11 +28,7 @@ import com.github.rwsbillyang.wxOA.pref.prefModule
 import com.github.rwsbillyang.wxOA.qrcodeChannel.qrCodeChannelModule
 import com.github.rwsbillyang.wxOA.qrcodeChannel.qrcodeChannelApi
 import com.github.rwsbillyang.wxOA.stats.statsModule
-import com.github.rwsbillyang.wxUser.account.AccountServiceBase
-import com.github.rwsbillyang.wxUser.account.stats.StatsService
-import com.github.rwsbillyang.wxUser.fakeRpc.IPayWechatNotifier
-import io.ktor.server.application.*
-import org.koin.dsl.bind
+import com.github.rwsbillyang.wxSDK.wxPay.wxPayNotify
 import org.koin.dsl.module
 import org.koin.ktor.ext.inject
 
@@ -38,7 +42,22 @@ val wxOaAppModule = AppModule(
             single { PrefController(get()) }
             single { EventHandler() } //需要时handler时自动注入
             single { MsgHandler() }//需要时handler时自动注入
-           // single { WxOASofaRpc(get()) }
+
+            single { WxPayConfigInstallation(get()) }
+            // single { WxOASofaRpc(get()) }
+            // single { ExpireNotifierOA(get()) }
+        },
+        module {
+            single { AccountOrderService(get()) }
+            single { AccountOrderController() }
+            single { ProductService(get()) }
+            single { PayConfigService() }
+
+            single { RecommendHelper() }
+
+            single { WxOaAccountController(get()) }
+            single { TemplatePayMsgNotifier() }
+            single { WxOaAccountService(get()) }
         },
         fanModule,
         statsModule,
@@ -49,14 +68,21 @@ val wxOaAppModule = AppModule(
     ),
     "weixin"
 ) {
+    oaUserApi()
     dispatchMsgApi()//  "/api/wx/oa/app/{appId}"
 
+    accountOrderApi()
+    //"/api/sale/wx/payNotify/{appId}" //default  /api/sale/wx/payNotify/
+    wxPayNotify { appId, payNotifyBean, orderPayDetail, errType ->
+        val orderController: AccountOrderController by inject()
+        orderController.onWxPayNotify(appId, payNotifyBean, orderPayDetail, errType)
+    }
+    productApi()
+
     oAuthApi( needUserInfoSettingsBlock = {owner, openId ->
-        val accountService: AccountServiceOA by inject()
         val fanService: FanService by inject()
 
-        val needUserInfo = owner?.let { accountService.findById(it) }?.needUserInfo?:false
-        needUserInfo && (fanService.findGuest(openId) == null && fanService.findFan(openId) == null)
+        fanService.findGuest(openId) == null && fanService.findFan(openId) == null
     }
       /* , onGetOauthAccessToken = { res, appId ->
         val fanService: FanService by inject()
@@ -79,45 +105,6 @@ val wxOaAppModule = AppModule(
 }
 
 
-/**
- * 账号功能： 公众号注册、登录、查询账号的level、推荐奖励、fanInfo等信息、支付通知模板消息、
- *
- * @param dbName 数据库名称，用于将账号模块放入到业务应用自己的数据库中
- * @param standalone 单独使用公众号功能时为true，与企业微信同时使用时为false。
- * 为true时，整个运行app中，AccountControllerOA和AccountServiceOA以及其父类型，都使用此时注入的OA实例；
- * 为false时，父类实例另有其它子类实例绑定，如企业微信子类实例，此处只管自己类型的额外的实例注入。
- *
- * */
-fun Application.installOaAccountAppModule(dbName: String, standalone: Boolean = true){
-    AccountServiceBase.AccountDbName = dbName
-
-    val list = listOf(
-        module(createdAtStart = true) {
-            single { ExpireNotifierOA(get()) }
-        },
-        module {
-            single { RecommendHelper() }
-            single { FanRpcOA() }
-
-            single { AccountControllerOA(get()) }
-            if(standalone){
-                single { StatsService(get()) }
-                //OrderController中支付成功后需要通知
-                single { TemplatePayMsgNotifier() } bind IPayWechatNotifier::class
-                //RawDataController中点击通知需要查询有效期从而是否展示访客名字, statsWorker中也类似, OrderController中支付成功后需要更新账户信息
-                single { AccountServiceOA(get()) } bind AccountServiceBase::class
-            }else{
-                single { TemplatePayMsgNotifier() }
-                single { AccountServiceOA(get()) }
-            }
-        })
-
-    val appModule = AppModule(list, dbName){
-        oaUserApi()
-    }
-
-    installModule(appModule)
-}
 
 
 

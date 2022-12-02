@@ -359,7 +359,7 @@ class ResponseUserDetail(
     @SerialName("errmsg")
     override val errMsg: String? = null,
 
-    val userid: String,
+    val userid: String? = null,
     val name: String? = null,
     val mobile: String? = null,
     val avatar: String? = null,
@@ -367,8 +367,9 @@ class ResponseUserDetail(
     val telephone: String? = null,    //座机。第三方仅通讯录应用可获取
     val alias: String? = null,
     val status: Int? = null,//激活状态: 1=已激活，2=已禁用，4=未激活，5=退出企业。
-    val gender: String, //0表示未定义，1表示男性，2表示女性
+    val gender: String? = null, //0表示未定义，1表示男性，2表示女性
     val email: String? = null,
+    val biz_mail: String? = null,
     val address: String? = null,
     val extattr: ExtAttr? = null,
 
@@ -382,6 +383,7 @@ class ResponseUserDetail(
      * */
     val isleader: Int? = null,
     val is_leader_in_dept: List<Int>? = null,
+    val direct_leader: List<String>? = null,
     val order: List<Int>? = null,
     val position: String? = null,
 

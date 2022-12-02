@@ -22,9 +22,9 @@ import org.slf4j.LoggerFactory
 
 import com.github.rwsbillyang.ktorKit.server.AppModule
 import com.github.rwsbillyang.ktorKit.server.LifeCycle
-import com.github.rwsbillyang.wxSDK.wxMini.account.AccountController
-import com.github.rwsbillyang.wxSDK.wxMini.account.AccountServiceMini
-import com.github.rwsbillyang.wxSDK.wxMini.account.account
+
+import com.github.rwsbillyang.wxSDK.wxMini.account.WxMiniAccountController
+import com.github.rwsbillyang.wxSDK.wxMini.account.WxMiniAccountService
 import com.github.rwsbillyang.wxSDK.wxMini.config.MiniConfigService
 import com.github.rwsbillyang.wxSDK.wxMini.config.wxMiniConfigApi
 import io.ktor.server.application.*
@@ -40,14 +40,13 @@ val wxMiniProgramModule = AppModule(
         },
         module {
             single { MiniConfigService(get()) }
-            single { AccountController(get()) }
-            single { AccountServiceMini(get()) }
+            single { WxMiniAccountController(get()) }
+            single { WxMiniAccountService(get()) }
         },
         ),
     "WxMini"
 ) {
     wxMiniConfigApi()
-    account()
 }
 
 object WxMini {

@@ -20,18 +20,14 @@
 package com.github.rwsbillyang.wxWork.account
 
 
-import com.github.rwsbillyang.ktorKit.to64String
-import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.ktorKit.db.MongoDataSource
-import com.github.rwsbillyang.wxUser.account.Account
-import com.github.rwsbillyang.wxUser.account.AccountServiceBase
+import com.github.rwsbillyang.ktorKit.toObjectId
+import com.github.rwsbillyang.wxUser.account.AccountService
+import com.github.rwsbillyang.wxUser.account.EditionLevel
+import com.github.rwsbillyang.wxUser.account.EditionLevel.level2Name
 import com.github.rwsbillyang.wxUser.account.Recommend
-import com.github.rwsbillyang.wxUser.fakeRpc.EditionLevel
-import com.github.rwsbillyang.wxUser.fakeRpc.level2Name
-import com.github.rwsbillyang.wxWork.fakeRpc.FanRpcWork
 import com.github.rwsbillyang.wxWork.msg.PayMsgNotifier
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import com.github.rwsbillyang.wxWork.wxWorkModule
 import kotlinx.serialization.UseContextualSerialization
 import org.bson.types.ObjectId
 import org.koin.core.component.KoinComponent
@@ -48,47 +44,43 @@ class RecommendHelper: KoinComponent {
     }
 
 
-    private val dbSource: MongoDataSource by inject(qualifier = named(AccountServiceBase.AccountDbName))
+    private val dbSource: MongoDataSource by inject(qualifier = named(wxWorkModule.dbName!!))
 
     private val recommendCol: CoroutineCollection<Recommend> by lazy {
-        dbSource.mongoDb.getCollection("RecommendWork")
+        dbSource.mongoDb.getCollection("wxWorkRecommend")
     }
 
-    private val accountService: AccountServiceWxWork by inject()
+    private val accountService: AccountService by inject()
+    private val wxWorkAccountService: WxWorkAccountService by inject()
 
     private val wechatNotifier: PayMsgNotifier by inject()
-    private val fanClient: FanRpcWork by inject()
 
     /**
-     * @param account 被推荐人Account
+     * @param account.Id
      * @param rcm 推荐人Account._id
      * */
-    fun bonus(account: Account, rcm: String?, agentId:Int?){
+    fun bonus(account: WxWorkAccount, rcm: String?, agentId:Int?){
         if(!isBonus || rcm == null){
             return
         }
         val rcmId = rcm.toObjectId()
-        //val now = System.currentTimeMillis()
 
-        runBlocking {
-            launch{
-                recommendCol.save(Recommend(account._id, rcmId))
+        wxWorkAccountService.insertRecommend(Recommend(account._id, rcmId))
 
-                var nick: String? = ""
-                val newExpire = accountService.updateAccountExpiration(account._id.to64String(), agentId, bonusLevel, 0,0, bonusDays)
+        val newExpire = accountService.calculateNewExpireInfo(account?.expire, bonusLevel, 0,0, bonusDays)
+        wxWorkAccountService.updateExpireInfo(account._id, newExpire)
 
-                if( account.corpId != null) nick = fanClient.getFanInfo(account.toVID()).nick?:""
-                //wechat notify 企业微信发送方式接收者有所不同
-                wechatNotifier.onBonusSuccess(account, account.corpId, agentId,"点击领取：" + level2Name(bonusLevel), newExpire, "我接受好友邀请，赠送30天VIP到账")
+        val recommender = wxWorkAccountService.findWxWorkAccount(rcmId)
+        if(recommender != null){
+            //wechat notify 企业微信发送方式接收者有所不同
+            wechatNotifier.onBonusSuccess(account, account.corpId, agentId,"点击领取：" + level2Name(bonusLevel), newExpire.expire, "我接受好友 ${recommender.userId} 邀请，赠送${RecommendHelper.bonusDays}天VIP到账")
 
 
-                //奖励推荐人
-                accountService.findOne(rcmId)?.let {
-                    val newExpire2 = accountService.updateAccountExpiration(rcm, agentId, bonusLevel, 0,0, bonusDays)
-                    //wechat notify 企业微信发送方式接收者有所不同
-                    wechatNotifier.onBonusSuccess(it, it.corpId, agentId,"点击领取：" + level2Name(bonusLevel),newExpire2, "我邀请的好友 $nick 开通使用， 赠送30天VIP到账")
-                }
-            }
+            //奖励推荐人
+            val newExpire2 = accountService.calculateNewExpireInfo(recommender.expire, bonusLevel, 0,0, bonusDays)
+            wxWorkAccountService.updateExpireInfo(rcmId, newExpire2)
+            //wechat notify 企业微信发送方式接收者有所不同
+            wechatNotifier.onBonusSuccess(recommender, recommender.corpId, agentId,"点击领取：" + level2Name(bonusLevel),newExpire2.expire, "我邀请的好友 ${account.userId} 开通使用， 赠送${RecommendHelper.bonusDays}天VIP到账")
         }
     }
 }

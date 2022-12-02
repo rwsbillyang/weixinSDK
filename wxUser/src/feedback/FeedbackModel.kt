@@ -27,8 +27,9 @@ import org.bson.types.ObjectId
 @Serializable
 data class Feedback(
         val _id: ObjectId? = null,
-        val uId: ObjectId,
+        var openId: String? = null,
         val desc: String,
+        val contact: String? = null,
         val type: String? = null,
         val imgs: List<String>? = null,
         val time: Long = System.currentTimeMillis(),

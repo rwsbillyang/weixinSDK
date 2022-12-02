@@ -54,7 +54,7 @@ fun Routing.agentApi() {
             }
         }
 
-        route("/api/wx/work/agent") {
+        route("/api/wx/admin/work/agent") {
             get("/sync/{corpId}/{agentId}"){
                 val corpId = call.parameters["corpId"]
                 val agentId = call.parameters["agentId"]?.toInt()
