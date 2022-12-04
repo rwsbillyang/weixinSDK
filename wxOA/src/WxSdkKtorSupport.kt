@@ -199,7 +199,7 @@ fun Routing.oAuthApi(
     //前端构建callback notify的url
     const url = `${Host}${notifyPath}/${params.appId}/${params.needUserInfo}/${params.openId}/${params.owner}`
      * */
-    get("$notifyPath1/{appId}/{needUserInfo}/{openId?}/{owner?}") {
+    get("$notifyPath1/{appId}/{needUserInfo}/{owner?}") {
         //code作为换取access_token的票据，每次用户授权带上的code将不一样，
         // code只能使用一次，5分钟未被使用自动过期。
         val code = call.request.queryParameters["code"]
@@ -210,9 +210,9 @@ fun Routing.oAuthApi(
         val appId = call.parameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
         val needUserInfo = call.parameters["needUserInfo"]?.toInt()?: NeedUserInfoType.Force_Not_Need
 
-        var tmp = call.parameters["openId"]
-        val guestOpenId = if(tmp == null || tmp == "null") null else tmp //前端中的缓存
-        tmp = call.parameters["owner"]
+        //var tmp = call.parameters["openId"]
+        //val guestOpenId = if(tmp == null || tmp == "null") null else tmp //前端中的缓存
+        val tmp = call.parameters["owner"]
         val owner = if(tmp == null || tmp == "null") null else tmp//前端中的url中的uId，用户获取是否获取用户信息的配置
 
         log.info("wxOA oauth, notify1 schema=${call.request.origin.scheme}")
@@ -226,14 +226,15 @@ fun Routing.oAuthApi(
             val oauthAi = OAuthApi(appId)
             val res = oauthAi.getAccessToken(code)
             if (res.isOK()) {
-                val openId = res.openId?:guestOpenId
+                val openId = res.openId
                 if(openId.isNullOrEmpty()){
+                    log.warn("wxoa notify1: no openId from weixin")
                     result.code = "KO"
                     result.msg = "no openId from weixin"
                 }else{
                     val isNeedEnterStep2 = when(needUserInfo){
                         NeedUserInfoType.Force_Not_Need -> false
-                        NeedUserInfoType.NeedIfNo -> fanService.findFan(openId) == null && fanService.findGuest(openId) == null
+                        NeedUserInfoType.NeedIfNo -> fanService.findGuest(openId) == null && fanService.findFan(openId) == null
                         NeedUserInfoType.NeedIfNoNameOrImg -> {
                             val guest = fanService.findGuest(openId)
                             val fan = fanService.findFan(openId)
@@ -241,7 +242,7 @@ fun Routing.oAuthApi(
                         }
                         NeedUserInfoType.NeedByUserSettings -> (needUserInfoSettingsBlock?.let{ it(owner, openId) })?: false
                         NeedUserInfoType.ForceNeed -> {
-                            log.warn("Should not come here, ForceNeed getUserInfo should get in notify2")
+                            log.warn("Should not come here, when ForceNeed frontend redirect to notify2")
                             true
                         }
                         else -> {
@@ -275,7 +276,7 @@ fun Routing.oAuthApi(
      * notify2: 用户授权后得到通知回调，获取用户信息，并重定向通知给前端
      * 引入needUserInfo完全是与notify1兼容，没有其它意义
      * */
-    get("$notifyPath2/{appId}/{needUserInfo}") {
+    get("$notifyPath2/{appId}") {
         val appId = call.parameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]

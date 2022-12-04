@@ -51,7 +51,7 @@ class MenuApi(appId: String) : OABaseApi(appId){
      *
      * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Creating_Custom-Defined_Menu.html
      * */
-    fun detail(): ResponseMenusDetail = doGet("get")
+    fun detail() = doGetRaw("get")
 
     /**
      *

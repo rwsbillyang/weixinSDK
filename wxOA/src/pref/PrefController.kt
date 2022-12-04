@@ -27,7 +27,10 @@ import com.github.rwsbillyang.wxSDK.msg.InEventType
 import com.github.rwsbillyang.wxSDK.msg.MsgType
 import com.github.rwsbillyang.wxSDK.officialAccount.MenuApi
 import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
+import io.ktor.client.call.*
+import io.ktor.client.statement.*
 import io.ktor.server.application.*
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import org.bson.types.ObjectId
 import org.koin.core.component.KoinComponent
@@ -240,7 +243,7 @@ class PrefController(application: Application) : LifeCycle(application), KoinCom
                 it.pagePath,it.miniId ) }
         return if(list.isEmpty())  null else list
     }
-    fun executeMenuCmd(cmd: String?, appId: String?): DataBox<String> {
+    suspend fun executeMenuCmd(cmd: String?, appId: String?): DataBox<String> {
         if(appId == null) return DataBox.ko("invalid paramter: no appId")
         if (cmd.isNullOrBlank()) return DataBox.ko("invalid parameter")
         when (cmd) {
@@ -266,9 +269,10 @@ class PrefController(application: Application) : LifeCycle(application), KoinCom
             }
             "get" -> {
                 val res = MenuApi(appId).detail()
-                val str = ApiJson.clientApiJson.encodeToString(res)
+                val str: String = res.body()
                 log.info("get menu response: ${str}")
-                return if (res.isOK()) DataBox.ok(str) else DataBox.ko("${res.errCode}: ${res.errMsg}")
+                return DataBox.ok(str)
+                //return if (res.isOK()) DataBox.ok(str) else DataBox.ko("${res.errCode}: ${res.errMsg}")
             }
             else -> {
                 log.warn("not support: $cmd")
