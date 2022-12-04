@@ -44,7 +44,7 @@ class WxOaAccountController(private val accountService: AccountService)
      * @param registerType 1: 明确要求新用户需注册为系统用户； 2 自动注册为系统用户； 其它值：无需注册系统用户（无系统账号）
      *
      * */
-    suspend fun login(guest: WxOaGuest, loginType: String,scanQrcodeId: String?,
+    suspend fun login(guest: WxOaGuest, scanQrcodeId: String?,
                       registerType: Int?, rcm: String?, ip: String?, ua: String?
     ): DataBox<WxOaAccountAuthBean>{
         //检查参数合法性
@@ -55,6 +55,8 @@ class WxOaAccountController(private val accountService: AccountService)
 
         //是否已经存在账户，存在直接返回authToken；不存在则创建账户，或返回NewUser，前端跳转到用户协议或注册页面
         val wxOaAccount = wxOaAccountService.findWxOaAccount(guest.unionId, guest.openId,guest.appId)
+
+        val loginType = if(scanQrcodeId != null) LoginParamBean.WECHAT_SCANQRCODE else LoginParamBean.WECHAT
 
         val box: DataBox<WxOaAccountAuthBean> = if(wxOaAccount == null){// no wxoa account, create it
             val doc = WxOaAccount(ObjectId(), guest.appId,guest.openId, guest.unionId)

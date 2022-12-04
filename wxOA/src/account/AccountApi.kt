@@ -34,11 +34,11 @@ internal fun Routing.oaUserApi() {
 
     route("/api/wx/oa/account"){
         post("/register"){
-            val loginType = call.request.queryParameters["loginType"]?: LoginParamBean.WECHAT
+            //val loginType = call.request.queryParameters["loginType"]?: LoginParamBean.WECHAT
             val scanQrcodeId = call.request.queryParameters["scanQrcodeId"]
             val rcm = call.request.queryParameters["rcm"] //推荐人 系统用户id
             val registerType = 2// 1: 明确要求新用户需注册为系统用户； 2 自动注册为系统用户； 其它值：无需注册系统用户（无系统账号）
-            call.respondBox(controller.login(call.receive<WxOaGuest>(), loginType,
+            call.respondBox(controller.login(call.receive<WxOaGuest>(),
                 scanQrcodeId, registerType, rcm,
                 call.request.origin.remoteHost, call.request.userAgent()))
         }
@@ -47,11 +47,11 @@ internal fun Routing.oaUserApi() {
 //        }
 
         post("/login"){
-            val loginType = call.request.queryParameters["loginType"]?: LoginParamBean.WECHAT
+           // val loginType = call.request.queryParameters["loginType"]?: LoginParamBean.WECHAT
             val scanQrcodeId = call.request.queryParameters["scanQrcodeId"]
             val rcm = call.request.queryParameters["rcm"] //推荐人
             val registerType = call.request.queryParameters["registerType"]?.toInt()
-            call.respondBox(controller.login(call.receive<WxOaGuest>(),loginType,
+            call.respondBox(controller.login(call.receive<WxOaGuest>(),
                 scanQrcodeId, registerType, rcm,
                 call.request.origin.remoteHost, call.request.userAgent()))
         }
