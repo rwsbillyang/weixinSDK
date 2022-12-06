@@ -28,9 +28,7 @@ import com.github.rwsbillyang.wxSDK.msg.MsgType
 import com.github.rwsbillyang.wxSDK.officialAccount.MenuApi
 import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
 import io.ktor.client.call.*
-import io.ktor.client.statement.*
 import io.ktor.server.application.*
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import org.bson.types.ObjectId
 import org.koin.core.component.KoinComponent
@@ -261,11 +259,11 @@ class PrefController(application: Application) : LifeCycle(application), KoinCom
                 }
                 log.info("menus: ${ApiJson.clientApiJson.encodeToString(menus)}")
                 val res = MenuApi(appId).create(menus)
-                return if (res.isOK()) DataBox.ok(null) else DataBox.ko("${res.errCode}: ${res.errMsg}")
+                return if (res.isOK()) DataBox.ok("create menu successfully") else DataBox.ko("${res.errCode}: ${res.errMsg}")
             }
             "del" -> {
                 val res = MenuApi(appId).delete()
-                return if (res.isOK()) DataBox.ok(null) else DataBox.ko("${res.errCode}: ${res.errMsg}")
+                return if (res.isOK()) DataBox.ok("del menu successfully") else DataBox.ko("${res.errCode}: ${res.errMsg}")
             }
             "get" -> {
                 val res = MenuApi(appId).detail()
