@@ -54,7 +54,7 @@ class ApplicationTest2 {
             testableModule()
         }
 
-        val response = client.get("/")
+        val response = client.get("/ok")
         assertEquals(HttpStatusCode.OK, response.status)
     }
 

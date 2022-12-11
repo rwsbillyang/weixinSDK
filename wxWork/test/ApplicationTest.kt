@@ -17,7 +17,7 @@ class ApplicationTest {
             testableModule(true)
         }
 
-        val response = client.get("/")
+        val response = client.get("/ok")
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals("OK from wxSDK", response.bodyAsText())
     }

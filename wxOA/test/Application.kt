@@ -89,7 +89,7 @@ fun Application.testableModule() {
     }
 
     routing {
-        get("/") {
+        get("/ok") {
             call.respondText("OK from wxSDK", contentType = ContentType.Text.Plain)
         }
     }
