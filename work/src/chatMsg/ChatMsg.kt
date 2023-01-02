@@ -365,15 +365,15 @@ class LocationMsg(override val base: ChatMsgCommonInfo, val location: LocationCo
 @Serializable
 @SerialName(MsgType.EMOTION)
 class EmotionContent(
-        val type: Int,
-        val width: Int,
-        val height: Int,
+        val type: Int? =null,
+        val width: Int? =null,
+        val height: Int? =null,
         @SerialName("sdkfileid")
         val sdkFileId: String,
         @SerialName("md5sum")
         val md5: String,
         @SerialName("imagesize")
-        val size: Int
+        val size: Int? =null
 ) : BaseChatMsgContent()
 
 @Serializable

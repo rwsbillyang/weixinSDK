@@ -32,7 +32,6 @@ import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
  * */
 class AccountControllerWebAdmin(private val cache: ICache, private val accountService: AccountService): AccountControllerBase(accountService) {
 
-    private val emailSender = EmailSender("qh_noreply@mail.github.rwsbillyang.com")
 
     /**
      * 支持账号密码登录、手机号+验证码登录、微信openId和unionId登录
@@ -132,7 +131,9 @@ class AccountControllerWebAdmin(private val cache: ICache, private val accountSe
    //发送邮件
     private fun sendCodeByEmail(name: String, email: String, code: String): Boolean {
         val pair = subjectAndBody(name, code)
-        return emailSender.sendEmail(
+       val emailSender = EmailSender("qh_noreply@mail.github.rwsbillyang.com")
+
+       return emailSender.sendEmail(
             pair.first, pair.second,
             email, emailSender.smtpHost != null
         )
@@ -164,6 +165,8 @@ class AccountControllerWebAdmin(private val cache: ICache, private val accountSe
             val pwd = Account.encryptPwd(rawCode, salt)
 
             val pair = subjectAndBody(u.name ?: "", rawCode, true)
+
+            val emailSender = EmailSender("qh_noreply@mail.github.rwsbillyang.com")
             val ret = emailSender.sendEmail(pair.first, pair.second, email, emailSender.smtpHost != null)
             return if (ret) {
                 val result = accountService.updatePwdAndSalt(u, pwd, salt)

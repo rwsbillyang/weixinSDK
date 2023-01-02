@@ -18,12 +18,11 @@
 
 package com.github.rwsbillyang.wxWork.contacts
 
-import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
+
 import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.wxSDK.work.ContactsApi
 import com.github.rwsbillyang.wxSDK.work.ExternalContactsApi
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -38,22 +37,17 @@ class ContactHelper: KoinComponent {
 
 
     fun getExternalListByPage(param: ExternalListParams): List<ContactBean>{
-        val pagination = if(param.umi == null)
-            UmiPagination(ContactsNumLimit)
-        else{
-            param.pagination.apply{pageSize = ContactsNumLimit}
-        }
-        return service.findExternalListByPage(param.toFilter(), pagination, param.lastId).map{
+
+        return service.findExternalListByPage(param).map{
             if(param.userId != null){
                 val contactId = param.contactId?.toObjectId()?:service.findContact(param.userId!!, it.corpId)?._id
                 it.toBean(param.userId,
                     0,
-                    param.channelId?.let{ service.findRelationChanges(param.corpId, param.userId!!, contactId, it) }
+                    param.channelId?.let{ service.findRelationChanges(param.userId!!, contactId, it) }
                 )
             }else{
                 it.toBean(param.userId, 0, null)
             }
-
         }
     }
 

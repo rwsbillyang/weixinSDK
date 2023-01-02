@@ -18,7 +18,7 @@
 
 package com.github.rwsbillyang.wxWork.contacts
 
-import com.github.rwsbillyang.ktorKit.apiBox.Sort
+
 import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.db.MongoDataSource
@@ -69,6 +69,7 @@ class ContactService(cache: ICache) : MongoGenericService(cache) {
         runBlocking { contactCol.findOne( Contact::userId eq userId, Contact::corpId eq corpId) }
     }
     fun findContactByOpenId(openId: String, corpId: String) = runBlocking { contactCol.findOne( Contact::openId eq openId, Contact::corpId eq corpId) }
+    fun findContactByUserId(userId: String, corpId: String) = runBlocking { contactCol.findOne( Contact::userId eq userId, Contact::corpId eq corpId) }
     fun findContact(_id: String) = runBlocking { contactCol.findOneById(_id.toObjectId()) }
     fun findContact(_id: ObjectId) = runBlocking { contactCol.findOneById(_id) }
     fun upsertContact(doc: Contact) = runBlocking {
@@ -165,19 +166,7 @@ class ContactService(cache: ICache) : MongoGenericService(cache) {
     fun findExternalListAll(filter: Bson) = runBlocking {
         externalContactCol.find(filter).toList()
     }
-    fun findExternalListByPage(filter: Bson, pagination: UmiPagination, lastId: String?) = runBlocking {
-        val sort = pagination.sortJson.bson
-
-        if(lastId == null)
-            externalContactCol.find(filter).skip((pagination.current - 1) * pagination.pageSize).limit(pagination.pageSize).sort(sort).toList()
-        else{
-            val lastId_ = lastId.toObjectId()
-            val f = if(pagination.sort == Sort.ASC) ExternalContact::_id gt lastId_
-            else ExternalContact::_id lt lastId_
-            externalContactCol.find(and(filter,f)).limit(pagination.pageSize).sort(sort).toList()
-        }
-    }
-
+    fun findExternalListByPage(param: ExternalListParams) = findPage(externalContactCol, param)
     fun addRelationChange(createTime: Long?, corpId: String, userId: String, contactId: ObjectId?, externalId: String, type:Int,  state: String?) = runBlocking{
         val time = DatetimeUtil.format(System.currentTimeMillis() )
 
@@ -194,11 +183,11 @@ class ContactService(cache: ICache) : MongoGenericService(cache) {
             ), upsert() )
     }
 
-    fun findRelationChanges(corpId: String, userId: String, contactId: ObjectId?, externalId: String) = runBlocking{
+    fun findRelationChanges(userId: String, contactId: ObjectId?, externalId: String) = runBlocking{
         if(contactId == null)
-            relateChangeCol.find(RelationChange::userId eq userId, RelationChange::externalUserId eq externalId, RelationChange::corpId eq corpId).toList()
+            relateChangeCol.find(RelationChange::userId eq userId, RelationChange::externalUserId eq externalId).toList()
         else
-            relateChangeCol.find(RelationChange::contactId eq contactId, RelationChange::externalUserId eq externalId, RelationChange::corpId eq corpId).toList()
+            relateChangeCol.find(RelationChange::contactId eq contactId, RelationChange::externalUserId eq externalId).toList()
     }
 
 

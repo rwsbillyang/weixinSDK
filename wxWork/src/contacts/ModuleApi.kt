@@ -20,7 +20,6 @@ package com.github.rwsbillyang.wxWork.contacts
 
 import com.github.rwsbillyang.ktorKit.server.*
 import com.github.rwsbillyang.wxWork.agentId
-import com.github.rwsbillyang.wxWork.userId
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -78,8 +77,8 @@ fun Routing.contactApi() {
             get("/external/detail/{id}"){
                 call.respondBox(controller.getExternalDetail(call.parameters["id"]))
             }
-            get("/external/relationChanges/{externalId}"){
-                call.respondBox(controller.getRelationChanges(call.parameters["externalId"], call.userId, call.appId))
+            get("/external/relationChanges/{externalId}/{userId}"){
+                call.respondBox(controller.getRelationChanges(call.parameters["externalId"],call.parameters["userId"]))
             }
             // 同步当前登录用户的所有外部联系人列表
             get("/syncExternalContact/{refreshType}"){
@@ -89,7 +88,7 @@ fun Routing.contactApi() {
             }
 
             get<ExternalListParams>{
-                call.respondBox(controller.getExternalListByPage(it, call.uId, call.appId))
+                call.respondBox(controller.getExternalListByPage(it))
             }
 
             get("/syncDepartment"){

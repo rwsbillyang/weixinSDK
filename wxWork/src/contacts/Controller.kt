@@ -29,12 +29,6 @@ import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 
 
-/**
- * TODO: 临时放置于此，用于控制所使用的客服数量
- * */
-var ContactsNumLimit = 200
-
-
 class ContactController: KoinComponent {
     private val log = LoggerFactory.getLogger("ContactController")
 
@@ -49,12 +43,6 @@ class ContactController: KoinComponent {
      * 默认排序，最终显示顺序由前端排序
      * */
     fun getSupportChatArchiveContactList(param: ContactListParams): DataBox<List<ContactBean>>{
-        val pagination = if(param.umi == null)
-            UmiPagination(ContactsNumLimit)
-        else{
-            param.pagination.apply{pageSize = ContactsNumLimit}
-        }
-
         if(param.archive == 1){//要获取支持会话存档的成员列表
             val list = service.findContactArchiveList(param.toExtraFilter())
             val list2 = if(param.children > 0){ //获取子列表，也就是其客户列表
@@ -63,14 +51,15 @@ class ContactController: KoinComponent {
                     val customers = it.ids?.mapNotNull {
                         service.findExternalContact(it, param.corpId)?.toBean(contactExtra.userId,
                             0  /*chatMsgController.countChatMsg(param.corpId, contactId, it)*/,
-                            service.findRelationChanges(contactExtra.corpId, contactExtra.userId, contactExtra._id, it)
+                            service.findRelationChanges(contactExtra.userId, contactExtra._id, it)
                         )
                     }
                     service.findContact(contactExtra._id)?.toBean(customers)
                 }
             }else{
-                list.mapNotNull {
-                    service.findContact(it._id)?.toBean(null)
+                list.map {
+                    val c = service.findContact(it._id)?: service.findContactByUserId(it.userId, it.corpId)
+                    c?.toBean(null)?:it.toBean()
                 }
             }
             return DataBox.ok(list2)
@@ -84,7 +73,7 @@ class ContactController: KoinComponent {
                         service.findExternalContact(it1, param.corpId)?.toBean(
                             contact.userId,
                             0  /*chatMsgController.countChatMsg(param.corpId, contactId, it)*/,
-                            contact.userId?.let { service.findRelationChanges(contact.corpId, it,contact._id, it1) })
+                            contact.userId?.let { service.findRelationChanges(it,contact._id, it1) })
                     }
                     it.toBean(customers)
                 }
@@ -162,7 +151,7 @@ class ContactController: KoinComponent {
      * @param userId 某个用户的渠道
      * @param corpId 用户所在企业
      * */
-    fun getExternalListByPage(params: ExternalListParams, userId: String?, corpId: String?)
+    fun getExternalListByPage(params: ExternalListParams)
     : DataBox<List<ContactBean>> = DataBox.ok(helper.getExternalListByPage(params))
 
     /**
@@ -180,19 +169,19 @@ class ContactController: KoinComponent {
             service.findExternalContact(it, extra.corpId)?.toBean(
                 extra.userId,
                 0 /*chatMsgController.countChatMsg(corpId, id, it)*/,
-                service.findRelationChanges(extra.corpId, extra.userId, extra._id, it)
+                service.findRelationChanges(extra.userId, extra._id, it)
             )
         }
         return DataBox.ok(customers)
     }
 
-    fun getRelationChanges(externalId: String?,userId: String?, corpId: String?): DataBox<List<RelationChange>> {
-        if( externalId.isNullOrBlank() || userId.isNullOrBlank() || corpId.isNullOrBlank()) {
-            log.warn("getRelationChanges: invalid parameter: corpId or externalId or userId is null")
-            return DataBox.ko("invalid parameter: corpId or externalId or userId is null")
+    fun getRelationChanges(externalId: String?, userId: String?): DataBox<List<RelationChange>> {
+        if( externalId.isNullOrBlank() || userId.isNullOrBlank()){
+            log.warn("getRelationChanges: invalid parameter: externalId/userId is null")
+            return DataBox.ko("invalid parameter: externalId/userId is null")
         }
 
-        return DataBox.ok(service.findRelationChanges(corpId, userId, null, externalId))
+        return DataBox.ok(service.findRelationChanges(userId, null, externalId))
     }
 
     //主动获取部门列表

@@ -12,6 +12,10 @@ import com.github.rwsbillyang.wxWork.account.WxWorkAccountService
 import com.github.rwsbillyang.wxWork.account.workAccountApi
 import com.github.rwsbillyang.wxWork.agent.agentApi
 import com.github.rwsbillyang.wxWork.agent.agentModule
+import com.github.rwsbillyang.wxWork.channel.ChannelController
+import com.github.rwsbillyang.wxWork.channel.ChannelService
+import com.github.rwsbillyang.wxWork.channel.channelApi
+import com.github.rwsbillyang.wxWork.chatViewer.*
 import com.github.rwsbillyang.wxWork.config.ConfigController
 import com.github.rwsbillyang.wxWork.config.ConfigService
 import com.github.rwsbillyang.wxWork.config.wxWorkConfigApi
@@ -47,10 +51,6 @@ val ApplicationCall.externalUserId
  * 而agent信息不存在时，则会同步agent信息，并同步其可见联系人详情，以及可见联系人的外部联系详情
  *
  * 配置信息可以动态修改更新，但route api不支持动态卸载
- *
- *
- *
- *
  * */
 val wxWorkModule = AppModule(
     listOf(contactModule, agentModule,
@@ -68,6 +68,8 @@ val wxWorkModule = AppModule(
             single { RecommendHelper() }
             single { WxWorkAccountController(get()) }
             single { WxWorkAccountService(get()) }
+            single { ChannelController() }
+            single { ChannelService(get()) }
         }
     ) + if (Work.isIsv) {
         listOf(isvModule, module(createdAtStart = true) {
@@ -90,6 +92,7 @@ val wxWorkModule = AppModule(
     workAccountApi()
     agentApi()
     contactApi()
+    channelApi()
     workJsSdkSignature()
 
     wxWorkOAuthApi {
@@ -118,7 +121,21 @@ val wxWorkModule = AppModule(
 
 
 
-
+//将企业微信会话存档so放置在系统路径：LD_LIBRARY_PATH指定的路径内，或者将so所在的目录加入到LD_LIBRARY_PATH的路径范围内。
+val chatViewerAppModule = AppModule(
+    listOf(
+        module(createdAtStart = true) {
+            single { ChatMsgController() }
+            single { ChatMsgService(get()) }
+            single(createdAtStart = true) { ChatMsgScheduleTask() }
+            single { ChatMsgFetcher() }
+            single { OnShutDown(get()) }
+        }
+    ),
+    "chatViewer"
+) {
+    chatViewerApi()
+}
 
 
 

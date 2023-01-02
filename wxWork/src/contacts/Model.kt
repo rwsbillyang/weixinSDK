@@ -90,7 +90,9 @@ data class ContactExtra(
     val userId: String, //userid
     val archive: Int? = null, //支持会话存档为1，否则为0
     val ids: List<String>? = null //外部联系人external_id列表
-)
+){
+    fun toBean() = ContactBean(_id.to64String(), userId)
+}
 
 /**
  * 与客户端交互的实体，随业务需要扩展
@@ -102,7 +104,7 @@ class ContactBean(
     val name: String? = null,
     val mobile: String? = null,
     val thumb: String? = null,
-    val gender: Int?, //0表示未定义，1表示男性，2表示女性
+    val gender: Int? = null, //0表示未定义，1表示男性，2表示女性
     val childrenSize: Long = 0L, //当查询的是客服列表时，表示客户数量；当查询的是客户列表时表示聊天消息数量
 
     //以下字段为内部联系人专有
@@ -128,7 +130,6 @@ data class ContactListParams(
     val status: Int? = null,//激活状态: 1=已激活，2=已禁用，4=未激活，5=退出企业。
     val gender: String? = null, //0表示未定义，1表示男性，2表示女性
     val children: Int = 0, //是否获取其客户列表,默认不获取
-    val lastId: String? = null
 ) : IUmiPaginationParams {
     override fun toFilter(): Bson {
 
@@ -142,9 +143,9 @@ data class ContactListParams(
     }
 
     fun toExtraFilter(): Bson{
-        val archiveFilter = archive?.let { ContactExtra::archive eq it }
+        //val archiveFilter = archive?.let { ContactExtra::archive eq it }
         val idFilter = id?.let { Contact::_id eq it.toObjectId() }
-        return and(idFilter, ContactExtra::corpId eq corpId, archiveFilter)
+        return and(idFilter, ContactExtra::corpId eq corpId)
     }
 }
 
