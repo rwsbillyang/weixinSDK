@@ -48,7 +48,7 @@ import org.bson.types.ObjectId
  * "systemAccessTokenKeyMap" : { "Contacts" : "secret", "ExternalContact" : "secret", "ChatArchive" : "secrets"}
  * */
 @Serializable
-data class WxWorkConfig(
+data class WxWorkAgentConfig(
     var _id: ObjectId? = null,
     val name: String? = null, //便于记忆标识
     val url: String? = null, //从管理后台直接进入
@@ -61,10 +61,10 @@ data class WxWorkConfig(
     val token: String? = null,
     val aesKey: String? = null,
     val private: String? = null,
-    val systemAccessTokenKeyMap: HashMap<String, String>? = null //key->secret
+    //val systemAccessTokenKeyMap: HashMap<String, String>? = null //key->secret
 )
 @Serializable
-data class WxWorkAgentConfigBean(
+class WxWorkAgentConfigBean(
     val _id: ObjectId? = null,
     val corpId: String, //corpId 不是有corpID作为唯一ID：一个企业可以配置多个agent应用
     val enable: Boolean, //是否激活
@@ -72,6 +72,17 @@ data class WxWorkAgentConfigBean(
     val enableJsSdk: Boolean,
     val enableMsg: Boolean, //是否激活：消息解析、分发、处理
 )
+
+@Serializable
+data class WxWorkSysAgentConfig(
+    var _id: String? = null, //SysAccessTokenKey+corpId
+    val enable: Boolean, //是否激活
+    val key: String,
+    val corpId: String,
+    val secret: String,
+){
+    fun id() = "$corpId-${key}"
+}
 /**
  * 消息通知中的url配置
  * */

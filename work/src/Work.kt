@@ -85,10 +85,8 @@ object Work {
 /**
  * 微信系统基础应用的secret，可使api具备特殊权限，如通讯录，外部联系人，聊天会话存档
  * */
-object SysAccessTokenKey{
-    const val Contact = "Contact"
-    const val ExternalContact = "ExternalContact"
-    const val ChatArchive = "ChatArchive"
+enum class SysAgentKey{
+    Contact, ExternalContact, ChatArchive, WxKeFu
 }
 
 
@@ -96,18 +94,20 @@ object SysAccessTokenKey{
  * 一个进程中就存在一个特定的corp的agent
  * */
 object WorkSingle{
+ //   private lateinit var ctx: CorpApiContext
     private lateinit var _corpId: String
-    private var _agentId by Delegates.notNull<Int>()
-    private lateinit var _agentContext: AgentContext
+    //private var _agentId by Delegates.notNull<Int>()
+   // private lateinit var _agentContext: AgentContext
+   val agentMap: HashMap<Int, AgentContext> = hashMapOf()
 
     val corpId: String
         get() = _corpId
 
-    val agentId: Int
-        get() = _agentId
+//    val agentId: Int
+//        get() = _agentId
 
-    val agentContext: AgentContext
-        get() = _agentContext
+//    val agentContext: AgentContext
+//        get() = _agentContext
 
     //key为SysAccessToken中的KeyXxxx
 
@@ -117,10 +117,10 @@ object WorkSingle{
     /**
      * 配置高权限secret
      *
-     * @param key 高权限accessToken对应的字符串key，可任意指定，同时需要将其赋值给对应的api的sysAccessTokenKey字段
-     * 如通讯录应用 ContactsApi.sysAccessTokenKey = ${key}
+     * @param key 高权限accessToken对应的字符串key，可任意指定，同时需要将其赋值给对应的api的SysAgentKey字段
+     * 如通讯录应用 ContactsApi.SysAgentKey = ${key}
      *
-     * sdk中已内置了几个默认字段：SysAccessTokenKey.Contact, SysAccessTokenKey.ExternalContact, SysAccessTokenKey.ChatArchive
+     * sdk中已内置了几个默认字段：SysAgentKey.Contact, SysAgentKey.ExternalContact, SysAgentKey.ChatArchive
      * 无需再给对应的api赋值
      *
      * @param secret 高权限api的secret
@@ -133,6 +133,9 @@ object WorkSingle{
     fun reset(key: String){
         sysAccessTokenMap.remove(key)
         sysSecretMap.remove(key)
+    }
+    fun reset(agentId: Int){
+        agentMap.remove(agentId)
     }
 
     fun config(corpId: String,
@@ -148,8 +151,8 @@ object WorkSingle{
                customAccessToken: ITimelyRefreshValue? = null
     ) {
         _corpId = corpId
-        _agentId = agentId
-        _agentContext = AgentContext(corpId, agentId, secret, enableMsg,
+
+        agentMap[agentId] = AgentContext(corpId, agentId, secret, enableMsg,
             token, encodingAESKey, privateKeyFilePath, enableJsSdk,
             customMsgHandler,customEventHandler,customAccessToken)
     }
@@ -202,10 +205,10 @@ object WorkMulti{
     /**
      * 配置高权限secret
      *
-     * @param key 高权限accessToken对应的字符串key，可任意指定，同时需要将其赋值给对应的api的sysAccessTokenKey字段
-     * 如通讯录应用 ContactsApi.sysAccessTokenKey = ${key}
+     * @param key 高权限accessToken对应的字符串key，可任意指定，同时需要将其赋值给对应的api的SysAgentKey字段
+     * 如通讯录应用 ContactsApi.SysAgentKey = ${key}
      *
-     * sdk中已内置了几个默认字段：SysAccessTokenKey.Contact, SysAccessTokenKey.ExternalContact, SysAccessTokenKey.ChatArchive
+     * sdk中已内置了几个默认字段：SysAgentKey.Contact, SysAgentKey.ExternalContact, SysAgentKey.ChatArchive
      * 无需再给对应的api赋值
      *
      * @param secret 高权限api的secret

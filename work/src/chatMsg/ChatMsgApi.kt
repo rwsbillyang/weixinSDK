@@ -65,7 +65,7 @@ class ChatMsgApi (corpId: String?, agentId: Int?, suiteId: String?)
                     }
                 }else{
                     //存在的话使用系统级别的secret及accessToken
-                    key?.let { WorkSingle.sysAccessTokenMap[it] }?:WorkSingle.agentContext.accessToken
+                    key?.let { WorkSingle.sysAccessTokenMap[it] }?:WorkSingle.agentMap[agentId]?.accessToken
                 }
             }
         }
@@ -73,7 +73,7 @@ class ChatMsgApi (corpId: String?, agentId: Int?, suiteId: String?)
 
 
     override val group = "msgaudit"
-    override var sysAccessTokenKey: String? = SysAccessTokenKey.ChatArchive
+    override var sysAccessTokenKey: String? = SysAgentKey.ChatArchive.name
 
     /**
      * 获取会话内容存档开启成员列表 企业可通过此接口，获取企业开启会话内容存档的成员列表
@@ -142,7 +142,7 @@ class ChatMsgApi (corpId: String?, agentId: Int?, suiteId: String?)
                 val privateKey = if(Work.isMulti){
                     WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.privateKey
                 }else{
-                    WorkSingle.agentContext.privateKey
+                    WorkSingle.agentMap[agentId]?.privateKey
                 }
 
                 if(privateKey == null){

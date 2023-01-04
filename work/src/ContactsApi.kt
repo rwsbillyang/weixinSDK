@@ -42,7 +42,7 @@ import kotlinx.serialization.json.*
 class ContactsApi(corpId: String?, agentId: Int?, suiteId: String?) : WorkBaseApi(corpId, agentId, suiteId) {
 
     override val group = "user"
-    override var sysAccessTokenKey: String? = SysAccessTokenKey.Contact
+    override var sysAccessTokenKey: String? = SysAgentKey.Contact.name
 
 
     fun create(body: Map<String, Any?>) = doPostRaw("create", body)

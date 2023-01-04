@@ -47,7 +47,7 @@ class ExternalContactsApi(corpId: String?, agentId: Int?, suiteId: String?)
 {
 
     override val group = "externalcontact"
-    override var sysAccessTokenKey: String? = SysAccessTokenKey.ExternalContact
+    override var sysAccessTokenKey: String? = SysAgentKey.ExternalContact.name
 
     /* 企业服务人员（客服），「联系我」 */
 

@@ -21,6 +21,7 @@ package com.github.rwsbillyang.wxWork.config
 
 import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
+import com.github.rwsbillyang.ktorKit.db.MongoCRUDService
 import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.wxWork.wxWorkModule
@@ -30,13 +31,16 @@ import org.koin.core.qualifier.named
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.eq
 
-class ConfigService(cache: ICache) : CacheService(cache) {
-    private val dbSource: MongoDataSource by inject(qualifier = named(wxWorkModule.dbName!!))
+class ConfigService(cache: ICache) : MongoCRUDService(cache,wxWorkModule.dbName!!) {
+    //private val dbSource: MongoDataSource by inject(qualifier = named(wxWorkModule.dbName!!))
 
     private val wxCorpCol: CoroutineCollection<Corp> by lazy {
         dbSource.mongoDb.getCollection()
     }
-    private val wxWorkAgentCfgCol: CoroutineCollection<WxWorkConfig> by lazy {
+    private val wxWorkAgentCfgCol: CoroutineCollection<WxWorkAgentConfig> by lazy {
+        dbSource.mongoDb.getCollection()
+    }
+    val wxWorkSysAgentCfgCol: CoroutineCollection<WxWorkSysAgentConfig> by lazy {
         dbSource.mongoDb.getCollection()
     }
 
@@ -53,17 +57,28 @@ class ConfigService(cache: ICache) : CacheService(cache) {
 
     fun findAgentConfigList(enabled: Boolean? = null) = runBlocking {
         if(enabled == null) wxWorkAgentCfgCol.find().toList()
-        else wxWorkAgentCfgCol.find(WxWorkConfig::enable eq enabled).toList()
+        else wxWorkAgentCfgCol.find(WxWorkAgentConfig::enable eq enabled).toList()
     }
-    fun findWxWorkConfig(id: String): WxWorkConfig? = runBlocking{
+    fun findWxWorkAgentConfig(id: String): WxWorkAgentConfig? = runBlocking{
         wxWorkAgentCfgCol.findOneById(id.toObjectId())
     }
-    fun findWxWorkConfigByCorpId(corpId: String) = runBlocking{
-        wxWorkAgentCfgCol.find(WxWorkConfig::corpId eq corpId).toList()
+    fun findWxWorkAgentConfigByCorpId(corpId: String) = runBlocking{
+        wxWorkAgentCfgCol.find(WxWorkAgentConfig::corpId eq corpId).toList()
     }
 
-    fun saveWxWorkConfig(doc: WxWorkConfig) = runBlocking {
+    fun saveWxWorkAgentConfig(doc: WxWorkAgentConfig) = runBlocking {
         wxWorkAgentCfgCol.save(doc)
+    }
+
+    fun findSysAgentConfigList(enabled: Boolean? = null) = runBlocking {
+        if(enabled == null) wxWorkSysAgentCfgCol.find().toList()
+        else wxWorkSysAgentCfgCol.find(WxWorkSysAgentConfig::enable eq enabled).toList()
+    }
+    fun saveWxWorkSysAgentConfig(doc: WxWorkSysAgentConfig) = runBlocking {
+        wxWorkSysAgentCfgCol.save(doc)
+    }
+    fun findWxWorkSysAgentConfig(id: String): WxWorkSysAgentConfig? = runBlocking{
+        wxWorkSysAgentCfgCol.findOneById(id)
     }
 
     fun delAgentConfig(id: String) = runBlocking{
@@ -80,6 +95,8 @@ class ConfigService(cache: ICache) : CacheService(cache) {
     fun delCorp(corpId: String) = runBlocking {
         wxCorpCol.deleteOneById(corpId)
     }
+
+
 
 
 }

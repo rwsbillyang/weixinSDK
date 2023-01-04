@@ -90,7 +90,7 @@ class OAuthApi (corpId: String?, agentId: Int?, suiteId: String?)
                 agentId2 = agentId
             }else{
                 appId = WorkSingle.corpId
-                agentId2 = WorkSingle.agentId
+                //agentId2 = WorkSingle.agentId
             }
         }
 

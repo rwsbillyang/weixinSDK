@@ -27,7 +27,8 @@ import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler
 import com.github.rwsbillyang.wxWork.agent.AgentController
 import com.github.rwsbillyang.wxWork.config.ConfigService
-import com.github.rwsbillyang.wxWork.config.WxWorkConfig
+import com.github.rwsbillyang.wxWork.config.WxWorkAgentConfig
+
 import io.ktor.server.application.*
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory
  * @param enableReset 当修改配置后保存时，需求reset配置，即去掉map中的apiContext。初始化时不需要reset
  * */
 internal fun configWxWorkMulti(
-    config: WxWorkConfig,
+    config: WxWorkAgentConfig,
     msgHandler: IWorkMsgHandler?,
     eventHandler: IWorkEventHandler?,
     agentController: AgentController,
@@ -59,7 +60,7 @@ internal fun configWxWorkMulti(
         //企业应用的可见用户更新，需在调用Work.config配置完work后进行同步调用
         agentController.syncAgentIfNotExit(config.corpId, config.agentId) //syncContacts改由管理员手工同步
 
-        config.systemAccessTokenKeyMap?.forEach { (k, v) -> WorkMulti.config(config.corpId, k, v) }
+        //config.systemAccessTokenKeyMap?.forEach { (k, v) -> WorkMulti.config(config.corpId, k, v) }
     } else if (enableReset) {
         WorkMulti.reset(config.corpId)
         println("TODO: unload routing for all agents in corpID=$config._id")
@@ -72,7 +73,7 @@ internal fun configWxWorkMulti(
  * 单个应用的单企业配置
  * */
 internal fun configWxWorkSingle(
-    config: WxWorkConfig,
+    config: WxWorkAgentConfig,
     msgHandler: IWorkMsgHandler?,
     eventHandler: IWorkEventHandler?,
     agentController: AgentController
@@ -91,7 +92,7 @@ internal fun configWxWorkSingle(
         //企业应用的可见用户更新，需在调用Work.config配置完work后进行同步调用
         agentController.syncAgent(corpId, agentId)//同步agent，以及agent的可见成员详情，可见成员的外部联系人详情
 
-        systemAccessTokenKeyMap?.forEach { (k, v) -> WorkSingle.config(k, v) }
+       // systemAccessTokenKeyMap?.forEach { (k, v) -> WorkSingle.config(k, v) }
     }
     return count
 }
@@ -123,17 +124,27 @@ class OnStartConfigWxWork(application: Application) : LifeCycle(application) {
     init {
         onStarted {
             val configService: ConfigService by application.inject()
-            val list = configService.findAgentConfigList(true)//只加载enabled的
+            val agentList = configService.findAgentConfigList(true)//只加载enabled的
+            val sysAgentList = configService.findSysAgentConfigList(true)//只加载enabled的
 
             var count = 0
+            var count2 = 0
             //数据库中有配置时的情形
             if (Work.isMulti) {
-                list.forEach {
+                agentList.forEach {
                     count += configWxWorkMulti(it, msgHandler, eventHandler, agentController)
                 }
+                sysAgentList.forEach {
+                    WorkMulti.config(it.corpId, it.key, it.secret)
+                    count2++
+                }
             } else {
-                list.firstOrNull { it.enable }?.let {
+                agentList.firstOrNull { it.enable }?.let {
                     count = configWxWorkSingle(it, msgHandler, eventHandler, agentController)
+                }
+                sysAgentList.forEach {
+                    WorkSingle.config(it.key, it.secret)
+                    count2++
                 }
             }
 
@@ -143,6 +154,11 @@ class OnStartConfigWxWork(application: Application) : LifeCycle(application) {
                 log.warn("no agent context initialized, please check wxWorkConfig in DB")
             } else {
                 log.info("$count agents context initialized from DB")
+            }
+            if (count2 == 0) {
+                log.info("no sys agent context initialized, please check wxWorkConfig in DB")
+            } else {
+                log.info("$count2 sys agents context initialized from DB")
             }
             logConfig()
         }

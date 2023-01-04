@@ -22,6 +22,7 @@ package com.github.rwsbillyang.wxWork.config
 import com.github.rwsbillyang.ktorKit.server.AbstractJwtHelper
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.server.respondBox
+import com.github.rwsbillyang.ktorKit.server.respondBoxOK
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -30,7 +31,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 import org.koin.ktor.ext.inject
-
+import org.litote.kmongo.eq
 
 
 fun Routing.wxWorkConfigApi() {
@@ -70,38 +71,72 @@ fun Routing.wxWorkConfigApi() {
                 }
             }
 
-            route("/agentConfig") {
-                get("/list"){
-                    val corpId = call.request.queryParameters["corpId"]
-                    if(corpId == null){
-                        call.respondBox(DataBox.ko<Int>("invalid parameters: no corpId"))
+            route("/config") {
+                get("/list/{name}"){
+                    val name = call.parameters["name"]
+                    if(name == null) {
+                        call.respondBox(DataBox.ko<Int>("invalid parameters: no name"))
                     }else{
-                        val list = service.findWxWorkConfigByCorpId(corpId)
-                        call.respondBox(DataBox.ok(list))
-                    }
-
-                }
-                post("/save"){
-                    call.respondBox(controller.saveWxWorkConfig(call.receive()))
-                }
-
-                get("/get/{corpId}"){
-                    val corpId = call.parameters["corpId"]
-                    if(corpId == null) call.respondBox(DataBox.ko<Int>("invalid parameter"))
-                    else {
-                        call.respondBox(DataBox.ok(controller.findWxWorkConfig(corpId)))
+                        val corpId = call.request.queryParameters["corpId"]
+                        if(corpId == null){
+                            call.respondBox(DataBox.ko<Int>("invalid parameters: no corpId"))
+                        }else{
+                            if(name == "agent"){
+                                call.respondBoxOK(service.findWxWorkAgentConfigByCorpId(corpId))
+                            }else if(name == "sysagent"){
+                                call.respondBoxOK(service.findAll(service.wxWorkSysAgentCfgCol, WxWorkSysAgentConfig::corpId eq corpId))
+                            }
+                        }
                     }
                 }
-                get("/del/{id}"){
-                    val id = call.parameters["id"]
-                    if(id == null)
-                        call.respondBox(DataBox.ko<Int>("invalid parameter: no id"))
-                    else
-                        call.respondBox(DataBox.ok(service.delAgentConfig(id).deletedCount))
+                post("/save/{name}"){
+                    val name = call.parameters["name"]
+                    if(name == null) {
+                        call.respondBox(DataBox.ko<Int>("invalid parameters: no name"))
+                    }else {
+                        if(name == "agent"){
+                            call.respondBox(controller.saveWxWorkAgentConfig(call.receive()))
+                        }else if(name == "sysagent"){
+                            call.respondBox(controller.saveWxWorkSysAgentConfig(call.receive()))
+                        }else{
+                            call.respondBox(DataBox.ko<Int>("invalid parameter, not support name=$name"))
+                        }
+                    }
+                }
+
+                get("/get/{name}/{id}"){
+                    val name = call.parameters["name"]
+                    if(name == null) {
+                        call.respondBox(DataBox.ko<Int>("invalid parameters: no name"))
+                    }else {
+                        val id = call.parameters["id"]
+                        if (id == null) call.respondBox(DataBox.ko<Int>("invalid parameter, no id"))
+                        else {
+                            if(name == "agent"){
+                                call.respondBox(DataBox.ok(service.findWxWorkAgentConfig(id)))
+                            }else if(name == "sysagent"){
+                                call.respondBox(DataBox.ok(service.findOne(service.wxWorkSysAgentCfgCol, id, false)))
+                            }else{
+                                call.respondBox(DataBox.ko<Int>("invalid parameter, not support name=$name"))
+                            }
+                        }
+                    }
+                }
+                get("/del/{name}/{id}") {
+                    val name = call.parameters["name"]
+                    if (name == null) {
+                        call.respondBox(DataBox.ko<Int>("invalid parameters: no name"))
+                    } else {
+                        val id = call.parameters["id"]
+                        if (id == null)
+                            call.respondBox(DataBox.ko<Int>("invalid parameter: no id"))
+                        else
+                        {
+                            call.respondBox(controller.delOne(id,name))
+                        }
+                    }
                 }
             }
-
-
         }
     }
 }

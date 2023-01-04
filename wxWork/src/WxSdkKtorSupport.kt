@@ -96,7 +96,7 @@ fun Routing.dispatchAgentMsgApi() {
             {
                 WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)
             }else{
-                WorkSingle.agentContext
+                WorkSingle.agentMap[agentId]
             }
 
             val token = ctx?.token
@@ -163,7 +163,7 @@ fun Routing.dispatchAgentMsgApi() {
                 {
                     WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)
                 }else{
-                    WorkSingle.agentContext
+                    WorkSingle.agentMap[agentId]
                 }
 
                 val msgHub = ctx?.msgHub
@@ -399,9 +399,9 @@ fun Routing.workJsSdkSignature() {
                         }
                     } else {
                         jsTicket = if (isAgent)
-                            WorkSingle.agentContext.agentJsTicket?.get()
+                            WorkSingle.agentMap[agentId]?.agentJsTicket?.get()
                         else
-                            WorkSingle.agentContext.corpJsTicket?.get()
+                            WorkSingle.agentMap[agentId]?.corpJsTicket?.get()
 
                         if (jsTicket == null)
                             call.respond(HttpStatusCode.BadRequest, "WorkSingle: jsTicket is null, isAgent=$isAgent")
@@ -410,7 +410,7 @@ fun Routing.workJsSdkSignature() {
                                 DataBox(
                                     "OK",
                                     null,
-                                    JsAPI.getSignature(corpId, jsTicket, url, WorkSingle.agentId)
+                                    JsAPI.getSignature(corpId, jsTicket, url, agentId)
                                 )
                             )
                     }

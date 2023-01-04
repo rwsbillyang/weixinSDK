@@ -29,13 +29,16 @@ import org.slf4j.LoggerFactory
 /**
  * 系统启动时同步agent信息，只支持内建单应用，ISV单应用在授权后会自动同步agent
  * */
-class AgentSyncOnStartNonIsvSingle(application: Application) : LifeCycle(application) {
+class AgentSyncOnStartNonIsvSingleDel(application: Application) : LifeCycle(application) {
     private val log = LoggerFactory.getLogger("AgentSyncOnStartNonIsvSingle")
     private val agentController: AgentController by application.inject()
     init {
         onStarted {
             if(!Work.isIsv && !Work.isMulti){ //build构建过程中，未曾config，不需要同步
-                agentController.syncAgentIfNotExit(WorkSingle.corpId, WorkSingle.agentId)
+                WorkSingle.agentMap.forEach { t, u ->
+                    agentController.syncAgentIfNotExit(WorkSingle.corpId, t)
+                }
+
             }else{
                 log.warn("only support non-Isv single")
             }

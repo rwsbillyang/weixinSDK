@@ -137,7 +137,7 @@ abstract class WorkBaseApi(val corpId: String?, val agentId: Int?, val suiteId: 
             }
         }else{
             //存在的话使用系统级别的secret及accessToken
-            sysAccessTokenKey?.let { WorkSingle.sysAccessTokenMap[it] }?:WorkSingle.agentContext.accessToken
+            sysAccessTokenKey?.let { WorkSingle.sysAccessTokenMap[it] }?:WorkSingle.agentMap[agentId]?.accessToken
         }
     })?.get()
 
