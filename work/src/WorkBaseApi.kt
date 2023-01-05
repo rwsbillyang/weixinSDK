@@ -48,14 +48,16 @@ import org.slf4j.LoggerFactory
  *
  * */
 abstract class WorkBaseApi(val corpId: String?, val agentId: Int?, val suiteId: String?): WxApi() {
+    companion object{
+        val log = LoggerFactory.getLogger("WorkBaseApi")
+    }
+
     init {
         val errMsg = checkValid(corpId, agentId, suiteId)
         if(errMsg != null){
             throw IllegalArgumentException(errMsg)
         }
     }
-
-    val log = LoggerFactory.getLogger("WorkBaseApi")
 
     override val base = "https://qyapi.weixin.qq.com/cgi-bin"
 
@@ -103,7 +105,7 @@ abstract class WorkBaseApi(val corpId: String?, val agentId: Int?, val suiteId: 
             }
         }else{
             if(Work.isMulti){
-                if(corpId == null || agentId == null){
+                if(corpId == null){
                     errMsg = "no agentId or corpId=$corpId, agentId=$agentId in multi mode"
                     log.warn(errMsg)
                     return errMsg

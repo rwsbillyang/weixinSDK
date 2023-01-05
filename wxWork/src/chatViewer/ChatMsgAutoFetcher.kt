@@ -24,7 +24,7 @@ import com.github.rwsbillyang.wxSDK.accessToken.ITimelyRefreshValue
 
 
 import com.github.rwsbillyang.wxSDK.msg.MsgType
-import com.github.rwsbillyang.wxSDK.work.SysAccessTokenKey
+import com.github.rwsbillyang.wxSDK.work.SysAgentKey
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.chatMsg.*
 import com.github.rwsbillyang.wxWork.config.ConfigService
@@ -111,7 +111,7 @@ class ChatMsgFetcher : KoinComponent {
     fun startFetch(corpId: String, agentId: Int?, suiteId: String?): Long {
         log.info("startFetch...corpId=$corpId")
 
-        val lock: ITimelyRefreshValue ? = ChatMsgApi.timelyRefreshAccessToken(SysAccessTokenKey.ChatArchive, corpId, agentId, suiteId)
+        val lock: ITimelyRefreshValue ? = ChatMsgApi.timelyRefreshAccessToken(SysAgentKey.ChatArchive.name, corpId, agentId, suiteId)
         if(lock == null){
             log.warn("no ITimelyRefreshValue accessToken, return -1")
             return -1L

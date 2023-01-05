@@ -103,12 +103,6 @@ object WorkSingle{
     val corpId: String
         get() = _corpId
 
-//    val agentId: Int
-//        get() = _agentId
-
-//    val agentContext: AgentContext
-//        get() = _agentContext
-
     //key为SysAccessToken中的KeyXxxx
 
     internal val sysAccessTokenMap = hashMapOf<String, TimelyRefreshAccessToken>()
@@ -222,8 +216,8 @@ object WorkMulti{
 
         corpApiCtx.sysSecretMap[key] = secret
         corpApiCtx.sysAccessTokenMap[key] = TimelyRefreshAccessToken(
-            WorkSingle.corpId,
-            AccessTokenRefresher(accessTokenUrl(WorkSingle.corpId, secret)), extra = key)
+            corpId,
+            AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = key)
     }
 
     fun resetAccessToken(corpId: String, key: String){
