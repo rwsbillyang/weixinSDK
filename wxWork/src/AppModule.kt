@@ -26,6 +26,9 @@ import com.github.rwsbillyang.wxWork.isv.OnStartConfigWxWork3rd
 import com.github.rwsbillyang.wxWork.isv.UserDetail3rd
 import com.github.rwsbillyang.wxWork.isv.isvModule
 import com.github.rwsbillyang.wxWork.msg.PayMsgNotifier
+import com.github.rwsbillyang.wxWork.wxkf.WxkfController
+import com.github.rwsbillyang.wxWork.wxkf.WxkfService
+import com.github.rwsbillyang.wxWork.wxkf.wxkfApi
 import io.ktor.server.application.*
 import org.koin.dsl.module
 import org.koin.ktor.ext.inject
@@ -70,6 +73,8 @@ val wxWorkModule = AppModule(
             single { WxWorkAccountService(get()) }
             single { ChannelController() }
             single { ChannelService(get()) }
+            single { WxkfController() }
+            single { WxkfService(get()) }
         }
     ) + if (Work.isIsv) {
         listOf(isvModule, module(createdAtStart = true) {
@@ -93,6 +98,7 @@ val wxWorkModule = AppModule(
     agentApi()
     contactApi()
     channelApi()
+    wxkfApi()
     workJsSdkSignature()
 
     wxWorkOAuthApi {
