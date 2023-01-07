@@ -36,7 +36,7 @@ open class MsgNotifierBase : KoinComponent {
 
 
     // 点击后跳转的链接。最长2048字节，请确保包含了协议头(http/https)
-    fun url(account: WxWorkAccount, corpId: String, agentId: Int?, type: String): String{
+    fun url(account: WxWorkAccount, corpId: String, agentId: String?, type: String): String{
         // val url = urlConfigMap?.get(type)?:defaultUrl
         val url = configService.findMsgNotifyConfig(corpId, agentId)?.pathMap?.get(type)?:defaultUrl
         return "$url?corpId=${account.corpId}&agentId=$agentId"
@@ -62,19 +62,15 @@ open class MsgNotifierBase : KoinComponent {
     }
 
 
-    fun msgApi(account: WxWorkAccount, appId: String?, agentId: Int?): MsgApi?{
+    fun msgApi(account: WxWorkAccount, appId: String?, agentId: String?): MsgApi?{
         if(appId == null || agentId == null || account.userId == null)
         {
             log.warn("appId, agentId or userId is null in account, do nothing")
             return null
         }
         return if(Work.isIsv){
-            if(Work.isMulti){
-                log.warn("Not support isv multi, do nothing")
-                null
-            }else{
-                MsgApi(appId, agentId, IsvWorkSingle.suiteId)
-            }
+            log.warn("Not support isv multi, do nothing")
+            null
         }else
             MsgApi(appId, agentId, null)
     }

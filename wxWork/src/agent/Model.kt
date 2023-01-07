@@ -42,7 +42,7 @@ import org.bson.types.ObjectId
 @Serializable
 data class Agent(
     val corpId: String,
-    val id: Int, //agentid
+    val id: String, //agentid
     val name: String?,
     val logo: String?,
     val description: String?,

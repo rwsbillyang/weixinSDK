@@ -47,7 +47,7 @@ class AgentController : KoinComponent {
      * @return 返回可见范围的用户数量
      * TODO: 支持isv multi多应用
      * */
-    fun syncAgent(corpId: String, agentId: Int): Int {
+    fun syncAgent(corpId: String, agentId: String): Int {
         try {
             val agentApi = AgentApi(corpId, agentId, null)
 
@@ -81,7 +81,7 @@ class AgentController : KoinComponent {
     }
 
     //系统启动时调用，若无agent则初始化
-    fun syncAgentIfNotExit(corpId: String, agentId: Int){
+    fun syncAgentIfNotExit(corpId: String, agentId: String){
         val agent = service.findAgent(agentId, corpId)
         if(agent == null)
             syncAgent(corpId, agentId)

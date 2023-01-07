@@ -50,11 +50,7 @@ fun Routing.isvDispatchMsgApi(){
             val nonce = call.request.queryParameters["nonce"]
             val echostr = call.request.queryParameters["echostr"]
 
-            val ctx = if(Work.isMulti){
-                IsvWorkMulti.ApiContextMap[suiteId]
-            }else{
-                IsvWorkSingle.ctx
-            }
+            val ctx = IsvWorkMulti.ApiContextMap[suiteId]
 
             val token = ctx?.token
 
@@ -77,11 +73,7 @@ fun Routing.isvDispatchMsgApi(){
 
     post{
         val suiteId = call.parameters["suiteId"]?:"NoSuiteId"
-        val ctx = if(Work.isMulti){
-            IsvWorkMulti.ApiContextMap[suiteId]
-        }else{
-            IsvWorkSingle.ctx
-        }
+        val ctx = IsvWorkMulti.ApiContextMap[suiteId]
 
         val body: String = call.receiveText()
 

@@ -44,7 +44,7 @@ data class WxWorkAccount(
 
     val corpId: String? = null,
     val suiteId: String? = null, //ISV模式，否则空
-    val agentId: Int? = null, //首次绑定账号时使用的agentId
+    val agentId: String? = null, //首次绑定账号时使用的agentId
 
     val openId: String? = null, // 企业微信的openId
     val userId: String? = null, //企业成员userId
@@ -84,7 +84,7 @@ data class WxAccountListParams(
 class WxWorkGuest(
     val corpId: String? = null,
     val suiteId: String? = null, //ISV模式，否则空
-    val agentId: Int? = null,
+    val agentId: String? = null,
 
     val openId: String? = null, // 企业微信的openId
     val userId: String? = null, //企业成员userId

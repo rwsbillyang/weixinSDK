@@ -24,7 +24,6 @@ import com.github.rwsbillyang.wxSDK.accessToken.ITimelyRefreshValue
 import com.github.rwsbillyang.wxSDK.security.RsaCryptoUtil
 import com.github.rwsbillyang.wxSDK.work.*
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
-import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
 import com.tencent.wework.Finance
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -33,39 +32,30 @@ import java.io.File
 import java.io.FileOutputStream
 
 
-class ChatMsgApi (corpId: String?, agentId: Int?, suiteId: String?)
-    : WorkBaseApi(corpId, agentId, suiteId)
+class ChatMsgApi (corpId: String?, agentIdOrKey: String?, suiteId: String?)
+    : WorkBaseApi(corpId, agentIdOrKey, suiteId)
 {
     companion object{
         const val CHAT_MSG_MAX_LIMIT = 1000
 
-        fun timelyRefreshAccessToken(key: String?, corpId: String?, agentId: Int?, suiteId: String?): ITimelyRefreshValue?
+        fun timelyRefreshAccessToken(key: String?, corpId: String?, agentId: String?, suiteId: String?): ITimelyRefreshValue?
         {
             return if(Work.isIsv){
-                if(Work.isMulti){
-                    IsvWorkMulti.ApiContextMap[suiteId]?.accessTokenMap?.get(corpId)
-                }else{
-                    IsvWorkSingle.ctx.accessTokenMap[corpId]
-                }
+                IsvWorkMulti.ApiContextMap[suiteId]?.accessTokenMap?.get(corpId)
             }else{
-                if(Work.isMulti){
-                    val corpCtx = WorkMulti.ApiContextMap[corpId]
-                    if(corpCtx == null){
-                        println("no corpCtx in multi mode?: corpId=$corpId")
-                        null
-                    }else{
-                        //存在的话使用系统级别的secret及accessToken
-                        key?.let { corpCtx.sysAccessTokenMap[it] }?:
-                        if(agentId != null) {
-                            WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.accessToken
-                        }else {
-                            println("no agentId in multi mode? corpId=$corpId")
-                            null
-                        }
-                    }
+                val corpCtx = WorkMulti.ApiContextMap[corpId]
+                if(corpCtx == null){
+                    println("no corpCtx in multi mode?: corpId=$corpId")
+                    null
                 }else{
                     //存在的话使用系统级别的secret及accessToken
-                    key?.let { WorkSingle.sysAccessTokenMap[it] }?:WorkSingle.agentMap[agentId]?.accessToken
+                    key?.let { corpCtx.agentMap[it] }?.accessToken?:
+                    if(agentId != null) {
+                        corpCtx.agentMap[agentId]?.accessToken
+                    }else {
+                        println("no agentId in multi mode? corpId=$corpId")
+                        null
+                    }
                 }
             }
         }
@@ -139,11 +129,7 @@ class ChatMsgApi (corpId: String?, agentId: Int?, suiteId: String?)
                 //    a) 需首先对每条消息的encrypt_random_key内容进行base64 decode,得到字符串str1.
                 //    b) 使用publickey_ver指定版本的私钥，使用RSA PKCS1算法对str1进行解密，得到解密内容str2.
                 //    c) 得到str2与对应消息的encrypt_chat_msg，调用下方描述的DecryptData接口，即可获得消息明文。
-                val privateKey = if(Work.isMulti){
-                    WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.privateKey
-                }else{
-                    WorkSingle.agentMap[agentId]?.privateKey
-                }
+                val privateKey = WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentIdOrKey)?.privateKey
 
                 if(privateKey == null){
                     log.warn("Finance.GetChatData privateKey is null, please config it first")

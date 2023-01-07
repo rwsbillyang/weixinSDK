@@ -47,13 +47,13 @@ import org.slf4j.LoggerFactory
  * 所有接口在通信时都需要携带此信息用于验证接口的访问权限
  *
  * */
-abstract class WorkBaseApi(val corpId: String?, val agentId: Int?, val suiteId: String?): WxApi() {
+abstract class WorkBaseApi(val corpId: String?, val agentIdOrKey: String?, val suiteId: String?): WxApi() {
     companion object{
         val log = LoggerFactory.getLogger("WorkBaseApi")
     }
 
     init {
-        val errMsg = checkValid(corpId, agentId, suiteId)
+        val errMsg = checkValid(corpId, agentIdOrKey, suiteId)
         if(errMsg != null){
             throw IllegalArgumentException(errMsg)
         }
@@ -68,19 +68,11 @@ abstract class WorkBaseApi(val corpId: String?, val agentId: Int?, val suiteId: 
      * ChatMsg中可能需要, 优先获取高权限key
      * */
     val secret: String?
-    get() = if(Work.isIsv){
-        if(Work.isMulti){
+        get() = if(Work.isIsv){
             IsvWorkMulti.ApiContextMap[suiteId]?.secret
         }else{
-            IsvWorkSingle.ctx.secret
+            WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentIdOrKey)?.secret
         }
-    }else{
-        if(Work.isMulti){
-            WorkMulti.ApiContextMap[corpId]?.sysSecretMap?.get(sysAccessTokenKey)
-        }else{
-            WorkSingle.sysSecretMap[sysAccessTokenKey]
-        }
-    }
 
 
 
@@ -88,7 +80,7 @@ abstract class WorkBaseApi(val corpId: String?, val agentId: Int?, val suiteId: 
      * 检查构造api的参数是否正常
      * @return 返回错误信息，没错误返回null
      * */
-    fun checkValid(corpId: String?, agentId: Int?, suiteId: String?): String?{
+    fun checkValid(corpId: String?, agentIdOrKey: String?, suiteId: String?): String?{
         var errMsg: String? = null
         if(Work.isIsv){
             if(corpId == null){
@@ -96,50 +88,37 @@ abstract class WorkBaseApi(val corpId: String?, val agentId: Int?, val suiteId: 
                 log.warn(errMsg)
                 return errMsg
             }
-            if(Work.isMulti){
-                if(suiteId == null){
-                    errMsg = "no suiteId or corpId, suiteId=$suiteId, corpId=$corpId"
-                    log.warn(errMsg)
-                    return errMsg
-                }
+            if(suiteId == null){
+                errMsg = "no suiteId or corpId, suiteId=$suiteId, corpId=$corpId"
+                log.warn(errMsg)
+                return errMsg
             }
         }else{
-            if(Work.isMulti){
-                if(corpId == null){
-                    errMsg = "no agentId or corpId=$corpId, agentId=$agentId in multi mode"
-                    log.warn(errMsg)
-                    return errMsg
-                }
+            if(corpId == null){
+                errMsg = "no agentId or corpId=$corpId, agentId=$agentIdOrKey in multi mode"
+                log.warn(errMsg)
+                return errMsg
             }
         }
         return errMsg
     }
 
     override fun accessToken() = (if(Work.isIsv){
-        if(Work.isMulti){
-            IsvWorkMulti.ApiContextMap[suiteId]?.accessTokenMap?.get(corpId)
-        }else{
-            IsvWorkSingle.ctx.accessTokenMap[corpId]
-        }
+        IsvWorkMulti.ApiContextMap[suiteId]?.accessTokenMap?.get(corpId)
     }else{
-        if(Work.isMulti){
-            val corpCtx = WorkMulti.ApiContextMap[corpId]
-            if(corpCtx == null){
-                println("no corpCtx in multi mode?: corpId=$corpId")
-                null
-            }else{
-                //存在的话使用系统级别的secret及accessToken
-                sysAccessTokenKey?.let { corpCtx.sysAccessTokenMap[it] }?:
-                if(agentId != null) {
-                    WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.accessToken
-                }else {
-                    println("no agentId in multi mode? corpId=$corpId")
-                    null
-                }
-            }
+        val corpCtx = WorkMulti.ApiContextMap[corpId]
+        if(corpCtx == null){
+            println("no corpCtx in multi mode?: corpId=$corpId")
+            null
         }else{
             //存在的话使用系统级别的secret及accessToken
-            sysAccessTokenKey?.let { WorkSingle.sysAccessTokenMap[it] }?:WorkSingle.agentMap[agentId]?.accessToken
+            sysAccessTokenKey?.let { corpCtx.agentMap[it] }?.accessToken?:
+            if(agentIdOrKey != null) {
+                corpCtx.agentMap.get(agentIdOrKey)?.accessToken
+            }else {
+                println("no agentId in multi mode? corpId=$corpId")
+                null
+            }
         }
     })?.get()
 

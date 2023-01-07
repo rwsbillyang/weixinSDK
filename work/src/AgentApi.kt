@@ -28,7 +28,7 @@ import kotlinx.serialization.Serializable
  * https://work.weixin.qq.com/api/doc/90000/90135/90226
  *
  * */
-class AgentApi (corpId: String?, agentId: Int?, suiteId: String?)
+class AgentApi (corpId: String?, agentId: String?, suiteId: String?)
     : WorkBaseApi(corpId, agentId,suiteId)
 {
     override val group = "agent"
@@ -43,7 +43,7 @@ class AgentApi (corpId: String?, agentId: Int?, suiteId: String?)
     /**
      * 获取指定的应用详情
      * */
-    fun detail(id: Int):ResponseAgentDetail = doGet("get", mapOf("agentid" to id.toString()))
+    fun detail(id: String):ResponseAgentDetail = doGet("get", mapOf("agentid" to id))
 
     /**
      * 设置应用

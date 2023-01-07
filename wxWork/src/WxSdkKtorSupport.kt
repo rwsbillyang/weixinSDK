@@ -91,14 +91,8 @@ fun Routing.dispatchAgentMsgApi() {
             val echostr = call.request.queryParameters["echostr"]
 
             val corpId = call.parameters["corpId"]?:"NoCorpId"
-            val agentId = call.parameters["agentId"]?.toInt()?:0
-            val ctx = if(Work.isMulti)
-            {
-                WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)
-            }else{
-                WorkSingle.agentMap[agentId]
-            }
-
+            val agentIdOrSysAgentKey = call.parameters["agentId"]
+            val ctx = WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentIdOrSysAgentKey)
             val token = ctx?.token
 
             //if (StringUtils.isAnyBlank(token, signature, timestamp, nonce,echostr)) {
@@ -152,29 +146,26 @@ fun Routing.dispatchAgentMsgApi() {
             val encryptType = call.request.queryParameters["encrypt_type"] ?: "aes"
 
             val corpId = call.parameters["corpId"]
-            val agentId = call.parameters["agentId"]?.toInt()
+            val agentIdOrSysAgentKey = call.parameters["agentId"]
 
-            if(msgSignature == null || timestamp == null || nonce == null || corpId == null || agentId == null)
+            if(msgSignature == null || timestamp == null || nonce == null || corpId == null)
             {
-                log.warn("Should not null: msgSignature=$msgSignature, timestamp=$timestamp, nonce=$nonce,corpId=$corpId, agentId=$agentId")
+                log.warn("Should not null: msgSignature=$msgSignature, timestamp=$timestamp, nonce=$nonce,corpId=$corpId, agentId=$agentIdOrSysAgentKey")
                 call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
             }else{
-                val ctx = if(Work.isMulti)
-                {
-                    WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)
-                }else{
-                    WorkSingle.agentMap[agentId]
-                }
+                val ctx = WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentIdOrSysAgentKey)
 
                 val msgHub = ctx?.msgHub
                 if(msgHub == null)
                 {
-                    log.error("no agentContext or msgHub, corpId=$corpId, agentId=$agentId, msgHub=$msgHub, config it?")
+                    log.error("no agentContext or msgHub, corpId=$corpId, agentId=$agentIdOrSysAgentKey, msgHub=$msgHub, config it?")
                 }
 
                 log.info("handle post: uri=${call.request.uri}, body=$body")
-                val reXml = msgHub?.handleXmlMsg(corpId, agentId, body, msgSignature, timestamp, nonce, encryptType)
-
+                val reXml = if(agentIdOrSysAgentKey != null && Regex("""\d+""").matches(agentIdOrSysAgentKey))
+                    msgHub?.handleXmlMsg(corpId, agentIdOrSysAgentKey, body, msgSignature, timestamp, nonce, encryptType)
+                else
+                    msgHub?.handleXmlMsg(corpId, null, body, msgSignature, timestamp, nonce, encryptType)
                 if (reXml.isNullOrBlank())
                     call.respondText("success", ContentType.Text.Plain, HttpStatusCode.OK)
                 else
@@ -256,7 +247,7 @@ fun Routing.wxWorkOAuthApi(
             val agentId = call.parameters["agentId"]
 
             try {
-                val api = OAuthApi(corpId, agentId?.toInt(), suiteId)
+                val api = OAuthApi(corpId, agentId, suiteId)
                 val res = if(Work.isIsv){
                     api.getUserInfo3rd(code)
                 }else{
@@ -341,7 +332,7 @@ fun Routing.workJsSdkSignature() {
     get(Work.jsSdkSignaturePath) { //默认路径： /api/wx/work/jssdk/signature?corpId=XXX&type=agent_config
         val suiteId = call.request.queryParameters["suiteId"]//IsvWorkMulti时需非空
         val corpId = call.request.queryParameters["corpId"] //均不能空
-        val agentId = call.request.queryParameters["agentId"]?.trim()?.toInt()//内部多应用时提供
+        val agentIdOrSysAgentKey = call.request.queryParameters["agentId"]//内部多应用时提供
         val isAgent = call.request.queryParameters["type"] == "agent_config" //agent_config
         val url = (call.request.queryParameters["url"]?: call.request.headers["Referer"])?.split('#')?.firstOrNull()
 
@@ -353,66 +344,34 @@ fun Routing.workJsSdkSignature() {
                 call.respond(HttpStatusCode.BadRequest, "invalid parameters: corpId is null")
             } else {
                 if (Work.isIsv) {
-                    if (Work.isMulti) {
-                        if (suiteId == null) {
-                            call.respond(HttpStatusCode.BadRequest, "IsvWorkMulti invalid parameters: suiteId is null")
-                        } else {
-                            jsTicket = if (isAgent)
-                                IsvWorkMulti.ApiContextMap[suiteId]?.agentJsTicket?.get()
-                            else
-                                IsvWorkMulti.ApiContextMap[suiteId]?.corpJsTicket?.get()
-
-                            if (jsTicket == null) {
-                                call.respond(HttpStatusCode.BadRequest, "IsvWorkMulti: jsTicket is null")
-                            } else {
-                                //agentId在登录时得到
-                                call.respond(DataBox("OK", null, JsAPI.getSignature(corpId, jsTicket, url)))
-                            }
-                        }
+                    if (suiteId == null) {
+                        call.respond(HttpStatusCode.BadRequest, "IsvWorkMulti invalid parameters: suiteId is null")
                     } else {
                         jsTicket = if (isAgent)
-                            IsvWorkSingle.ctx.agentJsTicket?.get()
+                            IsvWorkMulti.ApiContextMap[suiteId]?.agentJsTicket?.get()
                         else
-                            IsvWorkSingle.ctx.corpJsTicket?.get()
+                            IsvWorkMulti.ApiContextMap[suiteId]?.corpJsTicket?.get()
 
-                        if (jsTicket == null)
-                            call.respond(HttpStatusCode.BadRequest, "IsvWorkSingle: jsTicket is null")
-                        else {
+                        if (jsTicket == null) {
+                            call.respond(HttpStatusCode.BadRequest, "IsvWorkMulti: jsTicket is null")
+                        } else {
                             //agentId在登录时得到
                             call.respond(DataBox("OK", null, JsAPI.getSignature(corpId, jsTicket, url)))
                         }
                     }
                 } else {
-                    if (Work.isMulti) {
-                        if (agentId == null) {
-                            call.respond(HttpStatusCode.BadRequest, "invalid parameters: corpId and agentId could not be null")
-                        } else {
-                            jsTicket = if (isAgent)
-                                WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.agentJsTicket?.get()
-                            else
-                                WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.corpJsTicket?.get()
-
-                            if (jsTicket == null)
-                                call.respond(HttpStatusCode.BadRequest, "WorkMulti: jsTicket is null, isAgent=$isAgent")
-                            else
-                                call.respond(DataBox.ok(JsAPI.getSignature(corpId, jsTicket, url, agentId)))
-                        }
+                    if (agentIdOrSysAgentKey == null) {
+                        call.respond(HttpStatusCode.BadRequest, "invalid parameters: corpId and agentId could not be null")
                     } else {
                         jsTicket = if (isAgent)
-                            WorkSingle.agentMap[agentId]?.agentJsTicket?.get()
+                            WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentIdOrSysAgentKey)?.agentJsTicket?.get()
                         else
-                            WorkSingle.agentMap[agentId]?.corpJsTicket?.get()
+                            WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentIdOrSysAgentKey)?.corpJsTicket?.get()
 
                         if (jsTicket == null)
-                            call.respond(HttpStatusCode.BadRequest, "WorkSingle: jsTicket is null, isAgent=$isAgent")
+                            call.respond(HttpStatusCode.BadRequest, "WorkMulti: jsTicket is null, isAgent=$isAgent")
                         else
-                            call.respond(
-                                DataBox(
-                                    "OK",
-                                    null,
-                                    JsAPI.getSignature(corpId, jsTicket, url, agentId)
-                                )
-                            )
+                            call.respond(DataBox.ok(JsAPI.getSignature(corpId, jsTicket, url, agentIdOrSysAgentKey)))
                     }
                 }
             }

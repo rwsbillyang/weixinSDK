@@ -108,7 +108,7 @@ class ChatMsgFetcher : KoinComponent {
     val sdk: Long = Finance.NewSdk()
 
 
-    fun startFetch(corpId: String, agentId: Int?, suiteId: String?): Long {
+    fun startFetch(corpId: String, agentId: String?, suiteId: String?): Long {
         log.info("startFetch...corpId=$corpId")
 
         val lock: ITimelyRefreshValue ? = ChatMsgApi.timelyRefreshAccessToken(SysAgentKey.ChatArchive.name, corpId, agentId, suiteId)

@@ -50,7 +50,7 @@ class ChatMsgController : KoinComponent {
      * 0为增量刷新：获取允许会话的客服userid列表以及他们的客户的userid列表，若本地无用户详情信息则获取其详情,否则不获取
      * 1为全量刷新：获取获取允许会话的客服userid列表以及他们的客户的userid列表，并且全部刷新他们的详情信息，花费时间更长
      * */
-    fun syncPermitChatArchiveContacts(suiteId: String?, corpId: String?, agentId:Int?, refreshType: Int?): DataBox<Int> {
+    fun syncPermitChatArchiveContacts(suiteId: String?, corpId: String?, agentId:String?, refreshType: Int?): DataBox<Int> {
         if(corpId == null)
             return DataBox.ko("invalid parameter, no corpId") //TODO: not support isv multi
 
@@ -91,7 +91,7 @@ class ChatMsgController : KoinComponent {
     /**
      * 同步数据，从腾讯服务器获取聊天记录
      * */
-    fun syncChatMsg(corpId: String?, agentId: Int?, suiteId: String?): DataBox<Long> {
+    fun syncChatMsg(corpId: String?, agentId: String?, suiteId: String?): DataBox<Long> {
         if(corpId == null)
         {
             log.warn("invalid headers: no corpId")

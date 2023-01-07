@@ -19,13 +19,12 @@
 package com.github.rwsbillyang.wxWork.isv
 
 import com.github.rwsbillyang.ktorKit.server.LifeCycle
-import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler
 import com.github.rwsbillyang.wxSDK.work.isv.ISuiteInfoHandler
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWork
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
-import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
+
 import io.ktor.server.application.*
 
 import org.koin.ktor.ext.inject
@@ -63,17 +62,8 @@ class OnStartConfigWxWork3rd(application: Application): LifeCycle(application)  
             val configService: IsvCorpService by application.inject()
             val list = configService.findSuiteConfigList(SuiteConfig.STATUS_ENABLED)
             var count = 0
-            if(Work.isMulti){
-                //数据库中有配置时的情形
-                list.forEach {
-                    count = configWxWork3rdMulti(it, msgHandler,eventHandler, suiteHandler)
-                }
-            }else{
-                list.firstOrNull()?.let {
-                    IsvWorkSingle.config(it._id, it.secret, it.token, it.encodingAESKey, it.enableJsSdk, it.privateKeyFilePath,
-                        suiteHandler,msgHandler, eventHandler)
-                    count++
-                }
+            list.forEach {
+                count = configWxWork3rdMulti(it, msgHandler,eventHandler, suiteHandler)
             }
             if(count == 0){
                 log.warn("no agent context initialized, please check wxWorkConfig in DB")

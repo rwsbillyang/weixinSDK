@@ -21,7 +21,7 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
      * */
     fun handleXmlMsg(
         appId: String, //公众号通过路径传入appId，企业微信为corpId or suiteId
-        agentId: Int?, //企业微信内建应用
+        agentId: String?, //企业微信内建应用
         body: String,
         msgSignature: String,
         timestamp: String,
@@ -33,7 +33,7 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
         try {
             var map: Map<String, String?> = mapOf()
 
-            var agentIdInXml: Int? = null
+            var agentIdInXml: String? = null
             val decryptedXmlText = if(wxBizMsgCrypt == null) {
                 log.info("wxBizMsgCrypt is null, appId=$appId, agentId=$agentId")
                 body
@@ -43,7 +43,7 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
                 map = XmlUtil.extract(body)//body转换成的map数据结构
                 // 提取密文
                 val encryptText = map["Encrypt"]?:""//提取body中的Encrypt字段
-                agentIdInXml = map["AgentID"]?.toInt() //企业自建应用非空，第三方应用和公众号为空
+                agentIdInXml = map["AgentID"] //企业自建应用非空，第三方应用和公众号为空
                // corpId = appId?:map["ToUserName"]
                 wxBizMsgCrypt.decryptWxMsg(appId, msgSignature, timestamp, nonce, encryptText, encryptType)
             }
@@ -69,7 +69,7 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
      * @param decryptedXmlText 由外层xml中的Encrypt字段解析出来的新xml字段
      * @param outerMap 外层xml得到的map数据,即body直接转换成的map数据
      * */
-    protected open fun parseXmlThenDispatch(appId: String, agentId: Int?, decryptedXmlText: String, outerMap: Map<String, String?>): ReBaseMSg?{
+    protected open fun parseXmlThenDispatch(appId: String, agentId: String?, decryptedXmlText: String, outerMap: Map<String, String?>): ReBaseMSg?{
         val reader: XMLEventReader = XMLInputFactory.newInstance().createXMLEventReader(decryptedXmlText.byteInputStream())
 
         val base = BaseInfo.fromXml(decryptedXmlText, reader)
@@ -84,7 +84,7 @@ abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
 
 
 
-    abstract fun dispatchMsg(appId: String, agentId: Int?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?
+    abstract fun dispatchMsg(appId: String, agentId: String?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?
 
-    abstract fun dispatchEvent(appId: String, agentId: Int?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?
+    abstract fun dispatchEvent(appId: String, agentId: String?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?
 }

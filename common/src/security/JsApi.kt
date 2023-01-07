@@ -31,7 +31,7 @@ class JsApiSignature(
     val nonceStr: String,
     val timestamp: Long,
     val signature: String,
-    val agentId: Int?
+    val agentId: String?
 )
 
 object JsAPI {
@@ -48,7 +48,7 @@ object JsAPI {
      *
      * @return 签名以及相关参数
      */
-    fun getSignature(appId: String, jsApiTicket: String, url: String, agentId: Int? = null,  nonceStr: String? = null, timestamp: Long? = null): JsApiSignature {
+    fun getSignature(appId: String, jsApiTicket: String, url: String, agentId: String? = null,  nonceStr: String? = null, timestamp: Long? = null): JsApiSignature {
         require(!url.contains("#")){"url cannot contains #"}
 
         val nonce = nonceStr?:UUID.randomUUID().toString().replace("-".toRegex(), "")

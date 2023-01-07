@@ -39,7 +39,7 @@ import kotlinx.serialization.json.*
  * 获取通讯录管理secret的方法如下：
 1、进入企业微信管理后台，在“管理工具” — “通讯录同步助手”开启“API接口同步”
  * */
-class ContactsApi(corpId: String?, agentId: Int?, suiteId: String?) : WorkBaseApi(corpId, agentId, suiteId) {
+class ContactsApi(corpId: String?, agentId: String?, suiteId: String?) : WorkBaseApi(corpId, agentId, suiteId) {
 
     override val group = "user"
     override var sysAccessTokenKey: String? = SysAgentKey.Contact.name
@@ -194,7 +194,7 @@ class ResponseSelectedTicket(
 ) : IBase
 
 
-class DepartmentApi(corpId: String?, agentId: Int?, suiteId: String?) : WorkBaseApi(corpId, agentId, suiteId) {
+class DepartmentApi(corpId: String?, agentId: String?, suiteId: String?) : WorkBaseApi(corpId, agentId, suiteId) {
 
     override val group = "department"
 
@@ -232,7 +232,7 @@ class DepartmentApi(corpId: String?, agentId: Int?, suiteId: String?) : WorkBase
 
 }
 
-class TagApi(corpId: String?, agentId: Int?, suiteId: String?) : WorkBaseApi(corpId, agentId, suiteId) {
+class TagApi(corpId: String?, agentId: String?, suiteId: String?) : WorkBaseApi(corpId, agentId, suiteId) {
     override val group = "tag"
 
     /**
@@ -306,7 +306,7 @@ class BatchUserCallback(
 
 class BatchUserBody(val mediaId: String, toInvite: Boolean?, callback: BatchUserCallback?)
 
-class UserBatchApi(corpId: String?, agentId: Int?, suiteId: String?) : WorkBaseApi(corpId, agentId, suiteId) {
+class UserBatchApi(corpId: String?, agentId: String?, suiteId: String?) : WorkBaseApi(corpId, agentId, suiteId) {
 
     override val group = "batch"
 

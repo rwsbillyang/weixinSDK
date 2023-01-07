@@ -13,7 +13,7 @@ import javax.xml.stream.XMLEventReader
  * */
 open class WorkBaseMsg(val base: BaseInfo) {
     var msgId: Long? = null
-    var agentId: Int? = null
+    var agentId: String? = null
     open fun read(reader: XMLEventReader)
     {
         var count = 0
@@ -26,7 +26,7 @@ open class WorkBaseMsg(val base: BaseInfo) {
                         count++
                     }
                     "AgentID" -> {
-                        agentId = reader.elementText?.toInt()
+                        agentId = reader.elementText
                         count++
                     }
                 }

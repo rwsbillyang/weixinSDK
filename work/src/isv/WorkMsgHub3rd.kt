@@ -35,7 +35,7 @@ class WorkMsgHub3rd(
     eventHandler: IWorkEventHandler?,
     wxBizMsgCrypt: WXBizMsgCrypt,
     private val suiteInfoHandler: ISuiteInfoHandler?
-): WorkMsgHub(msgHandler,eventHandler, wxBizMsgCrypt) {
+): WorkMsgHub(wxBizMsgCrypt,msgHandler,eventHandler) {
 
     /**
      * @param decryptedXmlText 由外层xml中的Encrypt字段解析出来的新xml字段
@@ -51,7 +51,7 @@ class WorkMsgHub3rd(
      * AgentID：接收的应用id，可在应用的设置页面获取。对于应用授权部分，此字段为空
      * 参见：https://work.weixin.qq.com/api/doc/90000/90135/90238#%E4%BD%BF%E7%94%A8%E6%8E%A5%E6%94%B6%E6%B6%88%E6%81%AF
      * */
-    override fun parseXmlThenDispatch(appId: String, agentId:Int?, decryptedXmlText: String, outerMap: Map<String, String?>): ReBaseMSg?{
+    override fun parseXmlThenDispatch(appId: String, agentId:String?, decryptedXmlText: String, outerMap: Map<String, String?>): ReBaseMSg?{
         //val suiteId = outerMap["ToUserName"] //收到的数据包中ToUserName为产生事件的SuiteId，以ww或wx开头应用id， corpId也会以ww开头
         val agentId_ = outerMap["AgentID"] //AgentID为空
 

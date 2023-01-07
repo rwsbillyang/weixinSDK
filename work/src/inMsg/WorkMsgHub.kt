@@ -2,6 +2,7 @@ package com.github.rwsbillyang.wxSDK.work.inMsg
 
 import com.github.rwsbillyang.wxSDK.msg.*
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
+import com.github.rwsbillyang.wxSDK.work.WorkMulti
 import javax.xml.stream.XMLEventReader
 
 
@@ -9,12 +10,13 @@ import javax.xml.stream.XMLEventReader
  * xml消息事件通知的解包、解析、分发处理
  * */
 open class WorkMsgHub(
-    private val msgHandler: IWorkMsgHandler?,
-    private val eventHandler: IWorkEventHandler?,
-    wxBizMsgCrypt: WXBizMsgCrypt
+    wxBizMsgCrypt: WXBizMsgCrypt,
+    val workMsgHandler: IWorkMsgHandler? = null,
+    val workEventHandler: IWorkEventHandler? = null
 ): WxMsgHub(wxBizMsgCrypt) {
 
-    override fun dispatchMsg(appId: String, agentId: Int?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?{
+    override fun dispatchMsg(appId: String, agentId: String?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?{
+        val msgHandler = workMsgHandler?: WorkMulti.defaultWorkMsgHandler
         if(msgHandler == null) return null
         return when(baseInfo.msgType){
             MsgType.TEXT -> msgHandler.onTextMsg(appId, agentId,
@@ -43,7 +45,8 @@ open class WorkMsgHub(
     /**
      * TODO: 某些event里面的数据与文档中不一致，导致值为空，需根据实际情况来读取
      * */
-    override fun dispatchEvent(appId: String, agentId: Int?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?{
+    override fun dispatchEvent(appId: String, agentId: String?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?{
+        val eventHandler = workEventHandler?: WorkMulti.defaultWorkEventHandler
         if(eventHandler == null) return null
         //若使用WxBaseEvent可能event字段在后面，而agentID在前面，即使再去读，也读取不到了。
         //这里使用AgentEvent，比WxBaseEvent多读取一个agentId字段，即使没有此字段，便让其为空罢了

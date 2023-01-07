@@ -29,11 +29,7 @@ class ThirdPartyApi(private val suiteId: String) : WxApi("suite_access_token") {
     override val base = "https://qyapi.weixin.qq.com/cgi-bin"
     override val group = "service"
 
-    override fun accessToken() = if(Work.isMulti){
-        IsvWorkMulti.ApiContextMap[suiteId]?.suiteAccessToken?.get()
-    }else{
-        IsvWorkSingle.ctx.suiteAccessToken?.get()
-    }
+    override fun accessToken() = IsvWorkMulti.ApiContextMap[suiteId]?.suiteAccessToken?.get()
 
     /**
      * 获取预授权码 预授权码用于企业授权时的第三方服务商安全验证。
@@ -152,7 +148,7 @@ class ShareFrom(val corpid: String) //共享了应用的互联企业信息，仅
  * */
 @Serializable
 class AgentInfo(
-    val agentid: Int,
+    val agentid: String,
     val name: String,
     val round_logo_url:  String? = null,
     val square_logo_url:  String? = null,

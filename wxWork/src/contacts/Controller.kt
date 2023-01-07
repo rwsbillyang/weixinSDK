@@ -19,7 +19,6 @@
 package com.github.rwsbillyang.wxWork.contacts
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
-import com.github.rwsbillyang.ktorKit.apiBox.UmiPagination
 import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.wxSDK.work.DepartmentApi
 import org.koin.core.component.KoinComponent
@@ -122,7 +121,7 @@ class ContactController: KoinComponent {
      *
      * @param refreshType 0 不刷新客户信息，即已存在不刷新；1 刷新客户信息
      * */
-    fun syncExternalsOfUser(corpId: String?, agentId: Int?, suiteId: String?, userId: String?, refreshType: Int?): DataBox<String>{
+    fun syncExternalsOfUser(corpId: String?, agentId: String?, suiteId: String?, userId: String?, refreshType: Int?): DataBox<String>{
         if(corpId == null || userId == null){
             log.warn("no corpId or userId, corpId=$corpId, userId=$userId")
             return DataBox.ko("invalid parameter, corpId or userId")
@@ -185,7 +184,7 @@ class ContactController: KoinComponent {
     }
 
     //主动获取部门列表
-    fun syncDepartment(corpId: String?, agentId: Int?): DataBox<Int> {
+    fun syncDepartment(corpId: String?, agentId: String?): DataBox<Int> {
         if(corpId == null ) return DataBox.ko("invalid parameter: corpId is null")
 
         val res = DepartmentApi(corpId, agentId, null).list()

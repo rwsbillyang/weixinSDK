@@ -35,7 +35,7 @@ import org.koin.ktor.ext.inject
 
 
 val ApplicationCall.agentId
-    get() = this.request.headers["X-Auth-AgentId"]?.toInt()
+    get() = this.request.headers["X-Auth-AgentId"]
 
 val ApplicationCall.userId
     get() = this.request.headers["X-Auth-UserId"]

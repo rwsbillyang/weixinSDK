@@ -206,7 +206,7 @@ class WxWorkAccountController(private val accountService: AccountService): Accou
 
     //用于每次访问时检查token有效性，不管是ISV还是内建应用全部基于agent信息表
     //更简单的办法是检查userId是否为空，非空就有可见性，空则不可见。因oauth认证时，只要不可见，就不返回userId
-    private fun isVisible(userId: String, corpId: String, agentId: Int): Boolean{
+    private fun isVisible(userId: String, corpId: String, agentId: String): Boolean{
 
         val agent = agentService.findAgent(agentId, corpId)
         if(agent == null){

@@ -25,7 +25,7 @@ import com.github.rwsbillyang.wxSDK.bean.Menus
 
 
 
-class MenuApi (corpId: String?, agentId: Int?, suiteId: String?)
+class MenuApi (corpId: String?, agentId: String?, suiteId: String?)
     : WorkBaseApi(corpId, agentId,suiteId)
 {
 

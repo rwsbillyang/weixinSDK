@@ -52,7 +52,7 @@ class ContactHelper: KoinComponent {
     }
 
 
-    fun syncContactDetail(userId: String, corpId: String, agentId: Int?, suiteId: String?): String?{
+    fun syncContactDetail(userId: String, corpId: String, agentId: String?, suiteId: String?): String?{
         return try {
             val api = ContactsApi(corpId, agentId, suiteId)
             val res = api.detail(userId)
@@ -106,7 +106,7 @@ class ContactHelper: KoinComponent {
      *
      * @param refreshType 0 不刷新客户信息，即已存在不刷新；1 刷新客户信息
      * */
-    fun syncExternalsOfUser(corpId: String, agentId: Int?, suiteId: String?, userId: String, refreshType: Int): String?{
+    fun syncExternalsOfUser(corpId: String, agentId: String?, suiteId: String?, userId: String, refreshType: Int): String?{
        try {
            val api = ExternalContactsApi(corpId, agentId, suiteId)
            val res = api.list(userId)
@@ -155,7 +155,7 @@ class ContactHelper: KoinComponent {
     /**
      * 获取外部联系人详细信息
      * */
-    fun syncExternalDetail(corpId: String, agentId: Int?, suiteId: String?, externalUserId: String){
+    fun syncExternalDetail(corpId: String, agentId: String?, suiteId: String?, externalUserId: String){
         try {
             val api = ExternalContactsApi(corpId, agentId, suiteId)
             val res = api.detail(externalUserId)

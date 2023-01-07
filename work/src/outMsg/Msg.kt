@@ -56,14 +56,14 @@ class WxWorkTextCardMsg(
     val toparty: String? = null, //指定接收消息的部门，部门ID列表，多个接收者用‘|’分隔，最多支持100个。 当touser为”@all”时忽略本参数
     val totag: String? = null, //指定接收消息的标签，标签ID列表，多个接收者用‘|’分隔，最多支持100个。 当touser为”@all”时忽略本参数
     val msgtype: String,
-    val agentid: Int, //企业应用的id，整型。企业内部开发，可在应用的设置页面查看；第三方服务商，可通过接口 获取企业授权信息 获取该参数值
+    val agentid: String, //企业应用的id，整型。企业内部开发，可在应用的设置页面查看；第三方服务商，可通过接口 获取企业授权信息 获取该参数值
     val textcard: TextCard,
     val safe: Int = 0, //表示是否是保密消息，0表示可对外分享，1表示不能分享且内容显示水印，默认为0
     val enable_id_trans: Int = 0, //是否开启id转译，0表示否，1表示是，默认0。仅第三方应用需要用到，企业自建应用可以忽略。
     val enable_duplicate_check: Int = 0,//是否开启重复消息检查，0表示否，1表示是，默认0
     val duplicate_check_interval: Int = 1800, //是否重复消息检查的时间间隔，默认1800s，最大不超过4小时
 ):IOutWxWorkMsg  {
-    constructor(title: String, description: String, url: String, agentId: Int, touser: String?) :
+    constructor(title: String, description: String, url: String, agentId: String, touser: String?) :
             this(touser, null, null, "textcard", agentId, TextCard(title, description, url))
 }
 

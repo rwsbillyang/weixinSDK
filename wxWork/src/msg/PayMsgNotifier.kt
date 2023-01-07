@@ -34,7 +34,7 @@ class PayMsgNotifier: MsgNotifierBase() {
     fun onBonusSuccess(
         account: WxWorkAccount,
         appId: String?,
-        agentId: Int?,
+        agentId: String?,
         productName: String,
         newExpire: Long,
         title: String?
@@ -61,7 +61,7 @@ class PayMsgNotifier: MsgNotifierBase() {
     fun onExpire(
         account: WxWorkAccount,
         appId: String?,
-        agentId: Int?,
+        agentId: String?,
         expire: ExpireInfo?,
         title: String?
     ) {
@@ -84,7 +84,7 @@ class PayMsgNotifier: MsgNotifierBase() {
     fun onPaySuccess(
         account: WxWorkAccount,
         appId: String?,
-        agentId: Int?,
+        agentId: String?,
         productName: String,
         totalMoney: String,
         newExpire: Long,

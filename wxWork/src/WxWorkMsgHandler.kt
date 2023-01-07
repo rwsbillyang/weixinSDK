@@ -26,7 +26,7 @@ import org.koin.core.component.KoinComponent
 import org.slf4j.LoggerFactory
 import javax.xml.stream.XMLEventReader
 
-class WxWorkMsgHandler: IWorkMsgHandler, KoinComponent {
+class WxWorkMsgHandler: DefaultWorkMsgHandler(), KoinComponent {
     companion object{
         /**
          * 为简单，默认回复消息作为静态变量，各业务app可指定自己的默认回复消息
@@ -35,44 +35,15 @@ class WxWorkMsgHandler: IWorkMsgHandler, KoinComponent {
     }
 
     private val log = LoggerFactory.getLogger("MyMsgHandler")
-    override fun onDefault(appId: String, agentId: Int?, msg: WorkBaseMsg): ReBaseMSg? {
+    override fun onDefault(appId: String, agentId: String?, msg: WorkBaseMsg): ReBaseMSg? {
         log.info("onDefault:appId=$appId, agentId=$agentId Not yet implemented")
         if(defaultReTMsgText == null) return null
         return ReTextMsg(defaultReTMsgText!!, msg.base.fromUserName, msg.base.toUserName, System.currentTimeMillis())
     }
 
-    override fun onDispatch(appId: String, agentId: Int?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg? {
+    override fun onDispatch(appId: String, agentId: String?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg? {
         log.info("onDispatch:appId=$appId, agentId=$agentId Not yet implemented")
         return onDefault(appId, agentId, WorkBaseMsg(base))
     }
 
-    override fun onImgMsg(appId: String, agentId: Int?, msg: WorkImgMSg): ReBaseMSg? {
-        log.info("onImgMsg:appId=$appId, agentId=$agentId Not yet implemented")
-        return onDefault(appId, agentId, msg)
-    }
-
-    override fun onLinkMsg(appId: String, agentId: Int?, msg: WorkLinkMsg): ReBaseMSg? {
-        log.info("onLinkMsg:appId=$appId, agentId=$agentId Not yet implemented")
-        return onDefault(appId, agentId, msg)
-    }
-
-    override fun onLocationMsg(appId: String, agentId: Int?, msg: WorkLocationMsg): ReBaseMSg? {
-        log.info("onLocationMsg:appId=$appId, agentId=$agentId Not yet implemented")
-        return onDefault(appId, agentId, msg)
-    }
-
-    override fun onTextMsg(appId: String, agentId: Int?, msg: WorkTextMsg): ReBaseMSg? {
-        log.info("onTextMsg:appId=$appId, agentId=$agentId Not yet implemented")
-        return onDefault(appId, agentId, msg)
-    }
-
-    override fun onVideoMsg(appId: String, agentId: Int?, msg: WorkVideoMsg): ReBaseMSg? {
-        log.info("onVideoMsg:appId=$appId, agentId=$agentId Not yet implemented")
-        return onDefault(appId, agentId, msg)
-    }
-
-    override fun onVoiceMsg(appId: String, agentId: Int?, msg: WorkVoiceMsg): ReBaseMSg? {
-        log.info("onVoiceMsg:appId=$appId, agentId=$agentId Not yet implemented")
-        return onDefault(appId, agentId, msg)
-    }
 }

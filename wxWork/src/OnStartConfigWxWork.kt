@@ -20,14 +20,15 @@ package com.github.rwsbillyang.wxWork
 
 
 import com.github.rwsbillyang.ktorKit.server.LifeCycle
+import com.github.rwsbillyang.wxSDK.work.SysAgentKey
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.WorkMulti
-import com.github.rwsbillyang.wxSDK.work.WorkSingle
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler
 import com.github.rwsbillyang.wxWork.agent.AgentController
 import com.github.rwsbillyang.wxWork.config.ConfigService
 import com.github.rwsbillyang.wxWork.config.WxWorkAgentConfig
+import com.github.rwsbillyang.wxWork.contacts.ContactHandlerConfig
 
 import io.ktor.server.application.*
 import org.koin.ktor.ext.inject
@@ -40,75 +41,42 @@ import org.slf4j.LoggerFactory
  * @param agentController 调用者注入后传递过来，用于同步agent信息
  * @param enableReset 当修改配置后保存时，需求reset配置，即去掉map中的apiContext。初始化时不需要reset
  * */
-internal fun configWxWorkMulti(
+internal fun configWxWork(
     config: WxWorkAgentConfig,
-    msgHandler: IWorkMsgHandler?,
-    eventHandler: IWorkEventHandler?,
-    agentController: AgentController,
-    enableReset: Boolean = false
-): Int {
-    var count = 0
-    if (config.enable) {
-        WorkMulti.config(
-            config.corpId, config.agentId, config.secret, config.token, config.aesKey,
-            config.private, config.enableJsSdk, config.enableMsg,
-            customMsgHandler = msgHandler,
-            customEventHandler = eventHandler
-        )
-        count++
+    isSysAgent: Boolean = false,
+    agentController: AgentController? = null
+) {
+    if(isSysAgent){
+        when(config.agentId){
+            SysAgentKey.Contact.name ->  ContactHandlerConfig.config(config)
+            else -> {}
+        }
+    }else{
+        if(config.enable){
+            if(WorkMulti.msgHandlerCount.addAndGet(1) == 1)
+                WorkMulti.defaultWorkMsgHandler = WxWorkMsgHandler()
+            if(WorkMulti.eventHandlerCount.addAndGet(1) == 1)
+                WorkMulti.defaultWorkEventHandler = WxWorkEventHandler()
 
-        //企业应用的可见用户更新，需在调用Work.config配置完work后进行同步调用
-        agentController.syncAgentIfNotExit(config.corpId, config.agentId) //syncContacts改由管理员手工同步
+            WorkMulti.config(
+                config.corpId, config.agentId, config.secret, config.token, config.aesKey,
+                config.private, config.enableJsSdk, config.enableMsg
+            )
 
-        //config.systemAccessTokenKeyMap?.forEach { (k, v) -> WorkMulti.config(config.corpId, k, v) }
-    } else if (enableReset) {
-        WorkMulti.reset(config.corpId)
-        println("TODO: unload routing for all agents in corpID=$config._id")
+            if(agentController != null){
+                //企业应用的可见用户更新，需在调用Work.config配置完work后进行同步调用
+                agentController.syncAgentIfNotExit(config.corpId, config.agentId) //syncContacts改由管理员手工同步
+            }
+        }else{
+            WorkMulti.reset(config.corpId, config.agentId)
+            if(WorkMulti.msgHandlerCount.addAndGet(-1) == 0)
+                WorkMulti.defaultWorkMsgHandler = null
+            if(WorkMulti.eventHandlerCount.addAndGet(-1) == 0)
+                WorkMulti.defaultWorkEventHandler = null
+        }
     }
 
-    return count
 }
-
-/**
- * 单个应用的单企业配置
- * */
-internal fun configWxWorkSingle(
-    config: WxWorkAgentConfig,
-    msgHandler: IWorkMsgHandler?,
-    eventHandler: IWorkEventHandler?,
-    agentController: AgentController
-): Int {
-    var count = 0
-    with(config) {
-        WorkSingle.config(
-            corpId, agentId, secret, token, aesKey,
-            private, enableJsSdk, enableMsg,
-            customMsgHandler = msgHandler, //所有应用使用同一个msgHandler（无特殊处理）和eventHandler（主要用于通讯录等变化通知接收处理）
-            customEventHandler = eventHandler  //多个应用时可以只有一个接收通讯录变化即可
-        )
-
-        count++
-
-        //企业应用的可见用户更新，需在调用Work.config配置完work后进行同步调用
-        agentController.syncAgent(corpId, agentId)//同步agent，以及agent的可见成员详情，可见成员的外部联系人详情
-
-       // systemAccessTokenKeyMap?.forEach { (k, v) -> WorkSingle.config(k, v) }
-    }
-    return count
-}
-
-//internal fun configMsgNotifyUrl(application: Application) {
-//    val configService: ConfigService by application.inject()
-//    val cfg = configService.findMsgNotifyConfig()
-//    if(cfg != null){
-//        val msgNotifier: MsgNotifier by application.inject()
-//        val urlConfigMap = hashMapOf<NotifierType, String>()
-//        cfg.pathMap.forEach { (t, u) ->
-//            urlConfigMap[t] = cfg.host+u
-//        }
-//        msgNotifier.configUrl(urlConfigMap)
-//    }
-//}
 
 
 /**
@@ -127,39 +95,16 @@ class OnStartConfigWxWork(application: Application) : LifeCycle(application) {
             val agentList = configService.findAgentConfigList(true)//只加载enabled的
             val sysAgentList = configService.findSysAgentConfigList(true)//只加载enabled的
 
-            var count = 0
-            var count2 = 0
             //数据库中有配置时的情形
-            if (Work.isMulti) {
-                agentList.forEach {
-                    count += configWxWorkMulti(it, msgHandler, eventHandler, agentController)
-                }
-                sysAgentList.forEach {
-                    WorkMulti.config(it.corpId, it.key, it.secret)
-                    count2++
-                }
-            } else {
-                agentList.firstOrNull { it.enable }?.let {
-                    count = configWxWorkSingle(it, msgHandler, eventHandler, agentController)
-                }
-                sysAgentList.forEach {
-                    WorkSingle.config(it.key, it.secret)
-                    count2++
-                }
+            agentList.forEach {
+                configWxWork(it, false, agentController)
+            }
+            sysAgentList.forEach {
+                configWxWork(it, true)
             }
 
             //configMsgNotifyUrl(application)
 
-            if (count == 0) {
-                log.warn("no agent context initialized, please check wxWorkConfig in DB")
-            } else {
-                log.info("$count agents context initialized from DB")
-            }
-            if (count2 == 0) {
-                log.info("no sys agent context initialized, please check wxWorkConfig in DB")
-            } else {
-                log.info("$count2 sys agents context initialized from DB")
-            }
             logConfig()
         }
 
@@ -174,8 +119,54 @@ class OnStartConfigWxWork(application: Application) : LifeCycle(application) {
         log.info("Work.oauthNotifyPath=${Work.oauthNotifyPath}?code=CODE&state=STATE")
         log.info("Work.oauthNotifyWebAppUrl=${Work.oauthNotifyWebAppUrl}?code=OK&state=STATE&corpId={corpId?}&agentId={agentId?}&openId={openId?}&userId={userId?}&externalUserId={externalUserId?}")
         log.info("Work.jsSdkSignaturePath=${Work.jsSdkSignaturePath}?corpId=corpId&agentId=agentId")
+
+        log.info("WorkMulti.eventHandlerCount: ${WorkMulti.eventHandlerCount}")
+        log.info("WorkMulti.msgHandlerCount: ${WorkMulti.msgHandlerCount}")
+        log.info("ContactHandlerConfig.count: ${ContactHandlerConfig.count}")
+
         log.info("====================config WxWork=====================")
     }
 }
 
 
+//
+///**
+// * 单个应用的单企业配置
+// * */
+//internal fun configWxWorkSingle(
+//    config: WxWorkAgentConfig,
+//    msgHandler: IWorkMsgHandler?,
+//    eventHandler: IWorkEventHandler?,
+//    agentController: AgentController
+//): Int {
+//    var count = 0
+//    with(config) {
+//        WorkSingle.config(
+//            corpId, agentId, secret, token, aesKey,
+//            private, enableJsSdk, enableMsg,
+//            customMsgHandler = msgHandler, //所有应用使用同一个msgHandler（无特殊处理）和eventHandler（主要用于通讯录等变化通知接收处理）
+//            customEventHandler = eventHandler  //多个应用时可以只有一个接收通讯录变化即可
+//        )
+//
+//        count++
+//
+//        //企业应用的可见用户更新，需在调用Work.config配置完work后进行同步调用
+//        agentController.syncAgent(corpId, agentId)//同步agent，以及agent的可见成员详情，可见成员的外部联系人详情
+//
+//       // systemAccessTokenKeyMap?.forEach { (k, v) -> WorkSingle.config(k, v) }
+//    }
+//    return count
+//}
+
+//internal fun configMsgNotifyUrl(application: Application) {
+//    val configService: ConfigService by application.inject()
+//    val cfg = configService.findMsgNotifyConfig()
+//    if(cfg != null){
+//        val msgNotifier: MsgNotifier by application.inject()
+//        val urlConfigMap = hashMapOf<NotifierType, String>()
+//        cfg.pathMap.forEach { (t, u) ->
+//            urlConfigMap[t] = cfg.host+u
+//        }
+//        msgNotifier.configUrl(urlConfigMap)
+//    }
+//}

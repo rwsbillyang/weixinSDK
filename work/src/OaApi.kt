@@ -25,7 +25,7 @@ enum class CheckInDataType(val value: Int){
     ALL(3)
 }
 
-class CheckinApi  (corpId: String?, agentId: Int?, suiteId: String?)
+class CheckinApi  (corpId: String?, agentId: String?, suiteId: String?)
     : WorkBaseApi(corpId, agentId,suiteId)
 {
 
@@ -56,7 +56,7 @@ class CheckinApi  (corpId: String?, agentId: Int?, suiteId: String?)
         mapOf("datetime" to datetime, "useridlist" to userIdList))
  }
 
-class OaApi  (corpId: String?, agentId: Int?, suiteId: String?)
+class OaApi  (corpId: String?, agentId: String?, suiteId: String?)
     : WorkBaseApi(corpId, agentId,suiteId)
 {
 

@@ -54,35 +54,16 @@ data class WxWorkAgentConfig(
     val url: String? = null, //从管理后台直接进入
     val corpId: String, //corpId 不是有corpID作为唯一ID：一个企业可以配置多个agent应用
     val enable: Boolean, //是否激活
-    val agentId: Int,
+    val agentId: String,
     val secret: String,
     val enableJsSdk: Boolean,
     val enableMsg: Boolean, //是否激活：消息解析、分发、处理
     val token: String? = null,
     val aesKey: String? = null,
-    val private: String? = null,
+    val private: String? = null
     //val systemAccessTokenKeyMap: HashMap<String, String>? = null //key->secret
 )
-@Serializable
-class WxWorkAgentConfigBean(
-    val _id: ObjectId? = null,
-    val corpId: String, //corpId 不是有corpID作为唯一ID：一个企业可以配置多个agent应用
-    val enable: Boolean, //是否激活
-    val agentId: Int,
-    val enableJsSdk: Boolean,
-    val enableMsg: Boolean, //是否激活：消息解析、分发、处理
-)
 
-@Serializable
-data class WxWorkSysAgentConfig(
-    var _id: String? = null, //SysAccessTokenKey+corpId
-    val enable: Boolean, //是否激活
-    val key: String,
-    val corpId: String,
-    val secret: String,
-){
-    fun id() = "$corpId-${key}"
-}
 /**
  * 消息通知中的url配置
  * */
@@ -90,7 +71,7 @@ data class WxWorkSysAgentConfig(
 data class WxMsgNotifyConfig(
     val _id: ObjectId, // appId
     val corpId: String,
-    val agentId: Int,
+    val agentId: String,
     val host: String, // eg: http://zhike.niukid.com or https://zhike.niukid.com
     val pathMap: Map<String, String> //key: 类型， value：路径
 )
@@ -104,4 +85,28 @@ data class Corp(
 
 
 
+//@Serializable
+//class WxWorkAgentConfigBean(
+//    val _id: ObjectId? = null,
+//    val corpId: String, //corpId 不是有corpID作为唯一ID：一个企业可以配置多个agent应用
+//    val enable: Boolean, //是否激活
+//    val agentId: Int,
+//    val enableJsSdk: Boolean,
+//    val enableMsg: Boolean, //是否激活：消息解析、分发、处理
+//)
 
+//@Serializable
+//data class WxWorkSysAgentConfig(
+//    var _id: String? = null, //SysAccessTokenKey+corpId
+//    val enable: Boolean, //是否激活
+//    val key: String,
+//    val corpId: String,
+//    val secret: String,
+//    val enableJsSdk: Boolean = false,
+//    val enableMsg: Boolean = false, //是否激活：消息解析、分发、处理
+//    val token: String? = null,
+//    val aesKey: String? = null,
+//    val private: String? = null
+//){
+//    fun id() = "$corpId-${key}"
+//}

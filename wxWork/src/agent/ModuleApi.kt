@@ -57,7 +57,7 @@ fun Routing.agentApi() {
         route("/api/wx/admin/work/agent") {
             get("/sync/{corpId}/{agentId}"){
                 val corpId = call.parameters["corpId"]
-                val agentId = call.parameters["agentId"]?.toInt()
+                val agentId = call.parameters["agentId"]
                 if(corpId == null || agentId == null)
                     call.respondBox(DataBox.ko<Unit>("invalid parameter, corpId or agentId is null"))
                 else

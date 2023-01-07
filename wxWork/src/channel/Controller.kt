@@ -48,7 +48,7 @@ class ChannelController: KoinComponent {
         return DataBox.ok(b)
     }
 
-    fun delChannel(id: String?, suiteId: String?, agentId: Int?): DataBox<Int> {
+    fun delChannel(id: String?, suiteId: String?, agentId: String?): DataBox<Int> {
         if(id == null) return DataBox.ko("invalid parameter: channel id")
         val channel = service.findOne(id) ?: return DataBox.ko("not found channel")
 
@@ -71,7 +71,7 @@ class ChannelController: KoinComponent {
     /**
      * 获取某成员的某个渠道推广码
      * */
-    fun getChannelQrCode(channelId: String?, suiteId: String?, agentId: Int?): DataBox<String> {
+    fun getChannelQrCode(channelId: String?, suiteId: String?, agentId: String?): DataBox<String> {
         if(channelId == null) return DataBox.ko("getChannelQrCode invalid parameter: channel id")
         val channel = service.findOne(channelId) ?: return DataBox.ko("not found channel")
         val url = channel.qrCode
@@ -100,7 +100,7 @@ class ChannelController: KoinComponent {
     }
 
     //先删除（如果有的话，再重新生成，然后返回新生成的二维码）
-    fun regenerateQrCode(channelId: String?, suiteId: String?, agentId: Int?): DataBox<String>{
+    fun regenerateQrCode(channelId: String?, suiteId: String?, agentId: String?): DataBox<String>{
         if(channelId == null) return DataBox.ko("regenerateQrCode invalid parameter: channel id")
         val channel = service.findOne(channelId) ?: return DataBox.ko("not found channel")
         val url = channel.qrCode

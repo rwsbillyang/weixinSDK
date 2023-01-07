@@ -19,13 +19,9 @@
 package com.github.rwsbillyang.wxSDK.work
 
 import com.github.rwsbillyang.wxSDK.IBase
-import com.github.rwsbillyang.wxSDK.bean.OAuthInfo
-import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
-import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.net.URLEncoder
 
 /**
  * scope为:
@@ -47,7 +43,7 @@ enum class SnsApiScope(val value: String){
  * OAUTH身份认证，支持第三方应用
  * 注意：prepareOAuthInfo在企业多应用情况下可以缺少corpId，此时可以用""代替coprId，避免参数错误异常
  * */
-class OAuthApi (corpId: String?, agentId: Int?, suiteId: String?)
+class OAuthApi (corpId: String?, agentId: String?, suiteId: String?)
     : WorkBaseApi(corpId, agentId, suiteId)
 {
     override val group = "user"
@@ -74,29 +70,29 @@ class OAuthApi (corpId: String?, agentId: Int?, suiteId: String?)
      * 对于multi模式内建应用，需提供corpId和agentId
      * 对于multi模式ISV应用，需提供suiteId和corpId
      * */
-    fun prepareOAuthInfo(redirectUri: String, snsApiScope: SnsApiScope = SnsApiScope.PrivateInfo): OAuthInfo {
-        val state = WXBizMsgCrypt.getRandomStr()
-        val appId: String
-        var agentId2: Int? = null
-        if(Work.isIsv){
-            appId = if(Work.isMulti){
-                suiteId!!
-            }else{
-                IsvWorkSingle.suiteId
-            }
-        }else{
-            if(Work.isMulti){
-                appId = corpId!!
-                agentId2 = agentId
-            }else{
-                appId = WorkSingle.corpId
-                //agentId2 = WorkSingle.agentId
-            }
-        }
-
-        return OAuthInfo(appId, URLEncoder.encode(redirectUri,"UTF-8") ,
-            snsApiScope.value, state, agentId2)
-    }
+//    fun prepareOAuthInfo(redirectUri: String, snsApiScope: SnsApiScope = SnsApiScope.PrivateInfo): OAuthInfo {
+//        val state = WXBizMsgCrypt.getRandomStr()
+//        val appId: String
+//        var agentId2: Int? = null
+//        if(Work.isIsv){
+//            appId = if(Work.isMulti){
+//                suiteId!!
+//            }else{
+//                IsvWorkSingle.suiteId
+//            }
+//        }else{
+//            if(Work.isMulti){
+//                appId = corpId!!
+//                agentId2 = agentId
+//            }else{
+//                appId = WorkSingle.corpId
+//                //agentId2 = WorkSingle.agentId
+//            }
+//        }
+//
+//        return OAuthInfo(appId, URLEncoder.encode(redirectUri,"UTF-8") ,
+//            snsApiScope.value, state, agentId2)
+//    }
     /**
      * 获取访问用户身份(内建应用使用)
      *
@@ -113,19 +109,13 @@ class OAuthApi (corpId: String?, agentId: Int?, suiteId: String?)
      *
      * */
     fun getUserInfo3rd(code: String): ResponseOAuthUserInfo {
-        val token = if(Work.isMulti){
-            IsvWorkMulti.ApiContextMap[suiteId]?.suiteAccessToken?.get()
-        }else
-            IsvWorkSingle.ctx.suiteAccessToken?.get()
+        val token = IsvWorkMulti.ApiContextMap[suiteId]?.suiteAccessToken?.get()
 
         return doGet("https://qyapi.weixin.qq.com/cgi-bin/service/getuserinfo3rd?suite_access_token=$token&code=$code")
     }
 
     fun getUserDetail3rd(userTicket: String):ResponseOauthUserDetail3rd {
-        val token = if(Work.isMulti){
-            IsvWorkMulti.ApiContextMap[suiteId]?.suiteAccessToken?.get()
-        }else
-            IsvWorkSingle.ctx.suiteAccessToken?.get()
+        val token = IsvWorkMulti.ApiContextMap[suiteId]?.suiteAccessToken?.get()
 
         return doPost<Unit, ResponseOauthUserDetail3rd>("https://qyapi.weixin.qq.com/cgi-bin/service/getuserdetail3rd?suite_access_token=$token&user_ticket=$userTicket")
     }

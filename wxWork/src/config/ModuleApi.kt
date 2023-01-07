@@ -84,7 +84,7 @@ fun Routing.wxWorkConfigApi() {
                             if(name == "agent"){
                                 call.respondBoxOK(service.findWxWorkAgentConfigByCorpId(corpId))
                             }else if(name == "sysagent"){
-                                call.respondBoxOK(service.findAll(service.wxWorkSysAgentCfgCol, WxWorkSysAgentConfig::corpId eq corpId))
+                                call.respondBoxOK(service.findAll(service.wxWorkSysAgentCfgCol, WxWorkAgentConfig::corpId eq corpId))
                             }
                         }
                     }
@@ -94,13 +94,7 @@ fun Routing.wxWorkConfigApi() {
                     if(name == null) {
                         call.respondBox(DataBox.ko<Int>("invalid parameters: no name"))
                     }else {
-                        if(name == "agent"){
-                            call.respondBox(controller.saveWxWorkAgentConfig(call.receive()))
-                        }else if(name == "sysagent"){
-                            call.respondBox(controller.saveWxWorkSysAgentConfig(call.receive()))
-                        }else{
-                            call.respondBox(DataBox.ko<Int>("invalid parameter, not support name=$name"))
-                        }
+                        call.respondBox(controller.saveWxWorkAgentConfig(call.receive(),name))
                     }
                 }
 

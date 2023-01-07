@@ -52,7 +52,7 @@ open class AgentEvent(baseInfo: BaseInfo): BaseInfo(baseInfo.toUserName, baseInf
         val log: Logger = LoggerFactory.getLogger("AgentEvent")
     }
     var event: String? = null
-    var agentId: Int? = null
+    var agentId: String? = null
 
     //TODO: 读取到Event字段后退出，否则一直读取下去，顺带保存一下AgentId字段；若Event字段排在后面，将导致其前面的字段信息丢失
     //因 成员关注及取消关注事件 的event在agentId之后，，直到读取到event之后才退出，这样导致其它字段读取机会丧失
@@ -69,7 +69,7 @@ open class AgentEvent(baseInfo: BaseInfo): BaseInfo(baseInfo.toUserName, baseInf
                         break
                     }
                     "AgentID" -> { //目的在于兼容：成员关注及取消关注事件
-                        agentId = reader.elementText?.toInt()
+                        agentId = reader.elementText
                     }
                 }
             }
@@ -141,7 +141,7 @@ class WorkEnterAgent(baseInfo: BaseInfo, agentEvent: AgentEvent): AgentEvent(bas
                         count++
                     }
                     "AgentID" -> {
-                        agentId = reader.elementText?.toInt()
+                        agentId = reader.elementText
                          count++
                     }
                 }
@@ -194,7 +194,7 @@ open class WorkLocationEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): AgentE
                         precision = reader.elementText?.toFloat(); count++
                     }
                     "AgentID" -> {
-                        agentId = reader.elementText?.toInt()
+                        agentId = reader.elementText
                         count++
                     }
                 }
@@ -291,7 +291,7 @@ class WorkMenuClickEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): AgentEvent
                         eventKey = reader.elementText; count++
                     }
                     "AgentID" -> {
-                        agentId = reader.elementText?.toInt()
+                        agentId = reader.elementText
                         count++
                     }
                 }
@@ -325,7 +325,7 @@ class WorkMenuViewEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): AgentEvent(
                         eventKey = reader.elementText; count++
                     }
                     "AgentID" -> {
-                        agentId = reader.elementText?.toInt()
+                        agentId = reader.elementText
                         count++
                     }
                 }
@@ -374,7 +374,7 @@ open class WorkMenuScanCodePushEvent(baseInfo: BaseInfo, agentEvent: AgentEvent)
                         count++
                     }
                     "AgentID" -> {
-                        agentId = reader.elementText?.toInt()
+                        agentId = reader.elementText
                         count++
                     }
                 }
@@ -427,7 +427,7 @@ open class WorkMenuPhotoEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): Agent
                         count++
                     }
                     "AgentID" -> {
-                        agentId = reader.elementText?.toInt()
+                        agentId = reader.elementText
                         count++
                     }
                 }
@@ -519,7 +519,7 @@ class WorkMenuLocationEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): AgentEv
                         count++
                     }
                     "AgentID" -> {
-                        agentId = reader.elementText?.toInt()
+                        agentId = reader.elementText
                         count++
                     }
                 }
@@ -620,7 +620,7 @@ class WorkTaskCardClickEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): AgentE
                         count++
                     }
                     "AgentID" -> {
-                        agentId = reader.elementText?.toInt()
+                        agentId = reader.elementText
                         count++
                     }
                 }

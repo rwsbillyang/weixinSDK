@@ -22,12 +22,11 @@ import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.server.respondBox
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.WorkMulti
-import com.github.rwsbillyang.wxSDK.work.WorkSingle
+
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler
 import com.github.rwsbillyang.wxWork.agent.AgentController
-import com.github.rwsbillyang.wxWork.configWxWorkMulti
-import com.github.rwsbillyang.wxWork.configWxWorkSingle
+import com.github.rwsbillyang.wxWork.configWxWork
 import io.ktor.server.application.*
 import org.bson.types.ObjectId
 import org.koin.core.component.KoinComponent
@@ -50,47 +49,24 @@ class ConfigController : KoinComponent {
    private val eventHandler: IWorkEventHandler by application.inject()
     private val msgHandler: IWorkMsgHandler by application.inject()
 
-    fun saveWxWorkAgentConfig(doc: WxWorkAgentConfig): DataBox<WxWorkAgentConfig> {
+    fun saveWxWorkAgentConfig(doc: WxWorkAgentConfig, name: String): DataBox<WxWorkAgentConfig> {
         if(doc._id == null) doc._id = ObjectId()
         service.saveWxWorkAgentConfig(doc)
 
         if(!Work.isIsv){
             if(doc.enable){
-                if(Work.isMulti){
-                    configWxWorkMulti(doc, msgHandler, eventHandler, agentController, true)
-                }else{
-                    configWxWorkSingle(doc, msgHandler, eventHandler, agentController)
+                if(name == "agent")
+                    configWxWork(doc, false, agentController)
+                else if(name == "sysagent"){
+                    configWxWork(doc, true)
+                }else
+                {
+                    return DataBox.ko("not support name=$name")
                 }
             }else{
-                if(Work.isMulti){
-                    WorkMulti.reset(doc.corpId, doc.agentId)
-                }else{
-                    WorkSingle.reset(doc.agentId)
-                }
+                WorkMulti.reset(doc.corpId, doc.agentId)
             }
 
-        }else{
-            log.warn("TODO: implement config in saveWxWorkSysAgentConfig for ISV")
-        }
-
-        return DataBox.ok(doc)
-    }
-    fun saveWxWorkSysAgentConfig(doc: WxWorkSysAgentConfig): DataBox<WxWorkSysAgentConfig> {
-        if(doc._id == null) doc._id = doc.id()
-        service.saveWxWorkSysAgentConfig(doc)
-
-        if(!Work.isIsv){
-            if(Work.isMulti){
-                if(doc.enable)
-                    WorkMulti.config(doc.corpId, doc.key, doc.secret)
-                else
-                    WorkMulti.resetAccessToken(doc.corpId, doc.key)
-            }else{
-                if(doc.enable)
-                    WorkSingle.config(doc.key, doc.secret)
-                else
-                    WorkSingle.reset(doc.key)
-            }
         }else{
             log.warn("TODO: implement config in saveWxWorkSysAgentConfig for ISV")
         }
@@ -102,26 +78,18 @@ class ConfigController : KoinComponent {
         return if(name == "agent"){
             val doc = service.findWxWorkAgentConfig(id)
             if(doc != null){
-                if(Work.isMulti){
-                    WorkMulti.reset(doc.corpId, doc.agentId)
-                }else{
-                    WorkSingle.reset(doc.agentId)
-                }
+                WorkMulti.reset(doc.corpId, doc.agentId)
             }
             DataBox.ok(service.delAgentConfig(id).deletedCount)
         }else if(name == "sysagent"){
             val doc = service.findWxWorkSysAgentConfig(id)
             if(doc != null){
-                if(Work.isMulti){
-                    WorkMulti.resetAccessToken(doc.corpId, doc.key)
-                }else{
-                    WorkSingle.reset(doc.key)
-                }
+                WorkMulti.reset(doc.corpId, doc.agentId)
             }
             DataBox.ok(service.deleteOne(service.wxWorkSysAgentCfgCol, id, false))
         }else{
             DataBox.ko<Long>("invalid parameter, not support name=$name")
         }
     }
-   // fun findWxWorkAgentConfig(corpId: String) = service.findWxWorkAgentConfigByCorpId(corpId)
+
 }

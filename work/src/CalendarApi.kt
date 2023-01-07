@@ -44,7 +44,7 @@ data class Calendar(
     @SerialName("cal_id") val id: String? = null
 )
 
-class CalendarApi(corpId: String?, agentId: Int?, suiteId: String?)
+class CalendarApi(corpId: String?, agentId: String?, suiteId: String?)
     : WorkBaseApi(corpId, agentId,suiteId)
 {
 
@@ -71,7 +71,7 @@ class CalendarApi(corpId: String?, agentId: Int?, suiteId: String?)
     fun delete(id: String) = doPostRaw("del", mapOf("cal_id" to  id))
 }
 
-class Schedule(corpId: String?, agentId: Int?, suiteId: String?)
+class Schedule(corpId: String?, agentId: String?, suiteId: String?)
     : WorkBaseApi(corpId, agentId,suiteId)
 {
 

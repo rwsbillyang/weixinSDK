@@ -40,15 +40,15 @@ class ConfigService(cache: ICache) : MongoCRUDService(cache,wxWorkModule.dbName!
     private val wxWorkAgentCfgCol: CoroutineCollection<WxWorkAgentConfig> by lazy {
         dbSource.mongoDb.getCollection()
     }
-    val wxWorkSysAgentCfgCol: CoroutineCollection<WxWorkSysAgentConfig> by lazy {
-        dbSource.mongoDb.getCollection()
+    val wxWorkSysAgentCfgCol: CoroutineCollection<WxWorkAgentConfig> by lazy {
+        dbSource.mongoDb.getCollection("wxWorkSysAgentConfig")
     }
 
     private val msgNotifyConfigCol: CoroutineCollection<WxMsgNotifyConfig> by lazy {
         dbSource.mongoDb.getCollection()
     }
 
-    fun findMsgNotifyConfig(corpId: String, agentId: Int?) = cacheIncludeNull("notifyUrlConfig/$corpId/$agentId"){
+    fun findMsgNotifyConfig(corpId: String, agentId: String?) = cacheIncludeNull("notifyUrlConfig/$corpId/$agentId"){
         runBlocking{
             msgNotifyConfigCol.findOne(WxMsgNotifyConfig::corpId eq corpId, WxMsgNotifyConfig::agentId eq agentId)
         }
@@ -72,12 +72,12 @@ class ConfigService(cache: ICache) : MongoCRUDService(cache,wxWorkModule.dbName!
 
     fun findSysAgentConfigList(enabled: Boolean? = null) = runBlocking {
         if(enabled == null) wxWorkSysAgentCfgCol.find().toList()
-        else wxWorkSysAgentCfgCol.find(WxWorkSysAgentConfig::enable eq enabled).toList()
+        else wxWorkSysAgentCfgCol.find(WxWorkAgentConfig::enable eq enabled).toList()
     }
-    fun saveWxWorkSysAgentConfig(doc: WxWorkSysAgentConfig) = runBlocking {
+    fun saveWxWorkSysAgentConfig(doc: WxWorkAgentConfig) = runBlocking {
         wxWorkSysAgentCfgCol.save(doc)
     }
-    fun findWxWorkSysAgentConfig(id: String): WxWorkSysAgentConfig? = runBlocking{
+    fun findWxWorkSysAgentConfig(id: String): WxWorkAgentConfig? = runBlocking{
         wxWorkSysAgentCfgCol.findOneById(id)
     }
 

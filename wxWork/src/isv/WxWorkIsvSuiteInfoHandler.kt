@@ -51,18 +51,10 @@ class WxWorkIsvSuiteInfoHandler: ISuiteInfoHandler, KoinComponent
         //配置IsvWork之step2
         //必须系统启动时配置好ThirdPartyWork中的suiteId和secret
         //第三个参数是提供corpId和permanentCode数据对列表，目的是更新ticket时，若存在永久授权码，则可同时配置accessToken，无需步骤3了
-        if (Work.isMulti) {
-            IsvWorkMulti.configSuiteToken(suiteId2, ticket) {
-                service.findCorpInfoList(suiteId2)
-                    .filter { it.corpInfo?.corpid != null && it.permanentCode != null }
-                    .map { Pair(it.corpInfo!!.corpid, it.permanentCode!!) }
-            }
-        } else {
-            IsvWorkSingle.configSuiteToken(suiteId2, ticket) {
-                service.findCorpInfoList(suiteId2)
-                    .filter { it.corpInfo?.corpid != null && it.permanentCode != null }
-                    .map { Pair(it.corpInfo!!.corpid, it.permanentCode!!) }
-            }
+        IsvWorkMulti.configSuiteToken(suiteId2, ticket) {
+            service.findCorpInfoList(suiteId2)
+                .filter { it.corpInfo?.corpid != null && it.permanentCode != null }
+                .map { Pair(it.corpInfo!!.corpid, it.permanentCode!!) }
         }
     }
 
@@ -73,11 +65,7 @@ class WxWorkIsvSuiteInfoHandler: ISuiteInfoHandler, KoinComponent
             log.warn("onAuthCancel: no corpId")
             return
         }
-        if(Work.isMulti){
-            IsvWorkMulti.removeCorpAuth(suiteId2, corpId)
-        }else{
-            IsvWorkSingle.removeCorpAuth(corpId)
-        }
+        IsvWorkMulti.removeCorpAuth(suiteId2, corpId)
         
         service.updateStatus(CorpInfo.id(suiteId2, corpId), CorpInfo.STATUS_CANCELED)
     }

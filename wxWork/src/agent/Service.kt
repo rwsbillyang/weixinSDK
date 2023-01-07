@@ -37,7 +37,7 @@ class AgentService(cache: ICache) : CacheService(cache) {
         dbSource.mongoDb.getCollection()
     }
 
-    fun findAgent(id: Int, corpId: String): Agent? = cacheable("agent/$corpId/$id") {
+    fun findAgent(id: String, corpId: String): Agent? = cacheable("agent/$corpId/$id") {
         runBlocking{ agentCol.findOne(Agent::id eq id, Agent::corpId eq corpId) }
     }
 
@@ -51,22 +51,22 @@ class AgentService(cache: ICache) : CacheService(cache) {
         }
     }
 
-    fun addAllowUser(corpId: String, userId: String, agentId: Int) = evict("agent/$corpId/$agentId"){
+    fun addAllowUser(corpId: String, userId: String, agentId: String) = evict("agent/$corpId/$agentId"){
         runBlocking {
             agentCol.updateOne(and(Agent::corpId eq corpId, Agent::id eq agentId), addToSet(Agent::userList, userId))
         }
     }
-    fun addAllowUsers(corpId: String, userIds: List<String>, agentId: Int) = evict("agent/$corpId/$agentId"){
+    fun addAllowUsers(corpId: String, userIds: List<String>, agentId: String) = evict("agent/$corpId/$agentId"){
         runBlocking {
             agentCol.updateOne(and(Agent::corpId eq corpId, Agent::id eq agentId), addEachToSet(Agent::userList, userIds))
         }
     }
-    fun removeAllowUsers(corpId: String, userIds: List<String>, agentId: Int) = evict("agent/$corpId/$agentId"){
+    fun removeAllowUsers(corpId: String, userIds: List<String>, agentId: String) = evict("agent/$corpId/$agentId"){
         runBlocking {
             agentCol.updateOne(and(Agent::corpId eq corpId, Agent::id eq agentId), pullAll(Agent::userList, userIds))
         }
     }
-    fun removeAllowUser(corpId: String, userId: String, agentId: Int) = evict("agent/$corpId/$agentId"){
+    fun removeAllowUser(corpId: String, userId: String, agentId: String) = evict("agent/$corpId/$agentId"){
         runBlocking {
             agentCol.updateOne(and(Agent::corpId eq corpId, Agent::id eq agentId), pull(Agent::userList, userId))
         }

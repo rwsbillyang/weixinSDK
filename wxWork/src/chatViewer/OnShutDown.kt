@@ -19,10 +19,7 @@
 package com.github.rwsbillyang.wxWork.chatViewer
 
 import com.github.rwsbillyang.ktorKit.server.LifeCycle
-import com.github.rwsbillyang.wxSDK.work.Work
-import com.github.rwsbillyang.wxSDK.work.WorkSingle
-import com.github.rwsbillyang.wxSDK.work.isv.IsvWork
-import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
+
 import io.ktor.server.application.*
 
 import org.koin.ktor.ext.inject

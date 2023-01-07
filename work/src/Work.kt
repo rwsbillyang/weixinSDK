@@ -27,7 +27,17 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import java.security.PrivateKey
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.properties.Delegates
+
+
+/**
+ * 微信系统基础应用的secret，可使api具备特殊权限，如通讯录，外部联系人，聊天会话存档
+ * */
+enum class SysAgentKey{
+    Contact, ExternalContact, ChatArchive, WxKeFu
+}
+
 
 /**
  * 内部应用使用
@@ -41,7 +51,7 @@ object Work {
     /**
      * 单个agent应用支持部署到多个企业微信中，由app在配置sdk参数时自动指定
      * */
-    var isMulti by Delegates.notNull<Boolean>()
+    //var isMulti by Delegates.notNull<Boolean>()
 
     /**
      * 是否是isv模式，即第三方应用模式，在配置sdk参数时自动指定
@@ -83,75 +93,6 @@ object Work {
 }
 
 /**
- * 微信系统基础应用的secret，可使api具备特殊权限，如通讯录，外部联系人，聊天会话存档
- * */
-enum class SysAgentKey{
-    Contact, ExternalContact, ChatArchive, WxKeFu
-}
-
-
-/**
- * 一个进程中就存在一个特定的corp的agent
- * */
-object WorkSingle{
- //   private lateinit var ctx: CorpApiContext
-    private lateinit var _corpId: String
-    //private var _agentId by Delegates.notNull<Int>()
-   // private lateinit var _agentContext: AgentContext
-   val agentMap: HashMap<Int, AgentContext> = hashMapOf()
-
-    val corpId: String
-        get() = _corpId
-
-    //key为SysAccessToken中的KeyXxxx
-
-    internal val sysAccessTokenMap = hashMapOf<String, TimelyRefreshAccessToken>()
-    internal val sysSecretMap = hashMapOf<String, String>()
-
-    /**
-     * 配置高权限secret
-     *
-     * @param key 高权限accessToken对应的字符串key，可任意指定，同时需要将其赋值给对应的api的SysAgentKey字段
-     * 如通讯录应用 ContactsApi.SysAgentKey = ${key}
-     *
-     * sdk中已内置了几个默认字段：SysAgentKey.Contact, SysAgentKey.ExternalContact, SysAgentKey.ChatArchive
-     * 无需再给对应的api赋值
-     *
-     * @param secret 高权限api的secret
-     * */
-    fun config(key: String, secret: String){
-        sysSecretMap[key] = secret
-        sysAccessTokenMap[key] = TimelyRefreshAccessToken(corpId,
-            AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = key)
-    }
-    fun reset(key: String){
-        sysAccessTokenMap.remove(key)
-        sysSecretMap.remove(key)
-    }
-    fun reset(agentId: Int){
-        agentMap.remove(agentId)
-    }
-
-    fun config(corpId: String,
-               agentId: Int,
-               secret: String,
-               token: String? = null,
-               encodingAESKey: String? = null,
-               privateKeyFilePath: String? = null,
-               enableJsSdk: Boolean = false,
-               enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
-               customMsgHandler: IWorkMsgHandler?,
-               customEventHandler: IWorkEventHandler?,
-               customAccessToken: ITimelyRefreshValue? = null
-    ) {
-        _corpId = corpId
-
-        agentMap[agentId] = AgentContext(corpId, agentId, secret, enableMsg,
-            token, encodingAESKey, privateKeyFilePath, enableJsSdk,
-            customMsgHandler,customEventHandler,customAccessToken)
-    }
-}
-/**
  * 一个运行的应用（通常是一个进程）中，存在多个corp的多个agent。
  * 亦即多个agent打包到一个jar中，然后运行在一个应用进程中
  * */
@@ -162,6 +103,10 @@ object WorkMulti{
      * */
     val ApiContextMap = hashMapOf<String, CorpApiContext>()
 
+    var defaultWorkEventHandler: IWorkEventHandler? = null
+    var defaultWorkMsgHandler: IWorkMsgHandler? = null
+    var eventHandlerCount: AtomicInteger = AtomicInteger()
+    var msgHandlerCount: AtomicInteger = AtomicInteger()
     /**
      * 当更新配置后，重置
      * */
@@ -169,20 +114,20 @@ object WorkMulti{
         ApiContextMap.remove(corpId)
     }
 
-    fun reset(corpId: String, agentId: Int) {
-        ApiContextMap[corpId]?.agentMap?.remove(agentId)
+    fun reset(corpId: String, agentIdOrKey: String) {
+        ApiContextMap[corpId]?.agentMap?.remove(agentIdOrKey)
     }
 
     fun config(corpId: String,
-               agentId: Int,
+               agentIdOrKey: String,
                secret: String,
                token: String? = null,
                encodingAESKey: String? = null,
                privateKeyFilePath: String? = null,
                enableJsSdk: Boolean = false,
                enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
-               customMsgHandler: IWorkMsgHandler?,
-               customEventHandler: IWorkEventHandler?,
+               customMsgHandler: IWorkMsgHandler? = null,
+               customEventHandler: IWorkEventHandler? = null,
                customAccessToken: ITimelyRefreshValue? = null
     ) {
         var corpApiCtx = ApiContextMap[corpId]
@@ -191,41 +136,62 @@ object WorkMulti{
             ApiContextMap[corpId] = corpApiCtx
         }
 
-        corpApiCtx.agentMap[agentId] = AgentContext(corpId, agentId, secret, enableMsg,
-            token, encodingAESKey, privateKeyFilePath, enableJsSdk,
+        corpApiCtx.agentMap[agentIdOrKey] = setupApiCtx(corpId, agentIdOrKey, secret,
+            token, encodingAESKey, privateKeyFilePath, enableJsSdk,enableMsg,
             customMsgHandler,customEventHandler,customAccessToken)
     }
 
-    /**
-     * 配置高权限secret
-     *
-     * @param key 高权限accessToken对应的字符串key，可任意指定，同时需要将其赋值给对应的api的SysAgentKey字段
-     * 如通讯录应用 ContactsApi.SysAgentKey = ${key}
-     *
-     * sdk中已内置了几个默认字段：SysAgentKey.Contact, SysAgentKey.ExternalContact, SysAgentKey.ChatArchive
-     * 无需再给对应的api赋值
-     *
-     * @param secret 高权限api的secret
-     * */
-    fun config(corpId: String, key: String, secret: String){
-        var corpApiCtx = ApiContextMap[corpId]
-        if (corpApiCtx == null) {
-            corpApiCtx = CorpApiContext(corpId)
-            ApiContextMap[corpId] = corpApiCtx
+
+
+
+    fun setupApiCtx(corpId: String, agentIdOrKey: String,
+              secret: String,
+              token: String? = null,
+              encodingAESKey: String? = null,
+              privateKeyFilePath: String? = null,
+              enableJsSdk: Boolean = false,
+              enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
+              customMsgHandler: IWorkMsgHandler?,
+              customEventHandler: IWorkEventHandler?,
+              customAccessToken: ITimelyRefreshValue? = null):ApiCtx
+    {
+        val accessToken: ITimelyRefreshValue = customAccessToken ?: TimelyRefreshAccessToken(corpId,
+            AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = agentIdOrKey)
+
+        var msgHub: WorkMsgHub? = null
+        var wXBizMsgCrypt: WXBizMsgCrypt? = null
+        if (enableMsg) {
+            if (!token.isNullOrBlank() && !encodingAESKey.isNullOrBlank()) {
+                wXBizMsgCrypt = WXBizMsgCrypt(token, encodingAESKey)
+                msgHub = WorkMsgHub(wXBizMsgCrypt, customMsgHandler, customEventHandler)
+            } else {
+                println("enableMsg=true, but not config token and encodingAESKey")
+            }
+        }
+        var agentJsTicket:TimelyRefreshTicket? =  null
+        var corpJsTicket: TimelyRefreshTicket? =  null
+        if(enableJsSdk){
+            val agentJsTicket = TimelyRefreshTicket(corpId,
+                TicketRefresher{
+                    "https://qyapi.weixin.qq.com/cgi-bin/ticket/get?access_token=${accessToken.get()}&type=agent_config"
+                }, extra = agentIdOrKey)
+            val corpJsTicket = TimelyRefreshTicket(corpId,
+                TicketRefresher{
+                    "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${accessToken.get()}"
+                })
+        }
+        var privateKey: PrivateKey? = null //会话存档里用到
+        if (!privateKeyFilePath.isNullOrBlank()) {
+            val file = File(privateKeyFilePath)
+            if (file.exists()) {
+                privateKey = PemUtil.loadPrivateKey(FileInputStream(privateKeyFilePath))
+            } else {
+                val log = LoggerFactory.getLogger("setupApiCtx")
+                log.warn("Not exists: $privateKeyFilePath")
+            }
         }
 
-        corpApiCtx.sysSecretMap[key] = secret
-        corpApiCtx.sysAccessTokenMap[key] = TimelyRefreshAccessToken(
-            corpId,
-            AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = key)
-    }
-
-    fun resetAccessToken(corpId: String, key: String){
-        ApiContextMap[corpId]?.run{
-            sysAccessTokenMap.remove(key)
-            sysSecretMap.remove(key)
-        }
-
+       return ApiCtx(secret, token, msgHub, wXBizMsgCrypt, accessToken, agentJsTicket, corpJsTicket, privateKey)
     }
 }
 
@@ -244,14 +210,26 @@ object WorkMulti{
 class CorpApiContext(
         var corpId: String,
         /**
-         * key -> value: agentId -> WorkAgentContext
+         * key -> value: agentId -> ApiCtx
          * */
-        val agentMap: HashMap<Int, AgentContext> = hashMapOf(),
-
-        //key为SysAccessToken中的KeyXxxx
-        val sysAccessTokenMap: HashMap<String, TimelyRefreshAccessToken> = hashMapOf(),
-        val sysSecretMap: HashMap<String, String> = hashMapOf()
+        val agentMap: HashMap<String, ApiCtx> = hashMapOf()
 )
+
+class ApiCtx(
+    val secret: String,
+    val token: String? = null,
+    val msgHub: WorkMsgHub? = null,
+    val wxBizMsgCrypt: WXBizMsgCrypt? = null,
+    val accessToken: ITimelyRefreshValue? = null,
+    var agentJsTicket: ITimelyRefreshValue? = null,
+    var corpJsTicket:ITimelyRefreshValue? = null,
+    var privateKey: PrivateKey? = null
+)
+
+internal fun accessTokenUrl(corpId: String, secret: String) = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"
+//internal class AccessTokenUrl(private val corpId: String, private val secret: String) : IUrlProvider {
+//    override fun url() = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"
+//}
 
 
 /**
@@ -273,68 +251,64 @@ class CorpApiContext(
  * 。https://work.weixin.qq.com/api/doc/90000/90135/90930
  *  https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Access_Overview.html
  * */
-class AgentContext(
-    corpId: String,
-    val agentId: Int,
-    val secret: String,
-    val enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
-    val token: String? = null,
-    val encodingAESKey: String? = null,
-    privateKeyFilePath: String? = null,
-    enableJsSdk: Boolean,
-    msgHandler: IWorkMsgHandler?,
-    eventHandler: IWorkEventHandler?,
-    customAccessToken: ITimelyRefreshValue? = null,
-    var agentJsTicket: ITimelyRefreshValue? = null,
-    var corpJsTicket:ITimelyRefreshValue? = null
-) {
-    private val log = LoggerFactory.getLogger("AgentContext")
-
-    var accessToken: ITimelyRefreshValue = customAccessToken ?: TimelyRefreshAccessToken(corpId,
-            AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = agentId.toString())
-
-
-    var msgHub: WorkMsgHub? = null
-    var wxBizMsgCrypt: WXBizMsgCrypt? = null
-
-    var privateKey: PrivateKey? = null
-
-    init {
-        if (enableMsg) {
-            if (!token.isNullOrBlank() && !encodingAESKey.isNullOrBlank()) {
-                wxBizMsgCrypt = WXBizMsgCrypt(token, encodingAESKey)
-                msgHub = WorkMsgHub(msgHandler, eventHandler, wxBizMsgCrypt!!)
-            } else {
-                println("enableMsg=true, but not config token and encodingAESKey")
-            }
-        }
-        if(enableJsSdk){
-            agentJsTicket = TimelyRefreshTicket(corpId,
-                    TicketRefresher{
-                        "https://qyapi.weixin.qq.com/cgi-bin/ticket/get?access_token=${accessToken.get()}&type=agent_config"
-                    }, extra = agentId.toString())
-            corpJsTicket = TimelyRefreshTicket(corpId,
-                TicketRefresher{
-                    "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${accessToken.get()}"
-                })
-        }
-
-        if (!privateKeyFilePath.isNullOrBlank()) {
-            val file = File(privateKeyFilePath)
-            if (file.exists()) {
-                privateKey = PemUtil.loadPrivateKey(FileInputStream(privateKeyFilePath))
-            } else {
-                log.warn("Not exists: $privateKeyFilePath")
-            }
-        }
-    }
-}
-
-
-internal fun accessTokenUrl(corpId: String, secret: String) = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"
-//internal class AccessTokenUrl(private val corpId: String, private val secret: String) : IUrlProvider {
-//    override fun url() = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"
+//class AgentContext(
+//    corpId: String,
+//    val agentId: Int,
+//    val secret: String,
+//    val enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
+//    val token: String? = null,
+//    val encodingAESKey: String? = null,
+//    privateKeyFilePath: String? = null,
+//    enableJsSdk: Boolean,
+//    msgHandler: IWorkMsgHandler?,
+//    eventHandler: IWorkEventHandler?,
+//    customAccessToken: ITimelyRefreshValue? = null,
+//    var agentJsTicket: ITimelyRefreshValue? = null,
+//    var corpJsTicket:ITimelyRefreshValue? = null
+//) {
+//    private val log = LoggerFactory.getLogger("AgentContext")
+//
+//    var accessToken: ITimelyRefreshValue = customAccessToken ?: TimelyRefreshAccessToken(corpId,
+//            AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = agentId.toString())
+//
+//
+//    var msgHub: WorkMsgHub? = null
+//    var wxBizMsgCrypt: WXBizMsgCrypt? = null
+//
+//    var privateKey: PrivateKey? = null
+//
+//    init {
+//        if (enableMsg) {
+//            if (!token.isNullOrBlank() && !encodingAESKey.isNullOrBlank()) {
+//                wxBizMsgCrypt = WXBizMsgCrypt(token, encodingAESKey)
+//                msgHub = WorkMsgHub(msgHandler, eventHandler, wxBizMsgCrypt!!)
+//            } else {
+//                println("enableMsg=true, but not config token and encodingAESKey")
+//            }
+//        }
+//        if(enableJsSdk){
+//            agentJsTicket = TimelyRefreshTicket(corpId,
+//                    TicketRefresher{
+//                        "https://qyapi.weixin.qq.com/cgi-bin/ticket/get?access_token=${accessToken.get()}&type=agent_config"
+//                    }, extra = agentId.toString())
+//            corpJsTicket = TimelyRefreshTicket(corpId,
+//                TicketRefresher{
+//                    "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${accessToken.get()}"
+//                })
+//        }
+//
+//        if (!privateKeyFilePath.isNullOrBlank()) {
+//            val file = File(privateKeyFilePath)
+//            if (file.exists()) {
+//                privateKey = PemUtil.loadPrivateKey(FileInputStream(privateKeyFilePath))
+//            } else {
+//                log.warn("Not exists: $privateKeyFilePath")
+//            }
+//        }
+//    }
 //}
+
+
 
 //https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=ACCESS_TOKEN
 //internal class TicketUrl(private val accessToken: ITimelyRefreshValue): IUrlProvider{
@@ -343,4 +317,65 @@ internal fun accessTokenUrl(corpId: String, secret: String) = "https://qyapi.wei
 //}
 
 
+/**
+ * 一个进程中就存在一个特定的corp的agent
+ * */
+//object WorkSingle{
+// //   private lateinit var ctx: CorpApiContext
+//    private lateinit var _corpId: String
+//    //private var _agentId by Delegates.notNull<Int>()
+//   // private lateinit var _agentContext: AgentContext
+//   val agentMap: HashMap<Int, AgentContext> = hashMapOf()
+//
+//    val corpId: String
+//        get() = _corpId
+//
+//    //key为SysAccessToken中的KeyXxxx
+//
+//    val sysAccessTokenMap = hashMapOf<String, TimelyRefreshAccessToken>()
+//    internal val sysSecretMap = hashMapOf<String, String>()
+//
+//    /**
+//     * 配置高权限secret
+//     *
+//     * @param key 高权限accessToken对应的字符串key，可任意指定，同时需要将其赋值给对应的api的SysAgentKey字段
+//     * 如通讯录应用 ContactsApi.SysAgentKey = ${key}
+//     *
+//     * sdk中已内置了几个默认字段：SysAgentKey.Contact, SysAgentKey.ExternalContact, SysAgentKey.ChatArchive
+//     * 无需再给对应的api赋值
+//     *
+//     * @param secret 高权限api的secret
+//     * */
+//    fun config(key: String, secret: String){
+//        sysSecretMap[key] = secret
+//        sysAccessTokenMap[key] = TimelyRefreshAccessToken(corpId,
+//            AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = key)
+//    }
+//    fun reset(key: String){
+//        sysAccessTokenMap.remove(key)
+//        sysSecretMap.remove(key)
+//    }
+//    fun reset(agentId: Int){
+//        agentMap.remove(agentId)
+//    }
+//
+//    fun config(corpId: String,
+//               agentId: Int,
+//               secret: String,
+//               token: String? = null,
+//               encodingAESKey: String? = null,
+//               privateKeyFilePath: String? = null,
+//               enableJsSdk: Boolean = false,
+//               enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
+//               customMsgHandler: IWorkMsgHandler?,
+//               customEventHandler: IWorkEventHandler?,
+//               customAccessToken: ITimelyRefreshValue? = null
+//    ) {
+//        _corpId = corpId
+//
+//        agentMap[agentId] = AgentContext(corpId, agentId, secret, enableMsg,
+//            token, encodingAESKey, privateKeyFilePath, enableJsSdk,
+//            customMsgHandler,customEventHandler,customAccessToken)
+//    }
+//}
 

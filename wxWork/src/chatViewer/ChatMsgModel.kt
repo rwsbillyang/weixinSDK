@@ -35,7 +35,6 @@ import kotlinx.serialization.UseContextualSerialization
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.litote.kmongo.*
-import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -140,7 +139,7 @@ class ChatMsgListParam(
     override val umi: String? = null,
     val corpId: String,
     val userId: String,
-    val externalId: String,
+    val externalId: String? = null,
     val direction: Int? = null,
     val type: String? = null,
     val inDays: Int? = null,
@@ -224,7 +223,7 @@ class ChatMsgListParam(
             }
         }
 
-        return and(ownerFilter, //dateTimeRangeFilter,
+        return and(ownerFilter, dateTimeRangeFilter,
             typeFilter, ChatMsgRecord::corpId eq corpId)
     }
 }

@@ -26,7 +26,7 @@ class Invoice(
     @SerialName("card_id")val cardId: String,
     @SerialName("encrypt_code")val encryptCode: String)
 
-class InvoiceApi(corpId: String?, agentId: Int?, suiteId: String?)
+class InvoiceApi(corpId: String?, agentId: String?, suiteId: String?)
     : WorkBaseApi(corpId, agentId,suiteId)
 {
 

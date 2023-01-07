@@ -20,7 +20,7 @@ package com.github.rwsbillyang.wxSDK.work
 
 import com.github.rwsbillyang.ktorKit.client.doUploadRaw
 
-class MaterialApi(corpId: String?, agentId: Int?, suiteId: String?)
+class MaterialApi(corpId: String?, agentId: String?, suiteId: String?)
     : WorkBaseApi(corpId, agentId,suiteId)
 {
 

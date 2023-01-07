@@ -42,7 +42,7 @@ import kotlinx.serialization.Serializable
  * 调用（accesstoken如何获取？）；第三方/自建应用调用时，返回的跟进人follow_user仅包含应用可见范围之
  * 内的成员。
  * */
-class ExternalContactsApi(corpId: String?, agentId: Int?, suiteId: String?)
+class ExternalContactsApi(corpId: String?, agentId: String?, suiteId: String?)
     : WorkBaseApi(corpId, agentId,suiteId)
 {
 

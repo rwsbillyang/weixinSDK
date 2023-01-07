@@ -59,7 +59,7 @@ class RecommendHelper: KoinComponent {
      * @param account.Id
      * @param rcm 推荐人Account._id
      * */
-    fun bonus(account: WxWorkAccount, rcm: String?, agentId:Int?){
+    fun bonus(account: WxWorkAccount, rcm: String?, agentId:String?){
         if(!isBonus || rcm == null){
             return
         }
@@ -67,7 +67,7 @@ class RecommendHelper: KoinComponent {
 
         wxWorkAccountService.insertRecommend(Recommend(account._id, rcmId))
 
-        val newExpire = accountService.calculateNewExpireInfo(account?.expire, bonusLevel, 0,0, bonusDays)
+        val newExpire = accountService.calculateNewExpireInfo(account.expire, bonusLevel, 0,0, bonusDays)
         wxWorkAccountService.updateExpireInfo(account._id, newExpire)
 
         val recommender = wxWorkAccountService.findWxWorkAccount(rcmId)
