@@ -24,13 +24,11 @@ import com.github.rwsbillyang.wxSDK.work.SysAgentKey
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.WorkMulti
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
-import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler
 import com.github.rwsbillyang.wxWork.agent.AgentController
 import com.github.rwsbillyang.wxWork.config.ConfigService
 import com.github.rwsbillyang.wxWork.config.WxWorkAgentConfig
-import com.github.rwsbillyang.wxWork.contacts.ContactHandlerConfig
-
 import io.ktor.server.application.*
+import org.koin.core.qualifier.named
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
@@ -38,18 +36,31 @@ import org.slf4j.LoggerFactory
 /**
  * 单个应用的多企业配置
  * @param config 企业级配置
+ * @param application 用于注入eventHandler
+ * @param isSysAgent true：企业微信官方应用 false：自己创建的agent
  * @param agentController 调用者注入后传递过来，用于同步agent信息
- * @param enableReset 当修改配置后保存时，需求reset配置，即去掉map中的apiContext。初始化时不需要reset
  * */
 internal fun configWxWork(
     config: WxWorkAgentConfig,
+    application: Application,
     isSysAgent: Boolean = false,
     agentController: AgentController? = null
 ) {
     if(isSysAgent){
-        when(config.agentId){
-            SysAgentKey.Contact.name ->  ContactHandlerConfig.config(config)
-            else -> {}
+        if(config.enable){
+            val handler = when(config.agentId){
+                SysAgentKey.Contact.name -> application.inject<IWorkEventHandler>(named(config.agentId))
+                SysAgentKey.WxKeFu.name -> application.inject<IWorkEventHandler>(named(config.agentId))
+                else -> null
+            }?.value
+
+            WorkMulti.config(
+                config.corpId, config.agentId, config.secret, config.token, config.aesKey,
+                config.private, config.enableJsSdk, config.enableMsg,
+                null, handler
+            )
+        }else{
+            WorkMulti.reset(config.corpId, config.agentId)
         }
     }else{
         if(config.enable){
@@ -75,7 +86,6 @@ internal fun configWxWork(
                 WorkMulti.defaultWorkEventHandler = null
         }
     }
-
 }
 
 
@@ -86,8 +96,6 @@ internal fun configWxWork(
 class OnStartConfigWxWork(application: Application) : LifeCycle(application) {
     private val log = LoggerFactory.getLogger("WxWorkConfig")
     private val agentController: AgentController by application.inject()
-    private val eventHandler: IWorkEventHandler? by application.inject()
-    private val msgHandler: IWorkMsgHandler? by application.inject()
 
     init {
         onStarted {
@@ -97,10 +105,11 @@ class OnStartConfigWxWork(application: Application) : LifeCycle(application) {
 
             //数据库中有配置时的情形
             agentList.forEach {
-                configWxWork(it, false, agentController)
+                configWxWork(it, application,false, agentController)
             }
+
             sysAgentList.forEach {
-                configWxWork(it, true)
+                configWxWork(it, application, true)
             }
 
             //configMsgNotifyUrl(application)
@@ -122,7 +131,6 @@ class OnStartConfigWxWork(application: Application) : LifeCycle(application) {
 
         log.info("WorkMulti.eventHandlerCount: ${WorkMulti.eventHandlerCount}")
         log.info("WorkMulti.msgHandlerCount: ${WorkMulti.msgHandlerCount}")
-        log.info("ContactHandlerConfig.count: ${ContactHandlerConfig.count}")
 
         log.info("====================config WxWork=====================")
     }

@@ -2,9 +2,9 @@ package com.github.rwsbillyang.wxWork
 
 
 import com.github.rwsbillyang.ktorKit.server.AppModule
+import com.github.rwsbillyang.wxSDK.work.SysAgentKey
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
-import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkMsgHandler
 import com.github.rwsbillyang.wxUser.account.stats.StatsService
 import com.github.rwsbillyang.wxWork.account.RecommendHelper
 import com.github.rwsbillyang.wxWork.account.WxWorkAccountController
@@ -19,6 +19,7 @@ import com.github.rwsbillyang.wxWork.chatViewer.*
 import com.github.rwsbillyang.wxWork.config.ConfigController
 import com.github.rwsbillyang.wxWork.config.ConfigService
 import com.github.rwsbillyang.wxWork.config.wxWorkConfigApi
+import com.github.rwsbillyang.wxWork.contacts.ContactEventHandler
 import com.github.rwsbillyang.wxWork.contacts.contactApi
 import com.github.rwsbillyang.wxWork.contacts.contactModule
 import com.github.rwsbillyang.wxWork.isv.IsvCorpService
@@ -27,9 +28,11 @@ import com.github.rwsbillyang.wxWork.isv.UserDetail3rd
 import com.github.rwsbillyang.wxWork.isv.isvModule
 import com.github.rwsbillyang.wxWork.msg.PayMsgNotifier
 import com.github.rwsbillyang.wxWork.wxkf.WxkfController
+import com.github.rwsbillyang.wxWork.wxkf.WxkfEventHandler
 import com.github.rwsbillyang.wxWork.wxkf.WxkfService
 import com.github.rwsbillyang.wxWork.wxkf.wxkfApi
 import io.ktor.server.application.*
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.ktor.ext.inject
 
@@ -57,13 +60,12 @@ val ApplicationCall.externalUserId
  * */
 val wxWorkModule = AppModule(
     listOf(contactModule, agentModule,
-        module {
-            single<IWorkEventHandler> { WxWorkEventHandler() }
-            single<IWorkMsgHandler> { WxWorkMsgHandler() }
+
+        module(createdAtStart = true) {
+            //single { ExpireNotifierWork(get()) }
+            single<IWorkEventHandler>(named(SysAgentKey.Contact.name)) { ContactEventHandler() }
+            single<IWorkEventHandler>(named(SysAgentKey.WxKeFu.name)) { WxkfEventHandler() }
         },
-        //        module(createdAtStart = true) {
-//            single { ExpireNotifierWork(get()) }
-//        },
         module {
             //single { FanRpcWork() }
             single { PayMsgNotifier() }

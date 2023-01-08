@@ -19,10 +19,8 @@
 package com.github.rwsbillyang.wxWork.contacts
 
 import com.github.rwsbillyang.ktorKit.server.*
-import com.github.rwsbillyang.wxSDK.work.WorkMulti
-import com.github.rwsbillyang.wxSDK.work.inMsg.IWorkEventHandler
 import com.github.rwsbillyang.wxWork.agentId
-import com.github.rwsbillyang.wxWork.config.WxWorkAgentConfig
+
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -31,7 +29,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.dsl.module
 import org.koin.ktor.ext.inject
-import java.util.concurrent.atomic.AtomicInteger
 
 val contactModule = module {
     single { ContactController() }
@@ -40,25 +37,6 @@ val contactModule = module {
     //single { ContactEventHandler()}
 }
 
-object ContactHandlerConfig{
-    var handler: IWorkEventHandler? = null
-    var count: AtomicInteger = AtomicInteger()
-    fun config(cfg: WxWorkAgentConfig){
-        if(cfg.enable){
-            if(count.addAndGet(1) == 1)
-                handler = ContactEventHandler()
-            WorkMulti.config(
-                cfg.corpId, cfg.agentId, cfg.secret, cfg.token, cfg.aesKey,
-                cfg.private, cfg.enableJsSdk, cfg.enableMsg,
-                null, handler
-            )
-        }else{
-            if(count.addAndGet(-1) == 0)
-                handler = null
-            WorkMulti.reset(cfg.corpId, cfg.agentId)
-        }
-    }
-}
 
 fun Routing.contactApi() {
     val controller: ContactController by inject()

@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.xml.stream.XMLEventReader
 
 class ContactEventHandler: DefaultWorkEventHandler(), KoinComponent {
-    private val log = LoggerFactory.getLogger("MyEventHandler")
+    private val log = LoggerFactory.getLogger("ContactEventHandler")
     private val agentService: AgentService by inject()
     private val isvCorpService: IsvCorpService by inject()
     private val contactHelper: ContactHelper by inject()

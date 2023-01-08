@@ -44,9 +44,18 @@ interface IWorkEventHandler: IDispatcher {
     fun onExternalGroupChatCreateEvent(appId: String, agentId:String?,e: ExternalChatChangeEvent): ReBaseMSg?
     fun onExternalGroupChatUpdateEvent(appId: String, agentId:String?,e: ExternalChatUpdateEvent): ReBaseMSg?
     fun onExternalGroupChatDelEvent(appId: String, agentId:String?,e: ExternalChatChangeEvent): ReBaseMSg?
+
+    //wx kefu msg event
+    fun onWxkfMsgEvent(appId: String, e: WxkfEvent): ReBaseMSg?
 }
 
 open class DefaultWorkEventHandler : IWorkEventHandler{
+    /**
+     * 未知类型的msg或event可以继续进行读取其额外信息，从而可以自定义分发和处理
+     * 返回null表示由onDefault继续处理
+     * */
+    override fun onDispatch(appId: String, agentId:String?,reader: XMLEventReader, base: BaseInfo):ReBaseMSg? = null
+
     override fun onDefault(appId: String, agentId:String?,e: AgentEvent): ReBaseMSg? {
         return null
     }
@@ -103,11 +112,8 @@ open class DefaultWorkEventHandler : IWorkEventHandler{
     override fun onExternalGroupChatCreateEvent(appId: String, agentId: String?, e: ExternalChatChangeEvent) = onDefault(appId, agentId,e)
     override fun onExternalGroupChatUpdateEvent(appId: String, agentId: String?, e: ExternalChatUpdateEvent) = onDefault(appId, agentId,e)
     override fun onExternalGroupChatDelEvent(appId: String, agentId: String?, e: ExternalChatChangeEvent) = onDefault(appId, agentId,e)
-    /**
-     * 未知类型的msg或event可以继续进行读取其额外信息，从而可以自定义分发和处理
-     * 返回null表示由onDefault继续处理
-     * */
-    override fun onDispatch(appId: String, agentId:String?,reader: XMLEventReader, base: BaseInfo):ReBaseMSg? = null
 
 
+    //wx kefu msg event
+    override fun onWxkfMsgEvent(appId: String, e: WxkfEvent) = onDefault(appId,null, e)
 }

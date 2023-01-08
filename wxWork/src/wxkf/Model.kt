@@ -50,3 +50,21 @@ data class WxKfScene(
     val desc: String? = null,
     var url: String? = null
 )
+
+@Serializable
+data class WxkfMsg(
+    val _id: String, //msgid
+    val corpId: String,
+    val open_kfid: String,
+    val external_userid: String,
+    val send_time: Long,
+    val origin: Int,
+    val servicer_userid: String,
+    val msgtype: String,
+    val content: String // msg content json
+)
+@Serializable
+data class WxkfMsgCursor(
+    val _id: String,//open_kfid
+    val cursor: String
+)

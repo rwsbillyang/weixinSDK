@@ -37,6 +37,9 @@ object WorkEventType{
     const val EXTERNAL_CHAT_ADD = "create"
     const val EXTERNAL_CHAT_EDIT = "update"
     const val EXTERNAL_CHAT_DEL = "dismiss"
+
+
+    const val WxkfMsgEvent = "kf_msg_or_event"
 }
 
 /**

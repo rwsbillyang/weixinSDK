@@ -51,7 +51,10 @@ open class WorkMsgHub(
         //若使用WxBaseEvent可能event字段在后面，而agentID在前面，即使再去读，也读取不到了。
         //这里使用AgentEvent，比WxBaseEvent多读取一个agentId字段，即使没有此字段，便让其为空罢了
         val agentEvent = AgentEvent(baseInfo).apply { read(reader) } // 读取agentId和event
+
         return when (agentEvent.event) {
+            WorkEventType.WxkfMsgEvent -> eventHandler.onWxkfMsgEvent(appId,  WxkfEvent(baseInfo).apply { read(reader) } )
+
             InEventType.SUBSCRIBE -> eventHandler.onSubscribeEvent(appId, agentId,
                 WorkSubscribeEvent(baseInfo, agentEvent) //无需额外数据，故不需再读
             )
@@ -167,5 +170,4 @@ open class WorkMsgHub(
             }
         }
     }
-
 }
