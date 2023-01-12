@@ -19,15 +19,12 @@
 package com.github.rwsbillyang.wxWork.config
 
 
-import com.github.rwsbillyang.ktorKit.cache.CacheService
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.db.MongoCRUDService
-import com.github.rwsbillyang.ktorKit.db.MongoDataSource
 import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.wxWork.wxWorkModule
 import kotlinx.coroutines.runBlocking
-import org.koin.core.component.inject
-import org.koin.core.qualifier.named
+import org.litote.kmongo.and
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.eq
 
@@ -54,13 +51,15 @@ class ConfigService(cache: ICache) : MongoCRUDService(cache,wxWorkModule.dbName!
         }
     }
 
-
     fun findAgentConfigList(enabled: Boolean? = null) = runBlocking {
         if(enabled == null) wxWorkAgentCfgCol.find().toList()
         else wxWorkAgentCfgCol.find(WxWorkAgentConfig::enable eq enabled).toList()
     }
     fun findWxWorkAgentConfig(id: String): WxWorkAgentConfig? = runBlocking{
         wxWorkAgentCfgCol.findOneById(id.toObjectId())
+    }
+    fun findWxWorkAgentConfigByAgentId(corpId: String, agentId: String): WxWorkAgentConfig? = runBlocking{
+        wxWorkAgentCfgCol.findOne(and(WxWorkAgentConfig::corpId eq corpId, WxWorkAgentConfig::agentId eq agentId))
     }
     fun findWxWorkAgentConfigByCorpId(corpId: String) = runBlocking{
         wxWorkAgentCfgCol.find(WxWorkAgentConfig::corpId eq corpId).toList()

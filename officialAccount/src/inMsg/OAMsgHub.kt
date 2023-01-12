@@ -12,7 +12,7 @@ class OAMsgHub(
          val eventHandler: IOAEventHandler?,
         wxBizMsgCrypt: WXBizMsgCrypt?
 ):WxMsgHub(wxBizMsgCrypt) {
-    override fun dispatchMsg(appId:String, agentId:Int?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?{
+    override fun dispatchMsg(appId:String, agentId:String?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?{
         if(msgHandler == null) return null
         return when(baseInfo.msgType){
             MsgType.TEXT -> {
@@ -45,7 +45,7 @@ class OAMsgHub(
         }
     }
 
-    override fun dispatchEvent(appId:String, agentId:Int?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?{
+    override fun dispatchEvent(appId:String, agentId:String?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?{
         if(eventHandler == null) return null
         val baseEvent = WxBaseEvent(baseInfo).apply { read(reader) }
         return when (baseEvent.event) {

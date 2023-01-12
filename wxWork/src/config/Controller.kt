@@ -43,13 +43,15 @@ class ConfigController : KoinComponent {
 
     fun saveWxWorkAgentConfig(doc: WxWorkAgentConfig, name: String): DataBox<WxWorkAgentConfig> {
         if(doc._id == null) doc._id = ObjectId()
-        service.saveWxWorkAgentConfig(doc)
+
 
         if(!Work.isIsv){
             if(doc.enable){
-                if(name == "agent")
-                    configWxWork(doc, application,false, agentController)
-                else if(name == "sysagent"){
+                if(name == "agent") {
+                    service.saveWxWorkAgentConfig(doc)
+                    configWxWork(doc, application, false, agentController)
+                }else if(name == "sysagent"){
+                    service.saveWxWorkSysAgentConfig(doc)
                     configWxWork(doc,application, true)
                 }else
                 {

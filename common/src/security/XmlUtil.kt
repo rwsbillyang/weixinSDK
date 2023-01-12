@@ -97,7 +97,7 @@ object XmlUtil {
         timestamp: String?,
         nonce: String?,
         toUserName: String? = null,
-        agentId: Int? = null
+        agentId: String? = null
     ): String {
         val builder = XmlMsgBuilder("<xml>\n")
         if(!toUserName.isNullOrBlank()) builder.addData("ToUserName", toUserName)
@@ -105,7 +105,7 @@ object XmlUtil {
         builder.addTag("MsgSignature", signature)
         builder.addTag("TimeStamp", timestamp)
         builder.addTag("Nonce", nonce)
-        if(agentId != null) builder.addTag("AgentID", agentId.toString())
+        if(agentId != null) builder.addTag("AgentID", agentId)
         builder.append("</xml>")
 
         return builder.toString()

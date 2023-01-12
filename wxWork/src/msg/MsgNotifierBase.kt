@@ -20,10 +20,12 @@ package com.github.rwsbillyang.wxWork.msg
 
 import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.wxSDK.work.MsgApi
-import com.github.rwsbillyang.wxSDK.work.Work
-import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
+import com.github.rwsbillyang.wxSDK.work.outMsg.IOutWxWorkMsg
 import com.github.rwsbillyang.wxWork.account.WxWorkAccount
+import com.github.rwsbillyang.wxWork.agent.AgentService
 import com.github.rwsbillyang.wxWork.config.ConfigService
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
@@ -32,14 +34,25 @@ open class MsgNotifierBase : KoinComponent {
     private val log = LoggerFactory.getLogger("MsgNotifierBase")
 
     private val configService: ConfigService by inject()
-    private val defaultUrl = "http://zhike.niukid.com/#!/admin/tab/material"
+    private val agentService: AgentService by inject()
 
+    fun notifyMsg(corpId: String, agentId: String, msg: IOutWxWorkMsg) = runBlocking{
+        launch {
+            val api =  MsgApi(corpId, agentId)
+            api.send(msg)
+        }
+    }
 
     // 点击后跳转的链接。最长2048字节，请确保包含了协议头(http/https)
-    fun url(account: WxWorkAccount, corpId: String, agentId: String?, type: String): String{
-        // val url = urlConfigMap?.get(type)?:defaultUrl
-        val url = configService.findMsgNotifyConfig(corpId, agentId)?.pathMap?.get(type)?:defaultUrl
-        return "$url?corpId=${account.corpId}&agentId=$agentId"
+    fun url(corpId: String, agentId: String?, type: String?): String{
+        val defaultUrl = if(agentId == null) null else{
+            agentService.findAgent(agentId, corpId)?.url ?: configService.findWxWorkAgentConfigByAgentId(corpId, agentId)?.url
+        }
+        val url = if(type == null) defaultUrl else configService.findMsgNotifyConfig(corpId, agentId)?.pathMap?.get(type)?:defaultUrl
+        if(url == null){
+            log.warn("not found url in agent and agentConfig: corpId=$corpId, agentId=$agentId")
+        }
+        return "$url?corpId=${corpId}&agentId=$agentId"
     }
 
     fun div(text: String, className: String) = "<div class=\"$className\">${text}</div>"
@@ -59,19 +72,5 @@ open class MsgNotifierBase : KoinComponent {
         val highlightHtml = if(highlight != null) div(highlight, "highlight")  else ""
 
         return grayHtml + normals.filterNotNull().joinToString(" ") { div(it, "normal") } + highlightHtml
-    }
-
-
-    fun msgApi(account: WxWorkAccount, appId: String?, agentId: String?): MsgApi?{
-        if(appId == null || agentId == null || account.userId == null)
-        {
-            log.warn("appId, agentId or userId is null in account, do nothing")
-            return null
-        }
-        return if(Work.isIsv){
-            log.warn("Not support isv multi, do nothing")
-            null
-        }else
-            MsgApi(appId, agentId, null)
     }
 }

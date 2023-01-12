@@ -179,7 +179,7 @@ class WXBizMsgCrypt(private val token: String, private val encodingAesKey: Strin
                    timeStamp: String = System.currentTimeMillis().toString(),
                    nonce: String = getRandomStr(),
                    toUserName: String? = null,
-                   agentId: Int? = null
+                   agentId: String? = null
     ): Pair<String, String> {
         val encrypt = encrypt(appId, replyMsg)
         val signature = SHA1.getSHA1(token, timeStamp, nonce, encrypt)

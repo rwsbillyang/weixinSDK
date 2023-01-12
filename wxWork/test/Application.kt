@@ -37,16 +37,11 @@ import io.ktor.server.routing.*
 //fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 object TestConstatns {
-    const val KeyBase = 1000
-    const val KeyContact = KeyBase + 1
-    const val KeyCustomer = KeyBase + 2
-    const val KeyChatArchive = KeyBase + 3
+    val KeyContact = SysAgentKey.Contact.name
+    val KeyCustomer = SysAgentKey.ExternalContact.name
+    val KeyChatArchive = SysAgentKey.ChatArchive.name
+    val KeyWxkf = SysAgentKey.WxKeFu.name
 
-    const val KeyAgentMgt = KeyBase + 4
-    const val KeyCalendar = KeyBase + 5
-    const val KeyInvoice = KeyBase + 6
-    const val KeyMaterial = KeyBase + 7
-    const val KeyOA = KeyBase + 8
 
     const val CorpId = "wx5823bf96d3bd56c7"
 }
@@ -84,13 +79,12 @@ fun Application.WorkTestableModule(testing: Boolean = false) {
     testableModule(testing)
 
     Work.isIsv = false
-    Work.isMulti = true
 
     val msgHandler = TestWorkMsgHandler()
     val eventHandler = DefaultWorkEventHandler()
     WorkMulti.config(
         TestConstatns.CorpId,
-        TestConstatns.KeyBase,
+        TestConstatns.KeyWxkf,
         "the_secret",
         "QDG6eK",
         "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C",
@@ -148,7 +142,7 @@ class TestJsTicketValue : ITimelyRefreshValue {
 
 
 class TestWorkMsgHandler : DefaultWorkMsgHandler() {
-    override fun onTextMsg(appId: String ,agentId: Int?, msg: WorkTextMsg): ReBaseMSg? {
+    override fun onTextMsg(appId: String ,agentId: String?, msg: WorkTextMsg): ReBaseMSg? {
         return ReTextMsg(
             "TestWorkMsgHandler reply the msg: content=${msg.content},msgId=${msg.msgId},agentId=${msg.agentId}",
             msg.base.fromUserName,
@@ -156,7 +150,7 @@ class TestWorkMsgHandler : DefaultWorkMsgHandler() {
         )
     }
 
-    override fun onDefault(appId: String ,agentId: Int?,msg: WorkBaseMsg): ReBaseMSg? {
+    override fun onDefault(appId: String ,agentId: String?,msg: WorkBaseMsg): ReBaseMSg? {
         return ReTextMsg(
             "TestWorkMsgHandler default reply the msg: msgId=${msg.msgId},agentId=${msg.agentId}",
             msg.base.fromUserName,

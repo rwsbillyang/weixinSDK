@@ -23,7 +23,7 @@ import com.github.rwsbillyang.wxSDK.work.outMsg.IOutWxWorkMsg
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-class MsgApi (corpId: String?, agentId: String?, suiteId: String?)
+class MsgApi (corpId: String?, agentId: String?, suiteId: String? = null)
     : WorkBaseApi(corpId, agentId,suiteId)
 {
     override val group = "message"

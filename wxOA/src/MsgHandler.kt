@@ -37,7 +37,7 @@ class MsgHandler: IOAMsgHandler, MsgEventCommonHandler()  {
         return tryReMsg(appId, msg)
     }
 
-    override fun onDispatch(appId: String, agentId:Int?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg? = null
+    override fun onDispatch(appId: String, agentId:String?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg? = null
 
     override fun onOACustomerClickMenuMsg(appId: String, msg: OACustomerClickMenuMsg): ReBaseMSg? {
         val statMsg = StatsMsg(appId, msg.base.toUserName, msg.base.fromUserName, msg.base.createTime, msg.msgId,"${msg.menuId}, ${msg.content}")

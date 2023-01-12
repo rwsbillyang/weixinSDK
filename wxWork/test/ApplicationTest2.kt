@@ -23,7 +23,6 @@ import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.security.XmlUtil
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.WorkMulti
-import com.github.rwsbillyang.wxSDK.work.WorkSingle
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 
@@ -58,14 +57,12 @@ class ApplicationTest2 {
     fun testWorkUrlGet() = testApplication {
         application { WorkTestableModule(testing = true) }
 
-        val agentName = TestConstatns.KeyBase
+        val agentName = TestConstatns.KeyWxkf
 
-        val ctx = if (Work.isMulti)
-            WorkMulti.ApiContextMap[TestConstatns.CorpId]!!.agentMap[agentName]!!
-        else WorkSingle.agentContext
+        val ctx = WorkMulti.ApiContextMap[TestConstatns.CorpId]!!.agentMap[agentName]
 
         //加密第二个参数: wxBizMsgCrypt中使用的是Base64.getEncoder()，导致生成的字符串可能不符合url规范，导致接收到的encryptEcho产生变化，因而签名验证失败
-        val encryptEcho = ctx.wxBizMsgCrypt!!.encrypt(TestConstatns.CorpId,echoStr)
+        val encryptEcho = ctx!!.wxBizMsgCrypt!!.encrypt(TestConstatns.CorpId,echoStr)
 
         //对加密后的内容进行签名
         val signature = SHA1.getSHA1(ctx.token!!, timestamp, nonce, encryptEcho)
@@ -84,10 +81,8 @@ class ApplicationTest2 {
     fun testWorkUrlPost()  = testApplication {
         application { WorkTestableModule(testing = true) }
 
-        val agentName = TestConstatns.KeyBase
-        val ctx = if (Work.isMulti)
-            WorkMulti.ApiContextMap[TestConstatns.CorpId]!!.agentMap[agentName]!!
-        else WorkSingle.agentContext
+        val agentName = TestConstatns.KeyWxkf
+        val ctx = WorkMulti.ApiContextMap[TestConstatns.CorpId]!!.agentMap[agentName]!!
 
 
         //原始消息文本

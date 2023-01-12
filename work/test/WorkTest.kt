@@ -154,7 +154,7 @@ class WorkTest {
         val sRespData =
             "<xml><ToUserName><![CDATA[mycreate]]></ToUserName><FromUserName><![CDATA[wx5823bf96d3bd56c7]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[this is a test]]></Content><MsgId>1234567890123456</MsgId><AgentID>128</AgentID></xml>"
         try {
-            val sEncryptMsg: String = wXBizMsgCrypt.encryptMsg(CorpId, sRespData, sReqTimeStamp, sReqNonce,"mycreate", 128).first
+            val sEncryptMsg: String = wXBizMsgCrypt.encryptMsg(CorpId, sRespData, sReqTimeStamp, sReqNonce,"mycreate", "128").first
             println("\nafter encrypt sEncrytMsg: $sEncryptMsg")
             // 加密成功
             // HttpUtils.SetResponse(sEncryptMsg);

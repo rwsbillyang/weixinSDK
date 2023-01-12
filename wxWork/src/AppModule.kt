@@ -26,6 +26,7 @@ import com.github.rwsbillyang.wxWork.isv.IsvCorpService
 import com.github.rwsbillyang.wxWork.isv.OnStartConfigWxWork3rd
 import com.github.rwsbillyang.wxWork.isv.UserDetail3rd
 import com.github.rwsbillyang.wxWork.isv.isvModule
+import com.github.rwsbillyang.wxWork.msg.MsgNotifierBase
 import com.github.rwsbillyang.wxWork.msg.PayMsgNotifier
 import com.github.rwsbillyang.wxWork.wxkf.WxkfController
 import com.github.rwsbillyang.wxWork.wxkf.WxkfEventHandler
@@ -69,6 +70,7 @@ val wxWorkModule = AppModule(
         module {
             //single { FanRpcWork() }
             single { PayMsgNotifier() }
+            single { MsgNotifierBase() }
             single { StatsService(get()) }
             single { RecommendHelper() }
             single { WxWorkAccountController(get()) }

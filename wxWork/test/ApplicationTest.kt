@@ -12,7 +12,6 @@ class ApplicationTest {
     @Test
     fun testRoot() = testApplication {
         application {
-            Work.isMulti = false
             Work.isIsv = false
             testableModule(true)
         }

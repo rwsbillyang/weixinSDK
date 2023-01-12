@@ -42,7 +42,7 @@ class EventHandler: IOAEventHandler, MsgEventCommonHandler() {
         return tryReMsg(appId, e)
     }
 
-    override fun onDispatch(appId:String, agentId:Int?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg? {
+    override fun onDispatch(appId:String, agentId:String?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg? {
         return null// 返回null将由onDefault继续处理
     }
 
