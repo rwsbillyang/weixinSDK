@@ -18,8 +18,10 @@
 @file:UseContextualSerialization(ObjectId::class)
 package com.github.rwsbillyang.wxWork.wxkf
 
+import com.github.rwsbillyang.wxSDK.work.EnterSessionContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseContextualSerialization
+import kotlinx.serialization.json.JsonObject
 import org.bson.types.ObjectId
 
 @Serializable
@@ -61,10 +63,20 @@ data class WxkfMsg(
     val origin: Int,
     val servicer_userid: String,
     val msgtype: String,
-    val content: String // msg content json
+    val content: JsonObject // msg content json
 )
 @Serializable
 data class WxkfMsgCursor(
     val _id: String,//open_kfid
     val cursor: String
+)
+
+
+@Serializable
+class WxKfCustomer(
+    val nickname: String,
+    val avatar: String?,
+    val gender: Int,
+    val externalId: String,
+    val enterSessions: List<EnterSessionContext>? = null, //wxkf 中的来源场景列表
 )

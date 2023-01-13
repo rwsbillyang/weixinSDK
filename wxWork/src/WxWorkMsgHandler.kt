@@ -34,7 +34,7 @@ class WxWorkMsgHandler: DefaultWorkMsgHandler(), KoinComponent {
         var defaultReTMsgText: String? = null
     }
 
-    private val log = LoggerFactory.getLogger("MyMsgHandler")
+    private val log = LoggerFactory.getLogger("WxWorkMsgHandler")
     override fun onDefault(appId: String, agentId: String?, msg: WorkBaseMsg): ReBaseMSg? {
         log.info("onDefault:appId=$appId, agentId=$agentId Not yet implemented")
         if(defaultReTMsgText == null) return null

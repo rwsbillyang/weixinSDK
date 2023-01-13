@@ -70,8 +70,11 @@ data class Contact(
    // var archive: Int = 0, //自定义字段：支持会话存档为1，否则为0
    // val ids: List<String>? = null //外部联系人external_id列表
 ){
-    fun toBean(children: List<ContactBean>?, size: Long = -1) = ContactBean(_id!!.to64String(), userId, name, mobile, thumb, gender?.toInt(),
-        childrenSize = if(size < 0) children?.size?.toLong()?:0L else size, status, children = children)
+    fun toBean(children: List<ContactBean>?, size: Long = -1)
+        = ContactBean(_id!!.to64String(), userId, name, avatar, gender?.toInt(),
+        mobile, status,
+        children = children,
+        childrenSize = if(size < 0) children?.size?.toLong()?:0L else size,)
 }
 fun ResponseUserDetail.toDoc(corpId: String) = Contact(
     null, corpId,
@@ -102,10 +105,9 @@ class ContactBean(
     val _id: String,// Contact._id or ExternalContact._id  因为userId可能会改变，故不能以corpId/userId作为键值
     val userId: String?, //Contact.userId or ExternalContact.external_userId
     val name: String? = null,
-    val mobile: String? = null,
-    val thumb: String? = null,
+    val avatar: String? = null,
     val gender: Int? = null, //0表示未定义，1表示男性，2表示女性
-    val childrenSize: Long = 0L, //当查询的是客服列表时，表示客户数量；当查询的是客户列表时表示聊天消息数量
+    val mobile: String? = null,
 
     //以下字段为内部联系人专有
     val status: Int? = null,//激活状态: 1=已激活，2=已禁用，4=未激活，5=退出企业。
@@ -115,7 +117,13 @@ class ContactBean(
     //以下字段为外部联系人专有
     val addWay: Int? = null,// val add_way: Int, https://work.wxwork.qq.com/api/doc/90000/90135/92114
     val relationChanges: List<RelationChange>? = null, //关系变动列表
-    val remark: String? = null
+    val remark: String? = null,
+    val openId: String? = null,
+
+    val childrenSize: Long = 0L, //当查询的是客服列表时，表示客户数量；当查询的是客户列表时表示聊天消息数量
+
+    //wxkf customer
+    val enterSessions: List<EnterSessionContext>? = null, //wxkf 中的来源场景列表
 )
 
 @Serializable
@@ -163,36 +171,43 @@ data class ExternalContact(
     val externalId: String, //external_userid	外部联系人的userid
     val name: String? = null, ////如果是微信用户，则返回其微信昵称。如果是企业微信联系人，则返回其设置对外展示的别名或实名
     val avatar: String? = null,//外部联系人头像，代开发自建应用需要管理员授权才可以获取，第三方不可获取
-    val type: Int, //外部联系人的类型，1表示该外部联系人是微信用户，2表示该外部联系人是企业微信用户
     val gender: Int, //外部联系人性别 0-未知 1-男性 2-女性
     val unionId: String? = null,//外部联系人在微信开放平台的唯一身份标识（微信unionid），通过此字段企业可将外部联系人与公众号/小程序用户关联起来。仅当联系人类型是微信用户，且企业或第三方服务商绑定了微信开发者ID有此字段：https://work.weixin.qq.com/api/doc/90000/90135/92114
+    val type: Int? = null, //外部联系人的类型，1表示该外部联系人是微信用户，2表示该外部联系人是企业微信用户
     val position: String? = null,//外部联系人的职位，如果外部企业或用户选择隐藏职位，则不返回，仅当联系人类型是企业微信用户时有此字段
     val corpName: String? = null,//外部联系人所在企业的简称，仅当联系人类型是企业微信用户时有此字段
     val corpFullName: String? = null,//外部联系人所在企业的主体名称，仅当联系人类型是企业微信用户时有此字段
     val externalProfile: ExternalProfile? = null, //外部联系人的自定义展示信息，可以有多个字段和多种类型，包括文本，网页和小程序，仅当联系人类型是企业微信用户时有此字段
     val followers: List<FollowUser>? = null,
-    val openId: String? = null //通过external_userId得到
+    val openId: String? = null, //通过external_userId得到
+    val enterSessions: List<EnterSessionContext>? = null, //wxkf 中的来源场景列表
+    val wxkf: Boolean = false //是否是咨询微信客服用户
 ){
     /**
      * 若不是特定成员的客户，则contactUserId为空
      * */
     fun toBean(contactUserId: String?, msgCount: Long, relationChanges: List<RelationChange>?):ContactBean{
         return if(contactUserId == null){
-            ContactBean(_id!!.to64String(), externalId,  name, null, avatar,  gender)
+            ContactBean(_id!!.to64String(), externalId,  name, avatar,  gender,
+                openId = openId,
+                enterSessions = enterSessions)
         }else{
             val remarkInfo = followers?.firstOrNull { it.userid == contactUserId }
-            ContactBean(_id!!.to64String(), externalId, name,remarkInfo?.remark_mobiles?.firstOrNull(), avatar,  gender,
+            ContactBean(_id!!.to64String(), externalId, name,avatar,  gender,
+                remarkInfo?.remark_mobiles?.firstOrNull(),
                 childrenSize = msgCount,
                 addWay = remarkInfo?.add_way,
                 relationChanges = relationChanges,
-                remark = remarkInfo?.remark
+                remark = remarkInfo?.remark,
+                openId = openId,
+                enterSessions = enterSessions
             )
         }
 
     }
 }
 @Serializable
-@Resource("/external/list")
+@Resource("/list")
 data class ExternalListParams(
     val corpId: String,
 
@@ -248,8 +263,8 @@ add_way
  * */
 fun ResponseExternalContactDetail.toDoc(corpId: String) = external_contact?.run {
     ExternalContact(
-        null, corpId, external_userid, name, avatar, type, gender,
-        unionid, position, corp_name, corp_full_name, external_profile, follow_user
+        null, corpId, external_userid, name, avatar, gender,
+        unionid, type, position, corp_name, corp_full_name, external_profile, follow_user
     )
 }
 

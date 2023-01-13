@@ -102,13 +102,19 @@ class ContactController: KoinComponent {
      * @param id ExternalContact._id 即：corpId/external_userId
      * */
     fun getExternalDetail(id: String?): DataBox<ExternalContact> {
-        if(id.isNullOrBlank()) {
-            log.warn("getExternalContactDetail: invalid parameter: corpId or contactId is null")
-            return DataBox.ko("invalid parameter: corpId or contactId is null")
+        if(id == null) {
+            log.warn("getExternalContactDetail: invalid parameter: no id")
+            return DataBox.ko("invalid parameter: no id")
         }
         return DataBox.ok(service.findExternalContact(id.toObjectId()))
     }
-
+    fun getExternalDetailByExternalId(externalId: String?, corpId: String?): DataBox<ExternalContact> {
+        if(externalId == null || corpId == null) {
+            log.warn("getExternalDetailByExternalId: invalid parameter: no externalId or corpId")
+            return DataBox.ko("invalid parameter: no externalId or corpId")
+        }
+        return DataBox.ok(service.findExternalContactByExternalId(externalId, corpId))
+    }
 
     /**
      * 获取指定成员的客户列表。客户是指配置了客户联系功能的成员所添加的外部联系人。

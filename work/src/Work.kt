@@ -155,6 +155,7 @@ object WorkMulti{
               customEventHandler: IWorkEventHandler?,
               customAccessToken: ITimelyRefreshValue? = null):ApiCtx
     {
+        val log = LoggerFactory.getLogger("WorkMulti.setupApiCtx")
         val accessToken: ITimelyRefreshValue = customAccessToken ?: TimelyRefreshAccessToken(corpId,
             AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = agentIdOrKey)
 
@@ -165,7 +166,7 @@ object WorkMulti{
                 wXBizMsgCrypt = WXBizMsgCrypt(token, encodingAESKey)
                 msgHub = WorkMsgHub(wXBizMsgCrypt, customMsgHandler, customEventHandler)
             } else {
-                println("enableMsg=true, but not config token and encodingAESKey")
+                log.info("enableMsg=true, but not config token and encodingAESKey")
             }
         }
         var agentJsTicket:TimelyRefreshTicket? =  null
@@ -186,7 +187,6 @@ object WorkMulti{
             if (file.exists()) {
                 privateKey = PemUtil.loadPrivateKey(FileInputStream(privateKeyFilePath))
             } else {
-                val log = LoggerFactory.getLogger("setupApiCtx")
                 log.warn("Not exists: $privateKeyFilePath")
             }
         }

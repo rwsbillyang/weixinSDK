@@ -26,6 +26,7 @@ import com.github.rwsbillyang.ktorKit.db.MongoGenericService
 import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.wxSDK.work.DepartmentItem
+import com.github.rwsbillyang.wxSDK.work.EnterSessionContext
 import com.github.rwsbillyang.wxSDK.work.FollowUser
 import com.github.rwsbillyang.wxWork.wxWorkModule
 import kotlinx.coroutines.runBlocking
@@ -132,7 +133,16 @@ class ContactService(cache: ICache) : MongoGenericService(cache) {
     }
 
 
-    fun findExternalContact(_id: ObjectId) = runBlocking { externalContactCol.findOneById(_id) }
+    fun findExternalContact(_id: ObjectId) = runBlocking {
+        externalContactCol.findOneById(_id)
+    }
+    fun findExternalContactByExternalId(externalId: String, corpId: String) = runBlocking {
+        externalContactCol.findOne(
+            and(
+                ExternalContact::externalId eq externalId,
+                ExternalContact::corpId eq corpId)
+        )
+    }
     fun findExternalContact(externalId: String, corpId: String) = runBlocking { externalContactCol.findOne(ExternalContact::externalId eq externalId, ExternalContact::corpId eq corpId) }
     fun upsertExternalContact(doc: ExternalContact) = runBlocking {
         //externalContactCol.replaceOne(and(ExternalContact::externalId eq doc.externalId, ExternalContact::corpId eq doc.corpId), doc, ReplaceOptions().upsert(true))
@@ -166,6 +176,15 @@ class ContactService(cache: ICache) : MongoGenericService(cache) {
     fun findExternalListAll(filter: Bson) = runBlocking {
         externalContactCol.find(filter).toList()
     }
+
+    fun insertExternalContacts(list: List<ExternalContact>) = runBlocking{
+        externalContactCol.insertMany(list)
+    }
+    fun insertEnterSessionContext(externalId: String, corpId: String,enterSessionInfo: List<EnterSessionContext>) = runBlocking {
+        externalContactCol.updateOne(and(ExternalContact::externalId eq externalId, ExternalContact::corpId eq corpId),
+            pushEach( ExternalContact::enterSessions, enterSessionInfo))
+    }
+
     fun findExternalListByPage(param: ExternalListParams) = findPage(externalContactCol, param)
     fun addRelationChange(createTime: Long?, corpId: String, userId: String, contactId: ObjectId?, externalId: String, type:Int,  state: String?) = runBlocking{
         val time = DatetimeUtil.format(System.currentTimeMillis() )
@@ -223,5 +242,7 @@ class ContactService(cache: ICache) : MongoGenericService(cache) {
     fun delDepartment(corpId: String, id: Int) = runBlocking {
         departmentCol.deleteOne(Department::corpId eq corpId, Department::id eq id)
     }
+
+
 
 }

@@ -33,7 +33,7 @@ import javax.xml.stream.XMLEventReader
 //corpId,agentId来自于接收消息路径中指定的参数
 //对于isv，corpId为其suiteId， agentId为空
 class WxWorkEventHandler : DefaultWorkEventHandler(), KoinComponent {
-    private val log = LoggerFactory.getLogger("MyEventHandler")
+    private val log = LoggerFactory.getLogger("WxWorkEventHandler")
     private val agentService: AgentService by inject()
     private val isvCorpService: IsvCorpService by inject()
     private val contactHelper: ContactHelper by inject()

@@ -22,6 +22,19 @@ import com.github.rwsbillyang.wxSDK.msg.BaseInfo
 
 import javax.xml.stream.XMLEventReader
 
+//<xml>
+// <ToUserName><![CDATA[wwfc2fead39b1e60dd]]></ToUserName>
+// <Encrypt><![CDATA[ksULeHpUG0imG/CKibJVeTn3P35Yf0JcShljm2SkXX6KffMLZHSpwnKwoQJ7ixjh9DM0kkq8atMJf42sG8PDiIubteW6idDu9cVryEmF0s2EkZ/VYtKTp/Ht1NmdoVU8j8AWUyhZJYbP/Vpv/ycOXylWAhr4PRKpxYjKp3pVzf9tl4e/jweQH2plmuWUX1AD+DBw+NF5aYV3M8HJR2CE7dMTnahSutXfoYn3sLbvxh3dtcIv2pWa4j9fBKrL9EuwuRtV6RGgAMEe98Z6Xr2/ICfIqH+3bmxtYKEOmmr0Sd3GQJMP6prihJE5RBaATcWL3bC5snJUYnySe07uXA/zutsjYpAulDWSPbbIACj3is0uLLzR+LZ18gnqUMGnHRKEJfDQ+MVSUd35o7ctMvgZQFgvoZLyyMtDyU2hsE6oMIysDBBRuozpUokxTZVulWdXchh0wuYtnJnkmg5Fp1ASHhRTeFGGQyrxOT/CUAjBcsagjIDRWM7tZ3jo5+cvz54qvWgSVQMF0q7S74z565LFzt80RRevTRgB61SMzjFO/psBuVehmo+HbN1nDSLS6W63di+eTUxjQOY8Rpz8de8UtQ==]]></Encrypt>
+// <AgentID><![CDATA[3010151]]></AgentID></xml>
+//wxkf event
+//<xml>
+// <ToUserName><![CDATA[wwfc2fead39b1e60dd]]></ToUserName>
+// <CreateTime>1673582683</CreateTime>
+// <MsgType><![CDATA[event]]></MsgType>
+// <Event><![CDATA[kf_msg_or_event]]></Event>
+// <Token><![CDATA[ENC3LWxM1xSCBaWkhgz3yfWWn27WrBvB7wDWs5LgyAP6WH7]]></Token>
+// <OpenKfId><![CDATA[wkfqLUQwAApHj0eaMhYPQOOamS3Wz17w]]></OpenKfId>
+// </xml>
 class WxkfEvent(baseInfo: BaseInfo): AgentEvent(baseInfo)
 {
     var token: String? = null

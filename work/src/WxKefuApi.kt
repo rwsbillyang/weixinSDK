@@ -16,12 +16,16 @@
  * limitations under the License.
  */
 
+@file:UseContextualSerialization(LocalDateTime::class)
+
 package com.github.rwsbillyang.wxSDK.work
 
 import com.github.rwsbillyang.wxSDK.IBase
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseContextualSerialization
 import kotlinx.serialization.json.JsonObject
+import java.time.LocalDateTime
 
 class WxKefuApi(corpId: String) : WorkBaseApi(corpId, null, null) {
 
@@ -65,6 +69,15 @@ class WxKefuApi(corpId: String) : WorkBaseApi(corpId, null, null) {
      * */
     fun syncMsg(token: String?, open_kfid: String?, cursor: String?, limit: Int = 1000, voice_format: Int = 0):WxKfSyncMsgResponse
     = doPost("sync_msg", SyncMsgBody(token, open_kfid,cursor, limit, voice_format))
+
+    /**
+     * 获取客户基础信息
+     * */
+    fun getCustomerDetail(external_userid_list: List<String>, need_enter_session_context: Int = 1):WxKfCustomerDetailResponse = doPost("customer/batchget",
+        mapOf(
+            "external_userid_list" to external_userid_list,
+            "need_enter_session_context" to need_enter_session_context
+        ))
 }
 
 @Serializable
@@ -131,3 +144,36 @@ class WxKfSyncMsgResponse(
     val msg_list: List<JsonObject>? = null
 ):IBase
 
+@Serializable
+class WxKfCustomerDetailResponse(
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+    val invalid_external_userid: List<String>? = null,
+    val customer_list: List<CustomerDetail>? = null
+):IBase
+
+@Serializable
+class CustomerDetail(
+    val external_userid: String, //"wmxxxxxxxxxxxxxxxxxxxxxx",
+    val nickname: String,// "张三",
+    val avatar:  String? = null, //微信头像。第三方不可获取
+    val gender: Int, //1,性别。第三方不可获取，统一返回0
+    val unionid: String? = null, //需要绑定微信开发者帐号才能获取到，查看绑定方法。第三方不可获取
+    val enter_session_context: EnterSessionContext? = null
+)
+@Serializable
+class EnterSessionContext(
+    val scene: String, //"123",
+    val scene_param: String? = null, //"abc",
+    val wechat_channels:WechatChannels? = null,
+    val time: LocalDateTime = LocalDateTime.now()
+)
+
+@Serializable
+class WechatChannels(
+    val nickname: String,//"进入会话的视频号名称",
+    val scene: Int? = null, //视频号场景值。1：视频号主页，2：视频号直播间商品列表页，3：视频号商品橱窗页，4：视频号小店商品详情页，5：视频号小店订单页
+    val shop_nickname: String? = null//视频号小店名称，视频号场景值为4、5时返回此项
+)

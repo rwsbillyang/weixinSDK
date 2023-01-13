@@ -64,7 +64,6 @@ fun Routing.contactApi() {
 
 
         route("/api/wx/admin/work/contact") {
-
             get<ContactListParams> {
                 call.respondBox(controller.getSupportChatArchiveContactList(it))
             }
@@ -74,15 +73,14 @@ fun Routing.contactApi() {
                 call.respondBox(controller.getContactDetail(call.parameters["id"]))
             }
 
-            //通过_id获取某个外部客户的详情
-            get("/external/detail/{id}"){
-                call.respondBox(controller.getExternalDetail(call.parameters["id"]))
+            get("/syncDepartment"){
+                val agentId = call.request.queryParameters["agentId"]
+                call.respondBox(controller.syncDepartment(call.appId, agentId))
             }
-            get("/external/relationChanges/{externalId}/{userId}"){
-                call.respondBox(controller.getRelationChanges(call.parameters["externalId"],call.parameters["userId"]))
-            }
+        }
+        route("/api/wx/admin/work/contact/external") {
             // 同步当前登录用户的所有外部联系人列表
-            get("/syncExternalContact/{refreshType}"){
+            get("/sync/{refreshType}"){
                 //val userId = call.request.queryParameters["userId"]
                 val appId = call.appId
                 call.respondBox(controller.syncExternalsOfUser(appId, call.agentId, appId, call.uId, call.parameters["refreshType"]?.toInt()))
@@ -92,9 +90,15 @@ fun Routing.contactApi() {
                 call.respondBox(controller.getExternalListByPage(it))
             }
 
-            get("/syncDepartment"){
-                val agentId = call.request.queryParameters["agentId"]
-                call.respondBox(controller.syncDepartment(call.appId, agentId))
+            //通过_id获取某个外部客户的详情
+            get("/get/{id}"){
+                call.respondBox(controller.getExternalDetail(call.parameters["id"]))
+            }
+            get("/get2/{externaId}"){
+                call.respondBox(controller.getExternalDetailByExternalId(call.parameters["externaId"],call.appId))
+            }
+            get("/relationchanges/{externalId}/{userId}"){
+                call.respondBox(controller.getRelationChanges(call.parameters["externalId"],call.parameters["userId"]))
             }
         }
     }

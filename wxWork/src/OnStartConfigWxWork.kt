@@ -46,6 +46,7 @@ internal fun configWxWork(
     isSysAgent: Boolean = false,
     agentController: AgentController? = null
 ) {
+    val log = LoggerFactory.getLogger("configWxWork")
     if(isSysAgent){
         if(config.enable){
             val handler = when(config.agentId){
@@ -59,8 +60,10 @@ internal fun configWxWork(
                 config.private, config.enableJsSdk, config.enableMsg,
                 null, handler
             )
+            log.info("enable sysAgent: corpId=${config.corpId}, agentId=${config.agentId}")
         }else{
             WorkMulti.reset(config.corpId, config.agentId)
+            log.info("remove sysAgent: corpId=${config.corpId}, agentId=${config.agentId}")
         }
     }else{
         if(config.enable){
@@ -75,15 +78,19 @@ internal fun configWxWork(
             )
 
             if(agentController != null){
+                log.info("syncAgent: corpId=${config.corpId}, agentId=${config.agentId}")
                 //企业应用的可见用户更新，需在调用Work.config配置完work后进行同步调用
                 agentController.syncAgentIfNotExit(config.corpId, config.agentId) //syncContacts改由管理员手工同步
             }
+            log.info("enable agent: corpId=${config.corpId}, agentId=${config.agentId}")
         }else{
             WorkMulti.reset(config.corpId, config.agentId)
             if(WorkMulti.msgHandlerCount.addAndGet(-1) == 0)
                 WorkMulti.defaultWorkMsgHandler = null
             if(WorkMulti.eventHandlerCount.addAndGet(-1) == 0)
                 WorkMulti.defaultWorkEventHandler = null
+
+            log.info("remove agent: corpId=${config.corpId}, agentId=${config.agentId}")
         }
     }
 }
@@ -120,11 +127,13 @@ class OnStartConfigWxWork(application: Application) : LifeCycle(application) {
     }
 
     private fun logConfig() {
-        log.info("================config WxWork=======================")
-        WorkMulti.ApiContextMap.forEach { (t, _) ->
-            log.info("Work corpId=${t}")
+        log.info("=====config WxWork start=====")
+        WorkMulti.ApiContextMap.forEach { (corpId, corpCtx) ->
+            corpCtx.agentMap.forEach { agentId, _ ->
+                log.info("msgNotifyUri(if enabled): ${Work.msgNotifyUri}/${corpId}/${agentId}")
+            }
         }
-        log.info("Work.oauthInfoPath=${Work.oauthInfoPath}?agentId={AgentId}&corpId={corpId}&host={host?}")
+
         log.info("Work.oauthNotifyPath=${Work.oauthNotifyPath}?code=CODE&state=STATE")
         log.info("Work.oauthNotifyWebAppUrl=${Work.oauthNotifyWebAppUrl}?code=OK&state=STATE&corpId={corpId?}&agentId={agentId?}&openId={openId?}&userId={userId?}&externalUserId={externalUserId?}")
         log.info("Work.jsSdkSignaturePath=${Work.jsSdkSignaturePath}?corpId=corpId&agentId=agentId")
@@ -132,7 +141,7 @@ class OnStartConfigWxWork(application: Application) : LifeCycle(application) {
         log.info("WorkMulti.eventHandlerCount: ${WorkMulti.eventHandlerCount}")
         log.info("WorkMulti.msgHandlerCount: ${WorkMulti.msgHandlerCount}")
 
-        log.info("====================config WxWork=====================")
+        log.info("=====config WxWork end=====")
     }
 }
 
