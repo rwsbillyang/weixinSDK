@@ -5,7 +5,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
-
 /**
  * 消息所使用的场景
  * @property RE 被动回复消息
@@ -226,3 +225,6 @@ class MiniProgramContent(
         val thumb: String,
         val title: String? = null
 ): MsgBody(KF)
+
+
+

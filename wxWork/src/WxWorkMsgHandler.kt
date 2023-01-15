@@ -18,14 +18,16 @@
 
 package com.github.rwsbillyang.wxWork
 
-import com.github.rwsbillyang.wxSDK.msg.BaseInfo
+
 import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.msg.ReTextMsg
 import com.github.rwsbillyang.wxSDK.work.inMsg.*
 import org.koin.core.component.KoinComponent
 import org.slf4j.LoggerFactory
-import javax.xml.stream.XMLEventReader
+import org.w3c.dom.Element
 
+//每个agent都拥有自己的context，对应着不同的MsgbHub、msgHandler、EventHandler，通常情况下它们都共用一个handler或按类别区分
+// 这些EventHandler和MsgHandler只处理属于自己的消息或事件
 class WxWorkMsgHandler: DefaultWorkMsgHandler(), KoinComponent {
     companion object{
         /**
@@ -35,15 +37,15 @@ class WxWorkMsgHandler: DefaultWorkMsgHandler(), KoinComponent {
     }
 
     private val log = LoggerFactory.getLogger("WxWorkMsgHandler")
-    override fun onDefault(appId: String, agentId: String?, msg: WorkBaseMsg): ReBaseMSg? {
+    override fun onDefault(appId: String, agentId:String?, msg: WxWorkBaseMsg): ReBaseMSg? {
         log.info("onDefault:appId=$appId, agentId=$agentId Not yet implemented")
         if(defaultReTMsgText == null) return null
-        return ReTextMsg(defaultReTMsgText!!, msg.base.fromUserName, msg.base.toUserName, System.currentTimeMillis())
+        return ReTextMsg(defaultReTMsgText!!, msg.fromUserName, msg.toUserName, System.currentTimeMillis())
     }
 
-    override fun onDispatch(appId: String, agentId: String?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg? {
-        log.info("onDispatch:appId=$appId, agentId=$agentId Not yet implemented")
-        return onDefault(appId, agentId, WorkBaseMsg(base))
+    override fun onDispatch(appId: String, agentId:String?, xml: String, rootDom: Element, msgOrEventType: String?): ReBaseMSg? {
+        log.info("onDispatch:appId=$appId, agentId=$agentId  TODO: handle other eventType=${msgOrEventType}")
+        return onDefault(appId, agentId, WxWorkBaseMsg(xml, rootDom))
     }
 
 }

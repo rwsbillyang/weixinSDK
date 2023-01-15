@@ -20,7 +20,7 @@ package com.github.rwsbillyang.wxWork.test
 
 import com.github.rwsbillyang.wxSDK.security.SHA1
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
-import com.github.rwsbillyang.wxSDK.security.XmlUtil
+import com.github.rwsbillyang.wxSDK.util.XmlUtil
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.WorkMulti
 import io.ktor.client.request.*
@@ -112,7 +112,7 @@ class ApplicationTest2 {
 
         val content = response.bodyAsText()
         if (content.startsWith("<xml>")) {
-            val map = XmlUtil.extract(xml)
+            val map = XmlUtil.parseXmlByDom(xml, setOf("TimeStamp", "Nonce", "Encrypt"))
             val reTimeStamp = map["TimeStamp"] ?: ""
             val reNonce = map["Nonce"] ?: ""
             val reEcrypt = map["Encrypt"] ?: ""

@@ -1,8 +1,9 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
 import com.github.rwsbillyang.wxSDK.msg.SendPicsInfo
-import com.github.rwsbillyang.wxSDK.msg.WxBaseEvent
-import javax.xml.stream.XMLEventReader
+import com.github.rwsbillyang.wxSDK.msg.WxXmlEvent
+import org.w3c.dom.Element
+
 
 
 /**
@@ -13,10 +14,7 @@ import javax.xml.stream.XMLEventReader
  * 关于重试的消息排重，推荐使用FromUserName + CreateTime 排重。
  * 假如服务器无法保证在五秒内处理并回复，可以直接回复空串，微信服务器不会对此作任何处理，并且不会发起重试。
  * */
-class OASubscribeEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
-{
-    init { event = baseEvent.event }
-}
+class OASubscribeEvent(xml: String, rootDom: Element): WxXmlEvent(xml, rootDom)
 
 /**
  * 取消关注事件
@@ -26,10 +24,8 @@ class OASubscribeEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
  * 关于重试的消息排重，推荐使用FromUserName + CreateTime 排重。
  * 假如服务器无法保证在五秒内处理并回复，可以直接回复空串，微信服务器不会对此作任何处理，并且不会发起重试。
  * */
-class OAUnsubscribeEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
-{
-    init { event = baseEvent.event }
-}
+class OAUnsubscribeEvent(xml: String, rootDom: Element): WxXmlEvent(xml, rootDom)
+
 
 /**
  * 用户未关注时，扫码关注后的事件推送
@@ -37,27 +33,10 @@ class OAUnsubscribeEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
  * @property eventKey EventKey	事件KEY值，qrscene_为前缀，后面为二维码的参数值
  * @property ticket Ticket	二维码的ticket，可用来换取二维码图片
  * */
-class OAScanSubscribeEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
+open class OAScanSubscribeEvent(xml: String, rootDom: Element): WxXmlEvent(xml, rootDom)
 {
-    init { event = baseEvent.event } //在hub中已读出event值，此处直接赋值过来，无需再在reader中读取
-    var eventKey: String? = null
-    var ticket: String? = null
-    override fun read(reader: XMLEventReader) {//无需再调用super.read(reader)
-        var count = 0
-        while (reader.hasNext() && count < 2) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when (event.asStartElement().name.toString()) {
-                    "EventKey" -> {
-                        eventKey = reader.elementText; count++
-                    }
-                    "Ticket" -> {
-                        ticket = reader.elementText; count++
-                    }
-                }
-            }
-        }
-    }
+    val eventKey = get(rootDom, "EventKey")
+    val ticket = get(rootDom, "Ticket")
 }
 /**
  * 用户已关注时，扫码关注后的事件推送
@@ -65,28 +44,8 @@ class OAScanSubscribeEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
  * @property eventKey EventKey	事件KEY值，事件KEY值，是一个32位无符号整数，即创建二维码时的二维码scene_id
  * @property ticket Ticket	二维码的ticket，可用来换取二维码图片
  * */
-class OAScanEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
-{
-    init { event = baseEvent.event }
-    var eventKey: String? = null
-    var ticket: String? = null
-    override fun read(reader: XMLEventReader) {
-        var count = 0
-        while (reader.hasNext() && count < 2) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when (event.asStartElement().name.toString()) {
-                    "EventKey" -> {
-                        eventKey = reader.elementText; count++
-                    }
-                    "Ticket" -> {
-                        ticket = reader.elementText; count++
-                    }
-                }
-            }
-        }
-    }
-}
+class OAScanEvent(xml: String, rootDom: Element): OAScanSubscribeEvent(xml, rootDom)
+
 
 
 /**
@@ -99,31 +58,11 @@ class OAScanEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
  * @property longitude    地理位置经度
  * @property precision Precision	地理位置精度
  * */
-open class OALocationEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
+open class OALocationEvent(xml: String, rootDom: Element): WxXmlEvent(xml, rootDom)
 {
-    init { event = baseEvent.event }
-    var latitude: Float? = null
-    var longitude: Float?= null
-    var precision: Float?= null
-    override fun read(reader: XMLEventReader) {
-        var count = 0
-        while (reader.hasNext() && count < 3) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when (event.asStartElement().name.toString()) {
-                    "Latitude" -> {
-                        latitude = reader.elementText?.toFloat(); count++
-                    }
-                    "Longitude" -> {
-                        longitude = reader.elementText?.toFloat(); count++
-                    }
-                    "Precision" -> {
-                        precision = reader.elementText?.toFloat(); count++
-                    }
-                }
-            }
-        }
-    }
+    val latitude = get(rootDom, "Latitude")?.toFloat()
+    val longitude = get(rootDom, "Longitude")?.toFloat()
+    val precision = get(rootDom, "Precision")?.toFloat()
 }
 
 
@@ -134,22 +73,9 @@ open class OALocationEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
  *
  * @property eventKey EventKey 事件KEY值，与自定义菜单接口中KEY值对应
  * */
-class OAMenuClickEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
+class OAMenuClickEvent(xml: String, rootDom: Element): WxXmlEvent(xml, rootDom)
 {
-    init { event = baseEvent.event }
-    var eventKey: String? = null
-    override fun read(reader: XMLEventReader) {
-        while (reader.hasNext()) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when (event.asStartElement().name.toString()) {
-                    "EventKey" -> {
-                        eventKey = reader.elementText; break
-                    }
-                }
-            }
-        }
-    }
+    val eventKey = get(rootDom, "EventKey")
 }
 
 /**
@@ -159,27 +85,10 @@ class OAMenuClickEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
  * @property menuId MenuID	指菜单ID，如果是个性化菜单，则可以通过这个字段，知道是哪个规则的菜单被点击了
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  * */
-class OAMenuViewEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
+class OAMenuViewEvent(xml: String, rootDom: Element): WxXmlEvent(xml, rootDom)
 {
-    init { event = baseEvent.event }
-    var eventKey: String? = null
-    var menuId: String? = null
-    override fun read(reader: XMLEventReader) {
-        var count = 0
-        while (reader.hasNext() && count < 2) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when (event.asStartElement().name.toString()) {
-                    "EventKey" -> {
-                        eventKey = reader.elementText; count++
-                    }
-                    "MenuId" -> {
-                        menuId = reader.elementText; count++
-                    }
-                }
-            }
-        }
-    }
+    val eventKey = get(rootDom, "EventKey")
+    val menuId = get(rootDom, "MenuId")
 }
 /**
  * scancode_push：扫码推事件的事件推送
@@ -190,38 +99,11 @@ class OAMenuViewEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
  * @property scanType ScanType	扫描类型，一般是qrcode
  * @property scanResult ScanResult	扫描结果，即二维码对应的字符串信息
  * */
-open class OAMenuScanCodePushEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
+open class OAMenuScanCodePushEvent(xml: String, rootDom: Element): WxXmlEvent(xml, rootDom)
 {
-    init { event = baseEvent.event }
-    var eventKey: String? = null
-    var scanType: String? = null
-    var scanResult: String? = null
-    override fun read(reader: XMLEventReader) {
-        var count = 0
-        while (reader.hasNext() && count < 2) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when (event.asStartElement().name.toString()) {
-                    "EventKey" -> {
-                        eventKey = reader.elementText; count++
-                    }
-                    "ScanCodeInfo" -> {
-                        var count2 = 0
-                        while (reader.hasNext() && count2 < 2) {
-                            val e = reader.nextEvent()
-                            if (e.isStartElement) {
-                                when(e.asStartElement().name.toString()){
-                                    "ScanType" ->{ scanType = reader.elementText; count2++ }
-                                    "ScanResult" ->{ scanResult= reader.elementText; count2++}
-                                }
-                            }
-                        }
-                        count++
-                    }
-                }
-            }
-        }
-    }
+    val eventKey = get(rootDom, "EventKey")
+    val scanType = get(rootDom, "ScanType")
+    val scanResult = get(rootDom, "ScanResult")
 }
 
 /**
@@ -229,7 +111,7 @@ open class OAMenuScanCodePushEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEven
  *
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  * */
-class OAMenuScanCodeWaitEvent(baseEvent: WxBaseEvent): OAMenuScanCodePushEvent(baseEvent)
+class OAMenuScanCodeWaitEvent(xml: String, rootDom: Element): OAMenuScanCodePushEvent(xml, rootDom)
 
 
 
@@ -241,29 +123,10 @@ class OAMenuScanCodeWaitEvent(baseEvent: WxBaseEvent): OAMenuScanCodePushEvent(b
  * @property eventKey EventKey	事件KEY值，由开发者在创建菜单时设定
  * @property picsInfo SendPicsInfo 图片的MD5值，开发者若需要，可用于验证接收到图片
  * */
-open class OAMenuPhotoEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
+open class OAMenuPhotoEvent(xml: String, rootDom: Element): WxXmlEvent(xml, rootDom)
 {
-    init { event = baseEvent.event }
-    var eventKey: String? = null
-    var sendPicsInfo: SendPicsInfo? = null
-    override fun read(reader: XMLEventReader) {
-        var count = 0
-        while (reader.hasNext() && count < 2) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when (event.asStartElement().name.toString()) {
-                    "EventKey" -> {
-                        eventKey = reader.elementText
-                        count++
-                    }
-                    "SendPicsInfo" -> {
-                        sendPicsInfo = SendPicsInfo.fromXml(reader)
-                        count++
-                    }
-                }
-            }
-        }
-    }
+    val eventKey = get(rootDom, "EventKey")
+    val sendPicsInfo = SendPicsInfo.fromXml(getChild(rootDom, "SendPicsInfo"))
 }
 /**
  * pic_photo_or_album：弹出拍照或者相册发图的事件推送
@@ -271,7 +134,7 @@ open class OAMenuPhotoEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  *
  * */
-class OAMenuPhotoOrAlbumEvent(baseEvent: WxBaseEvent): OAMenuPhotoEvent(baseEvent)
+class OAMenuPhotoOrAlbumEvent(xml: String, rootDom: Element): OAMenuPhotoEvent(xml, rootDom)
 
 
 /**
@@ -280,7 +143,7 @@ class OAMenuPhotoOrAlbumEvent(baseEvent: WxBaseEvent): OAMenuPhotoEvent(baseEven
  * https://developers.weixin.qq.com/doc/offiaccount/Custom_Menus/Custom_Menu_Push_Events.html
  *
  * */
-class OAMenuOAAlbumEvent(baseEvent: WxBaseEvent): OAMenuPhotoEvent(baseEvent)
+class OAMenuOAAlbumEvent(xml: String, rootDom: Element): OAMenuPhotoEvent(xml, rootDom)
 
 
 /**
@@ -293,53 +156,23 @@ class OAMenuOAAlbumEvent(baseEvent: WxBaseEvent): OAMenuPhotoEvent(baseEvent)
  * @property label Label	地理位置的字符串信息
  * @property poiname Poiname	朋友圈POI的名字，可能为空
  * */
-class OAMenuLocationEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
+class OAMenuLocationEvent(xml: String, rootDom: Element): WxXmlEvent(xml, rootDom)
 {
-    init { event = baseEvent.event }
-    var eventKey: String? = null
-    var locationX: Float? = null
-    var locationY: Float? = null
-    var scale: Int? = null
-    var label: String? = null
-    var poiname: String? = null
     /*
-    * <EventKey><![CDATA[6]]></EventKey>
-        <SendLocationInfo><Location_X><![CDATA[23]]></Location_X>
-        <Location_Y><![CDATA[113]]></Location_Y>
-        <Scale><![CDATA[15]]></Scale>
-        <Label><![CDATA[ 广州市海珠区客村艺苑路 106号]]></Label>
-        <Poiname><![CDATA[]]></Poiname>
-        </SendLocationInfo>
-    * */
-    override fun read(reader: XMLEventReader) {
-        var count = 0
-        while (reader.hasNext() && count < 2) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when (event.asStartElement().name.toString()) {
-                    "EventKey" -> {
-                        eventKey = reader.elementText; count++
-                    }
-                    "SendLocationInfo" -> {
-                        var count2 = 0
-                        while (reader.hasNext() && count2 < 5) {
-                            val e = reader.nextEvent()
-                            if (e.isStartElement) {
-                                when(e.asStartElement().name.toString()){
-                                    "Location_X" ->{ locationX = reader.elementText?.toFloat(); count2++ }
-                                    "Location_Y" ->{ locationY= reader.elementText?.toFloat(); count2++}
-                                    "Scale" ->{ scale = reader.elementText?.toInt(); count2++ }
-                                    "Label" ->{ label= reader.elementText; count2++}
-                                    "Poiname" ->{ poiname = reader.elementText; count2++ }
-                                }
-                            }
-                        }
-                        count++
-                    }
-                }
-            }
-        }
-    }
+       * <EventKey><![CDATA[6]]></EventKey>
+           <SendLocationInfo><Location_X><![CDATA[23]]></Location_X>
+           <Location_Y><![CDATA[113]]></Location_Y>
+           <Scale><![CDATA[15]]></Scale>
+           <Label><![CDATA[ 广州市海珠区客村艺苑路 106号]]></Label>
+           <Poiname><![CDATA[]]></Poiname>
+           </SendLocationInfo>
+       * */
+    val eventKey = get(rootDom, "EventKey")
+    val locationX = get(rootDom, "Location_X")?.toFloat()
+    val locationY = get(rootDom, "Location_Y")?.toFloat()
+    val scale = get(rootDom, "Scale")?.toInt()
+    val label = get(rootDom, "Label")
+    val poiname = get(rootDom, "Poiname")
 }
 
 
@@ -349,27 +182,10 @@ class OAMenuLocationEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
  * @param eventKey EventKey	事件KEY值，跳转的小程序路径
  * @param menuId MenuID	菜单ID，如果是个性化菜单，则可以通过这个字段，知道是哪个规则的菜单被点击了
  * */
-class OAMenuMiniEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
+class OAMenuMiniEvent(xml: String, rootDom: Element): WxXmlEvent(xml, rootDom)
 {
-    init { event = baseEvent.event }
-    var eventKey: String? = null
-    var menuId: String? = null
-    override fun read(reader: XMLEventReader) {
-        var count = 0
-        while (reader.hasNext() && count < 2) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when (event.asStartElement().name.toString()) {
-                    "EventKey" -> {
-                        eventKey = reader.elementText; count++
-                    }
-                    "MenuId" -> {
-                        menuId = reader.elementText; count++
-                    }
-                }
-            }
-        }
-    }
+    val eventKey = get(rootDom, "EventKey")
+    val menuId = get(rootDom, "MenuId")
 }
 
 
@@ -385,22 +201,9 @@ class OAMenuMiniEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
  * failed:user block: 送达由于用户拒收（用户设置拒绝接收公众号消息）;
  * failed: system failed: 发送状态为发送失败（非用户拒绝）
  * */
-class OATemplateSendJobFinish(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
+class OATemplateSendJobFinish(xml: String, rootDom: Element): WxXmlEvent(xml, rootDom)
 {
-    init { event = baseEvent.event }
-    var status: String? = null
-    override fun read(reader: XMLEventReader) {
-        while (reader.hasNext()) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when (event.asStartElement().name.toString()) {
-                    "Status" -> {
-                        status = reader.elementText; break
-                    }
-                }
-            }
-        }
-    }
+    val status = get(rootDom, "Status")
 }
 
 
@@ -482,83 +285,65 @@ class OATemplateSendJobFinish(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.bas
     </ResultList>
     </ArticleUrlResult>
  * */
-class OAMassSendFinishEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
+class OAMassSendFinishEvent(xml: String, rootDom: Element): WxXmlEvent(xml, rootDom)
 {
-    init { event = baseEvent.event }
-    var msgId: Long? = null
-    var status: String? = null
-    var totalCount: Int? = null
-    var filterCount: Int? = null
-    var sentCount: Int? = null
-    var errorCount: Int? = null
-    var copyrightCheckResult: CopyrightCheckResult? = null
-    var articleUrlResult: ArticleUrlResult? = null
-    override fun read(reader: XMLEventReader) {
-        var count = 0
-        while (reader.hasNext() && count < 8) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when (e.asStartElement().name.toString()) {
-                    "MsgID" -> { msgId = reader.elementText?.toLong(); count++}
-                    "Status" ->{ status = reader.elementText; count++}
-                    "TotalCount" -> { totalCount = reader.elementText?.toInt(); count++}
-                    "FilterCount" -> {  filterCount = reader.elementText?.toInt(); count++}
-                    "SentCount" -> { sentCount = reader.elementText?.toInt(); count++}
-                    "ErrorCount" ->{  errorCount = reader.elementText?.toInt(); count++}
-                    "CopyrightCheckResult" -> { copyrightCheckResult = parseCopyrightCheckResult(reader); count++}
-                    "ArticleUrlResult" -> { articleUrlResult = parseArticleUrlResult(reader); count++}
-                }
-            }
-        }
-    }
-    private fun parseCopyrightCheckResult(reader: XMLEventReader): CopyrightCheckResult {
-        var count:Int? = null
-        var checkState: Int? = null
-        val list = mutableListOf<CopyrightResult>()
-        while (reader.hasNext()) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when(event.asStartElement().name.toString()){
-                    "Count" -> count = reader.elementText?.toInt()
-                    "CheckState" -> checkState = reader.elementText?.toInt()
-                    "ResultList" -> {
-                        while (reader.hasNext()) {
-                            val event1 = reader.nextEvent()
-                            if (event1.isStartElement && "item" == event1.asStartElement().name.toString())
-                            {
-                                val map = mutableMapOf<String, String?>()
-                                while (reader.hasNext()){
-                                    val event2 = reader.nextEvent()
-                                    val tag = event1.asStartElement().name.toString()
-                                    map[tag] = reader.elementText
-                                    if(event2.isEndElement && "item" == event2.asEndElement().name.toString()) {
-                                        break
-                                    }
-                                }
-
-                                list.add(
-                                    CopyrightResult(
-                                        map["ArticleIdx"]?.toInt(),
-                                        map["UserDeclareState"]?.toInt(),
-                                        map["AuditState"]?.toInt(),
-                                        map["OriginalArticleUrl"],
-                                        map["OriginalArticleType"]?.toInt(),
-                                        map["CanReprint"]?.toInt(),
-                                        map["NeedReplaceContent"]?.toInt(),
-                                        map["NeedShowReprintSource"]?.toInt(),
-                                    )
-                                )
-                            } else if (event1.isEndElement && "ResultList" == event1.asEndElement().name.toString()) {
-                                break
-                            }
-                        }
-                    }
-                }
-
-            }
-        }
-        return CopyrightCheckResult(count, checkState, list)
-    }
+    val msgId = get(rootDom, "MsgID")
+    val status = get(rootDom, "Status")
+    val totalCount = get(rootDom, "TotalCount")
+    val filterCount = get(rootDom, "FilterCount")
+    val sentCount = get(rootDom, "SentCount")
+    val errorCount = get(rootDom, "ErrorCount")
+//    val copyrightCheckResult: CopyrightCheckResult? = null
+//    val articleUrlResult: ArticleUrlResult? = null
+    
+//    private fun parseCopyrightCheckResult(reader: XMLEventReader): CopyrightCheckResult {
+//        val count:Int? = null
+//        val checkState: Int? = null
+//        val list = mutableListOf<CopyrightResult>()
+//        while (reader.hasNext()) {
+//            val event = reader.nextEvent()
+//            if (event.isStartElement) {
+//                when(event.asStartElement().name.toString()){
+//                    "Count" -> count = reader.elementText?.toInt()
+//                    "CheckState" -> checkState = reader.elementText?.toInt()
+//                    "ResultList" -> {
+//                        while (reader.hasNext()) {
+//                            val event1 = reader.nextEvent()
+//                            if (event1.isStartElement && "item" == event1.asStartElement().name.toString())
+//                            {
+//                                val map = mutableMapOf<String, String?>()
+//                                while (reader.hasNext()){
+//                                    val event2 = reader.nextEvent()
+//                                    val tag = event1.asStartElement().name.toString()
+//                                    map[tag] = reader.elementText
+//                                    if(event2.isEndElement && "item" == event2.asEndElement().name.toString()) {
+//                                        break
+//                                    }
+//                                }
+//
+//                                list.add(
+//                                    CopyrightResult(
+//                                        map["ArticleIdx"]?.toInt(),
+//                                        map["UserDeclareState"]?.toInt(),
+//                                        map["AuditState"]?.toInt(),
+//                                        map["OriginalArticleUrl"],
+//                                        map["OriginalArticleType"]?.toInt(),
+//                                        map["CanReprint"]?.toInt(),
+//                                        map["NeedReplaceContent"]?.toInt(),
+//                                        map["NeedShowReprintSource"]?.toInt(),
+//                                    )
+//                                )
+//                            } else if (event1.isEndElement && "ResultList" == event1.asEndElement().name.toString()) {
+//                                break
+//                            }
+//                        }
+//                    }
+//                }
+//
+//            }
+//        }
+//        return CopyrightCheckResult(count, checkState, list)
+//    }
 
     /**
      * <ArticleUrlResult>
@@ -571,40 +356,40 @@ class OAMassSendFinishEvent(baseEvent: WxBaseEvent): WxBaseEvent(baseEvent.base)
     </ResultList>
     </ArticleUrlResult>
      * */
-    private fun parseArticleUrlResult(reader: XMLEventReader): ArticleUrlResult {
-        var count:Int? = null
-        val list = mutableListOf<ArticleUrl>()
-        while (reader.hasNext()) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when(event.asStartElement().name.toString()){
-                    "Count" -> count = reader.elementText?.toInt()
-                    "ResultList" -> {
-                        while (reader.hasNext()) {
-                            val event1 = reader.nextEvent()
-                            if (event1.isStartElement && "item" == event1.asStartElement().name.toString())
-                            {
-                                val map = mutableMapOf<String, String?>()
-                                while (reader.hasNext()){
-                                    val event2 = reader.nextEvent()
-                                    val tag = event1.asStartElement().name.toString()
-                                    map[tag] = reader.elementText
-                                    if(event2.isEndElement && "item" == event2.asEndElement().name.toString()) {
-                                        break
-                                    }
-                                }
-                                list.add( ArticleUrl( map["ArticleIdx"]?.toInt(),  map["ArticleUrl"]) )
-                            } else if (event1.isEndElement && "ResultList" == event1.asEndElement().name.toString()) {
-                                break
-                            }
-                        }
-                    }
-                }
-
-            }
-        }
-        return ArticleUrlResult(count,  list)
-    }
+//    private fun parseArticleUrlResult(reader: XMLEventReader): ArticleUrlResult {
+//        val count:Int? = null
+//        val list = mutableListOf<ArticleUrl>()
+//        while (reader.hasNext()) {
+//            val event = reader.nextEvent()
+//            if (event.isStartElement) {
+//                when(event.asStartElement().name.toString()){
+//                    "Count" -> count = reader.elementText?.toInt()
+//                    "ResultList" -> {
+//                        while (reader.hasNext()) {
+//                            val event1 = reader.nextEvent()
+//                            if (event1.isStartElement && "item" == event1.asStartElement().name.toString())
+//                            {
+//                                val map = mutableMapOf<String, String?>()
+//                                while (reader.hasNext()){
+//                                    val event2 = reader.nextEvent()
+//                                    val tag = event1.asStartElement().name.toString()
+//                                    map[tag] = reader.elementText
+//                                    if(event2.isEndElement && "item" == event2.asEndElement().name.toString()) {
+//                                        break
+//                                    }
+//                                }
+//                                list.add( ArticleUrl( map["ArticleIdx"]?.toInt(),  map["ArticleUrl"]) )
+//                            } else if (event1.isEndElement && "ResultList" == event1.asEndElement().name.toString()) {
+//                                break
+//                            }
+//                        }
+//                    }
+//                }
+//
+//            }
+//        }
+//        return ArticleUrlResult(count,  list)
+//    }
 }
 
 /**

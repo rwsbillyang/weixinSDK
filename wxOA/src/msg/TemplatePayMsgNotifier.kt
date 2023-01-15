@@ -41,14 +41,14 @@ class TemplatePayMsgNotifier : TemplateMsgBase() {
         title: String?
     ) {
 
-        if (openId == null || expireInfo.expire == null) {
+        if (openId == null) {
             log.warn("onExpire: openId or expire is null, ignore ")
             return
         }
 
         val data = mutableMapOf<String, ColoredValue>()
         data["first"] = ColoredValue(title ?: "亲，您的会员即将到期")
-        data["keynote1"] = ColoredValue(DatetimeUtil.format(expireInfo.expire!!, "yyyy年MM月dd日"), color)
+        data["keynote1"] = ColoredValue(DatetimeUtil.format(expireInfo.expire, "yyyy年MM月dd日"), color)
         data["keynote2"] = ColoredValue(level2Name(expireInfo.level) + "会员到期后，影响使用", color)
         data["remark"] = ColoredValue("点击续费!", color)
 

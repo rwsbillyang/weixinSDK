@@ -18,118 +18,43 @@
 
 package com.github.rwsbillyang.wxOA
 
+import com.github.rwsbillyang.wxOA.fan.FanService
 import com.github.rwsbillyang.wxOA.msg.MsgService
 import com.github.rwsbillyang.wxOA.qrcodeChannel.QrCodeChannelService
 import com.github.rwsbillyang.wxOA.stats.StatsEvent
 import com.github.rwsbillyang.wxOA.stats.StatsService
 import com.github.rwsbillyang.wxSDK.msg.*
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import javax.xml.stream.XMLEventReader
+import org.slf4j.LoggerFactory
 
-class EventHandler: IOAEventHandler, MsgEventCommonHandler() {
+//每个公众号都拥有自己的context，对应着MsgbHub、msgHandler、EventHandler，通常情况下它们都共用一个handler
+// 这些EventHandler和MsgHandler只处理属于自己的消息或事件
+class EventHandler: DefaultOAEventHandler(), KoinComponent  {
+    private val log = LoggerFactory.getLogger("OAEventHandler")
 
     private val statsService: StatsService by inject()
-
+    private val reMsgChooser: ReMsgChooser by inject()
+    private val fanService: FanService by inject()
     //用于关注后，查询关注渠道二维码设置的响应消息ID
     private val qrCodeChannelService: QrCodeChannelService by inject()
     private val msgService: MsgService by inject()//用于查询配置的消息
 
-    override fun onDefault(appId:String, e: WxBaseEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event)
-        statsService.insertEvent(event)
+    private fun insertStats(appId:String, e: WxXmlEvent) = runBlocking{
+        launch {
+            val stats = StatsEvent(appId, e.toUserName, e.fromUserName, e.createTime, e.event, e.xml)
+            statsService.insertEvent(stats)
+        }
+    }
+    override fun onDefault(appId:String, e: WxXmlEvent): ReBaseMSg? {
+        insertStats(appId, e)
 
-        return tryReMsg(appId, e)
+        return reMsgChooser.tryReMsg(appId, e)
     }
 
-    override fun onDispatch(appId:String, agentId:String?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg? {
-        return null// 返回null将由onDefault继续处理
-    }
-
-    override fun onOALocationEvent(appId:String, e: OALocationEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event, extra = "${e.latitude}, ${e.longitude}, ${e.precision}" )
-        statsService.insertEvent(event)
-
-        return tryReMsg(appId, e)
-    }
-
-    override fun onOAMassSendFinishEvent(appId:String, e: OAMassSendFinishEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event)
-        statsService.insertEvent(event)
-
-        return tryReMsg(appId, e)
-    }
-
-    override fun onOAMenuClickEvent(appId:String, e: OAMenuClickEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event, eKey = e.eventKey )
-        statsService.insertEvent(event)
-
-        return tryReMsg(appId, e)
-    }
-
-    override fun onOAMenuLocationEvent(appId:String, e: OAMenuLocationEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event, eKey = e.eventKey,  extra = "${e.locationX}, ${e.locationY}, ${e.scale}, ${e.label}" )
-        statsService.insertEvent(event)
-
-        return tryReMsg(appId, e)
-    }
-
-    override fun onOAMenuMiniEvent(appId:String, e: OAMenuMiniEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event, extra = e.menuId )
-        statsService.insertEvent(event)
-
-        return tryReMsg(appId, e)
-    }
-
-    override fun onOAMenuOAAlbumEvent(appId:String, e: OAMenuOAAlbumEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event, extra = e.sendPicsInfo.toString() )
-        statsService.insertEvent(event)
-
-        return tryReMsg(appId, e)
-    }
-
-    override fun onOAMenuPhotoEvent(appId:String, e: OAMenuPhotoEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event, extra = e.sendPicsInfo.toString() )
-        statsService.insertEvent(event)
-
-        return tryReMsg(appId, e)
-    }
-
-    override fun onOAMenuPhotoOrAlbumEvent(appId:String, e: OAMenuPhotoOrAlbumEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event, extra = e.sendPicsInfo.toString() )
-        statsService.insertEvent(event)
-
-        return tryReMsg(appId, e)
-    }
-
-    override fun onOAMenuScanCodePushEvent(appId:String, e: OAMenuScanCodePushEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event, extra = "${e.scanResult},${e.scanType}")
-        statsService.insertEvent(event)
-
-        return tryReMsg(appId, e)
-    }
-
-    override fun onOAMenuScanCodeWaitEvent(appId:String, e: OAMenuScanCodeWaitEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event, extra = "${e.scanResult},${e.scanType}")
-        statsService.insertEvent(event)
-
-        return tryReMsg(appId, e)
-    }
-
-    override fun onOAMenuViewEvent(appId:String, e: OAMenuViewEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event, extra = e.menuId)
-        statsService.insertEvent(event)
-
-        //进入菜单时更新，后期可以去掉, 避免频繁更新
-        return tryReMsg(appId, e, event.from != null && fanService.findFan(event.from) == null)
-    }
-
-    override fun onOATemplateSendJobFinish(appId:String, e: OATemplateSendJobFinish): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event, extra = "${e.status}")
-        statsService.insertEvent(event)
-
-        return tryReMsg(appId, e)
-    }
 
     /**
      * 用户已关注时，扫码关注后的事件推送
@@ -138,13 +63,12 @@ class EventHandler: IOAEventHandler, MsgEventCommonHandler() {
      * @property ticket Ticket	二维码的ticket，可用来换取二维码图片
      * */
     override fun onOAScanEvent(appId:String, e: OAScanEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event, eKey = e.eventKey, extra = e.ticket)
-        statsService.insertEvent(event)
+        log.info("onOAScanEvent from ${e.fromUserName}")
 
-        log.info("onOAScanEvent from ${event.from}")
+        insertStats(appId, e)
 
         val scene = e.eventKey
-        return tryUseQrcodeMsgConfig(appId, scene,e.base.fromUserName, e.base.toUserName)?:tryReMsg(appId, e,false)
+        return tryUseQrcodeMsgConfig(appId, e, scene)?:reMsgChooser.tryReMsg(appId, e,false)
     }
 
     /**
@@ -154,13 +78,12 @@ class EventHandler: IOAEventHandler, MsgEventCommonHandler() {
      * @property ticket Ticket	二维码的ticket，可用来换取二维码图片
      * */
     override fun onOAScanSubscribeEvent(appId:String, e: OAScanSubscribeEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event, eKey = e.eventKey, extra = e.ticket)
-        statsService.insertEvent(event)
+        log.info("onOAScanSubscribeEvent from ${e.fromUserName}")
 
-        log.info("onOAScanSubscribeEvent from ${event.from}")
+        insertStats(appId, e)
 
         val scene = e.eventKey?.removePrefix("qrscene_")
-        return tryUseQrcodeMsgConfig(appId, scene,e.base.fromUserName, e.base.toUserName)?:tryReMsg(appId, e,false)
+        return tryUseQrcodeMsgConfig(appId, e, scene)?:reMsgChooser.tryReMsg(appId, e,false)
     }
 
     /**
@@ -172,12 +95,11 @@ class EventHandler: IOAEventHandler, MsgEventCommonHandler() {
      * 假如服务器无法保证在五秒内处理并回复，可以直接回复空串，微信服务器不会对此作任何处理，并且不会发起重试。
      * */
     override fun onOASubscribeEvent(appId:String, e: OASubscribeEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event)
-        statsService.insertEvent(event)
-        log.info("onOASubscribeEvent from ${event.from}")
+        log.info("onOASubscribeEvent from ${e.fromUserName}")
 
+        insertStats(appId, e)
 
-        return tryReMsg(appId, e,true) //腾讯收回权限，插入一条记录
+        return reMsgChooser.tryReMsg(appId, e,true) //腾讯收回权限，插入一条记录
     }
 
 
@@ -190,17 +112,16 @@ class EventHandler: IOAEventHandler, MsgEventCommonHandler() {
      * 假如服务器无法保证在五秒内处理并回复，可以直接回复空串，微信服务器不会对此作任何处理，并且不会发起重试。
      * */
     override fun onOAUnsubscribeEvent(appId:String, e: OAUnsubscribeEvent): ReBaseMSg? {
-        val event = StatsEvent(appId, e.base.toUserName, e.base.fromUserName, e.base.createTime, e.event)
-        statsService.insertEvent(event)
-        e.base.fromUserName?.let { fanService.subscribeOrUnsubscribe(it, 0) }
-        return tryReMsg(appId, e, false)
+        insertStats(appId, e)
+        e.fromUserName?.let { fanService.subscribeOrUnsubscribe(it, 0) }
+        return reMsgChooser.tryReMsg(appId, e, false)
     }
 
     //插入一条FAN记录, 并检查该qrcode是否配置有回复消息
-    private fun tryUseQrcodeMsgConfig(appId: String, scene: String?, from: String?, to: String?): ReBaseMSg?{
+    private fun tryUseQrcodeMsgConfig(appId: String, e: WxXmlEvent, scene: String?): ReBaseMSg?{
         //腾讯收回权限，但用于获取其它信息，并插入一条FAN记录
-        if(from != null)
-            upsertFan(appId, from)
+        if(e.fromUserName != null)
+            reMsgChooser.upsertFan(appId, e.fromUserName!!)
         else {
             log.warn("from(openId) should not null")
         }
@@ -210,7 +131,7 @@ class EventHandler: IOAEventHandler, MsgEventCommonHandler() {
             if(msgId != null){
                 val msg = msgService.findMyMsg(msgId)
                 if(msg != null){
-                    return myMsgToReMsg(msg, from, to)
+                    return reMsgChooser.myMsgToReMsg(msg, e.fromUserName, e.toUserName)
                 }else{
                     log.warn("not found msg for msgId=${msgId.toHexString()}, to check event type config")
                 }

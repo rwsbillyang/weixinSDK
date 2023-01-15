@@ -19,10 +19,8 @@
 package com.github.rwsbillyang.wxSDK.work.inMsg
 
 
-import com.github.rwsbillyang.wxSDK.msg.BaseInfo
 import com.github.rwsbillyang.wxSDK.work.*
-import javax.xml.stream.XMLEventReader
-
+import org.w3c.dom.Element
 
 /*
 * 通讯录变更事件
@@ -35,13 +33,9 @@ import javax.xml.stream.XMLEventReader
 /**
  * 通讯录变更事件  base class
  * */
-open class WorkChangeContactEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): AgentEvent(baseInfo)
+open class WorkChangeContactEvent(xml: String, rootDom: Element): AgentEvent(xml, rootDom)
 {
-    init {
-        event = agentEvent.event
-        agentId = agentEvent.agentId
-    }
-    var changeType: String? = null
+    val changeType = get(rootDom, "ChangeType")
     companion object{
         const val CREATE_USER = "create_user"
         const val UPDATE_USER = "update_user"
@@ -51,148 +45,10 @@ open class WorkChangeContactEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): A
         const val DELETE_PARTY= "delete_party"
         const val UPDATE_TAG= "update_tag"
     }
-    override fun read(reader: XMLEventReader)
-    {
-        while (reader.hasNext()) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "ChangeType" -> {
-                        changeType = reader.elementText
-                        break
-                    }
-                }
-            }
-        }
-    }
+   
 }
 
-/**
- * 扩展属性
- * @param name 扩展属性名称
- * @param type 扩展属性类型: 0-文本 1-网页
- * */
-open class ExtAttr(val name: String?, val type: Int?)
-{
-    companion object{
-        fun fromXml(reader: XMLEventReader):List<ExtAttr>{
-            val list = mutableListOf<ExtAttr>()
-            while (reader.hasNext()) {
-                val event1 = reader.nextEvent()
-                if (event1.isStartElement && "item" == event1.asStartElement().name.toString())
-                {
-                    //var name: String?
-                    //val map = mutableMapOf<String, String?>()
-                    while (reader.hasNext()){
-                        val e2 = reader.nextEvent()
-                        if(e2.isEndElement && "item" == e2.asEndElement().name.toString()) {
-                            readExtAttr(reader)?.let { list.add(it) }
-                        }
-                    }
-                } else if (event1.isEndElement && "ExtAttr" == event1.asEndElement().name.toString()) {
-                    break
-                }
-            }
-            return  list
-        }
 
-        fun readExtAttr(reader: XMLEventReader): ExtAttr?{
-            var name: String? = null
-            var type: Int? = null
-            while (reader.hasNext()) {
-                val e = reader.nextEvent()
-                if (e.isStartElement) {
-                    when(e.asStartElement().name.toString()){
-                        "Name" -> {
-                            name = reader.elementText
-                            break
-                        }
-                        "Type" -> {
-                            type = reader.elementText?.toInt()
-                            break
-                        }
-                        "Text" -> {
-                            val e2 = reader.nextEvent()
-                            while (reader.hasNext()) {
-                                if (e2.isStartElement) {
-                                    when(e2.asStartElement().name.toString()){
-                                        "Value" -> {
-                                            return ExtAttrText(name, reader.elementText)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        "Web" -> {
-                            var url: String? = null
-                            var title: String? = null
-                            var count = 0
-                            val e2 = reader.nextEvent()
-                            while (reader.hasNext() && count < 2) {
-                                if (e2.isStartElement) {
-                                    when(e.asStartElement().name.toString()){
-                                        "Title" -> {
-                                            title = reader.elementText; count++
-                                        }
-                                        "Url" -> {
-                                            url = reader.elementText; count++
-                                        }
-                                    }
-                                }
-                            }
-                            return ExtAttrWeb(name, title, url)
-                        }
-                        "MiniProgram" ->{ //此段内容，文档中没有，根据读取成员详情添加进来的
-                            var appId: String? = null
-                            var pagepath: String? = null
-                            var title: String? = null
-                            var count = 0
-                            val e2 = reader.nextEvent()
-                            while (reader.hasNext() && count < 3) {
-                                if (e2.isStartElement) {
-                                    when(e.asStartElement().name.toString()){
-                                        "Title" -> {
-                                            title = reader.elementText; count++
-                                        }
-                                        "AppID" -> {
-                                            appId = reader.elementText; count++
-                                        }
-                                        "PagePath" -> {
-                                            pagepath = reader.elementText; count++
-                                        }
-                                    }
-                                }
-                            }
-                            return ExtAttrMiniProgram(name, title, appId, pagepath)
-                        }
-                    }
-                }
-            }
-            return null
-        }
-    }
-
-    fun toAttr():Attr?{
-        return when(this){
-            is ExtAttrText -> TextAttr(0, name?:"", Text(value?:""))
-            is ExtAttrWeb -> WebAttr(1, name?:"", Web(url?:"", title?:"") )
-            is ExtAttrMiniProgram -> MiniProgramAttr(2,name?:"", MiniProgram(appId?:"", pagePath?:"", title?:""))
-            else -> null
-        }
-    }
-}
-/**
- * 文本扩展属性
- * @param value 文本属性内容
- * */
-class ExtAttrText(name: String?,val value: String?):ExtAttr(name, 0)
-/**
- * 网页扩展属性
- * @param title 网页的展示标题
- * @param url Url	网页的url
- * */
-class ExtAttrWeb(name: String?, val title: String?, val url: String?):ExtAttr(name, 1)
-class ExtAttrMiniProgram(name: String?, val title: String?, val appId: String?, val pagePath: String?):ExtAttr(name, 2)
 /**
  * 新增成员事件
  * @property userId UserID	变更信息的成员UserID
@@ -209,51 +65,22 @@ class ExtAttrMiniProgram(name: String?, val title: String?, val appId: String?, 
  * @property telephone Telephone	座机，变更时推送
  * @property address Address	地址
  * */
-open class WorkUserCreateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): WorkChangeContactEvent(baseInfo, agentEvent) {
-    init {
-        changeType = CREATE_USER
-    }
-    var userId: String? = null
-    var mainDepartment: String? = null
-    var name: String? = null
-    var department: String? = null
-    var isLeaderInDept: String? = null
-    var mobile: String? = null
-    var position: String? = null
-    var gender: String? = null
-    var email: String? = null
-    var status: String? = null
-    var avatar: String? = null
-    var alias: String? = null
-    var telephone: String? = null
-    var address: String? = null
-    var extAttrs: List<ExtAttr>? = null
-    override fun read(reader: XMLEventReader)
-    {
-        var count2 = 0
-        while (reader.hasNext() && count2 < 15) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "UserID" ->{ userId = reader.elementText; count2++ }
-                    "Name" ->{ name= reader.elementText; count2++}
-                    "Department" ->{ department = reader.elementText; count2++ }
-                    "MainDepartment" ->{ mainDepartment= reader.elementText; count2++}
-                    "IsLeaderInDept" ->{ isLeaderInDept= reader.elementText; count2++}
-                    "Mobile" ->{ mobile= reader.elementText; count2++}
-                    "Position" ->{ position = reader.elementText; count2++ }
-                    "Gender" ->{ gender= reader.elementText; count2++}
-                    "Email" ->{ email= reader.elementText; count2++}
-                    "Status" ->{ status= reader.elementText; count2++}
-                    "Avatar" ->{ avatar = reader.elementText; count2++ }
-                    "Alias" ->{ alias= reader.elementText; count2++}
-                    "Telephone" ->{ telephone= reader.elementText; count2++}
-                    "Address" ->{ address= reader.elementText; count2++}
-                    "ExtAttr" -> {extAttrs = ExtAttr.fromXml(reader); count2++}
-                }
-            }
-        }
-    }
+open class WorkUserCreateEvent(xml: String, rootDom: Element): WorkChangeContactEvent(xml, rootDom) {
+    val userId = get(rootDom, "UserID")
+    val mainDepartment = get(rootDom, "MainDepartment")
+    val name = get(rootDom, "Name")
+    val department = get(rootDom, "Department")
+    val isLeaderInDept = get(rootDom, "IsLeaderInDept")
+    val mobile = get(rootDom, "Mobile")
+    val position = get(rootDom, "Position")
+    val gender = get(rootDom, "Gender")
+    val email = get(rootDom, "Email")
+    val status = get(rootDom, "Status")
+    val avatar = get(rootDom, "Avatar")
+    val alias = get(rootDom, "Alias")
+    val telephone = get(rootDom, "Telephone")
+    val address = get(rootDom, "Address")
+    //val extAttrs = getChild(rootDom, "ExtAttr")
 }
 
 /**
@@ -273,75 +100,16 @@ open class WorkUserCreateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): Work
  * @property telephone Telephone	座机，变更时推送
  * @property address Address	地址
  * */
-class WorkUserUpdateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent):  WorkChangeContactEvent(baseInfo, agentEvent) {
-    init {
-        changeType = CREATE_USER
-    }
-    var userId: String? = null
-    var newUserID: String? = null
-    var name: String? = null
-    var department: String? = null
-    var mainDepartment: String? = null
-    var isLeaderInDept: String? = null
-    var mobile: String? = null
-    var position: String? = null
-    var gender: String? = null
-    var email: String? = null
-    var status: String? = null
-    var avatar: String? = null
-    var alias: String? = null
-    var telephone: String? = null
-    var address: String? = null
-    var extAttrs: List<ExtAttr>? = null
-    override fun read(reader: XMLEventReader)
-    {
-        var count2 = 0
-        while (reader.hasNext() && count2 < 16) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "UserID" ->{ userId = reader.elementText; count2++ }
-                    "NewUserID" ->{ newUserID= reader.elementText; count2++}
-                    "Name" ->{ name= reader.elementText; count2++}
-                    "Department" ->{ department = reader.elementText; count2++ }
-                    "MainDepartment" ->{ mainDepartment= reader.elementText; count2++}
-                    "IsLeaderInDept" ->{ isLeaderInDept= reader.elementText; count2++}
-                    "Mobile" ->{ mobile= reader.elementText; count2++}
-                    "Position" ->{ position = reader.elementText; count2++ }
-                    "Gender" ->{ gender= reader.elementText; count2++}
-                    "Email" ->{ email= reader.elementText; count2++}
-                    "Status" ->{ status= reader.elementText; count2++}
-                    "Avatar" ->{ avatar = reader.elementText; count2++ }
-                    "Alias" ->{ alias= reader.elementText; count2++}
-                    "Telephone" ->{ telephone= reader.elementText; count2++}
-                    "Address" ->{ address= reader.elementText; count2++}
-                    "ExtAttr" -> {extAttrs = ExtAttr.fromXml(reader); count2++}
-                }
-            }
-        }
-    }
+class WorkUserUpdateEvent(xml: String, rootDom: Element): WorkUserCreateEvent(xml, rootDom) {
+    val newUserID = get(rootDom, "NewUserID")
 }
 
 /**
  * 删除成员事件
  * @property userId UserID	变更信息的成员UserID
  * */
-class WorkUserDelEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): WorkChangeContactEvent(baseInfo, agentEvent) {
-    init {
-        changeType = DELETE_USER
-    }
-    var userId: String? = null
-    override fun read(reader: XMLEventReader)
-    {
-        while (reader.hasNext()) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "UserID" ->{ userId = reader.elementText; break }
-                }
-            }
-        }
-    }
+class WorkUserDelEvent(xml: String, rootDom: Element): WorkChangeContactEvent(xml, rootDom) {
+    val userId = get(rootDom, "UserID")
 }
 
 
@@ -354,29 +122,12 @@ class WorkUserDelEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): WorkChangeCo
  * @property parentId ParentId	父部门id
  * @property order Order	部门排序
  * */
-class WorkPartyCreateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): WorkChangeContactEvent(baseInfo, agentEvent) {
-    init {
-        changeType = CREATE_PARTY
-    }
-    var id: String? = null
-    var name: String? = null
-    var parentId: String? = null
-    var order: String? = null
-    override fun read(reader: XMLEventReader)
-    {
-        var count2 = 0
-        while (reader.hasNext() && count2 < 4) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "Id" ->{ id = reader.elementText; count2++ }
-                    "Name" ->{ name= reader.elementText; count2++}
-                    "ParentId" ->{ parentId= reader.elementText; count2++}
-                    "Order" ->{ order= reader.elementText; count2++}
-                }
-            }
-        }
-    }
+class WorkPartyCreateEvent(xml: String, rootDom: Element): WorkChangeContactEvent(xml, rootDom) {
+    val id = get(rootDom, "Id")
+    val name = get(rootDom, "Name")
+    val parentId = get(rootDom, "ParentId")
+    val order = get(rootDom, "Order")
+
 }
 
 /**
@@ -385,49 +136,19 @@ class WorkPartyCreateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): WorkChan
  * @property name Name	部门名称，仅发送变更时传递
  * @property parentId ParentId	父部门id，仅发送变更时传递
  * */
-class WorkPartyUpdateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): WorkChangeContactEvent(baseInfo, agentEvent) {
-    init {
-        changeType = UPDATE_PARTY
-    }
-    var id: String? = null
-    var name: String? = null
-    var parentId: String? = null
-    override fun read(reader: XMLEventReader)
-    {
-        var count2 = 0
-        while (reader.hasNext() && count2 < 3) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "Id" ->{ id = reader.elementText; count2++ }
-                    "Name" ->{ name= reader.elementText; count2++}
-                    "ParentId" ->{ parentId= reader.elementText; count2++}
-                }
-            }
-        }
-    }
+class WorkPartyUpdateEvent(xml: String, rootDom: Element): WorkChangeContactEvent(xml, rootDom) {
+    val id = get(rootDom, "Id")
+    val name = get(rootDom, "Name")
+    val parentId = get(rootDom, "ParentId")
+
 }
 
 /**
  * 删除部门事件
  * @property id Id	部门Id
  * */
-class WorkPartyDelEvent(baseInfo: BaseInfo,  agentEvent: AgentEvent): WorkChangeContactEvent(baseInfo, agentEvent) {
-    init {
-        changeType = DELETE_PARTY
-    }
-    var id: String? = null
-    override fun read(reader: XMLEventReader)
-    {
-        while (reader.hasNext()) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "Id" ->{ id = reader.elementText; break }
-                }
-            }
-        }
-    }
+class WorkPartyDelEvent(xml: String, rootDom: Element): WorkChangeContactEvent(xml, rootDom) {
+    val id = get(rootDom, "Id")
 }
 
 /**
@@ -438,29 +159,139 @@ class WorkPartyDelEvent(baseInfo: BaseInfo,  agentEvent: AgentEvent): WorkChange
  * @property addPartyItems	标签中新增的部门id列表，用逗号分隔
  * @property delPartyItems	标签中删除的部门id列表，用逗号分隔
  * */
-class WorkTagUpdateEvent(baseInfo: BaseInfo, agentEvent: AgentEvent): WorkChangeContactEvent(baseInfo, agentEvent) {
-    init {
-        changeType = UPDATE_TAG
-    }
-    var tagId: String? = null
-    var addUserItems: List<String>? = null
-    var delUserItems: List<String>? = null
-    var addPartyItems: List<String>? = null
-    var delPartyItems: List<String>? = null
-    override fun read(reader: XMLEventReader)
-    {
-        var count = 0
-        while (reader.hasNext() && count < 4) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                when(e.asStartElement().name.toString()){
-                    "TagId" ->{ tagId = reader.elementText; count++ }
-                    "AddUserItems" ->{ addUserItems = reader.elementText?.split(','); count++ }
-                    "DelUserItems" ->{ delUserItems = reader.elementText.split(','); count++ }
-                    "AddPartyItems" ->{ addPartyItems = reader.elementText.split(','); count++ }
-                    "DelPartyItems" ->{ delPartyItems = reader.elementText.split(','); count++ }
-                }
-            }
+class WorkTagUpdateEvent(xml: String, rootDom: Element): WorkChangeContactEvent(xml, rootDom) {
+    val tagId = get(rootDom, "TagId")
+    val addUserItems = get(rootDom, "AddUserItems")?.split(',')
+    val delUserItems = get(rootDom, "DelUserItems")?.split(',')
+    val addPartyItems = get(rootDom, "AddPartyItems")?.split(',')
+    val delPartyItems = get(rootDom, "DelPartyItems")?.split(',')
+}
+
+
+/**
+ * 文本扩展属性
+ * @param value 文本属性内容
+ * */
+class ExtAttrText(name: String?,val value: String?):ExtAttr(name, 0)
+/**
+ * 网页扩展属性
+ * @param title 网页的展示标题
+ * @param url Url	网页的url
+ * */
+class ExtAttrWeb(name: String?, val title: String?, val url: String?):ExtAttr(name, 1)
+class ExtAttrMiniProgram(name: String?, val title: String?, val appId: String?, val pagePath: String?):ExtAttr(name, 2)
+
+/**
+ * 扩展属性
+ * @param name 扩展属性名称
+ * @param type 扩展属性类型: 0-文本 1-网页
+ * */
+open class ExtAttr(val name: String?, val type: Int?)
+{
+//    companion object{
+//        fun fromXml(reader: XMLEventReader):List<ExtAttr>{
+//            val list = mutableListOf<ExtAttr>()
+//            while (reader.hasNext()) {
+//                val event1 = reader.nextEvent()
+//                if (event1.isStartElement && "item" == event1.asStartElement().name.toString())
+//                {
+//                    //val name: String?
+//                    //val map = mutableMapOf<String, String?>()
+//                    while (reader.hasNext()){
+//                        val e2 = reader.nextEvent()
+//                        if(e2.isEndElement && "item" == e2.asEndElement().name.toString()) {
+//                            readExtAttr(reader)?.let { list.add(it) }
+//                        }
+//                    }
+//                } else if (event1.isEndElement && "ExtAttr" == event1.asEndElement().name.toString()) {
+//                    break
+//                }
+//            }
+//            return  list
+//        }
+//
+//        fun readExtAttr(reader: XMLEventReader): ExtAttr?{
+//            val name: String? = null
+//            val type: Int? = null
+//            while (reader.hasNext()) {
+//                val e = reader.nextEvent()
+//                if (e.isStartElement) {
+//                    when(e.asStartElement().name.toString()){
+//                        "Name" -> {
+//                            name = reader.elementText
+//                            break
+//                        }
+//                        "Type" -> {
+//                            type = reader.elementText?.toInt()
+//                            break
+//                        }
+//                        "Text" -> {
+//                            val e2 = reader.nextEvent()
+//                            while (reader.hasNext()) {
+//                                if (e2.isStartElement) {
+//                                    when(e2.asStartElement().name.toString()){
+//                                        "Value" -> {
+//                                            return ExtAttrText(name, reader.elementText)
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        }
+//                        "Web" -> {
+//                            val url: String? = null
+//                            val title: String? = null
+//                            val count = 0
+//                            val e2 = reader.nextEvent()
+//                            while (reader.hasNext() && count < 2) {
+//                                if (e2.isStartElement) {
+//                                    when(e.asStartElement().name.toString()){
+//                                        "Title" -> {
+//                                            title = reader.elementText; count++
+//                                        }
+//                                        "Url" -> {
+//                                            url = reader.elementText; count++
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                            return ExtAttrWeb(name, title, url)
+//                        }
+//                        "MiniProgram" ->{ //此段内容，文档中没有，根据读取成员详情添加进来的
+//                            val appId: String? = null
+//                            val pagepath: String? = null
+//                            val title: String? = null
+//                            val count = 0
+//                            val e2 = reader.nextEvent()
+//                            while (reader.hasNext() && count < 3) {
+//                                if (e2.isStartElement) {
+//                                    when(e.asStartElement().name.toString()){
+//                                        "Title" -> {
+//                                            title = reader.elementText; count++
+//                                        }
+//                                        "AppID" -> {
+//                                            appId = reader.elementText; count++
+//                                        }
+//                                        "PagePath" -> {
+//                                            pagepath = reader.elementText; count++
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                            return ExtAttrMiniProgram(name, title, appId, pagepath)
+//                        }
+//                    }
+//                }
+//            }
+//            return null
+//        }
+//    }
+
+    fun toAttr():Attr?{
+        return when(this){
+            is ExtAttrText -> TextAttr(0, name?:"", Text(value?:""))
+            is ExtAttrWeb -> WebAttr(1, name?:"", Web(url?:"", title?:"") )
+            is ExtAttrMiniProgram -> MiniProgramAttr(2,name?:"", MiniProgram(appId?:"", pagePath?:"", title?:""))
+            else -> null
         }
     }
 }

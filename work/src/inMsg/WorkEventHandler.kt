@@ -1,14 +1,16 @@
 package com.github.rwsbillyang.wxSDK.work.inMsg
 
-import com.github.rwsbillyang.wxSDK.msg.BaseInfo
+
 import com.github.rwsbillyang.wxSDK.msg.IDispatcher
 import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
-import javax.xml.stream.XMLEventReader
+import com.github.rwsbillyang.wxSDK.msg.WxXmlEvent
+import org.w3c.dom.Element
+
 
 //对于ISV， appId 来自于suiteId，agentId为空；内建应用：appId是corpId，agentID非空。
 // 它们来自于接收消息api中的路径参数
 interface IWorkEventHandler: IDispatcher {
-    fun onDefault(appId: String, agentId:String?,e: AgentEvent): ReBaseMSg?
+    fun onDefault(appId: String, agentId: String?, e: WxXmlEvent): ReBaseMSg?
     fun onSubscribeEvent(appId: String, agentId:String?,e: WorkSubscribeEvent): ReBaseMSg?
     fun onUnsubscribeEvent(appId: String, agentId:String?,e: WorkUnsubscribeEvent): ReBaseMSg?
     fun onLocationEvent(appId: String, agentId:String?,e: WorkLocationEvent): ReBaseMSg?
@@ -54,9 +56,9 @@ open class DefaultWorkEventHandler : IWorkEventHandler{
      * 未知类型的msg或event可以继续进行读取其额外信息，从而可以自定义分发和处理
      * 返回null表示由onDefault继续处理
      * */
-    override fun onDispatch(appId: String, agentId:String?,reader: XMLEventReader, base: BaseInfo):ReBaseMSg? = null
+    override fun onDispatch(appId: String, agentId:String?, xml: String, rootDom: Element, msgOrEventType: String?):ReBaseMSg? = null
 
-    override fun onDefault(appId: String, agentId:String?,e: AgentEvent): ReBaseMSg? {
+    override fun onDefault(appId: String, agentId:String?, e: WxXmlEvent): ReBaseMSg? {
         return null
     }
 

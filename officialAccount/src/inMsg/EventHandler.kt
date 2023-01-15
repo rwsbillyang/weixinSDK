@@ -1,10 +1,8 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
 
-import com.github.rwsbillyang.wxSDK.msg.BaseInfo
-import com.github.rwsbillyang.wxSDK.msg.IDispatcher
-import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
-import com.github.rwsbillyang.wxSDK.msg.WxBaseEvent
+import com.github.rwsbillyang.wxSDK.msg.*
+import org.w3c.dom.Element
 import javax.xml.stream.XMLEventReader
 
 /**
@@ -167,7 +165,7 @@ interface IOAEventHandler: IDispatcher {
     /**
      *  缺省处理函数
      * */
-    fun onDefault(appId:String, e: WxBaseEvent): ReBaseMSg?
+    fun onDefault(appId:String, e: WxXmlEvent): ReBaseMSg?
 }
 
 open class DefaultOAEventHandler: IOAEventHandler {
@@ -203,7 +201,7 @@ open class DefaultOAEventHandler: IOAEventHandler {
 
     override fun onOATemplateSendJobFinish(appId:String, e: OATemplateSendJobFinish) = onDefault(appId, e)
 
-    override fun onDefault(appId:String, e: WxBaseEvent): ReBaseMSg? {
+    override fun onDefault(appId:String, e: WxXmlEvent): ReBaseMSg? {
         return null
     }
 
@@ -211,6 +209,6 @@ open class DefaultOAEventHandler: IOAEventHandler {
      * 未知类型的msg或event可以继续进行读取其额外信息，从而可以自定义分发和处理
      * 返回null表示由onDefault继续处理
      * */
-    override fun onDispatch(appId:String, agentId:String?,reader: XMLEventReader, base: BaseInfo) = null
+    override fun onDispatch(appId:String, agentId:String?, xml:String, rootDom: Element, msgOrEventType: String?) = null
 
 }

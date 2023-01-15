@@ -22,9 +22,7 @@ data class StatsEvent(
         val from: String?,
         val time: Long?,
         val event: String?,
-        val eKey: String? = null,
-//        val ticket: String? = null,
-//        val menuId: String? = null,
+        //val eKey: String? = null,
         val extra:  String? = null,
         val _id: ObjectId = ObjectId()
 )

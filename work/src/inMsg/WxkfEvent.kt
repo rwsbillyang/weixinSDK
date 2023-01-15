@@ -18,48 +18,25 @@
 
 package com.github.rwsbillyang.wxSDK.work.inMsg
 
-import com.github.rwsbillyang.wxSDK.msg.BaseInfo
+import com.github.rwsbillyang.wxSDK.msg.WxXmlEvent
+import org.w3c.dom.Element
 
-import javax.xml.stream.XMLEventReader
 
 //<xml>
 // <ToUserName><![CDATA[wwfc2fead39b1e60dd]]></ToUserName>
 // <Encrypt><![CDATA[ksULeHpUG0imG/CKibJVeTn3P35Yf0JcShljm2SkXX6KffMLZHSpwnKwoQJ7ixjh9DM0kkq8atMJf42sG8PDiIubteW6idDu9cVryEmF0s2EkZ/VYtKTp/Ht1NmdoVU8j8AWUyhZJYbP/Vpv/ycOXylWAhr4PRKpxYjKp3pVzf9tl4e/jweQH2plmuWUX1AD+DBw+NF5aYV3M8HJR2CE7dMTnahSutXfoYn3sLbvxh3dtcIv2pWa4j9fBKrL9EuwuRtV6RGgAMEe98Z6Xr2/ICfIqH+3bmxtYKEOmmr0Sd3GQJMP6prihJE5RBaATcWL3bC5snJUYnySe07uXA/zutsjYpAulDWSPbbIACj3is0uLLzR+LZ18gnqUMGnHRKEJfDQ+MVSUd35o7ctMvgZQFgvoZLyyMtDyU2hsE6oMIysDBBRuozpUokxTZVulWdXchh0wuYtnJnkmg5Fp1ASHhRTeFGGQyrxOT/CUAjBcsagjIDRWM7tZ3jo5+cvz54qvWgSVQMF0q7S74z565LFzt80RRevTRgB61SMzjFO/psBuVehmo+HbN1nDSLS6W63di+eTUxjQOY8Rpz8de8UtQ==]]></Encrypt>
 // <AgentID><![CDATA[3010151]]></AgentID></xml>
-//wxkf event
+
 //<xml>
 // <ToUserName><![CDATA[wwfc2fead39b1e60dd]]></ToUserName>
-// <CreateTime>1673582683</CreateTime>
+// <CreateTime>1673624501</CreateTime>
 // <MsgType><![CDATA[event]]></MsgType>
 // <Event><![CDATA[kf_msg_or_event]]></Event>
-// <Token><![CDATA[ENC3LWxM1xSCBaWkhgz3yfWWn27WrBvB7wDWs5LgyAP6WH7]]></Token>
+// <Token><![CDATA[ENCFHoY8dNsqMD9XtfnCbU7yze1upBqpiNQsWyjvwXaEXDG]]></Token>
 // <OpenKfId><![CDATA[wkfqLUQwAApHj0eaMhYPQOOamS3Wz17w]]></OpenKfId>
 // </xml>
-class WxkfEvent(baseInfo: BaseInfo): AgentEvent(baseInfo)
+class WxkfEvent(xml: String, rootDom: Element): WxXmlEvent(xml, rootDom)
 {
-    var token: String? = null
-    var openKfId: String? = null
-
-    override fun read(reader: XMLEventReader)
-    {
-        var count = 0
-        while (reader.hasNext()) {
-            val e = reader.nextEvent()
-            if (e.isStartElement) {
-                count++
-                when(e.asStartElement().name.toString()){
-                    "Token" -> {
-                        token = reader.elementText
-                    }
-                    "OpenKfId" -> { //目的在于兼容：成员关注及取消关注事件
-                        openKfId = reader.elementText
-                        break
-                    }
-                }
-            }
-        }
-        if(count > 2){
-            log.warn("read $count times, maybe some values of fields miss")
-        }
-    }
+    val token = get(rootDom, "Token")
+    val openKfId = get(rootDom, "OpenKfId")
 }

@@ -45,7 +45,7 @@ open class MsgEventCommonHandler: KoinComponent {
      *
      * https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Receiving_standard_messages.html
      * */
-    fun tryReMsg(appId: String, e: WxBaseMsg) = tryReMsg(appId, e.base.msgType, "defaultMsg", e.base.fromUserName, e.base.toUserName)
+    fun tryReMsg(appId: String, e: WxXmlMsg) = tryReMsg(appId, e.msgType, "defaultMsg", e.fromUserName, e.toUserName)
 
 
     /**
@@ -53,7 +53,7 @@ open class MsgEventCommonHandler: KoinComponent {
      *
      * https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Passive_user_reply_message.html
      * */
-    fun tryReMsg(appId: String, e: WxBaseEvent, upsertUserInfo: Boolean = false) = tryReMsg(appId, e.base.msgType, "defaultEvent", e.base.fromUserName, e.base.toUserName, upsertUserInfo)
+    fun tryReMsg(appId: String, e: WxXmlEvent, upsertUserInfo: Boolean = false) = tryReMsg(appId, e.msgType, "defaultEvent", e.fromUserName, e.toUserName, upsertUserInfo)
 
     fun upsertFan(appId: String, openId: String) = runBlocking {
         launch {

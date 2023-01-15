@@ -1,7 +1,7 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
 import com.github.rwsbillyang.wxSDK.msg.*
-import javax.xml.stream.XMLEventReader
+import org.w3c.dom.Element
 
 
 /**
@@ -50,7 +50,7 @@ interface IOAMsgHandler: IDispatcher
      * */
     fun onOALinkMsg(appId: String, msg: OALinkMsg): ReBaseMSg?
 
-    fun onDefault(appId: String, msg: WxBaseMsg): ReBaseMSg?
+    fun onDefault(appId: String, msg: WxXmlMsg): ReBaseMSg?
 }
 
 open class DefaultOAMsgHandler: IOAMsgHandler
@@ -70,13 +70,13 @@ open class DefaultOAMsgHandler: IOAMsgHandler
 
     override fun onOALinkMsg(appId: String, msg: OALinkMsg) = onDefault(appId, msg)
 
-    override fun onDefault(appId: String, msg: WxBaseMsg): ReBaseMSg? {
-        return ReTextMsg("欢迎关注！", msg.base.fromUserName, msg.base.toUserName)
+    override fun onDefault(appId: String, msg: WxXmlMsg): ReBaseMSg? {
+        return ReTextMsg("欢迎关注！", msg.fromUserName, msg.toUserName)
     }
     /**
      * 未知类型的msg或event可以继续进行读取其额外信息，从而可以自定义分发和处理
      * 返回null表示由onDefault继续处理
      * */
-    override fun onDispatch(appId:String, agentId:String?,reader: XMLEventReader, base: BaseInfo) = null
+    override fun onDispatch(appId: String, agentId:String?, xml: String, rootDom: Element, msgOrEventType: String?) = null
 
 }

@@ -22,10 +22,7 @@ import com.github.rwsbillyang.wxSDK.accessToken.ITimelyRefreshValue
 import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
 import com.github.rwsbillyang.wxSDK.msg.ReTextMsg
 import com.github.rwsbillyang.wxSDK.work.*
-import com.github.rwsbillyang.wxSDK.work.inMsg.DefaultWorkEventHandler
-import com.github.rwsbillyang.wxSDK.work.inMsg.DefaultWorkMsgHandler
-import com.github.rwsbillyang.wxSDK.work.inMsg.WorkBaseMsg
-import com.github.rwsbillyang.wxSDK.work.inMsg.WorkTextMsg
+import com.github.rwsbillyang.wxSDK.work.inMsg.*
 import com.github.rwsbillyang.wxWork.dispatchAgentMsgApi
 
 import io.ktor.http.*
@@ -142,19 +139,19 @@ class TestJsTicketValue : ITimelyRefreshValue {
 
 
 class TestWorkMsgHandler : DefaultWorkMsgHandler() {
-    override fun onTextMsg(appId: String ,agentId: String?, msg: WorkTextMsg): ReBaseMSg? {
+    override fun onTextMsg(appId: String ,agentId: String?, msg: WorkTextMsg): ReBaseMSg {
         return ReTextMsg(
             "TestWorkMsgHandler reply the msg: content=${msg.content},msgId=${msg.msgId},agentId=${msg.agentId}",
-            msg.base.fromUserName,
-            msg.base.toUserName
+            msg.fromUserName,
+            msg.toUserName
         )
     }
 
-    override fun onDefault(appId: String ,agentId: String?,msg: WorkBaseMsg): ReBaseMSg? {
+    override fun onDefault(appId: String ,agentId: String?,msg: WxWorkBaseMsg): ReBaseMSg {
         return ReTextMsg(
             "TestWorkMsgHandler default reply the msg: msgId=${msg.msgId},agentId=${msg.agentId}",
-            msg.base.fromUserName,
-            msg.base.toUserName
+            msg.fromUserName,
+            msg.toUserName
         )
     }
 }

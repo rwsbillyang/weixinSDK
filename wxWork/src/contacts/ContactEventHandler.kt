@@ -18,9 +18,8 @@
 
 package com.github.rwsbillyang.wxWork.contacts
 
-import com.github.rwsbillyang.wxSDK.msg.BaseInfo
+
 import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
-import com.github.rwsbillyang.wxSDK.work.Attr
 import com.github.rwsbillyang.wxSDK.work.ContactsApi
 import com.github.rwsbillyang.wxSDK.work.ExternalContactsApi
 import com.github.rwsbillyang.wxSDK.work.Work
@@ -32,8 +31,6 @@ import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
-import java.util.concurrent.atomic.AtomicInteger
-import javax.xml.stream.XMLEventReader
 
 class ContactEventHandler: DefaultWorkEventHandler(), KoinComponent {
     private val log = LoggerFactory.getLogger("ContactEventHandler")
@@ -42,15 +39,6 @@ class ContactEventHandler: DefaultWorkEventHandler(), KoinComponent {
     private val contactHelper: ContactHelper by inject()
     private val contactService: ContactService by inject()
 
-    override fun onDefault(appId: String, agentId: String?, e: AgentEvent): ReBaseMSg? {
-        log.info("onDefault: Not yet implemented,appId=$appId, agentId=$agentId, e.agentId=${e.agentId}")
-        return null
-    }
-
-    override fun onDispatch(appId: String, agentId: String?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg? {
-        log.info("onDispatch: Not yet implemented")
-        return null
-    }
 
     //内建应用+第三方应用： 成员已经加入企业，管理员添加成员到应用可见范围(或移除可见范围)时; 成员已经在应用可见范围，成员加入(或退出)企业时
     override fun onSubscribeEvent(appId: String, agentId: String?, e: WorkSubscribeEvent): ReBaseMSg? {
@@ -310,12 +298,13 @@ class ContactEventHandler: DefaultWorkEventHandler(), KoinComponent {
             log.warn("onUserCreateEvent: appId=$appId, corpId=$corpId, not equal, agentId=$agentId,e.agentId=${e.agentId} ")
         }
         launch {
-            val attrs: List<Attr>? = e.extAttrs?.mapNotNull { it.toAttr() }
+            //val attrs: List<Attr>? = e.extAttrs?.mapNotNull { it.toAttr() }
             val contact = Contact(
                 null, corpId, e.userId ?: "", e.name, e.mobile,
                 e.department?.split(",")?.map { it.toInt() }, null,
                 e.position, e.gender, e.email, e.isLeaderInDept?.split(",")?.map { it.toInt() },
-                e.avatar, null, e.telephone, e.alias, attrs, e.status?.toInt()
+                e.avatar, null, e.telephone, e.alias,  null,//attrs,
+                e.status?.toInt()
             )
             contactService.insertContact(contact)
         }
@@ -330,12 +319,13 @@ class ContactEventHandler: DefaultWorkEventHandler(), KoinComponent {
             log.warn("onUserUpdateEvent: appId=$appId, corpId=$corpId, not equal, agentId=$agentId,e.agentId=${e.agentId} ")
         }
         launch {
-            val attrs: List<Attr>? = e.extAttrs?.mapNotNull { it.toAttr() }
+            //val attrs: List<Attr>? = e.extAttrs?.mapNotNull { it.toAttr() }
             val newContact = Contact(
                 null, corpId, e.userId ?: "", e.name, e.mobile,
                 e.department?.split(",")?.map { it.toInt() }, null,
                 e.position, e.gender, e.email, e.isLeaderInDept?.split(",")?.map { it.toInt() },
-                e.avatar, null, e.telephone, e.alias, attrs, e.status?.toInt()
+                e.avatar, null, e.telephone, e.alias, null,//attrs,
+                e.status?.toInt()
             )
             contactService.updateContact(newContact, e.newUserID)
 

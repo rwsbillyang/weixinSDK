@@ -1,32 +1,16 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
-import com.github.rwsbillyang.wxSDK.msg.BaseInfo
-import com.github.rwsbillyang.wxSDK.msg.WxBaseMsg
-import javax.xml.stream.XMLEventReader
 
+import com.github.rwsbillyang.wxSDK.msg.WxXmlMsg
+import org.w3c.dom.Element
 
 /**
  * 文本消息 微信服务器推送过来的
  * @property content 消息内容
  * */
-open class OATextMsg(base: BaseInfo): WxBaseMsg(base)
+open class OATextMsg(xml: String, rootDom: Element): WxXmlMsg(xml, rootDom)
 {
-    var content: String? = null
-    override fun read(reader: XMLEventReader)
-    {
-        while (reader.hasNext()) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when(event.asStartElement().name.toString()){
-                    "Content" -> {
-                        content = reader.elementText
-                        break
-                    }
-                }
-            }
-        }
-        super.read(reader)
-    }
+    val content = get(rootDom, "Content")
 }
 /**
  * 文本消息 微信服务器推送过来的
@@ -36,24 +20,9 @@ open class OATextMsg(base: BaseInfo): WxBaseMsg(base)
  * @property menuId 点击的菜单ID 参见客服消息中的菜单消息中的菜单，用户调查时用户点击的菜单id
  * https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Service_Center_messages.html#7
  * */
-class OACustomerClickMenuMsg(base: BaseInfo): OATextMsg(base)
+class OACustomerClickMenuMsg(xml: String, rootDom: Element): WxXmlMsg(xml, rootDom)
 {
-    var menuId: String? = null
-    override fun read(reader: XMLEventReader)
-    {
-        super.read(reader)
-        while (reader.hasNext()) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when(event.asStartElement().name.toString()){
-                    "bizmsgmenuid" -> {
-                        menuId = reader.elementText
-                        break
-                    }
-                }
-            }
-        }
-    }
+    val menuId = get(rootDom, "bizmsgmenuid")
 }
 
 /**
@@ -61,24 +30,10 @@ class OACustomerClickMenuMsg(base: BaseInfo): OATextMsg(base)
  * @property picUrl 图片链接（由系统生成）
  * @property mediaId 图片消息媒体id，可以调用获取临时素材接口拉取数据。
  * */
-class OAImgMSg(base: BaseInfo): WxBaseMsg(base)
+class OAImgMSg(xml: String, rootDom: Element): WxXmlMsg(xml, rootDom)
 {
-    var picUrl: String? = null
-    var mediaId: String? = null
-    override fun read(reader: XMLEventReader)
-    {
-        var count = 0
-        while (reader.hasNext() && count < 2) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when(event.asStartElement().name.toString()){
-                    "PicUrl" -> {picUrl = reader.elementText; count++}
-                    "MediaId" -> {mediaId = reader.elementText; count++}
-                }
-            }
-        }
-        super.read(reader)
-    }
+    val picUrl = get(rootDom, "PicUrl")
+    val mediaId = get(rootDom, "MediaId")
 }
 
 /**
@@ -90,27 +45,11 @@ class OAImgMSg(base: BaseInfo): WxBaseMsg(base)
  * 开发者开启或者关闭语音识别功能，对新关注者立刻生效，对已关注用户需要24小时生效。
  * 开发者可以重新关注此帐号进行测试）
  * */
-class OAVoiceMsg(base: BaseInfo): WxBaseMsg(base)
+class OAVoiceMsg(xml: String, rootDom: Element): WxXmlMsg(xml, rootDom)
 {
-    var mediaId: String?= null
-    var format: String? = null
-    var recognition: String?= null
-
-    override fun read(reader: XMLEventReader)
-    {
-        var count = 0
-        while (reader.hasNext() && count < 4) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when(event.asStartElement().name.toString()){
-                    "MediaId" -> {mediaId = reader.elementText; count++}
-                    "Format" -> {format = reader.elementText; count++}
-                    "Recognition" -> {recognition = reader.elementText; count++}
-                    "MsgId" -> { msgId = reader.elementText?.toLong(); count++}
-                }
-            }
-        }
-    }
+    val mediaId = get(rootDom, "MediaId")
+    val format = get(rootDom, "Format")
+    val recognition = get(rootDom, "Recognition")
 }
 
 /**
@@ -118,30 +57,16 @@ class OAVoiceMsg(base: BaseInfo): WxBaseMsg(base)
  * @property mediaId 视频消息媒体id，可以调用获取临时素材接口拉取数据
  * @property thumbMediaId 视频消息缩略图的媒体id，可以调用多媒体文件下载接口拉取数据。
  * */
-open class OAVideoMsg(base: BaseInfo): WxBaseMsg(base)
+open class OAVideoMsg(xml: String, rootDom: Element): WxXmlMsg(xml, rootDom)
 {
-    var mediaId: String? = null
-    var thumbMediaId: String? = null
-    override fun read(reader: XMLEventReader)
-    {
-        var count = 0
-        while (reader.hasNext() && count < 2) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when(event.asStartElement().name.toString()){
-                    "MediaId" -> {mediaId = reader.elementText; count++}
-                    "ThumbMediaId" -> {thumbMediaId = reader.elementText; count++}
-                }
-            }
-        }
-        super.read(reader)
-    }
+    val mediaId = get(rootDom, "MediaId")
+    val thumbMediaId = get(rootDom, "ThumbMediaId")
 }
 /**
  * 小视频消息
  * @property thumbMediaId 视频消息缩略图的媒体id，可以调用多媒体文件下载接口拉取数据。
  * */
-class OAShortVideoMsg(base: BaseInfo): OAVideoMsg(base)
+class OAShortVideoMsg(xml: String, rootDom: Element): OAVideoMsg(xml, rootDom)
 
 /**
  * 地理位置消息
@@ -150,28 +75,12 @@ class OAShortVideoMsg(base: BaseInfo): OAVideoMsg(base)
  * @property scale 地图缩放大小
  * @property label 地理位置信息
  * */
-class OALocationMsg(base: BaseInfo): WxBaseMsg(base)
+class OALocationMsg(xml: String, rootDom: Element): WxXmlMsg(xml, rootDom)
 {
-    var locationX: Float? = null
-    var locationY: Float? = null
-    var scale: Int? = null
-    var label: String? = null
-    override fun read(reader: XMLEventReader)
-    {
-        var count = 0
-        while (reader.hasNext() && count < 4) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when(event.asStartElement().name.toString()){
-                    "Location_X" -> {locationX = reader.elementText?.toFloat(); count++}
-                    "Location_Y" -> {locationY = reader.elementText?.toFloat(); count++}
-                    "Scale" -> {scale = reader.elementText?.toInt(); count++}
-                    "Label" -> {label = reader.elementText; count++}
-                }
-            }
-        }
-        super.read(reader)
-    }
+    val locationX = get(rootDom, "Location_X")?.toFloat()
+    val locationY = get(rootDom, "Location_Y")?.toFloat()
+    val scale = get(rootDom, "Scale")?.toInt()
+    val label = get(rootDom, "Label")
 }
 /**
  * 链接消息
@@ -179,24 +88,9 @@ class OALocationMsg(base: BaseInfo): WxBaseMsg(base)
  * @property description Description	消息描述
  * @property url Url	消息链接
  * */
-class OALinkMsg(base: BaseInfo): WxBaseMsg(base)
+class OALinkMsg(xml: String, rootDom: Element): WxXmlMsg(xml, rootDom)
 {
-    var title: String? = null
-    var description: String? = null
-    var url: String? = null
-    override fun read(reader: XMLEventReader)
-    {
-        var count = 0
-        while (reader.hasNext() && count < 3) {
-            val event = reader.nextEvent()
-            if (event.isStartElement) {
-                when(event.asStartElement().name.toString()){
-                    "Title" -> {title = reader.elementText; count++}
-                    "Description" -> {description = reader.elementText; count++}
-                    "Url" -> {url = reader.elementText; count++}
-                }
-            }
-        }
-        super.read(reader)
-    }
+    val title = get(rootDom, "Title")
+    val description = get(rootDom, "Description")
+    val url = get(rootDom, "Url")
 }

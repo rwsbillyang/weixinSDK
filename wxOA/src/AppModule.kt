@@ -40,6 +40,7 @@ val wxOaAppModule = AppModule(
     listOf(
         module(createdAtStart = true) {
             single { PrefController(get()) }
+            single { ReMsgChooser() }
             single { EventHandler() } //需要时handler时自动注入
             single { MsgHandler() }//需要时handler时自动注入
 

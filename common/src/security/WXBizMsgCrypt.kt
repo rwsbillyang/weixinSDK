@@ -1,6 +1,7 @@
 package com.github.rwsbillyang.wxSDK.security
 
 
+import com.github.rwsbillyang.wxSDK.util.XmlUtil
 import org.apache.commons.codec.binary.Base64
 import security.BytesUtil
 

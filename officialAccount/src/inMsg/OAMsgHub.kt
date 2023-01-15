@@ -2,7 +2,9 @@ package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
 import com.github.rwsbillyang.wxSDK.msg.*
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
-import javax.xml.stream.XMLEventReader
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.w3c.dom.Element
 
 /**
  * xml消息事件通知的解包、解析、分发处理
@@ -12,95 +14,95 @@ class OAMsgHub(
          val eventHandler: IOAEventHandler?,
         wxBizMsgCrypt: WXBizMsgCrypt?
 ):WxMsgHub(wxBizMsgCrypt) {
-    override fun dispatchMsg(appId:String, agentId:String?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?{
+    private val log: Logger = LoggerFactory.getLogger("OAMsgHub")
+    override fun dispatchMsg(appId: String, agentId: String?, xml: String, rootDom: Element, msgType: String?): ReBaseMSg?{
         if(msgHandler == null) return null
-        return when(baseInfo.msgType){
+        return when(msgType){
             MsgType.TEXT -> {
-                val msg = OACustomerClickMenuMsg(baseInfo).apply { read(reader) }
-                if(msg.menuId.isNullOrBlank())
-                    msgHandler.onOATextMsg(appId, msg)
+                val menuId = rootDom.get("bizmsgmenuid")
+                if(menuId.isNullOrBlank())
+                    msgHandler.onOATextMsg(appId, OATextMsg(xml, rootDom))
                 else{
-                    msgHandler.onOACustomerClickMenuMsg(appId, msg)
+                    msgHandler.onOACustomerClickMenuMsg(appId, OACustomerClickMenuMsg(xml, rootDom))
                 }
             }
             MsgType.IMAGE -> msgHandler.onOAImgMsg(appId,
-                OAImgMSg(baseInfo).apply { read(reader) }
+                OAImgMSg(xml, rootDom)
             )
             MsgType.VOICE -> msgHandler.onOAVoiceMsg(appId,
-                OAVoiceMsg(baseInfo).apply { read(reader) }
+                OAVoiceMsg(xml, rootDom)
             )
             MsgType.VIDEO -> msgHandler.onOAVideoMsg(appId,
-                OAVideoMsg(baseInfo).apply { read(reader) }
+                OAVideoMsg(xml, rootDom)
             )
             MsgType.SHORT_VIDEO -> msgHandler.onOAShortVideoMsg(appId,
-                OAShortVideoMsg(baseInfo).apply { read(reader) }
+                OAShortVideoMsg(xml, rootDom)
             )
             MsgType.LOCATION -> msgHandler.onOALocationMsg(appId,
-                OALocationMsg(baseInfo).apply { read(reader) }
+                OALocationMsg(xml, rootDom)
             )
             MsgType.LINK -> msgHandler.onOALinkMsg(appId,
-                OALinkMsg(baseInfo).apply { read(reader) }
+                OALinkMsg(xml, rootDom)
             )
-            else -> msgHandler.onDispatch(appId, agentId, reader, baseInfo)?: msgHandler.onDefault(appId,WxBaseMsg(baseInfo).apply { read(reader) })
+            else -> msgHandler.onDispatch(appId, agentId, xml, rootDom, msgType)?: msgHandler.onDefault(appId, WxXmlMsg(xml, rootDom))
         }
     }
 
-    override fun dispatchEvent(appId:String, agentId:String?, reader: XMLEventReader, baseInfo: BaseInfo): ReBaseMSg?{
+    override fun dispatchEvent(appId: String, agentId: String?, xml: String, rootDom: Element, eventType: String?): ReBaseMSg?{
         if(eventHandler == null) return null
-        val baseEvent = WxBaseEvent(baseInfo).apply { read(reader) }
-        return when (baseEvent.event) {
+        return when (eventType) {
             InEventType.SUBSCRIBE -> {
-                val subscribeEvent = OAScanSubscribeEvent(baseEvent).apply { read(reader) }
+                val subscribeEvent = OAScanSubscribeEvent(xml, rootDom)
                 if (subscribeEvent.ticket.isNullOrBlank()) {
-                    eventHandler.onOASubscribeEvent(appId, OASubscribeEvent(baseEvent))
+                    eventHandler.onOASubscribeEvent(appId, OASubscribeEvent(xml, rootDom))
                 } else {
                     eventHandler.onOAScanSubscribeEvent(appId,subscribeEvent)
                 }
             }
             InEventType.UNSUBSCRIBE -> eventHandler.onOAUnsubscribeEvent(appId,
-                OAUnsubscribeEvent(baseEvent)
+                OAUnsubscribeEvent(xml, rootDom)
             )
             InEventType.SCAN -> eventHandler.onOAScanEvent(appId,
-                OAScanEvent(baseEvent).apply { read(reader) }
+                OAScanEvent(xml, rootDom)
             )
             InEventType.LOCATION -> eventHandler.onOALocationEvent(appId,
-                OALocationEvent(baseEvent).apply { read(reader) }
+                OALocationEvent(xml, rootDom)
             )
             InEventType.CLICK -> eventHandler.onOAMenuClickEvent(appId,
-                OAMenuClickEvent(baseEvent).apply { read(reader) }
+                OAMenuClickEvent(xml, rootDom)
             )
             InEventType.VIEW -> eventHandler.onOAMenuViewEvent(appId,
-                OAMenuViewEvent(baseEvent).apply { read(reader) }
+                OAMenuViewEvent(xml, rootDom)
             )
             InEventType.SCAN_CODE_PUSH ->
                 eventHandler.onOAMenuScanCodePushEvent(appId,
-                    OAMenuScanCodePushEvent(baseEvent).apply { read(reader) }
+                    OAMenuScanCodePushEvent(xml, rootDom)
                 )
             InEventType.SCAN_CODE_WAIT_MSG -> eventHandler.onOAMenuScanCodeWaitEvent(appId,
-                OAMenuScanCodeWaitEvent(baseEvent).apply { read(reader) }
+                OAMenuScanCodeWaitEvent(xml, rootDom)
             )
             InEventType.PIC_SYS_PHOTO -> eventHandler.onOAMenuPhotoEvent(appId,
-                OAMenuPhotoEvent(baseEvent).apply { read(reader) }
+                OAMenuPhotoEvent(xml, rootDom)
             )
             InEventType.PIC_PHOTO_OR_ALBUM -> eventHandler.onOAMenuPhotoOrAlbumEvent(appId,
-                OAMenuPhotoOrAlbumEvent(baseEvent).apply { read(reader) }
+                OAMenuPhotoOrAlbumEvent(xml, rootDom)
             )
             InEventType.PIC_WEIXIN -> eventHandler.onOAMenuOAAlbumEvent(appId,
-                OAMenuOAAlbumEvent(baseEvent).apply { read(reader) }
+                OAMenuOAAlbumEvent(xml, rootDom)
             )
             InEventType.LOCATION_SELECT -> eventHandler.onOAMenuLocationEvent(appId,
-                OAMenuLocationEvent(baseEvent).apply { read(reader) }
+                OAMenuLocationEvent(xml, rootDom)
             )
             InEventType.VIEW_MINI_PROGRAM -> eventHandler.onOAMenuMiniEvent(appId,
-                OAMenuMiniEvent(baseEvent).apply { read(reader) }
+                OAMenuMiniEvent(xml, rootDom)
             )
             InEventType.MASS_SEND_JOB_FINISH -> eventHandler.onOAMassSendFinishEvent(appId,
-                OAMassSendFinishEvent(baseEvent).apply { read(reader) }
+                OAMassSendFinishEvent(xml, rootDom)
             )
             InEventType.TEMPLATE_SEND_JOB_FINISH -> eventHandler.onOATemplateSendJobFinish(appId,
-                OATemplateSendJobFinish(baseEvent).apply { read(reader) }
+                OATemplateSendJobFinish(xml, rootDom)
             )
-            else -> eventHandler.onDispatch(appId,null, reader, baseInfo)?: eventHandler.onDefault(appId,baseEvent)
+            else -> eventHandler.onDispatch(appId, agentId, xml, rootDom, eventType)?: eventHandler.onDefault(appId, WxXmlEvent(xml, rootDom))
         }
     }
 }

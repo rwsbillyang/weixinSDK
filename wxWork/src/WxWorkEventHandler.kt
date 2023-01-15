@@ -18,34 +18,29 @@
 
 package com.github.rwsbillyang.wxWork
 
-import com.github.rwsbillyang.wxSDK.msg.BaseInfo
-import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
-import com.github.rwsbillyang.wxSDK.work.inMsg.*
-import com.github.rwsbillyang.wxWork.agent.AgentService
-import com.github.rwsbillyang.wxWork.contacts.*
-import com.github.rwsbillyang.wxWork.isv.IsvCorpService
 
+import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
+import com.github.rwsbillyang.wxSDK.msg.WxXmlEvent
+import com.github.rwsbillyang.wxSDK.work.inMsg.DefaultWorkEventHandler
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
-import javax.xml.stream.XMLEventReader
+import org.w3c.dom.Element
+
 
 //corpId,agentId来自于接收消息路径中指定的参数
 //对于isv，corpId为其suiteId， agentId为空
+//每个agent都拥有自己的context，对应着不同的MsgbHub、msgHandler、EventHandler，通常情况下它们都共用一个handler或按类别区分
+// 这些EventHandler和MsgHandler只处理属于自己的消息或事件
 class WxWorkEventHandler : DefaultWorkEventHandler(), KoinComponent {
     private val log = LoggerFactory.getLogger("WxWorkEventHandler")
-    private val agentService: AgentService by inject()
-    private val isvCorpService: IsvCorpService by inject()
-    private val contactHelper: ContactHelper by inject()
-    private val contactService: ContactService by inject()
 
-    override fun onDefault(appId: String, agentId: String?, e: AgentEvent): ReBaseMSg? {
-        log.info("onDefault: Not yet implemented,appId=$appId, agentId=$agentId, e.agentId=${e.agentId}")
+    override fun onDefault(appId: String, agentId:String?, e: WxXmlEvent): ReBaseMSg? {
+        log.info("onDefault: Not yet implemented,appId=$appId, agentId=$agentId, agentId=${agentId}")
         return null
     }
 
-    override fun onDispatch(appId: String, agentId: String?, reader: XMLEventReader, base: BaseInfo): ReBaseMSg? {
-        log.info("onDispatch: Not yet implemented")
+    override fun onDispatch(appId: String, agentId:String?, xml: String, rootDom: Element, msgOrEventType: String?): ReBaseMSg? {
+        log.info("onDispatch: TODO: handle other eventType=${msgOrEventType}")
         return null
     }
 

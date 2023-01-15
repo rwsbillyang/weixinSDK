@@ -1,7 +1,7 @@
 package com.github.rwsbillyang.wxSDK.officialAccount.outMsg
 
 import com.github.rwsbillyang.wxSDK.msg.*
-
+import com.github.rwsbillyang.wxSDK.util.XmlMsgBuilder
 
 
 //============================= 公众号支持，企业微信未提及支持 被动回复 消息 =============================//

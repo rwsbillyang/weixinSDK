@@ -1,5 +1,33 @@
 package com.github.rwsbillyang.wxSDK.msg
 
+import com.github.rwsbillyang.wxSDK.util.XmlMsgBuilder
+
+
+/**
+ * 被动回复消息基类
+ * */
+abstract class ReBaseMSg(
+    val toUserName: String?,
+    val fromUserName: String?,
+    val createTime: Long,
+    val msgType: String
+)  {
+    open fun toXml(): String {
+        val builder = XmlMsgBuilder("<xml>\n")
+        builder.addData("ToUserName", toUserName)
+        builder.addData("FromUserName", fromUserName)
+        builder.addTag("CreateTime", createTime.toString().substring(0, 10))
+        builder.addData("MsgType", msgType)
+        addMsgContent(builder)
+        builder.append("</xml>")
+        return builder.toString()
+    }
+
+    override fun toString() = toXml()
+
+    protected abstract fun addMsgContent(builderXml: XmlMsgBuilder)
+}
+
 
 
 /**
