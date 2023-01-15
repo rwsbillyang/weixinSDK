@@ -41,7 +41,7 @@ class WxkfController:KoinComponent {
         do {
             res = api.accountList(page*100, 100)
             res.account_list?.forEach {
-                service.saveWxKfAccount(WxKfAccount(it.open_kfid, it.name, it.avatar, it.manage_privilege, corpId))
+                service.saveWxKfAccount(WxkfAccount(it.open_kfid, it.name, it.avatar, it.manage_privilege, corpId))
             }
             page++
             count += (res.account_list?.size?:0)
@@ -54,11 +54,11 @@ class WxkfController:KoinComponent {
         }
         return DataBox.ok(count)
     }
-    fun getWxkfAccountList(coprId: String): List<WxKfAccount>{
-        return service.findAll(service.wxKfAccountCol, WxKfAccount::corpId eq coprId)
+    fun getWxkfAccountList(coprId: String): List<WxkfAccount>{
+        return service.findAll(service.wxkfAccountCol, WxkfAccount::corpId eq coprId)
     }
 
-    fun saveScene(doc: WxKfScene): DataBox<WxKfScene> {
+    fun saveScene(doc: WxkfScene): DataBox<WxkfScene> {
         if(doc._id == null){
             val api = WxKefuApi(doc.corpId)
             val res = api.addScene(doc.kfId, doc.scene)
@@ -66,7 +66,7 @@ class WxkfController:KoinComponent {
                 if(res.url != null){
                     doc.url = res.url
                     doc._id = ObjectId()
-                    service.save("wxKfScene", doc)
+                    service.save("wxkfScene", doc)
                     return DataBox.ok(doc)
                 }else{
                     val msg = "should not come here: no url when call  api.addScene"
@@ -80,16 +80,16 @@ class WxkfController:KoinComponent {
             }
         }else{
             //update
-            service.save("wxKfscene", doc)
+            service.save("wxkfscene", doc)
             return DataBox.ok(doc)
         }
     }
 
-    fun sceneList(coprId: String,kfId: String?): List<WxKfScene>{
-        val f = if(kfId == null) WxKfScene::corpId eq coprId
-        else and(WxKfScene::corpId eq coprId, WxKfScene::kfId eq kfId)
-        return service.findAll("wxKfScene", f)
+    fun sceneList(coprId: String,kfId: String?): List<WxkfScene>{
+        val f = if(kfId == null) WxkfScene::corpId eq coprId
+        else and(WxkfScene::corpId eq coprId, WxkfScene::kfId eq kfId)
+        return service.findAll("wxkfScene", f)
     }
 
-    fun delScene(id: String) = service.deleteOne<WxKfScene>("wxKfScene", id)
+    fun delScene(id: String) = service.deleteOne<WxkfScene>("wxkfScene", id)
 }

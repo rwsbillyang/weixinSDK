@@ -143,7 +143,8 @@ class ContactService(cache: ICache) : MongoGenericService(cache) {
                 ExternalContact::corpId eq corpId)
         )
     }
-    fun findExternalContact(externalId: String, corpId: String) = runBlocking { externalContactCol.findOne(ExternalContact::externalId eq externalId, ExternalContact::corpId eq corpId) }
+    fun findExternalContact(externalId: String, corpId: String)
+    = runBlocking { externalContactCol.findOne(ExternalContact::externalId eq externalId, ExternalContact::corpId eq corpId) }
     fun upsertExternalContact(doc: ExternalContact) = runBlocking {
         //externalContactCol.replaceOne(and(ExternalContact::externalId eq doc.externalId, ExternalContact::corpId eq doc.corpId), doc, ReplaceOptions().upsert(true))
         val old = externalContactCol.findOne(ExternalContact::externalId eq doc.externalId, ExternalContact::corpId eq doc.corpId)
@@ -182,7 +183,7 @@ class ContactService(cache: ICache) : MongoGenericService(cache) {
     }
     fun insertEnterSessionContext(externalId: String, corpId: String,enterSessionInfo: List<EnterSessionContext>) = runBlocking {
         externalContactCol.updateOne(and(ExternalContact::externalId eq externalId, ExternalContact::corpId eq corpId),
-            pushEach( ExternalContact::enterSessions, enterSessionInfo))
+            pushEach(ExternalContact::enterSessions, enterSessionInfo))
     }
 
     fun findExternalListByPage(param: ExternalListParams) = findPage(externalContactCol, param)

@@ -25,33 +25,34 @@ import com.mongodb.client.model.InsertManyOptions
 import com.mongodb.client.model.WriteModel
 import kotlinx.coroutines.runBlocking
 import org.litote.kmongo.coroutine.CoroutineCollection
+import org.litote.kmongo.setValue
 import org.litote.kmongo.upsert
 
 class WxkfService(cache: ICache): MongoCRUDService(cache, wxWorkModule.dbName!!) {
-    val wxKfAccountCol: CoroutineCollection<WxKfAccount> by lazy {
+    val wxkfAccountCol: CoroutineCollection<WxkfAccount> by lazy {
         dbSource.mongoDb.getCollection()
     }
-    val wxKfCursorCol: CoroutineCollection<WxkfMsgCursor> by lazy {
+    val wxkfCursorCol: CoroutineCollection<WxkfMsgCursor> by lazy {
         dbSource.mongoDb.getCollection()
     }
-    val wxKfMsgCol: CoroutineCollection<WxkfMsg> by lazy {
+    val wxkfMsgCol: CoroutineCollection<WxkfMsg> by lazy {
         dbSource.mongoDb.getCollection()
     }
-    fun saveWxKfAccount(doc: WxKfAccount) = runBlocking {
-        wxKfAccountCol.save(doc)
+    fun saveWxKfAccount(doc: WxkfAccount) = runBlocking {
+        wxkfAccountCol.save(doc)
     }
 
     fun findCursor(kfid: String) = runBlocking {
-        val c = cache.get(kfid)
+        val c = cache[kfid]
         if(c != null) c as String
-        else wxKfCursorCol.findOneById(kfid)?.cursor
+        else wxkfCursorCol.findOneById(kfid)?.cursor
     }
     fun upsertCursor(kfid: String, cursor: String) = runBlocking {
         cache.put(kfid, cursor)
-        wxKfCursorCol.updateOneById(kfid, cursor, upsert())
+        wxkfCursorCol.updateOneById(kfid, setValue(WxkfMsgCursor::cursor, cursor), upsert())
     }
 
-    fun upsertMsgList(list: List<WxkfMsg>) = runBlocking {
-        wxKfMsgCol.insertMany(list)
+    fun insertMsgList(list: List<WxkfMsg>) = runBlocking {
+        wxkfMsgCol.insertMany(list)
     }
 }

@@ -21,6 +21,7 @@
 package com.github.rwsbillyang.wxSDK.work
 
 import com.github.rwsbillyang.wxSDK.IBase
+import io.ktor.client.statement.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseContextualSerialization
@@ -74,12 +75,20 @@ class WxKefuApi(corpId: String) : WorkBaseApi(corpId, null, null) {
      * 获取客户基础信息
      * */
     fun getCustomerDetail(external_userid_list: List<String>, need_enter_session_context: Int = 1):WxKfCustomerDetailResponse = doPost("customer/batchget",
-        mapOf(
-            "external_userid_list" to external_userid_list,
-            "need_enter_session_context" to need_enter_session_context
-        ))
+        WxkfCustomerDetailParam(external_userid_list, need_enter_session_context)
+        // Exception: Serializing collections of different element types is not yet supported. Selected serializers: [kotlin.collections.ArrayList, kotlin.Int]
+//        mapOf(
+//            "external_userid_list" to external_userid_list,
+//            "need_enter_session_context" to need_enter_session_context
+//        )
+    )
 }
 
+//map中不可以有多种类型，否则报错，改用自定义数据类型
+@Serializable class WxkfCustomerDetailParam(
+    val external_userid_list: List<String>,
+    val need_enter_session_context: Int
+)
 @Serializable
 class SyncMsgBody(
     val token: String?,
@@ -163,10 +172,14 @@ class CustomerDetail(
     val unionid: String? = null, //需要绑定微信开发者帐号才能获取到，查看绑定方法。第三方不可获取
     val enter_session_context: EnterSessionContext? = null
 )
+
 @Serializable
 class EnterSessionContext(
     val scene: String, //"123",
     val scene_param: String? = null, //"abc",
+    val open_kfid: String? = null, //sync msg时有此字段 客服帐号ID
+    val external_userid: String? = null, //sync msg时有此字段 客户UserID
+    val welcome_code: String? = null, //sync msg时有此字段
     val wechat_channels:WechatChannels? = null,
     val time: LocalDateTime = LocalDateTime.now()
 )
