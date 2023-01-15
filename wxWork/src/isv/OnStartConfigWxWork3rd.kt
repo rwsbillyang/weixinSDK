@@ -39,7 +39,7 @@ internal fun configWxWork3rdMulti(config: SuiteConfig,
     val log = LoggerFactory.getLogger("configWxWork3rd")
     var count = 0
     if(config.status == SuiteConfig.STATUS_ENABLED){
-        IsvWorkMulti.config(config._id, config.secret, config.token, config.encodingAESKey, config.enableJsSdk, config.privateKeyFilePath,
+        IsvWorkMulti.config(config._id, config.secret, config.token, config.encodingAESKey, config.enableJsSdk, true, config.privateKeyFilePath,
             suiteInfoHandler,msgHandler, eventHandler)
         count++
     }else{

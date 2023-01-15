@@ -57,7 +57,7 @@ internal fun configWxWork(
 
             WorkMulti.config(
                 config.corpId, config.agentId, config.secret, config.token, config.aesKey,
-                config.private, config.enableJsSdk, config.enableMsg,
+                config.private, config.enableJsSdk, config.enableAgentJsTicket, config.enableMsg,
                 null, handler
             )
             log.info("enable sysAgent: corpId=${config.corpId}, agentId=${config.agentId}")
@@ -74,7 +74,7 @@ internal fun configWxWork(
 
             WorkMulti.config(
                 config.corpId, config.agentId, config.secret, config.token, config.aesKey,
-                config.private, config.enableJsSdk, config.enableMsg
+                config.private, config.enableJsSdk, config.enableAgentJsTicket,  config.enableMsg
             )
 
             if(agentController != null){

@@ -81,7 +81,7 @@ object IsvWorkSingle {
 
     fun config(
         suiteId: String, secret: String, token: String, encodingAESKey: String?,
-        enableJsSdk: Boolean, privateKeyFilePath: String?,
+        enableJsSdk: Boolean,enableJsAgent: Boolean, privateKeyFilePath: String?,
         suiteInfoHandler: ISuiteInfoHandler?,
         msgHandler: IWorkMsgHandler?,
         eventHandler: IWorkEventHandler?
@@ -93,6 +93,7 @@ object IsvWorkSingle {
             token,
             encodingAESKey,
             enableJsSdk,
+            enableJsAgent,
             privateKeyFilePath,
             msgHandler,
             eventHandler,
@@ -137,15 +138,15 @@ object IsvWorkSingle {
             }
 
             if(ctx.enableJsSdk){
-                ctx.corpJsTicket = TimelyRefreshTicket(suiteId,
+                ctx.jsTicket = TimelyRefreshTicket(suiteId,
                     TicketRefresher{
                         "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${ctx.accessTokenMap[corpId]!!.get()}"
                     })
-
-                ctx.agentJsTicket = TimelyRefreshTicket(suiteId,
-                    TicketRefresher{
-                        "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${ctx.accessTokenMap[corpId]!!.get()}&type=agent_config"
-                    })
+                if(ctx.enableJsAgentTicket)
+                    ctx.agentJsTicket = TimelyRefreshTicket(suiteId,
+                        TicketRefresher{
+                            "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${ctx.accessTokenMap[corpId]!!.get()}&type=agent_config"
+                        })
             }
         } else
             log.warn("not need config accessToken again")
@@ -175,13 +176,13 @@ object IsvWorkMulti{
      * accessToken的创建需要等到应用被授权后创建，接着是jsTicket
      * */
     fun config(suiteId: String, secret: String, token: String, encodingAESKey: String?,
-               enableJsSdk: Boolean, privateKeyFilePath: String?,
+               enableJsSdk: Boolean,enableJsAgent: Boolean,privateKeyFilePath: String?,
                suiteInfoHandler: ISuiteInfoHandler?,
                msgHandler: IWorkMsgHandler?,
                eventHandler: IWorkEventHandler?) {
         var ctx = ApiContextMap[suiteId]
         if (ctx == null) {//first time
-            ctx = SuiteApiContext(suiteId, secret, token, encodingAESKey, enableJsSdk,privateKeyFilePath, msgHandler, eventHandler, suiteInfoHandler)
+            ctx = SuiteApiContext(suiteId, secret, token, encodingAESKey, enableJsSdk,enableJsAgent,privateKeyFilePath, msgHandler, eventHandler, suiteInfoHandler)
             ApiContextMap[suiteId] = ctx
         }
     }
@@ -234,7 +235,7 @@ object IsvWorkMulti{
             }
 
             if(ctx.enableJsSdk){
-                ctx.corpJsTicket = TimelyRefreshTicket(suiteId,
+                ctx.jsTicket = TimelyRefreshTicket(suiteId,
                     TicketRefresher{
                         "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${ctx.accessTokenMap[corpId]!!.get()}"
                     })
@@ -271,7 +272,7 @@ class SuiteApiContext(
     val token: String,
     val encodingAESKey: String? = null,
     val enableJsSdk: Boolean,
-
+    val enableJsAgentTicket: Boolean = false,
     privateKeyFilePath: String? = null,
 
     msgHandler: IWorkMsgHandler?,
@@ -284,7 +285,7 @@ class SuiteApiContext(
 
     //corpId -> accessToken, suite ticket推送过来后，也被授权了，通过得到的永久授权码(第一次授权通知或从数据库中得到)，进行创建
     val accessTokenMap: HashMap<String, TimelyRefreshAccessToken3rd> = hashMapOf(),
-    var corpJsTicket: ITimelyRefreshValue? = null, //二者使用不同的jsTicket：https://work.weixin.qq.com/api/doc/90001/90144/94325
+    var jsTicket: ITimelyRefreshValue? = null, //二者使用不同的jsTicket：https://work.weixin.qq.com/api/doc/90001/90144/94325
     var agentJsTicket: ITimelyRefreshValue? = null // 由accessToken换取,参见 ThirdPartyWork.configAccessToken
     //val agentIdMap: HashMap<String, Int> = hashMapOf() //corpId -> agentId
 )

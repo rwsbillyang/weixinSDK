@@ -20,12 +20,12 @@ package com.github.rwsbillyang.wxWork
 
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.server.respondBoxKO
 import com.github.rwsbillyang.wxSDK.security.AesException
 import com.github.rwsbillyang.wxSDK.security.JsAPI
 import com.github.rwsbillyang.wxSDK.work.*
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWork
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
-import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkSingle
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -329,49 +329,60 @@ fun Routing.wxWorkOAuthApi(
  * 当为内部多应用：需再提供agentId，单应用无需提供
  * */
 fun Routing.workJsSdkSignature() {
+    val log = LoggerFactory.getLogger("workJsSdkSignature")
+
+    //  /api/wx/work/jssdk/signature
+    //corpId=wwfc2fead39b1e60dd&agentId=1000006&url=https%3A%2F%2Fwxadmin.zhuanzhuan360.com%2F
     get(Work.jsSdkSignaturePath) { //默认路径： /api/wx/work/jssdk/signature?corpId=XXX&type=agent_config
         val suiteId = call.request.queryParameters["suiteId"]//IsvWorkMulti时需非空
         val corpId = call.request.queryParameters["corpId"] //均不能空
-        val agentIdOrSysAgentKey = call.request.queryParameters["agentId"]//内部多应用时提供
-        val isAgent = call.request.queryParameters["type"] == "agent_config" //agent_config
+        val agentId = call.request.queryParameters["agentId"]//内部多应用时提供 OrSysAgentKey
+        val isInjectAgentConfig = call.request.queryParameters["type"] == "agent_config" //agent_config
         val url = (call.request.queryParameters["url"]?: call.request.headers["Referer"])?.split('#')?.firstOrNull()
 
         val jsTicket: String?
         if (url == null) {
-            call.respond(HttpStatusCode.BadRequest, "request Referer is null")
+            log.warn("request Referer or url parameter is null")
+            call.respondBoxKO("request Referer is null")
         } else {
             if (corpId == null) {
-                call.respond(HttpStatusCode.BadRequest, "invalid parameters: corpId is null")
+                log.warn("invalid parameters: corpId is null")
+                call.respondBoxKO("invalid parameters: corpId is null")
             } else {
                 if (Work.isIsv) {
                     if (suiteId == null) {
-                        call.respond(HttpStatusCode.BadRequest, "IsvWorkMulti invalid parameters: suiteId is null")
+                        log.warn("IsvWorkMulti invalid parameters: suiteId is null")
+                        call.respondBoxKO("IsvWorkMulti invalid parameters: suiteId is null")
                     } else {
-                        jsTicket = if (isAgent)
+                        jsTicket =  if(isInjectAgentConfig)
                             IsvWorkMulti.ApiContextMap[suiteId]?.agentJsTicket?.get()
-                        else
-                            IsvWorkMulti.ApiContextMap[suiteId]?.corpJsTicket?.get()
+                            else IsvWorkMulti.ApiContextMap[suiteId]?.jsTicket?.get()
 
                         if (jsTicket == null) {
-                            call.respond(HttpStatusCode.BadRequest, "IsvWorkMulti: jsTicket is null")
+                            log.warn("IsvWorkMulti: jsTicket is null")
+                            call.respondBoxKO("IsvWorkMulti: jsTicket is null")
                         } else {
                             //agentId在登录时得到
-                            call.respond(DataBox("OK", null, JsAPI.getSignature(corpId, jsTicket, url)))
+                            call.respond(DataBox("OK", null, JsAPI.getSignature(corpId, jsTicket, url,
+                            if(isInjectAgentConfig)agentId else null)))
                         }
                     }
                 } else {
-                    if (agentIdOrSysAgentKey == null) {
-                        call.respond(HttpStatusCode.BadRequest, "invalid parameters: corpId and agentId could not be null")
+                    if (agentId == null) {
+                        log.warn("agentId is null")
+                        call.respondBoxKO("invalid parameters: corpId and agentId could not be null")
                     } else {
-                        jsTicket = if (isAgent)
-                            WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentIdOrSysAgentKey)?.agentJsTicket?.get()
-                        else
-                            WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentIdOrSysAgentKey)?.corpJsTicket?.get()
+                        jsTicket = if(isInjectAgentConfig){
+                            WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.agentJsTicket?.get()
+                        }else
+                            WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.jsTicket?.get()
 
-                        if (jsTicket == null)
-                            call.respond(HttpStatusCode.BadRequest, "WorkMulti: jsTicket is null, isAgent=$isAgent")
+                        if (jsTicket == null) {
+                            log.warn("jsTicket is null,config correctly or not enabled?")
+                            call.respondBoxKO("WorkMulti: jsTicket is null, isInjectAgentConfig=$isInjectAgentConfig")
+                        }
                         else
-                            call.respond(DataBox.ok(JsAPI.getSignature(corpId, jsTicket, url, agentIdOrSysAgentKey)))
+                            call.respond(DataBox.ok(JsAPI.getSignature(corpId, jsTicket, url, if(isInjectAgentConfig)agentId else null)))
                     }
                 }
             }

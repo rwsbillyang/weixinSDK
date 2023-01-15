@@ -22,6 +22,7 @@ package com.github.rwsbillyang.wxWork.config
 import com.github.rwsbillyang.ktorKit.server.AbstractJwtHelper
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.server.respondBox
+import com.github.rwsbillyang.ktorKit.server.respondBoxKO
 import com.github.rwsbillyang.ktorKit.server.respondBoxOK
 import io.ktor.http.*
 import io.ktor.server.application.*

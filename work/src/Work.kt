@@ -125,6 +125,7 @@ object WorkMulti{
                encodingAESKey: String? = null,
                privateKeyFilePath: String? = null,
                enableJsSdk: Boolean = false,
+               enableJsAgent: Boolean = false,
                enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
                customMsgHandler: IWorkMsgHandler? = null,
                customEventHandler: IWorkEventHandler? = null,
@@ -137,7 +138,7 @@ object WorkMulti{
         }
 
         corpApiCtx.agentMap[agentIdOrKey] = setupApiCtx(corpId, agentIdOrKey, secret,
-            token, encodingAESKey, privateKeyFilePath, enableJsSdk,enableMsg,
+            token, encodingAESKey, privateKeyFilePath, enableJsSdk,enableJsAgent,enableMsg,
             customMsgHandler,customEventHandler,customAccessToken)
     }
 
@@ -149,7 +150,7 @@ object WorkMulti{
               token: String? = null,
               encodingAESKey: String? = null,
               privateKeyFilePath: String? = null,
-              enableJsSdk: Boolean = false,
+              enableJsSdk: Boolean = false, enableJsAgent: Boolean = false,
               enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
               customMsgHandler: IWorkMsgHandler?,
               customEventHandler: IWorkEventHandler?,
@@ -170,13 +171,13 @@ object WorkMulti{
             }
         }
         var agentJsTicket:TimelyRefreshTicket? =  null
-        var corpJsTicket: TimelyRefreshTicket? =  null
+        var jsTicket: TimelyRefreshTicket? =  null
         if(enableJsSdk){
-            val agentJsTicket = TimelyRefreshTicket(corpId,
+            agentJsTicket = if(enableJsAgent) TimelyRefreshTicket(corpId,
                 TicketRefresher{
                     "https://qyapi.weixin.qq.com/cgi-bin/ticket/get?access_token=${accessToken.get()}&type=agent_config"
-                }, extra = agentIdOrKey)
-            val corpJsTicket = TimelyRefreshTicket(corpId,
+                }, extra = agentIdOrKey) else null
+            jsTicket = TimelyRefreshTicket(corpId,
                 TicketRefresher{
                     "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${accessToken.get()}"
                 })
@@ -191,7 +192,7 @@ object WorkMulti{
             }
         }
 
-       return ApiCtx(secret, token, msgHub, wXBizMsgCrypt, accessToken, agentJsTicket, corpJsTicket, privateKey)
+       return ApiCtx(secret, token, msgHub, wXBizMsgCrypt, accessToken, agentJsTicket, jsTicket, privateKey)
     }
 }
 
@@ -222,7 +223,7 @@ class ApiCtx(
     val wxBizMsgCrypt: WXBizMsgCrypt? = null,
     val accessToken: ITimelyRefreshValue? = null,
     var agentJsTicket: ITimelyRefreshValue? = null,
-    var corpJsTicket:ITimelyRefreshValue? = null,
+    var jsTicket:ITimelyRefreshValue? = null,
     var privateKey: PrivateKey? = null
 )
 
