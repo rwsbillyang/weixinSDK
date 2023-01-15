@@ -2,6 +2,15 @@ package com.github.rwsbillyang.wxSDK.msg
 
 import com.github.rwsbillyang.wxSDK.util.XmlMsgBuilder
 
+/**
+ * 主动发的消息，包括群发消息、模板消息、客服消息，不是推送消息后然后系统立即自动回复给用户的消息，它们完全不同
+ *
+ * @property msgType 消息类型
+ * */
+interface IMsg {
+    val msgType: String
+}
+
 
 /**
  * 被动回复消息基类

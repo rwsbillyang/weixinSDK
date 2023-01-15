@@ -32,10 +32,10 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 
-open class MsgEventCommonHandler: KoinComponent {
-    val log = LoggerFactory.getLogger("MsgEventCommonHandler")
+class ReMsgChooser: KoinComponent {
+    private val log = LoggerFactory.getLogger("ReMsgChooser")
 
-    val fanService: FanService by inject()
+    private val fanService: FanService by inject()
     private val prefService: PrefService by inject()
     private val msgService: MsgService by inject()
 

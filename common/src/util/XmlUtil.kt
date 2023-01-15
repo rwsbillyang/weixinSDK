@@ -1,6 +1,24 @@
-package com.github.rwsbillyang.wxSDK.security
+/*
+ * Copyright © 2023 rwsbillyang@qq.com 
+ *  
+ * Written by rwsbillyang@qq.com at Beijing Time: 2023-01-13 16:27 
+ *  
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *  
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *  
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import com.github.rwsbillyang.wxSDK.msg.XmlMsgBuilder
+package com.github.rwsbillyang.wxSDK.util
+
+import org.w3c.dom.Element
 import org.xml.sax.InputSource
 import java.io.StringReader
 import javax.xml.parsers.DocumentBuilder
@@ -47,7 +65,7 @@ object XmlUtil {
 
 
 
-    fun getXmlDom(xml: String) = getDocumentBuilder().parse(InputSource(StringReader(xml))).documentElement
+    fun getXmlRootDom(xml: String): Element = getDocumentBuilder().parse(InputSource(StringReader(xml))).documentElement
 
 
     /**
@@ -55,7 +73,7 @@ object XmlUtil {
      * @param tags 需要提取哪些tags， 对应的值为非嵌套文档
      * */
     fun parseXmlByDom(xml: String, tags: Set<String>): Map<String, String?>{
-        val root = getDocumentBuilder().parse(InputSource(StringReader(xml))).documentElement
+        val root = getXmlRootDom(xml)
         val map = mutableMapOf<String, String?>()
         for(tag in tags){
             map[tag] = root.getElementsByTagName(tag).item(0)?.textContent

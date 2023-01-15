@@ -1,4 +1,4 @@
-package com.github.rwsbillyang.wxSDK.msg
+package com.github.rwsbillyang.wxSDK.util
 
 
 class XmlMsgBuilder(str: String? = null) {
