@@ -26,7 +26,9 @@ import com.github.rwsbillyang.wxUser.account.PayNotifierType
 import com.github.rwsbillyang.wxWork.account.WxWorkAccount
 import org.slf4j.LoggerFactory
 
-
+/**
+ * 账号过期等支付通知
+ * */
 class PayMsgNotifier: MsgNotifierBase() {
     private val log = LoggerFactory.getLogger("PayMsgNotifier")
     fun onBonusSuccess(

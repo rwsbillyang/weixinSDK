@@ -18,21 +18,21 @@
 
 package com.github.rwsbillyang.wxWork.wxkf
 
+import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.ktorKit.util.utcSecondsToLocalDateTime
 import com.github.rwsbillyang.wxSDK.msg.ReBaseMSg
-import com.github.rwsbillyang.wxSDK.work.EnterSessionContext
-import com.github.rwsbillyang.wxSDK.work.WechatChannels
-import com.github.rwsbillyang.wxSDK.work.WxKefuApi
-import com.github.rwsbillyang.wxSDK.work.WxKfSyncMsgResponse
+import com.github.rwsbillyang.wxSDK.work.*
 import com.github.rwsbillyang.wxSDK.work.inMsg.DefaultWorkEventHandler
 import com.github.rwsbillyang.wxSDK.work.inMsg.WxkfEvent
+import com.github.rwsbillyang.wxSDK.work.outMsg.TextCard
+import com.github.rwsbillyang.wxSDK.work.outMsg.WxWorkTextCardMsg
 import com.github.rwsbillyang.wxWork.contacts.ContactService
 import com.github.rwsbillyang.wxWork.contacts.ExternalContact
+import com.github.rwsbillyang.wxWork.msg.MsgNotifierBase
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
-import org.bson.types.ObjectId
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
@@ -44,6 +44,7 @@ class WxkfEventHandler : DefaultWorkEventHandler(), KoinComponent {
 
     private val service: WxkfService by inject()
     private val contactService: ContactService by inject()
+    private val msgNotifier: MsgNotifierBase by inject()
 
     companion object {
         const val WxkfEnterSession = "enter_session"
@@ -53,6 +54,7 @@ class WxkfEventHandler : DefaultWorkEventHandler(), KoinComponent {
         const val WxkfUserRecallMsg = "user_recall_msg"//用户撤回消息事件
         const val WxkfServicerRecallMsg = "servicer_recall_msg"//接待人员撤回消息事件
     }
+
     //onWxkfMsgEvent: xml=<xml><ToUserName><![CDATA[wwfc2fead39b1e60dd]]></ToUserName><CreateTime>1673762225</CreateTime><MsgType><![CDATA[event]]></MsgType><Event><![CDATA[kf_msg_or_event]]></Event><Token><![CDATA[ENCCbxHCSFXmjW4MDKD1z2DP2F1cn6XJnWzQEkkfqmXseuQ]]></Token><OpenKfId><![CDATA[wkfqLUQwAApHj0eaMhYPQOOamS3Wz17w]]></OpenKfId></xml>
     override fun onWxkfMsgEvent(appId: String, e: WxkfEvent): ReBaseMSg? {
         log.info("onWxkfMsgEvent: xml=${e.xml}")
@@ -130,20 +132,46 @@ class WxkfEventHandler : DefaultWorkEventHandler(), KoinComponent {
         }
 
         val enterMsgs = list2.filter {
-            it.msgtype == "event"
+             it.origin == 4 //4-系统推送的事件消息 //it.msgtype == "event" &&
                     && WxkfEnterSession == it.json?.get("event_type")?.jsonPrimitive?.content
         }
 
         if (enterMsgs.isNotEmpty()) {
-            getUserDetail(appId, enterMsgs)
+            getAllCustomerDetaill(appId, eventKfId, enterMsgs) //getPartlyCustomerDetail
         }
     }
 
-    //更新用户信息，并记录下enterSession信息
-    fun getUserDetail(corpId: String, enterSessionMsgList: List<WxkfMsg>) {
+    private fun getAllCustomerDetaill(corpId: String, openKfId: String?, enterSessionMsgList: List<WxkfMsg>) {
+        val externalIds = mutableSetOf<String>()//客户信息的客户ID
+        val map = mutableMapOf<String, MutableList<EnterSessionContext>>()
+        log.info("insert enterSessionMsgList size=${enterSessionMsgList.size}")
+        enterSessionMsgList.forEach {
+            //val enter = it.json!! //通过校验WxkfEnterSession必然非空
+            val enterSessionContext = json2EnterSessionCtx(it.json!!, it.send_time)
+
+            val externalId = enterSessionContext.external_userid
+            if (externalId != null) {
+                externalIds.add(externalId)
+
+                if (map[externalId] == null) {
+                    map[externalId] = mutableListOf(enterSessionContext)
+                } else {
+                    map[externalId]!!.add(enterSessionContext)
+                }
+            } else {
+                log.warn("no externalId in enter_session ctx?")
+            }
+        }
+        upsertExternalContacts(corpId,openKfId, externalIds.toList(), map)//有的是插入，有的只是更新enterSessions
+    }
+
+
+    //部分更新用户信息，并记录下enterSession信息
+    fun getPartlyCustomerDetail(corpId: String,openKfId: String?, enterSessionMsgList: List<WxkfMsg>) {
         val externalIds1 = mutableSetOf<String>()//不存在客户信息的客户ID
         val externalIds2 = mutableSetOf<String>()//客户信息存在的客户ID
         val map = mutableMapOf<String, MutableList<EnterSessionContext>>()
+        val map2 = mutableMapOf<String, ExternalContact>()
         log.info("insert enterSessionMsgList size=${enterSessionMsgList.size}")
         enterSessionMsgList.forEach {
             //val enter = it.json!! //通过校验WxkfEnterSession必然非空
@@ -161,6 +189,7 @@ class WxkfEventHandler : DefaultWorkEventHandler(), KoinComponent {
                         externalIds1.add(externalId)
                     } else {
                         externalIds2.add(externalId)
+                        map2[externalId] = customer
                     }
                 }
 
@@ -174,35 +203,10 @@ class WxkfEventHandler : DefaultWorkEventHandler(), KoinComponent {
             }
         }
 
-        if (externalIds1.isNotEmpty()) {
-            log.info("getCustomerDetail, externalIds1=${externalIds1.joinToString(",")}")
-            //不存在，查询信息，并则只是插入enter_session信息
-            val res = WxKefuApi(corpId).getCustomerDetail(externalIds1.toList())
-            if (res.isOK()) {
-                if (!res.customer_list.isNullOrEmpty()) {
-                    res.customer_list!!.map {
-                        ExternalContact(
-                            ObjectId(), corpId, it.external_userid, it.nickname,
-                            it.avatar, it.gender, it.unionid,
-                            enterSessions = map[it.external_userid], wxkf = true
-                        )
-                    }.also {
-                        try{
-                            log.info("insertExternalContacts, size=${it.size}")
-                            contactService.insertExternalContacts(it)
-                            log.info("insertExternalContacts done")
-                        }catch(e: Exception){
-                            log.info("fail to insertExternalContacts: " + e.message)
-                        }
-                    }
-                } else {
-                    log.warn("no customer_list, invalid_external_userid: ${res.invalid_external_userid}")
-                }
-            } else {
-                log.warn("fail getCustomerDetail: ${res.errCode}: ${res.errMsg}")
-            }
-        }
+        //不存在客户信息的客户ID
+        upsertExternalContacts(corpId, openKfId, externalIds1.toList(), map)//均为插入
 
+        //已存在的客户
         if (externalIds2.isNotEmpty()) {
             log.info("insertEnterSessionContext...")
             //已存在，则只是插入enter_session信息
@@ -216,10 +220,46 @@ class WxkfEventHandler : DefaultWorkEventHandler(), KoinComponent {
                     }catch(e: Exception){
                         log.info("Fail to insertEnterSessionContext: " + e.message)
                     }
+                    val c = map2[it]
+                    //通知新进入
+                    notifyKfNewEnterSesison(openKfId,
+                        WxkfCustomerDetail(it,c?.name?:"",
+                        c?.avatar,c?.gender?:0, c?.unionId,
+                        list.last().let { EnterSessionContextBrief(it.scene, it.scene_param) }),
+                    )
                 }
             }
         }
     }
+
+    /**
+     * @param externalIds 已去重
+     * @param map externalIds对应的EnterSessionContext列表, 全部或没有客户信息的
+     * */
+    private fun upsertExternalContacts(
+        corpId: String,openKfId: String?,
+        externalIds: List<String>,
+        map: Map<String, List<EnterSessionContext>>){
+        if (externalIds.isNotEmpty()) {
+            log.info("getCustomerDetail, externalIds1=${externalIds.joinToString(",")}")
+
+            val res = WxKefuApi(corpId).getCustomerDetail(externalIds.toList())
+
+            if (res.isOK()) {
+                res.customer_list?.forEach {
+                    val ctx = map[it.external_userid]?:listOf()
+                    contactService.upsertExternalContactByWxkf(corpId, it.external_userid, it.nickname,
+                        it.avatar, it.gender, it.unionid, ctx)//可能只是更新基本信息和插入enter_session信息
+
+                    //通知新进入
+                    notifyKfNewEnterSesison(openKfId, it)
+                }
+            } else {
+                log.warn("fail getCustomerDetail: ${res.errCode}: ${res.errMsg}")
+            }
+        }
+    }
+
 
     //json
     //{"event_type":"enter_session",
@@ -250,5 +290,64 @@ class WxkfEventHandler : DefaultWorkEventHandler(), KoinComponent {
         )
         //log.info("parse EnterSessionContext done")
         return ctx
+    }
+
+    private fun notifyEnterSession(map: Map<String, List<EnterSessionContext>> ){
+        map.forEach { k, v ->
+
+        }
+        //val users = service.findOne<WxkfServicer>("wxkfServicer", )
+    }
+
+    /**
+     * @param corpId
+     * @param agentId 通过哪个应用下发
+     * @param nickname 客户昵称
+     * @param avatar 客户avatar
+     * @param enter 最近一次的EnterSessionContext
+     * {"external_userid":"wmfqLUQwAAHniQno9qrSYAQBiwoP6xog","nickname":"北溟之水","avatar":"http://wx.qlogo.cn/mmhead/KSh5WmbVbAY7ricfHqibWp9IosLvb6iaXXXLdveoJTZCSE/0","gender":1,"enter_session_context":{"scene":"oamenu3","scene_param":"H5%E4%BF%AE%E6%88%90%E5%95%86%E5%9F%8E%EF%BC%9A%E8%AF%97%E4%BC%98%E5%85%8B%E7%A1%92%E7%89%87-3%E7%9B%92%E8%A3%85"}
+     * */
+    private fun notifyKfNewEnterSesison(openKfId: String?, customer: WxkfCustomerDetail){
+        if(customer.enter_session_context == null){
+            log.warn("no EnterSessionContext")
+            return
+        }
+        if(openKfId == null){
+            log.warn("no openKfId")
+            return
+        }
+        val corpId = System.getProperty("wxkf.corpId")
+        val agentId = System.getProperty("wxkf.agentId")
+        if(corpId == null || agentId == null){
+            log.warn("no corpId or agentId,please set it call System.setProperty wxkf.corpId,wxkf.agentId")
+            return
+        }
+        val wxkfServicer = service.findWxkfServicerCol(openKfId)
+        if(wxkfServicer == null || (wxkfServicer.userIds.isNullOrEmpty() && wxkfServicer.department.isNullOrEmpty())){
+            log.warn("no userIds/departments or not found wxkfServicer, open_kfid=${openKfId}")
+            return
+        }
+        val description = msgNotifier.grayDiv(
+            "时间：" + DatetimeUtil.format(System.currentTimeMillis())
+        ) +"<br>"+
+                msgNotifier.normalDiv("客户昵称：" + customer.nickname) +
+                msgNotifier.grayDiv("客户头像：" + customer.avatar) +
+                msgNotifier.grayDiv("来源类别：" + customer.enter_session_context!!.scene) +
+                msgNotifier.normalDiv("具体场景：" + customer.enter_session_context!!.scene_param?.let{URLDecoder.decode(it, "UTF-8")})
+
+        val clickUrl = System.getProperty("wxkf.clickUrl")
+       val msg = WxWorkTextCardMsg(
+            if(wxkfServicer.userIds.isNullOrEmpty()) null else wxkfServicer.userIds.joinToString("|"),
+            if(wxkfServicer.department.isNullOrEmpty()) null else wxkfServicer.department.joinToString("|"),
+            null,
+            agentId.toInt(),
+            TextCard(
+                "有客户咨询", description,
+                "$clickUrl/${customer.external_userid}?corpId=${corpId}&agentId=${agentId}"
+                //msgNotifier.url(corpId, agentId, null)
+            )
+        )
+
+        msgNotifier.notifyMsg(corpId, agentId, msg)
     }
 }

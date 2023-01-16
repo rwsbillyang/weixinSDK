@@ -154,6 +154,22 @@ class ContactService(cache: ICache) : MongoGenericService(cache) {
             externalContactCol.replaceOneById (old._id!!, doc.apply { _id = old._id })
         }
     }
+    fun upsertExternalContactByWxkf(
+        corpId: String, externalId: String,
+        name: String, avatar: String?, gender: Int, unionId: String?,
+    enterSessionInfo: List<EnterSessionContext>) = runBlocking {
+        externalContactCol.updateOne(and(ExternalContact::externalId eq externalId, ExternalContact::corpId eq corpId),
+            combine(
+                set(
+                    SetTo(ExternalContact::name, name),
+                    SetTo(ExternalContact::avatar, avatar),
+                    SetTo(ExternalContact::gender, gender),
+                    SetTo(ExternalContact::unionId, unionId)
+                ),
+                pushEach(ExternalContact::enterSessions, enterSessionInfo),
+                setOnInsert(ExternalContact::wxkf, true))
+        , upsert())
+    }
     fun findExternalContactByOpenId(openId: String, corpId: String) = runBlocking { externalContactCol.findOne(ExternalContact::openId eq openId, ExternalContact::corpId eq corpId) }
     fun updateExternalContactOpenId(userId: String, corpId: String, openId: String)= runBlocking {
         externalContactCol.updateOne(and(ExternalContact::externalId eq userId, ExternalContact::corpId eq corpId), setValue(ExternalContact::openId, openId))

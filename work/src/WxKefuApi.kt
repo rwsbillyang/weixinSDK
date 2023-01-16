@@ -49,6 +49,8 @@ class WxKefuApi(corpId: String) : WorkBaseApi(corpId, null, null) {
         "account/list",
         mapOf("offset" to offset.toString(), "limit" to limit.toString())
     )
+
+    fun servicerListByOpenKfId(openKfid: String):KfServicerListResponse = doGet("servicer/list", mapOf("open_kfid" to openKfid))
     /**
      * 获取客服帐号链接 https://developer.work.weixin.qq.com/document/path/94665
      * @param open_kfid	是	string	客服帐号ID
@@ -122,7 +124,20 @@ class KfAccount(
     val avatar: String,
     val manage_privilege: Boolean
 )
-
+@Serializable
+class KfServicerListResponse(
+    @SerialName("errcode")
+    override val errCode: Int = 0,
+    @SerialName("errmsg")
+    override val errMsg: String? = null,
+    val servicer_list: List<KfServicer> ? = null
+):IBase
+@Serializable
+class KfServicer(
+    val userid: String? = null,//"lisi",
+    val status: Int? = null, // 1
+    val department_id: Int? = null
+)
 /*
  {
     "errcode": 0,
@@ -153,6 +168,14 @@ class WxKfSyncMsgResponse(
     val msg_list: List<JsonObject>? = null
 ):IBase
 
+//{"errcode":0,"errmsg":"ok",
+// "customer_list":[
+// {"external_userid":"wmfqLUQwAAHniQno9qrSYAQBiwoP6xog",
+// "nickname":"北溟之水",
+// "avatar":"http://wx.qlogo.cn/mmhead/KSh5WmbVbAY7ricfHqibWp9IosLvb6iaXXXLdveoJTZCSE/0",
+// "gender":1,
+// "enter_session_context":{"scene":"oamenu3","scene_param":"H5%E4%BF%AE%E6%88%90%E5%95%86%E5%9F%8E%EF%BC%9A%E8%AF%97%E4%BC%98%E5%85%8B%E7%A1%92%E7%89%87-3%E7%9B%92%E8%A3%85"}
+// }],"invalid_external_userid":[]}
 @Serializable
 class WxKfCustomerDetailResponse(
     @SerialName("errcode")
@@ -160,19 +183,26 @@ class WxKfCustomerDetailResponse(
     @SerialName("errmsg")
     override val errMsg: String? = null,
     val invalid_external_userid: List<String>? = null,
-    val customer_list: List<CustomerDetail>? = null
+    val customer_list: List<WxkfCustomerDetail>? = null
 ):IBase
 
+
 @Serializable
-class CustomerDetail(
+class WxkfCustomerDetail(
     val external_userid: String, //"wmxxxxxxxxxxxxxxxxxxxxxx",
     val nickname: String,// "张三",
     val avatar:  String? = null, //微信头像。第三方不可获取
     val gender: Int, //1,性别。第三方不可获取，统一返回0
     val unionid: String? = null, //需要绑定微信开发者帐号才能获取到，查看绑定方法。第三方不可获取
-    val enter_session_context: EnterSessionContext? = null
+    val enter_session_context: EnterSessionContextBrief? = null
 )
 
+//"enter_session_context":{"scene":"oamenu3","scene_param":"H5%E4%BF%AE%E6%88%90%E5%95%86%E5%9F%8E%EF%BC%9A%E8%AF%97%E4%BC%98%E5%85%8B%E7%A1%92%E7%89%87-3%E7%9B%92%E8%A3%85"}
+@Serializable
+class EnterSessionContextBrief(
+    val scene: String, //"123",
+    val scene_param: String? = null, //"abc"
+)
 @Serializable
 class EnterSessionContext(
     val scene: String, //"123",

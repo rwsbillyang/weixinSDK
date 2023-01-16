@@ -40,22 +40,42 @@ class WxkfController:KoinComponent {
         var page = 0
         do {
             res = api.accountList(page*100, 100)
-            res.account_list?.forEach {
-                service.saveWxKfAccount(WxkfAccount(it.open_kfid, it.name, it.avatar, it.manage_privilege, corpId))
+            if(res.isOK()){
+                res.account_list?.forEach {
+                    service.save("wxkfAccount", WxkfAccount(it.open_kfid, it.name, it.avatar, it.manage_privilege, corpId))
+                    syncServicesByOpenKfId(api, it.open_kfid)
+                }
+                page++
+                count += (res.account_list?.size?:0)
             }
-            page++
-            count += (res.account_list?.size?:0)
-        }while(res.isOK() && res.account_list != null && res.account_list!!.size >= 100)
+        }while(res.account_list != null && res.account_list!!.size >= 100)
 
         if(!res.isOK()){
-            val msg = "${res.errCode}: ${res.errMsg}"
+            val msg = "syncWxKfAccountList: ${res.errCode}: ${res.errMsg}"
             log.warn(msg)
             return DataBox.ko(msg)
         }
         return DataBox.ok(count)
     }
+
+    fun syncServicesByOpenKfId(api: WxKefuApi, open_kfid: String): Int{
+        val res = api.servicerListByOpenKfId(open_kfid)
+        if(res.isOK()){
+            val userList = mutableListOf<String>()
+            val depList = mutableListOf<Int>()
+            res.servicer_list?.forEach {
+                if(it.userid != null) userList.add(it.userid!!)
+                if(it.department_id != null) depList.add(it.department_id!!)
+            }
+            service.save("wxkfServicer", WxkfServicer(open_kfid, api.corpId!!, userList, depList))
+        }else{
+            val msg = "syncServicesByOpenKfId: ${res.errCode}: ${res.errMsg}"
+            log.warn(msg)
+        }
+        return res.servicer_list?.size?:0
+    }
     fun getWxkfAccountList(coprId: String): List<WxkfAccount>{
-        return service.findAll(service.wxkfAccountCol, WxkfAccount::corpId eq coprId)
+        return service.findAll("wxkfAccount", WxkfAccount::corpId eq coprId)
     }
 
     fun saveScene(doc: WxkfScene): DataBox<WxkfScene> {

@@ -19,10 +19,8 @@
 package com.github.rwsbillyang.wxWork.wxkf
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
-import com.github.rwsbillyang.ktorKit.server.AbstractJwtHelper
-import com.github.rwsbillyang.ktorKit.server.respondBox
-import com.github.rwsbillyang.ktorKit.server.respondBoxKO
-import com.github.rwsbillyang.ktorKit.server.respondBoxOK
+import com.github.rwsbillyang.ktorKit.server.*
+import com.github.rwsbillyang.wxSDK.work.WxKefuApi
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -55,6 +53,19 @@ fun Routing.wxkfApi() {
                     call.respondBox(DataBox.ko<Unit>("invalid parameter, corpId is null"))
                 else
                     call.respondBox(controller.syncWxKfAccountList(corpId))
+            }
+            get("/syncServicerList/{openKfId}"){
+                val openKfId = call.parameters["openKfId"]
+                if(openKfId == null )
+                    call.respondBox(DataBox.ko<Unit>("invalid parameter, openKfId is null"))
+                else {
+                    val corpId = call.appId
+                    if(corpId == null){
+                        call.respondBox(DataBox.ko<Unit>("invalid parameter, no appId in header"))
+                    }else{
+                        call.respondBoxOK(controller.syncServicesByOpenKfId(WxKefuApi(corpId),openKfId))
+                    }
+                }
             }
 
             get("/account/list/{corpId}"){

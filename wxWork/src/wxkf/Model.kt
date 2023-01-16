@@ -33,7 +33,13 @@ data class WxkfAccount(
     val manage_privilege: Boolean,
     val corpId: String,
 )
-
+@Serializable
+data class WxkfServicer(
+    val _id: String, //open_kfid
+    val corpId: String,
+    val userIds: List<String>?,
+    val department: List<Int>?
+)
 /**
  * @param kfId 客服id
  * @param scene 场景值 不多于32字节 字符串取值范围(正则表达式)：[0-9a-zA-Z_-]*
@@ -66,7 +72,7 @@ data class WxkfMsg(
     val _id: String, //msgid
     val corpId: String,
     val send_time: Long?,
-    val origin: Int?,
+    val origin: Int?,//消息来源。3-微信客户发送的消息 4-系统推送的事件消息 5-接待人员在企业微信客户端发送的消息
     val msgtype: String?,//event or msg type
 
     //kmongo reports exception because jershell/kbson not support jsonObject:

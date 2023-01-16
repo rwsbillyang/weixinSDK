@@ -21,27 +21,25 @@ package com.github.rwsbillyang.wxWork.wxkf
 import com.github.rwsbillyang.ktorKit.cache.ICache
 import com.github.rwsbillyang.ktorKit.db.MongoCRUDService
 import com.github.rwsbillyang.wxWork.wxWorkModule
-import com.mongodb.client.model.InsertManyOptions
-import com.mongodb.client.model.WriteModel
 import kotlinx.coroutines.runBlocking
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.setValue
 import org.litote.kmongo.upsert
 
 class WxkfService(cache: ICache): MongoCRUDService(cache, wxWorkModule.dbName!!) {
-    val wxkfAccountCol: CoroutineCollection<WxkfAccount> by lazy {
-        dbSource.mongoDb.getCollection()
-    }
+
     val wxkfCursorCol: CoroutineCollection<WxkfMsgCursor> by lazy {
         dbSource.mongoDb.getCollection()
     }
     val wxkfMsgCol: CoroutineCollection<WxkfMsg> by lazy {
         dbSource.mongoDb.getCollection()
     }
-    fun saveWxKfAccount(doc: WxkfAccount) = runBlocking {
-        wxkfAccountCol.save(doc)
+    val wxkfServicerCol: CoroutineCollection<WxkfServicer> by lazy {
+        dbSource.mongoDb.getCollection()
     }
-
+    fun insertMsgList(list: List<WxkfMsg>) = runBlocking {
+        wxkfMsgCol.insertMany(list)
+    }
     fun findCursor(kfid: String) = runBlocking {
         val c = cache[kfid]
         if(c != null) c as String
@@ -52,7 +50,8 @@ class WxkfService(cache: ICache): MongoCRUDService(cache, wxWorkModule.dbName!!)
         wxkfCursorCol.updateOneById(kfid, setValue(WxkfMsgCursor::cursor, cursor), upsert())
     }
 
-    fun insertMsgList(list: List<WxkfMsg>) = runBlocking {
-        wxkfMsgCol.insertMany(list)
+    fun findWxkfServicerCol(kfid: String) = runBlocking {
+        wxkfServicerCol.findOneById(kfid)
     }
+
 }

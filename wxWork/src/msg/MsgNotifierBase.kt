@@ -21,7 +21,6 @@ package com.github.rwsbillyang.wxWork.msg
 import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.wxSDK.work.MsgApi
 import com.github.rwsbillyang.wxSDK.work.outMsg.IOutWxWorkMsg
-import com.github.rwsbillyang.wxWork.account.WxWorkAccount
 import com.github.rwsbillyang.wxWork.agent.AgentService
 import com.github.rwsbillyang.wxWork.config.ConfigService
 import kotlinx.coroutines.launch
@@ -45,13 +44,13 @@ open class MsgNotifierBase : KoinComponent {
 
     // 点击后跳转的链接。最长2048字节，请确保包含了协议头(http/https)
     fun url(corpId: String, agentId: String?, type: String?): String{
-        val defaultUrl = if(agentId == null) null else{
+        val url = if(agentId == null) null else{
             agentService.findAgent(agentId, corpId)?.url ?: configService.findWxWorkAgentConfigByAgentId(corpId, agentId)?.url
         }
-        val url = if(type == null) defaultUrl else configService.findMsgNotifyConfig(corpId, agentId)?.pathMap?.get(type)?:defaultUrl
-        if(url == null){
-            log.warn("not found url in agent and agentConfig: corpId=$corpId, agentId=$agentId")
-        }
+
+//        if(url == null){
+//            log.warn("not found url in agent and agentConfig: corpId=$corpId, agentId=$agentId")
+//        }
         return "$url?corpId=${corpId}&agentId=$agentId"
     }
 

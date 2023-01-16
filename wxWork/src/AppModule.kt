@@ -69,7 +69,7 @@ val wxWorkModule = AppModule(
         },
         module {
             //single { FanRpcWork() }
-            single { PayMsgNotifier() }
+            //single { PayMsgNotifier() }
             single { MsgNotifierBase() }
             single { StatsService(get()) }
             single { RecommendHelper() }

@@ -67,14 +67,14 @@ data class WxWorkAgentConfig(
 /**
  * 消息通知中的url配置
  * */
-@Serializable
-data class WxMsgNotifyConfig(
-    val _id: ObjectId, // appId
-    val corpId: String,
-    val agentId: String,
-    val host: String, // eg: http://zhike.niukid.com or https://zhike.niukid.com
-    val pathMap: Map<String, String> //key: 类型， value：路径
-)
+//@Serializable
+//data class WxMsgNotifyConfig(
+//    val _id: ObjectId, // appId
+//    val corpId: String,
+//    val agentId: String,
+//    val host: String, // eg: http://zhike.niukid.com or https://zhike.niukid.com
+//    val pathMap: Map<String, String> //key: 类型， value：路径
+//)
 
 @Serializable
 data class Corp(

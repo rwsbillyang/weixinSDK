@@ -41,15 +41,15 @@ class ConfigService(cache: ICache) : MongoCRUDService(cache,wxWorkModule.dbName!
         dbSource.mongoDb.getCollection("wxWorkSysAgentConfig")
     }
 
-    private val msgNotifyConfigCol: CoroutineCollection<WxMsgNotifyConfig> by lazy {
-        dbSource.mongoDb.getCollection()
-    }
+//    private val msgNotifyConfigCol: CoroutineCollection<WxMsgNotifyConfig> by lazy {
+//        dbSource.mongoDb.getCollection()
+//    }
 
-    fun findMsgNotifyConfig(corpId: String, agentId: String?) = cacheIncludeNull("notifyUrlConfig/$corpId/$agentId"){
-        runBlocking{
-            msgNotifyConfigCol.findOne(WxMsgNotifyConfig::corpId eq corpId, WxMsgNotifyConfig::agentId eq agentId)
-        }
-    }
+//    fun findMsgNotifyConfig(corpId: String, agentId: String?) = cacheIncludeNull("notifyUrlConfig/$corpId/$agentId"){
+//        runBlocking{
+//            msgNotifyConfigCol.findOne(WxMsgNotifyConfig::corpId eq corpId, WxMsgNotifyConfig::agentId eq agentId)
+//        }
+//    }
 
     fun findAgentConfigList(enabled: Boolean? = null) = runBlocking {
         if(enabled == null) wxWorkAgentCfgCol.find().toList()
