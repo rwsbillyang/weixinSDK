@@ -43,8 +43,7 @@ import org.slf4j.LoggerFactory
 internal fun configWxWork(
     config: WxWorkAgentConfig,
     application: Application,
-    isSysAgent: Boolean = false,
-    agentController: AgentController? = null
+    isSysAgent: Boolean = false
 ) {
     val log = LoggerFactory.getLogger("configWxWork")
     if(isSysAgent){
@@ -77,7 +76,8 @@ internal fun configWxWork(
                 config.private, config.enableJsSdk, config.enableAgentJsTicket,  config.enableMsg
             )
 
-            if(agentController != null){
+            if(config.syncOnStart){
+                val agentController: AgentController by application.inject()
                 log.info("syncAgent: corpId=${config.corpId}, agentId=${config.agentId}")
                 //企业应用的可见用户更新，需在调用Work.config配置完work后进行同步调用
                 agentController.syncAgentIfNotExit(config.corpId, config.agentId) //syncContacts改由管理员手工同步
@@ -102,7 +102,6 @@ internal fun configWxWork(
  * */
 class OnStartConfigWxWork(application: Application) : LifeCycle(application) {
     private val log = LoggerFactory.getLogger("WxWorkConfig")
-    private val agentController: AgentController by application.inject()
 
     init {
         onStarted {
@@ -112,7 +111,7 @@ class OnStartConfigWxWork(application: Application) : LifeCycle(application) {
 
             //数据库中有配置时的情形
             agentList.forEach {
-                configWxWork(it, application,false, agentController)
+                configWxWork(it, application,false)
             }
 
             sysAgentList.forEach {

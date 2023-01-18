@@ -37,7 +37,7 @@ data class QrCodeChannel(
     val _id: ObjectId,
     val appId: String, //公众号ID
     val name: String, //渠道名称
-    val code: String, //渠道编码值
+    val code: String, //渠道编码值 scene
     val type: Int, //类型 0：临时 1：永久
     val remark: String? = null, //备注
     val qrCode:String? = null, //qrcode 解析后的url，可自行生成

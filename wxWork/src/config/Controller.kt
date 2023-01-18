@@ -22,7 +22,6 @@ package com.github.rwsbillyang.wxWork.config
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.wxSDK.work.Work
 import com.github.rwsbillyang.wxSDK.work.WorkMulti
-import com.github.rwsbillyang.wxWork.agent.AgentController
 import com.github.rwsbillyang.wxWork.configWxWork
 import io.ktor.server.application.*
 import org.bson.types.ObjectId
@@ -37,7 +36,6 @@ import org.slf4j.LoggerFactory
 class ConfigController : KoinComponent {
     private val log = LoggerFactory.getLogger("ConfigController")
     private val service: ConfigService by inject()
-    private val agentController: AgentController by inject()
     private val application: Application by inject()
    // private val suiteHandler: MySuiteInfoHandler by inject()
 
@@ -49,7 +47,7 @@ class ConfigController : KoinComponent {
             if(doc.enable){
                 if(name == "agent") {
                     service.saveWxWorkAgentConfig(doc)
-                    configWxWork(doc, application, false, agentController)
+                    configWxWork(doc, application, false)
                 }else if(name == "sysagent"){
                     service.saveWxWorkSysAgentConfig(doc)
                     configWxWork(doc,application, true)

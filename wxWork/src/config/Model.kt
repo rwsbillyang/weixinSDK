@@ -57,6 +57,7 @@ data class WxWorkAgentConfig(
     val enableJsSdk: Boolean = false,
     val enableAgentJsTicket: Boolean = false,
     val enableMsg: Boolean = false, //是否激活：消息解析、分发、处理
+    val syncOnStart: Boolean = true,
     val token: String? = null,
     val aesKey: String? = null,
     val private: String? = null,
