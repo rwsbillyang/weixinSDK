@@ -19,6 +19,10 @@
 package com.github.rwsbillyang.wxOA
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.server.respondBox
+import com.github.rwsbillyang.ktorKit.server.respondBoxKO
+import com.github.rwsbillyang.ktorKit.server.respondBoxOK
+import com.github.rwsbillyang.ktorKit.util.IpCheckUtil
 import com.github.rwsbillyang.wxOA.account.NeedUserInfoType
 import com.github.rwsbillyang.wxOA.fan.FanService
 import com.github.rwsbillyang.wxOA.fan.toGuest
@@ -38,6 +42,53 @@ import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
+
+//为其它系统访问的accessToken信息, 必须是本机访问
+fun Routing.publishAccessTokenApi(){
+    val log = LoggerFactory.getLogger("publishAccessTokenApi")
+    route("/api/wx/oa/"){
+        get("/accessToken"){
+            val fromIp = call.request.origin.remoteHost
+            if(!IpCheckUtil.isFromLocalIp(fromIp)){
+                log.warn("not from local IP: fromIp=$fromIp")
+                call.respondBoxKO("visit forbidden")
+            }else{
+                val appId = call.request.queryParameters["appId"]
+                if(appId == null){
+                    log.warn("invalid query parameter, no appId")
+                    call.respondBoxKO("invalid query parameter, no appId")
+                }else{
+                    val accessToken = OfficialAccount.ApiContextMap[appId]?.accessToken?.get()
+                    if(accessToken == null){
+                        call.respondBoxKO("no accessToken")
+                    }else{
+                        call.respondBoxOK(accessToken)
+                    }
+                }
+            }
+        }
+        get("/jsTikect"){
+            val fromIp = call.request.origin.remoteHost
+            if(!IpCheckUtil.isFromLocalIp(fromIp)){
+                log.warn("not from local IP: fromIp=$fromIp")
+                call.respondBoxKO("visit forbidden")
+            }else{
+                val appId = call.request.queryParameters["appId"]
+                if(appId == null){
+                    log.warn("invalid query parameter, no appId")
+                    call.respondBoxKO("invalid query parameter, no appId")
+                }else{
+                    val ticket = OfficialAccount.ApiContextMap[appId]?.ticket?.get()
+                    if(ticket == null){
+                        call.respondBoxKO("no ticket")
+                    }else{
+                        call.respondBoxOK(ticket)
+                    }
+                }
+            }
+        }
+    }
+}
 
 fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
     val log = LoggerFactory.getLogger("officialAccountMsgApi")

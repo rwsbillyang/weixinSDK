@@ -29,6 +29,7 @@ import com.github.rwsbillyang.wxOA.qrcodeChannel.qrCodeChannelModule
 import com.github.rwsbillyang.wxOA.qrcodeChannel.qrcodeChannelApi
 import com.github.rwsbillyang.wxOA.stats.statsModule
 import com.github.rwsbillyang.wxSDK.wxPay.wxPayNotify
+import io.ktor.server.routing.*
 import org.koin.dsl.module
 import org.koin.ktor.ext.inject
 
@@ -103,6 +104,8 @@ val wxOaAppModule = AppModule(
     prefApi()
     mediaApi()
     qrcodeChannelApi()
+
+    publishAccessTokenApi()
 }
 
 
