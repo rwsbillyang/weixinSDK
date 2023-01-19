@@ -12,7 +12,8 @@ import kotlinx.serialization.Serializable
  * @property KF 公众号客服消息
  * */
 @Serializable
-sealed class MsgBody(val flag: Byte) {
+sealed class MsgBody() {
+    abstract val flag: Byte //不可作为MsgBody的构造函数中的参数：MsgBody(val flag: Byte)，否则反序列化时无法调用它，出错
     companion object {
         const val RE: Byte = 0b0000_0001 //1
         const val MASS: Byte = 0b0000_0010 //2
@@ -26,15 +27,14 @@ sealed class MsgBody(val flag: Byte) {
 }
 
 @Serializable
-@SerialName(MsgType.TEXT)
-data class TextContent(val content: String) : MsgBody(ALL)
+@SerialName(MsgType.TEXT) //用于 classDiscriminator，配置为:_class,默认值为type
+class TextContent(val content: String, override val flag: Byte = ALL) : MsgBody()
 
 @Serializable
 @SerialName(MsgType.VOICE)
-data class VoiceContent(
+class VoiceContent(
         @SerialName("media_id")
-        val mediaId: String
-) : MsgBody(ALL)
+        val mediaId: String, override val flag: Byte = ALL) : MsgBody()
 
 
 
@@ -43,10 +43,9 @@ data class VoiceContent(
  * */
 @Serializable
 @SerialName(MsgType.IMAGE)
-data class ImageContent(
+class ImageContent(
         @SerialName("media_id")
-        val mediaId: String
-) : MsgBody(RE_KF)
+        val mediaId: String, override val flag: Byte = RE_KF) : MsgBody()
 
 /**
  * 多图片消息（群发消息）
@@ -56,15 +55,14 @@ data class ImageContent(
  * */
 @Serializable
 @SerialName("images")
-data class ImagesContent(
+class ImagesContent(
         @SerialName("media_ids")
         val mediaIds: List<String>,
         val recommend: String? = null,
         @SerialName("need_open_comment")
         val needOpenComment: Int = 0,
         @SerialName("only_fans_can_comment")
-        val onlyFansCanComment: Int = 0
-) : MsgBody(MASS)
+        val onlyFansCanComment: Int = 0, override val flag: Byte = MASS) : MsgBody()
 
 
 
@@ -74,12 +72,11 @@ data class ImagesContent(
  * */
 @Serializable
 @SerialName(MsgType.VIDEO)
-data class VideoContent(
+class VideoContent(
         @SerialName("media_id")
         val mediaId: String,
         val title: String? = null,
-        val description: String? = null
-) : MsgBody(RE_MASS)
+        val description: String? = null, override val flag: Byte = RE_MASS) : MsgBody()
 
 
 
@@ -89,14 +86,13 @@ data class VideoContent(
  * */
 @Serializable
 @SerialName("video_kf")
-data class VideoKfContent(
+class VideoKfContent(
         @SerialName("media_id")
         val mediaId: String,
         @SerialName("thumb_media_id")
         val thumb: String,
         val title: String,
-        val description: String
-) : MsgBody(KF)
+        val description: String, override val flag: Byte = KF) : MsgBody()
 
 
 
@@ -111,7 +107,7 @@ data class VideoKfContent(
  * */
 @Serializable
 @SerialName(MsgType.MUSIC)
-data class MusicContent(
+class MusicContent(
         @SerialName("thumb_media_id")
         val thumbMediaId: String,
         @SerialName("musicurl")
@@ -119,8 +115,7 @@ data class MusicContent(
         @SerialName("hqmusicurl")
         val hqMusicUrl: String? = null,
         val title: String? = null,
-        val description: String? = null
-) : MsgBody(RE_KF)
+        val description: String? = null, override val flag: Byte = RE_KF) : MsgBody()
 
 
 
@@ -151,9 +146,8 @@ class ArticleItem(
  * */
 @Serializable
 @SerialName(MsgType.NEWS)
-data class NewsContent(
-        val articles: List<ArticleItem>
-) : MsgBody(RE_KF)
+class NewsContent(
+        val articles: List<ArticleItem>, override val flag: Byte = RE_KF) : MsgBody()
 
 
 /**
@@ -161,10 +155,9 @@ data class NewsContent(
  * */
 @Serializable
 @SerialName(MsgType.MPNEWS)
-data class MpNewsContent(
+class MpNewsContent(
         @SerialName("media_id")
-        val mediaId: String
-) : MsgBody(MASS_KF)
+        val mediaId: String, override val flag: Byte = MASS_KF) : MsgBody()
 
 
 /**
@@ -173,7 +166,7 @@ data class MpNewsContent(
  * */
 @Serializable
 @SerialName(MsgType.WXCARD)
-class CardContent(@SerialName("card_id") val cardId: String): MsgBody(MASS_KF)
+class CardContent(@SerialName("card_id") val cardId: String, override val flag: Byte = MASS_KF) : MsgBody()
 
 
 
@@ -193,8 +186,7 @@ class MenuContent(
         val headContent: String,
     val list: List<IdContent>,
     @SerialName("tail_content")
-        val tailContent: String
-): MsgBody(KF)
+        val tailContent: String, override val flag: Byte = KF) : MsgBody()
 /**
  * 诸如 "id": "101", "content": "满意" 和 "id": "102","content": "不满意" 等
  * */
@@ -223,8 +215,7 @@ class MiniProgramContent(
         val pagePath: String,
         @SerialName("thumb_media_id")
         val thumb: String,
-        val title: String? = null
-): MsgBody(KF)
+        val title: String? = null, override val flag: Byte = KF) : MsgBody()
 
 
 
