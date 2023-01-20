@@ -18,22 +18,12 @@
 
 package com.github.rwsbillyang.wxSDK.officialAccount
 
-
-import com.github.rwsbillyang.ktorKit.ApiJson
-import com.github.rwsbillyang.ktorKit.client.DefaultClient
 import com.github.rwsbillyang.wxSDK.IBase
 import com.github.rwsbillyang.wxSDK.Response
 import com.github.rwsbillyang.wxSDK.bean.OAuthInfo
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import java.net.URLEncoder
 
 /**
@@ -72,7 +62,7 @@ class OAuthApi(appId: String) : OABaseApi(appId){
      *
      * Content-Type: text/plain
      * */
-    fun getAccessToken(code: String): ResponseOauthAccessToken = doGet("access_token", mapOf("appid" to appId, "secret" to OfficialAccount.ApiContextMap[appId]?.secret, "code" to code, "grant_type" to "authorization_code"))
+    fun getAccessToken(code: String): ResponseOauthAccessToken = doGetByUrl(url("access_token", mapOf("appid" to appId, "secret" to OfficialAccount.ApiContextMap[appId]?.secret, "code" to code, "grant_type" to "authorization_code"),false))
 
     /**
      * 第三步：刷新access_token（如果需要）
@@ -112,6 +102,8 @@ class OAuthApi(appId: String) : OABaseApi(appId){
  * refresh_token有效期为30天，当refresh_token失效之后，需要用户重新授权。
  * @param openId openid	用户唯一标识，请注意，在未关注公众号时，用户访问公众号的网页，也会产生一个用户和公众号唯一的OpenID
  * @param scope	用户授权的作用域，使用逗号（,）分隔
+ *
+ * https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
  * */
 @Serializable
 class ResponseOauthAccessToken(
@@ -127,5 +119,7 @@ class ResponseOauthAccessToken(
         val refreshToken: String? = null,
         @SerialName("openid")
         val openId: String? = null,
-        val scope: String? = null
+        val scope: String? = null,
+        val unionid: String? = null,//用户统一标识（针对一个微信开放平台帐号下的应用，同一用户的 unionid 是唯一的），只有当 scope 为"snsapi_userinfo"时返回
+        val is_snapshotuser: Int? = null //是否为快照页模式虚拟账号，只有当用户是快照页模式虚拟账号时返回，值为1
 ): IBase

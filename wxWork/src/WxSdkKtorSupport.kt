@@ -21,6 +21,8 @@ package com.github.rwsbillyang.wxWork
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.server.respondBoxKO
+import com.github.rwsbillyang.ktorKit.server.respondBoxOK
+import com.github.rwsbillyang.ktorKit.util.IpCheckUtil
 import com.github.rwsbillyang.wxSDK.security.AesException
 import com.github.rwsbillyang.wxSDK.security.JsAPI
 import com.github.rwsbillyang.wxSDK.work.*
@@ -28,6 +30,7 @@ import com.github.rwsbillyang.wxSDK.work.isv.IsvWork
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -392,3 +395,51 @@ fun Routing.workJsSdkSignature() {
 }
 
 
+//为其它系统访问的accessToken信息, 必须是本机访问
+fun Routing.publishWorkAccessTokenApi(){
+    val log = LoggerFactory.getLogger("publishWorkAccessTokenApi")
+    route("/api/wx/work/"){
+        get("/accessToken"){
+            val fromIp = call.request.origin.remoteHost
+            if(!IpCheckUtil.isFromLocalIp(fromIp)){
+                log.warn("not from local IP: fromIp=$fromIp")
+                call.respondBoxKO("visit forbidden")
+            }else{
+                val corpId = call.request.queryParameters["corpId"]
+                val agentId = call.request.queryParameters["agentId"]
+                if(corpId == null || agentId == null){
+                    log.warn("invalid query parameter, no corpId/agentId, corpId=$corpId agentId=$agentId")
+                    call.respondBoxKO("invalid query parameter, no corpId/agentId")
+                }else{
+                    val accessToken = WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.accessToken?.get()
+                    if(accessToken == null){
+                        call.respondBoxKO("no accessToken")
+                    }else{
+                        call.respondBoxOK(accessToken)
+                    }
+                }
+            }
+        }
+        get("/jsTikect"){
+            val fromIp = call.request.origin.remoteHost
+            if(!IpCheckUtil.isFromLocalIp(fromIp)){
+                log.warn("not from local IP: fromIp=$fromIp")
+                call.respondBoxKO("visit forbidden")
+            }else{
+                val corpId = call.request.queryParameters["corpId"]
+                val agentId = call.request.queryParameters["agentId"]
+                if(corpId == null || agentId == null){
+                    log.warn("invalid query parameter, no corpId/agentId, corpId=$corpId agentId=$agentId")
+                    call.respondBoxKO("invalid query parameter, no corpId/agentId")
+                }else{
+                    val ticket = WorkMulti.ApiContextMap[corpId]?.agentMap?.get(agentId)?.jsTicket?.get()
+                    if(ticket == null){
+                        call.respondBoxKO("no ticket")
+                    }else{
+                        call.respondBoxOK(ticket)
+                    }
+                }
+            }
+        }
+    }
+}

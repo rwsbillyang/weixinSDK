@@ -104,7 +104,7 @@ val wxWorkModule = AppModule(
     channelApi()
     wxkfApi()
     workJsSdkSignature()
-
+    publishWorkAccessTokenApi() //cmf ftl 中获取访客openid or external id时需要
     wxWorkOAuthApi {
         val isvCorpService: IsvCorpService by inject()
         if (it.isOK()) {

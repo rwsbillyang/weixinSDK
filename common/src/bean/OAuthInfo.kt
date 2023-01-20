@@ -49,11 +49,18 @@ class OAuthInfo(
 //        var schema = "http"  //
 //    }
     init {
-        if(agentId == null)
-            authorizeUrl = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}" +
-                "&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}#wechat_redirect"
+        authorizeUrl = wxAuthUrl(appId, redirectUri, scope, state, agentId)
+    }
+    companion object{
+        fun wxAuthUrl(appId: String,
+                         redirectUri: String,
+                         scope: String,
+                         state: String,
+                         agentId: Int?) = if(agentId == null)
+             "https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}" +
+                    "&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}#wechat_redirect"
         else
-            authorizeUrl = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}" +
+             "https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}" +
                     "&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&agentid=${agentId}&state=${state}#wechat_redirect"
     }
 }
