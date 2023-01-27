@@ -24,7 +24,6 @@ import com.github.rwsbillyang.ktorKit.db.MongoGenericService
 import com.github.rwsbillyang.ktorKit.to64String
 import com.github.rwsbillyang.ktorKit.toObjectId
 import com.github.rwsbillyang.wxOA.wxOaAppModule
-import com.mongodb.client.model.ReturnDocument
 import kotlinx.coroutines.runBlocking
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
@@ -58,27 +57,25 @@ class QrCodeChannelService(cache: ICache) : MongoGenericService(cache){
         }
     }
 
-    fun addChannel(bean: ChannelBean) = runBlocking{
-        val doc = QrCodeChannel(ObjectId(), bean.appId, bean.name, bean.code, bean.type, bean.remark,null, null,System.currentTimeMillis())
-        channelCol.insertOne(doc)
+
+
+    fun saveChannel(doc: QrCodeChannel) = runBlocking {
+        if(doc._id == null){
+            doc._id = ObjectId()
+            channelCol.insertOne(doc)
+        }else{
+            var update = set(
+                SetTo(QrCodeChannel::name, doc.name),
+                SetTo(QrCodeChannel::code, doc.code),
+                SetTo(QrCodeChannel::remark, doc.remark),
+                SetTo(QrCodeChannel::msgId, doc.msgId)
+            )
+            if(doc.qrCode == null) update = combine(update, setValue(QrCodeChannel::type, doc.type))
+            channelCol.updateOneById(doc._id!!, update)
+        }
         doc
     }
 
-    /**
-     * @param isUpdateType 如果qrCode没有值，才更新type，一旦生成二维码将不再更新type
-     * */
-    fun updateChannel(info: ChannelBean, isUpdateType: Boolean) = evict(info._id!!){
-        runBlocking {
-            var update = set(
-                SetTo(QrCodeChannel::name, info.name),
-                SetTo(QrCodeChannel::code, info.code),
-                SetTo(QrCodeChannel::remark, info.remark)
-            )
-            if(isUpdateType) update = combine(update, setValue(QrCodeChannel::type, info.type))
-            channelCol.findOneAndUpdate(QrCodeChannel::_id eq info._id.toObjectId(), update,
-                findOneAndUpdateUpsert().returnDocument(ReturnDocument.AFTER))
-        }
-    }
 
     fun updateQrcode(id: ObjectId, qrcode: String, imgUrl: String?) = evict(id.to64String()){
         runBlocking {
@@ -90,13 +87,6 @@ class QrCodeChannelService(cache: ICache) : MongoGenericService(cache){
         }
     }
 
-    fun updateMsgId(id: ObjectId, msgId: String) = evict(id.to64String()){
-        runBlocking {
-            channelCol.updateOneById(id, set(
-                SetTo(QrCodeChannel::msgId, msgId.toObjectId()),
-            ))
-        }
-    }
     fun findMsgId(appId: String, code: String) = runBlocking {
         channelCol.findOne(and(QrCodeChannel::appId eq appId, QrCodeChannel::code eq code))?.msgId
     }

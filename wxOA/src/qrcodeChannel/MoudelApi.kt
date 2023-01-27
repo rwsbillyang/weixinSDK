@@ -21,6 +21,7 @@ package com.github.rwsbillyang.wxOA.qrcodeChannel
 
 import com.github.rwsbillyang.ktorKit.server.AbstractJwtHelper
 import com.github.rwsbillyang.ktorKit.server.respondBox
+import com.github.rwsbillyang.ktorKit.server.respondBoxOK
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -42,6 +43,7 @@ internal val qrCodeChannelModule = module{
 }
 fun Routing.qrcodeChannelApi(){
     val controller: QrCodeChannelController by inject()
+    val service: QrCodeChannelService by inject()
     val jwtHelper: AbstractJwtHelper by inject()
 
     authenticate {
@@ -59,10 +61,10 @@ fun Routing.qrcodeChannelApi(){
 
         route("/api/wx/admin/oa/qrcodeChannel"){
             get<ChannelListParams> {
-                call.respondBox(controller.getChannelList(it))
+                call.respondBoxOK(service.findList(it))
             }
             post("/save") {
-                call.respondBox(controller.saveChannel(call.receive()))
+                call.respondBoxOK(service.saveChannel(call.receive()))
             }
             get("/generate/{channelId}") {
                 call.respondBox(controller.generateChannelQrCode(call.parameters["channelId"],call.request.queryParameters["appId"]))

@@ -34,14 +34,6 @@ class QrCodeChannelController: KoinComponent {
 
     private val service: QrCodeChannelService by inject()
 
-    fun getChannelList(listParams: ChannelListParams) = DataBox.ok(service.findList(listParams))
-    fun saveChannel(info: ChannelBean): DataBox<QrCodeChannel?> {
-        val doc = if(info._id == null)
-            service.addChannel(info)
-        else
-            service.updateChannel(info, info.qrCode == null)//一旦生成二维码将不再更新type
-        return DataBox.ok(doc)
-    }
 
     fun delChannel(id: String?, appId: String?): DataBox<Int> {
         if(id == null) return DataBox.ko("invalid parameter: channel id or appId")
@@ -88,7 +80,7 @@ class QrCodeChannelController: KoinComponent {
             }
 
             return if(res.isOK() && res.ticket != null && res.url != null) {
-                service.updateQrcode(channel._id, res.url!!, null)
+                service.updateQrcode(channel._id!!, res.url!!, null)
 
                 val filename = channel.code + "-"+System.currentTimeMillis() + ".jpg"
 
@@ -101,7 +93,7 @@ class QrCodeChannelController: KoinComponent {
                 val ok = doDownload(downUrl, filePath,filename)
                 if(ok != null){
                     val url = "${NginxStaticRootUtil.getUrlPrefix(myPath)}/$filename"
-                    service.updateQrcode(channel._id, res.url!!, url)
+                    service.updateQrcode(channel._id!!, res.url!!, url)
                     DataBox.ok(QrCodeInfo(res.url, url))
                 }else{
                     log.warn("fail to download for filePath=$filePath")

@@ -34,7 +34,7 @@ import org.litote.kmongo.regex
 //引导关注公众号的渠道二维码
 @Serializable
 data class QrCodeChannel(
-    val _id: ObjectId,
+    var _id: ObjectId? = null,
     val appId: String, //公众号ID
     val name: String, //渠道名称
     val code: String, //渠道编码值 scene
@@ -42,21 +42,10 @@ data class QrCodeChannel(
     val remark: String? = null, //备注
     val qrCode:String? = null, //qrcode 解析后的url，可自行生成
     val imgUrl: String? = null, //下载到本地文件系统中的二维码，若被删除只能通过qrCode生成
-    val time: Long, //创建时间
+    val time: Long = System.currentTimeMillis(), //创建时间
     val msgId: ObjectId? = null //通过渠道码关注后的响应的消息，优先级最高
     )
 
-//编辑或新增时提交上来的数据
-@Serializable
-class ChannelBean(
-    val _id: String? = null,
-    val appId: String, //公众号ID
-    val name: String, //渠道名称
-    val code: String, //渠道编码值
-    val type: Int, //类型 0：临时 1：永久
-    val remark: String?, //备注
-    val qrCode:String? = null, //qrcode 解析后的url
-)
 
 @Serializable
 class QrCodeInfo(
