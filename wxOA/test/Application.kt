@@ -23,7 +23,6 @@ import com.github.rwsbillyang.wxOA.dispatchMsgApi
 import com.github.rwsbillyang.wxOA.oAuthApi
 import com.github.rwsbillyang.wxSDK.accessToken.ITimelyRefreshValue
 import com.github.rwsbillyang.wxSDK.msg.*
-import com.github.rwsbillyang.wxSDK.officialAccount.ApiContext
 import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.DefaultOAEventHandler
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.DefaultOAMsgHandler
@@ -43,31 +42,21 @@ val AppIdForTest = "wx2ea341a3b3871d23"
 
 fun configTestOA(){
 
-//    OfficialAccount.config {
-//        appId = AppIdForTest
-//        secret = "89d147ef8e83c4cd097e96992127f0bc"
-//        encodingAESKey = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG"
-//        token = "com.github.rwsbillyang.wxSDK.test.testToken"
-//        wechatId = "gh_b2f9163a8000"
-//        wechatName = "测试号"
-//        msgHandler = TestOAMsgHandler()
-//        eventHandler = OAEventTestHandler()
-//
-//        accessToken = TestAccessTokenValue()
-//        ticket = TestJsTicketValue()
-//    }
-    OfficialAccount.ApiContextMap[AppIdForTest] = ApiContext(
-        AppIdForTest,
-        "89d147ef8e83c4cd097e96992127f0bc",
-        "com.github.rwsbillyang.wxSDK.test.testToken",
-        "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG",
-        "gh_b2f9163a8000",
-        "测试号",
-        TestOAMsgHandler(),
-        OAEventTestHandler(),
-        TestAccessTokenValue(),
-        TestJsTicketValue()
-    )
+    OfficialAccount.config {
+        appId = AppIdForTest
+        secret = "89d147ef8e83c4cd097e96992127f0bc"
+        encodingAESKey = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG"
+        token = "com.github.rwsbillyang.wxSDK.test.testToken"
+        wechatId = "gh_b2f9163a8000"
+        wechatName = "测试号"
+        msgHandler = TestOAMsgHandler()
+        eventHandler = OAEventTestHandler()
+
+        customAccessToken = TestAccessTokenValue()
+        customTicket = TestJsTicketValue()
+    }
+
+
 }
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads

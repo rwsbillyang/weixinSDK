@@ -2,8 +2,7 @@ package com.github.rwsbillyang.wxSDK.officialAccount.inMsg
 
 import com.github.rwsbillyang.wxSDK.msg.*
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+
 import org.w3c.dom.Element
 
 /**
@@ -14,7 +13,7 @@ class OAMsgHub(
          val eventHandler: IOAEventHandler?,
         wxBizMsgCrypt: WXBizMsgCrypt?
 ):WxMsgHub(wxBizMsgCrypt) {
-    private val log: Logger = LoggerFactory.getLogger("OAMsgHub")
+   // private val log: Logger = LoggerFactory.getLogger("OAMsgHub")
     override fun dispatchMsg(appId: String, agentId: String?, xml: String, rootDom: Element, msgType: String?): ReBaseMSg?{
         if(msgHandler == null) return null
         return when(msgType){

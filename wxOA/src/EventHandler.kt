@@ -58,7 +58,7 @@ class EventHandler: DefaultOAEventHandler(), KoinComponent  {
 
     /**
      * 用户已关注时，扫码关注后的事件推送
-     * TODO: 测试号关注时无此事件？
+     *  测试号关注时无此事件？
      * @property eventKey EventKey	事件KEY值，事件KEY值，是一个32位无符号整数，即创建二维码时的二维码scene_id
      * @property ticket Ticket	二维码的ticket，可用来换取二维码图片
      * */
@@ -73,7 +73,7 @@ class EventHandler: DefaultOAEventHandler(), KoinComponent  {
 
     /**
      * 用户未关注时，扫码关注后的事件推送
-     * TODO: 测试号关注时无此事件？
+     * 测试号关注时无此事件？
      * @property eventKey EventKey	事件KEY值，qrscene_为前缀，后面为二维码的参数值
      * @property ticket Ticket	二维码的ticket，可用来换取二维码图片
      * */
@@ -88,7 +88,7 @@ class EventHandler: DefaultOAEventHandler(), KoinComponent  {
 
     /**
      * 关注事件
-     * TODO: 测试号关注时无此事件？
+     * 测试号关注时无此事件？
      * 用户在关注与取消关注公众号时，微信会把这个事件推送到开发者填写的URL。
      * 方便开发者给用户下发欢迎消息或者做帐号的解绑。为保护用户数据隐私，开发者收到用户取消关注事件时需要删除该用户的所有信息。微信服务器在五秒内收不到响应会断掉连接，并且重新发起请求，总共重试三次。
      * 关于重试的消息排重，推荐使用FromUserName + CreateTime 排重。
@@ -136,7 +136,7 @@ class EventHandler: DefaultOAEventHandler(), KoinComponent  {
                     log.warn("not found msg for msgId=${msgId.toHexString()}, to check event type config")
                 }
             }else{
-                log.info("no config re-msg for qrcode: ${scene}, to check event type config")
+                log.info("no config re-msg for qrcode: ${scene},appId=$appId to check event type config")
             }
         }else{
             log.warn("onOAScanSubscribeEvent: no scene? eventKey=${scene}, to check event type config")

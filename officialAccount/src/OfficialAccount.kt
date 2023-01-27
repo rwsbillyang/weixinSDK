@@ -24,20 +24,22 @@ import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
 import com.github.rwsbillyang.wxSDK.officialAccount.inMsg.*
 
 
-
 object OfficialAccount {
     /**
      * 微信消息接入点"/api/wx/oa/app/{appId}"
      * */
     var msgUri = "/api/wx/oa/app"
+
     /**
      * 前端获取api签名信息，重定向到请求腾讯授权页面
      * */
     var oauthInfoPath: String = "/api/wx/oa/oauth/info"
+
     /**
      * 微信服务器通知到后端的路径（无需用户授权）, 最后面的参数为{appId}，用于通知openId
      * */
     var oauthNotifyPath1: String = "/api/wx/oa/oauth/notify1"
+
     /**
      * 获取用户信息用户授权后，微信服务器通知到后端的路径，最后面的参数为{appId}
      * */
@@ -54,35 +56,21 @@ object OfficialAccount {
     var oauthNotifyWebAppUrl: String = "/wxoa/authNotify"
 
 
-    var jsSdkSignaturePath: String =  "/api/wx/oa/jssdk/signature"
+    var jsSdkSignaturePath: String = "/api/wx/oa/jssdk/signature"
 
     /**
      * 配置公众号参数
      * */
     fun config(block: OAConfiguration.() -> Unit) {
         val config = OAConfiguration().apply(block)
-        val old = ApiContextMap[config.appId]
-        if(old == null){
-            ApiContextMap[config.appId] = ApiContext(
-                config.appId,
-                config.secret,
-                config.token,
-                config.encodingAESKey,
-                config.wechatId,
-                config.wechatName,
-                config.msgHandler,
-                config.eventHandler,
-                config.accessToken,
-                config.ticket
-            )
-        }else{
-            old.onChange(config)
-        }
+        //val old = ApiContextMap[config.appId]
+        ApiContextMap[config.appId] = ApiCtx.build(config)
     }
 
-    val ApiContextMap = hashMapOf<String, ApiContext>()
+    val ApiContextMap = hashMapOf<String, ApiCtx>()
 
 }
+
 /**
  * 调用API时可能需要用到的配置
  *
@@ -104,17 +92,17 @@ object OfficialAccount {
  *  https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Access_Overview.html
  * */
 class OAConfiguration {
-    var appId : String = "your_app_id"
+    var appId: String = "your_app_id"
     var secret: String = "your_app_secret_key"
     var token: String = "your_token"
     var encodingAESKey: String? = null
     var wechatId: String? = null
     var wechatName: String? = null
 
-    var msgHandler: IOAMsgHandler?  = null
+    var msgHandler: IOAMsgHandler? = null
     var eventHandler: IOAEventHandler? = null
-    var accessToken: ITimelyRefreshValue? = null
-    var ticket: ITimelyRefreshValue? = null
+    var customAccessToken: ITimelyRefreshValue? = null
+    var customTicket: ITimelyRefreshValue? = null
 }
 
 /**
@@ -137,97 +125,133 @@ class OAConfiguration {
  * 。https://work.weixin.qq.com/api/doc/90000/90135/90930
  *  https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Access_Overview.html
  * */
-class ApiContext(
-        var appId: String,
-        var secret: String,
-        var token: String,
-        var encodingAESKey: String? = null,
-        var wechatId: String? = null,
-        var wechatName: String? = null,
-        customMsgHandler: IOAMsgHandler?,
-        customEventHandler: IOAEventHandler?,
-        customAccessToken: ITimelyRefreshValue?,
-        customTicket: ITimelyRefreshValue?
+class ApiCtx(
+    val appId: String,
+    val secret: String,
+    val token: String,
+    val encodingAESKey: String?,
+    val accessToken: ITimelyRefreshValue?,
+    val jsTicket: ITimelyRefreshValue?,
+    //val wxBizMsgCrypt: WXBizMsgCrypt?,
+    val msgHub: OAMsgHub,
+    val wechatId: String? = null
 ) {
-    var accessToken: ITimelyRefreshValue
-    var ticket: ITimelyRefreshValue
-    var wxBizMsgCrypt = encodingAESKey?.let { WXBizMsgCrypt(token, it) }
-    var msgHub: OAMsgHub
+    companion object {
+        fun build(cfg: OAConfiguration): ApiCtx {
+            val accessToken = cfg.customAccessToken
+                ?: TimelyRefreshAccessToken(
+                    cfg.appId,
+                    AccessTokenRefresher("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${cfg.appId}&secret=${cfg.secret}")
+                )
 
-    init {
-        msgHub = OAMsgHub(customMsgHandler, customEventHandler, wxBizMsgCrypt)
+            val jsTicket = cfg.customTicket ?: TimelyRefreshTicket(cfg.appId, TicketRefresher {
+                "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
+            })
 
-        accessToken = customAccessToken
-                ?: TimelyRefreshAccessToken(appId, AccessTokenRefresher(accessTokenUrl(appId, secret)))
-
-        ticket = customTicket ?: TimelyRefreshTicket(appId, TicketRefresher{
-            "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
-        })
-    }
-    fun onChange(config: OAConfiguration){
-        var dirty1 = false
-        var dirty2 = false
-        if(config.appId != appId){
-            appId = config.appId
-            dirty1 = true
+            return ApiCtx(
+                cfg.appId, cfg.secret, cfg.token, cfg.encodingAESKey,
+                accessToken, jsTicket,
+                OAMsgHub(cfg.msgHandler, cfg.eventHandler, cfg.encodingAESKey?.let { WXBizMsgCrypt(cfg.token, it) }),
+                cfg.wechatId
+            )
         }
-        if(config.secret != secret){
-            secret = config.secret
-            dirty2 = true
-        }
-        if(config.token != token){
-            token = config.token
-            dirty1 = true
-        }
-        if(config.encodingAESKey != encodingAESKey){
-            encodingAESKey = config.encodingAESKey
-            dirty1 = true
-        }
-        if(config.wechatId != wechatId){
-            wechatId = config.wechatId
-        }
-        if(config.wechatName != wechatName){
-            wechatName = config.wechatName
-        }
-
-        var dirty3 = false
-        val msgHandler = if(config.msgHandler != null){
-            dirty3 = true
-            config.msgHandler!!
-        }else msgHub.msgHandler
-
-        val eventHandler = if(config.eventHandler != null){
-            dirty3 = true
-            config.eventHandler!!
-        }else msgHub.eventHandler
-
-        if(dirty1) {
-            wxBizMsgCrypt = encodingAESKey?.let { WXBizMsgCrypt(token, it) }
-            dirty3 = true
-        }
-        if(dirty3){
-            msgHub = OAMsgHub(msgHandler, eventHandler, wxBizMsgCrypt)
-        }
-
-       if(config.accessToken != null)
-           accessToken = config.accessToken!!
-        else if(dirty1 || dirty2){
-           accessToken = TimelyRefreshAccessToken(appId, AccessTokenRefresher(accessTokenUrl(appId, secret)))
-       }
-
-       if(config.ticket != null)
-           ticket = config.ticket!!
-        else if(dirty1 || dirty2){
-           ticket = TimelyRefreshTicket(appId, TicketRefresher{
-               "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
-           })
-       }
-
     }
 }
+//
+//class ApiContext(
+//    var appId: String,
+//    var secret: String,
+//    var token: String,
+//    var encodingAESKey: String? = null,
+//    var wechatId: String? = null,
+//    var wechatName: String? = null,
+//    customMsgHandler: IOAMsgHandler?,
+//    customEventHandler: IOAEventHandler?,
+//    customAccessToken: ITimelyRefreshValue?,
+//    customTicket: ITimelyRefreshValue?
+//) {
+//    var accessToken: ITimelyRefreshValue
+//    var ticket: ITimelyRefreshValue
+//    var wxBizMsgCrypt = encodingAESKey?.let { WXBizMsgCrypt(token, it) }
+//    var msgHub: OAMsgHub
+//
+//    init {
+//        msgHub = OAMsgHub(customMsgHandler, customEventHandler, wxBizMsgCrypt)
+//
+//        accessToken = customAccessToken
+//            ?: TimelyRefreshAccessToken(appId, AccessTokenRefresher(accessTokenUrl(appId, secret)))
+//
+//        ticket = customTicket ?: TimelyRefreshTicket(appId, TicketRefresher {
+//            "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
+//        })
+//    }
+//
+//    fun onChange(config: OAConfiguration) {
+//        var dirty1 = false
+//        var dirty2 = false
+//        if (config.appId != appId) {
+//            appId = config.appId
+//            dirty1 = true
+//        }
+//        if (config.secret != secret) {
+//            secret = config.secret
+//            dirty2 = true
+//        }
+//        if (config.token != token) {
+//            token = config.token
+//            dirty1 = true
+//        }
+//        if (config.encodingAESKey != encodingAESKey) {
+//            encodingAESKey = config.encodingAESKey
+//            dirty1 = true
+//        }
+//        if (config.wechatId != wechatId) {
+//            wechatId = config.wechatId
+//        }
+//        if (config.wechatName != wechatName) {
+//            wechatName = config.wechatName
+//        }
+//
+//        var dirty3 = false
+//        val msgHandler = if (config.msgHandler != null) {
+//            dirty3 = true
+//            config.msgHandler!!
+//        } else msgHub.msgHandler
+//
+//        val eventHandler = if (config.eventHandler != null) {
+//            dirty3 = true
+//            config.eventHandler!!
+//        } else msgHub.eventHandler
+//
+//        if (dirty1) {
+//            wxBizMsgCrypt = encodingAESKey?.let { WXBizMsgCrypt(token, it) }
+//            dirty3 = true
+//        }
+//        if (dirty3) {
+//            msgHub = OAMsgHub(msgHandler, eventHandler, wxBizMsgCrypt)
+//        }
+//
+//        if (config.accessToken != null)
+//            accessToken = config.accessToken!!
+//        else if (dirty1 || dirty2) {
+//            accessToken = TimelyRefreshAccessToken(appId, AccessTokenRefresher(accessTokenUrl(appId, secret)))
+//        }
+//
+//        if (config.ticket != null)
+//            ticket = config.ticket!!
+//        else if (dirty1 || dirty2) {
+//            ticket = TimelyRefreshTicket(appId, TicketRefresher {
+//                "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${accessToken.get()}&type=jsapi"
+//            })
+//        }
+//
+//    }
+//}
 
 
-internal fun accessTokenUrl(appId: String, secret: String) = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$appId&secret=$secret"
+//internal fun accessTokenUrl(appId: String, secret: String) =
+//    "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$appId&secret=$secret"
+
 //internal class AccessTokenUrl(private val appId: String, private val secret: String) : IUrlProvider {
 //    override fun url() = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$appId&secret=$secret"
 //}

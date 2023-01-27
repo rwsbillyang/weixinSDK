@@ -21,7 +21,6 @@ package com.github.rwsbillyang.wxOA.test
 
 import com.github.rwsbillyang.ktorKit.ApiJson
 
-import com.github.rwsbillyang.wxSDK.officialAccount.OAuthApi
 import com.github.rwsbillyang.wxSDK.officialAccount.OfficialAccount
 import com.github.rwsbillyang.wxSDK.officialAccount.ResponseOauthAccessToken
 import com.github.rwsbillyang.wxSDK.security.SignUtil
@@ -87,7 +86,7 @@ class ApplicationTest2 {
             "<xml><ToUserName><![CDATA[$toUser]]></ToUserName><FromUserName><![CDATA[${AppIdForTest}]]></FromUserName><CreateTime>1348831860</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[$content]]></Content><MsgId>${msgId}</MsgId></xml>"
         //将原始文本用timestamp和nonce拼接后，用sha1加密，得到加密消息，再置于post data
 
-        val (xml, msgSignature) = OfficialAccount.ApiContextMap[AppIdForTest]?.wxBizMsgCrypt!!.encryptMsg(
+        val (xml, msgSignature) = OfficialAccount.ApiContextMap[AppIdForTest]?.msgHub?.wxBizMsgCrypt!!.encryptMsg(
             AppIdForTest,
             originalTextMsg,
             timestamp,

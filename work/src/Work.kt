@@ -216,23 +216,6 @@ class CorpApiContext(
         val agentMap: HashMap<String, ApiCtx> = hashMapOf()
 )
 
-class ApiCtx(
-    val secret: String,
-    val token: String? = null,
-    val msgHub: WorkMsgHub? = null,
-    val wxBizMsgCrypt: WXBizMsgCrypt? = null,
-    val accessToken: ITimelyRefreshValue? = null,
-    var agentJsTicket: ITimelyRefreshValue? = null,
-    var jsTicket:ITimelyRefreshValue? = null,
-    var privateKey: PrivateKey? = null
-)
-
-internal fun accessTokenUrl(corpId: String, secret: String) = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"
-//internal class AccessTokenUrl(private val corpId: String, private val secret: String) : IUrlProvider {
-//    override fun url() = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"
-//}
-
-
 /**
  * agent的配置
  *
@@ -252,62 +235,23 @@ internal fun accessTokenUrl(corpId: String, secret: String) = "https://qyapi.wei
  * 。https://work.weixin.qq.com/api/doc/90000/90135/90930
  *  https://developers.weixin.qq.com/doc/offiaccount/Basic_Information/Access_Overview.html
  * */
-//class AgentContext(
-//    corpId: String,
-//    val agentId: Int,
-//    val secret: String,
-//    val enableMsg: Boolean = true, //是否激活：消息解析、分发、处理
-//    val token: String? = null,
-//    val encodingAESKey: String? = null,
-//    privateKeyFilePath: String? = null,
-//    enableJsSdk: Boolean,
-//    msgHandler: IWorkMsgHandler?,
-//    eventHandler: IWorkEventHandler?,
-//    customAccessToken: ITimelyRefreshValue? = null,
-//    var agentJsTicket: ITimelyRefreshValue? = null,
-//    var corpJsTicket:ITimelyRefreshValue? = null
-//) {
-//    private val log = LoggerFactory.getLogger("AgentContext")
-//
-//    var accessToken: ITimelyRefreshValue = customAccessToken ?: TimelyRefreshAccessToken(corpId,
-//            AccessTokenRefresher(accessTokenUrl(corpId, secret)), extra = agentId.toString())
-//
-//
-//    var msgHub: WorkMsgHub? = null
-//    var wxBizMsgCrypt: WXBizMsgCrypt? = null
-//
-//    var privateKey: PrivateKey? = null
-//
-//    init {
-//        if (enableMsg) {
-//            if (!token.isNullOrBlank() && !encodingAESKey.isNullOrBlank()) {
-//                wxBizMsgCrypt = WXBizMsgCrypt(token, encodingAESKey)
-//                msgHub = WorkMsgHub(msgHandler, eventHandler, wxBizMsgCrypt!!)
-//            } else {
-//                println("enableMsg=true, but not config token and encodingAESKey")
-//            }
-//        }
-//        if(enableJsSdk){
-//            agentJsTicket = TimelyRefreshTicket(corpId,
-//                    TicketRefresher{
-//                        "https://qyapi.weixin.qq.com/cgi-bin/ticket/get?access_token=${accessToken.get()}&type=agent_config"
-//                    }, extra = agentId.toString())
-//            corpJsTicket = TimelyRefreshTicket(corpId,
-//                TicketRefresher{
-//                    "https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${accessToken.get()}"
-//                })
-//        }
-//
-//        if (!privateKeyFilePath.isNullOrBlank()) {
-//            val file = File(privateKeyFilePath)
-//            if (file.exists()) {
-//                privateKey = PemUtil.loadPrivateKey(FileInputStream(privateKeyFilePath))
-//            } else {
-//                log.warn("Not exists: $privateKeyFilePath")
-//            }
-//        }
-//    }
+class ApiCtx(
+    val secret: String,
+    val token: String? = null,
+    val msgHub: WorkMsgHub? = null,
+    val wxBizMsgCrypt: WXBizMsgCrypt? = null,
+    val accessToken: ITimelyRefreshValue? = null,
+    var agentJsTicket: ITimelyRefreshValue? = null,
+    var jsTicket:ITimelyRefreshValue? = null,
+    var privateKey: PrivateKey? = null
+)
+
+internal fun accessTokenUrl(corpId: String, secret: String) = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"
+//internal class AccessTokenUrl(private val corpId: String, private val secret: String) : IUrlProvider {
+//    override fun url() = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=$corpId&corpsecret=$secret"
 //}
+
+
 
 
 

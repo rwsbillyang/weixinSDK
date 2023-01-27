@@ -78,7 +78,7 @@ fun Routing.publishAccessTokenApi(){
                     log.warn("invalid query parameter, no appId")
                     call.respondBoxKO("invalid query parameter, no appId")
                 }else{
-                    val ticket = OfficialAccount.ApiContextMap[appId]?.ticket?.get()
+                    val ticket = OfficialAccount.ApiContextMap[appId]?.jsTicket?.get()
                     if(ticket == null){
                         call.respondBoxKO("no ticket")
                     }else{
@@ -91,7 +91,7 @@ fun Routing.publishAccessTokenApi(){
 }
 
 fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
-    val log = LoggerFactory.getLogger("officialAccountMsgApi")
+    val log = LoggerFactory.getLogger("officialAccount.dispatchMsgApi")
 
     route(path) {
         /**
@@ -108,6 +108,7 @@ fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
                 msg = "no appId, wrong uri"
                 log.warn(msg)
             } else {
+                // /api/wx/oa/app/wx59aed1fa23ba2e25?signature=781443640a789092d394bfedc8868f90b5ba1b8a&echostr=7347226570179443922&timestamp=1674804226&nonce=1444183484
                 val signature = call.request.queryParameters["signature"]
                 val timestamp = call.request.queryParameters["timestamp"]
                 val nonce = call.request.queryParameters["nonce"]
@@ -121,7 +122,7 @@ fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
                 } else {
                     msg = echostr ?: ""
                     if (signature.isNullOrBlank() || timestamp.isNullOrBlank() || nonce.isNullOrBlank() || echostr.isNullOrBlank()) {
-                        log.warn("invalid parameters: token=$token, signature=$signature, timestamp=$timestamp, nonce=$nonce,echostr=$echostr")
+                        log.warn("invalid parameters: signature=$signature, timestamp=$timestamp, nonce=$nonce,echostr=$echostr")
                         msg = "invalid parameters"
                     } else {
                         if (!SignUtil.checkSignature(token, signature, timestamp, nonce)) {
@@ -169,11 +170,11 @@ fun Routing.dispatchMsgApi(path: String = OfficialAccount.msgUri) {
                     log.warn("not config officialAccount: appId=$appId")
                 } else {
                     val body: String = call.receiveText()
-
+                    // /api/wx/oa/app/wx59aed1fa23ba2e25?signature=d300e5f6c27e05482d03ea25555a0c2bed652bac&timestamp=1674805224&nonce=1934646181&openid=oe-9O5_GY7F3dZoehnhge_N28Y6o&encrypt_type=aes&msg_signature=610c56b29eeb1ebca55c61694fcf0aab36ecf0bf
                     val msgSignature = call.request.queryParameters["msg_signature"]
                     val timeStamp = call.request.queryParameters["timestamp"]
                     val nonce = call.request.queryParameters["nonce"]
-                    val encryptType = call.request.queryParameters["encrypt_type"] ?: "security"
+                    val encryptType = call.request.queryParameters["encrypt_type"] ?: "aes"
 
                     if (msgSignature == null || timeStamp == null || nonce == null) {
                         log.warn("Should not null: msgSignature=$msgSignature, timeStamp=$timeStamp, nonce=$nonce")
@@ -391,7 +392,7 @@ fun Routing.jsSdkSignature(path: String = OfficialAccount.jsSdkSignaturePath) {
                 //call.respond(HttpStatusCode.BadRequest, "no appId in query parameters and no config oa")
                 "no appId in query parameters and no config oa"
             } else {
-                val ticket = OfficialAccount.ApiContextMap[appId]?.ticket?.get()
+                val ticket = OfficialAccount.ApiContextMap[appId]?.jsTicket?.get()
                 if (ticket == null) {
                     "appId=$appId is configured?"
                 } else {

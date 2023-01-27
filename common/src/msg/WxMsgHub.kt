@@ -11,7 +11,7 @@ import org.w3c.dom.Element
 /**
  * xml消息事件通知的解包、解析、分发处理,xml消息为腾讯post过来的body，重点处理Encrypt中的内容
  * */
-abstract class WxMsgHub(private val wxBizMsgCrypt: WXBizMsgCrypt?)
+abstract class WxMsgHub(val wxBizMsgCrypt: WXBizMsgCrypt?)
 {
     private val log: Logger = LoggerFactory.getLogger("WxMsgHub")
     /**
