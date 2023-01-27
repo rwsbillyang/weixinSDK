@@ -57,18 +57,22 @@ class ReMsgChooser: KoinComponent {
 
     fun upsertFan(appId: String, openId: String) = runBlocking {
         launch {
-            val res = UserApi(appId).getUserInfo(openId)
-            if (res.isOK()) {
-                val f = res.toFan(appId)
-                if(f != null){
-                    //此处的用户场景信息是用户第一次关注时的。已关注的话，再次扫渠道码获取用户信息时，无渠道码信息
-                    log.info("upsertFan: openId=${f._id}, qrs=${f.qrs}, qr=${f.qr}")
-                    fanService.saveFan(f)
+            val f0 = fanService.findFan(openId)
+            if(f0 == null){
+                //{"subscribe":1,"openid":"oe-9O5_GY7F3dZoehnhge_N28Y6o","nickname":"","sex":0,"language":"zh_CN","city":"","province":"","country":"","headimgurl":"","subscribe_time":1659583930,"remark":"","groupid":0,"tagid_list":[],"subscribe_scene":"ADD_SCENE_SEARCH","qr_scene":0,"qr_scene_str":""}
+                val res = UserApi(appId).getUserInfo(openId)
+                if (res.isOK()) {
+                    val f = res.toFan(appId)
+                    if(f != null){
+                        //此处的用户场景信息是用户第一次关注时的。已关注的话，再次扫渠道码获取用户信息时，无渠道码信息
+                        log.info("upsertFan: openId=${f._id}, qrs=${f.qrs}, qr=${f.qr}")
+                        fanService.saveFan(f)
+                    }else{
+                        log.warn("fail to convert response to Fan:res.openid=${res.openid}, ${res.toString()}")
+                    }
                 }else{
-                    log.warn("fail to convert response to Fan:res.openid=${res.openid}, ${res.toString()}")
+                    log.warn("fail to getUserInfo: openid=$openId, err=${res.errMsg}")
                 }
-            }else{
-                log.warn("fail to getUserInfo: openid=$openId, err=${res.errMsg}")
             }
         }
     }
