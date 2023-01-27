@@ -342,7 +342,7 @@ class WxkfEventHandler : DefaultWorkEventHandler(), KoinComponent {
             null,
             agentId.toInt(),
             TextCard(
-                "有客户咨询", description,
+                "有客户进入咨询会话", description,
                 "$clickUrl/${customer.external_userid}?corpId=${corpId}&agentId=${agentId}"
                 //msgNotifier.url(corpId, agentId, null)
             )
