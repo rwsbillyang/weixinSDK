@@ -21,6 +21,13 @@ package com.github.rwsbillyang.wxSDK.officialAccount.test
 
 import com.github.rwsbillyang.wxSDK.security.AesException
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.testing.*
 import org.junit.Assert
 import org.junit.Test
 import org.xml.sax.InputSource
@@ -29,6 +36,7 @@ import java.io.IOException
 import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.parsers.ParserConfigurationException
+import kotlin.test.assertEquals
 
 
 class OATest {
@@ -113,4 +121,105 @@ class OATest {
     }
 
 
+    private fun url(appId:String, needUserInfo: Int, separator: String,owner: String?)
+            = if(owner== null)"/notify/${appId}/${separator}/${needUserInfo}"
+    else "/notify/${appId}/${separator}/${needUserInfo}/${owner}"
+
+    private fun result(appId:String?, needUserInfo: Int?, separator: String?,owner: String?) = if(owner == null) "${appId}/${needUserInfo}/${separator}/${owner}" else
+        "${appId}/${needUserInfo}/${separator}"
+    private fun Application.notifyTestableModule() {
+        routing {
+            get("/notify/{appId}/{separator}/{needUserInfo}/{owner?}") {
+                val appId = call.parameters["appId"]
+                val needUserInfo = call.parameters["needUserInfo"]?.toInt()
+                val separator = call.parameters["separator"]
+                val owner = call.parameters["owner"]
+
+                val result = if(owner == null) "${appId}/${needUserInfo}/${separator}/${owner}" else
+                    "${appId}/${needUserInfo}/${separator}"
+
+                call.respondText(result(appId, needUserInfo, separator, owner), contentType = ContentType.Text.Plain)
+            }
+        }
+    }
+
+   // @Test
+    fun testNotifyPath1() = testApplication{
+        application {
+            notifyTestableModule()
+        }
+        val appId = "TestAppId"
+        val needUserInfo = 0
+        val separator = "#!" //路径不支持，提示404 not found
+        val owner = null
+
+        val url = url(appId, needUserInfo, separator, owner)
+        println("url=$url")
+        val response = client.get(url)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(result(appId, needUserInfo, separator, owner), response.bodyAsText())
+    }
+
+    //@Test
+    fun testNotifyPath2() = testApplication{
+        application {
+            notifyTestableModule()
+        }
+        val appId = "TestAppId"
+        val needUserInfo = 0
+        val separator = "#"//路径不支持，提示404 not found
+        val owner = null
+
+        val response = client.get(url(appId, needUserInfo, separator, owner))
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(result(appId, needUserInfo, separator, owner), response.bodyAsText())
+    }
+    @Test
+    fun testNotifyPath3() = testApplication{
+        application {
+            notifyTestableModule()
+        }
+        val appId = "TestAppId"
+        val needUserInfo = 0
+        val separator = "0"
+        val owner = null
+
+        val response = client.get(url(appId, needUserInfo, separator, owner))
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(result(appId, needUserInfo, separator, owner), response.bodyAsText())
+    }
+    //@Test
+    fun testNotifyPath4() = testApplication{
+        application {
+            notifyTestableModule()
+        }
+        val appId = "TestAppId"
+        val needUserInfo = 0
+        val separator = ""
+        val owner = null
+
+        val response = client.get(url(appId, needUserInfo, separator, owner))
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(result(appId, needUserInfo, separator, owner), response.bodyAsText())
+    }
+
+    @Test
+    fun testNotifyPath5() = testApplication{
+        application {
+            notifyTestableModule()
+        }
+        val appId = "TestAppId"
+        val needUserInfo = 0
+        val separator = "0"
+        val owner = "testowner"
+
+        val response = client.get(url(appId, needUserInfo, separator, owner))
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(result(appId, needUserInfo, separator, owner), response.bodyAsText())
+    }
 }

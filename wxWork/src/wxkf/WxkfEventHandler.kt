@@ -110,8 +110,8 @@ class WxkfEventHandler : DefaultWorkEventHandler(), KoinComponent {
                     msgtype,
                     content,
                     contentStr,
-                    it["open_kfid"]?.jsonPrimitive?.content ?: eventKfId,
-                    it["external_userid"]?.jsonPrimitive?.content,
+                    (it["open_kfid"]?.jsonPrimitive?.content ?: eventKfId)?:content?.get("open_kfid")?.jsonPrimitive?.content,//origin ===4 时，第一个值为空,
+                    it["external_userid"]?.jsonPrimitive?.content?:content?.get("external_userid")?.jsonPrimitive?.content,//origin ===4 时，值取后者
                     it["servicer_userid"]?.jsonPrimitive?.content
                 )
             }
@@ -292,12 +292,6 @@ class WxkfEventHandler : DefaultWorkEventHandler(), KoinComponent {
         return ctx
     }
 
-    private fun notifyEnterSession(map: Map<String, List<EnterSessionContext>> ){
-        map.forEach { k, v ->
-
-        }
-        //val users = service.findOne<WxkfServicer>("wxkfServicer", )
-    }
 
     /**
      * @param corpId
@@ -336,14 +330,14 @@ class WxkfEventHandler : DefaultWorkEventHandler(), KoinComponent {
                 msgNotifier.normalDiv("具体场景：" + customer.enter_session_context!!.scene_param?.let{URLDecoder.decode(it, "UTF-8")})
 
         val clickUrl = System.getProperty("wxkf.clickUrl")
-       val msg = WxWorkTextCardMsg(
+        val msg = WxWorkTextCardMsg(
             if(wxkfServicer.userIds.isNullOrEmpty()) null else wxkfServicer.userIds.joinToString("|"),
             if(wxkfServicer.department.isNullOrEmpty()) null else wxkfServicer.department.joinToString("|"),
             null,
             agentId.toInt(),
             TextCard(
                 "有客户进入咨询会话", description,
-                "$clickUrl/${customer.external_userid}?corpId=${corpId}&agentId=${agentId}"
+                "$clickUrl?externalId=${customer.external_userid}&corpId=${corpId}&agentId=${agentId}"
                 //msgNotifier.url(corpId, agentId, null)
             )
         )

@@ -25,6 +25,8 @@ import com.github.rwsbillyang.ktorKit.server.BizException
 import com.github.rwsbillyang.ktorKit.util.EmailSender
 import com.github.rwsbillyang.ktorKit.util.isEmail
 import com.github.rwsbillyang.wxSDK.security.WXBizMsgCrypt
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 
 /**
@@ -37,7 +39,7 @@ class AccountControllerWebAdmin(private val cache: ICache, private val accountSe
      * 支持账号密码登录、手机号+验证码登录、微信openId和unionId登录
      * */
     fun login(loginParam: LoginParamBean, ip: String?, ua: String?): DataBox<SysAccountAuthBean> {
-        log.info("param: $loginParam")
+        log.info("param: ${Json.encodeToString(loginParam)}")
         val user = when (loginParam.type) {
             LoginParamBean.MOBILE -> {
                 val code = cache["phone/${loginParam.name}"]

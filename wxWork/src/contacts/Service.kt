@@ -164,10 +164,11 @@ class ContactService(cache: ICache) : MongoGenericService(cache) {
                     SetTo(ExternalContact::name, name),
                     SetTo(ExternalContact::avatar, avatar),
                     SetTo(ExternalContact::gender, gender),
-                    SetTo(ExternalContact::unionId, unionId)
+                    SetTo(ExternalContact::unionId, unionId),
+                    SetTo(ExternalContact::wxkf, true)
                 ),
                 pushEach(ExternalContact::enterSessions, enterSessionInfo),
-                setOnInsert(ExternalContact::wxkf, true))
+               )
         , upsert())
     }
     fun findExternalContactByOpenId(openId: String, corpId: String) = runBlocking { externalContactCol.findOne(ExternalContact::openId eq openId, ExternalContact::corpId eq corpId) }

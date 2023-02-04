@@ -19,6 +19,7 @@
 package com.github.rwsbillyang.wxOA
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.apiBox.PostData
 import com.github.rwsbillyang.ktorKit.server.respondBox
 import com.github.rwsbillyang.ktorKit.server.respondBoxKO
 import com.github.rwsbillyang.ktorKit.server.respondBoxOK
@@ -30,6 +31,7 @@ import com.github.rwsbillyang.wxOA.fan.toOauthToken
 import com.github.rwsbillyang.wxSDK.officialAccount.*
 import com.github.rwsbillyang.wxSDK.security.JsAPI
 import com.github.rwsbillyang.wxSDK.security.SignUtil
+import com.github.rwsbillyang.wxSDK.util.BrowserRouterSeperatorUtil
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
@@ -251,7 +253,7 @@ fun Routing.oAuthApi(
     //前端构建callback notify的url
     const url = `${Host}${notifyPath}/${params.appId}/${params.needUserInfo}/${params.openId}/${params.owner}`
      * */
-    get("$notifyPath1/{appId}/{needUserInfo}/{owner?}") {
+    get("$notifyPath1/{appId}/{needUserInfo}/{separator}/{owner?}") {
         //code作为换取access_token的票据，每次用户授权带上的code将不一样，
         // code只能使用一次，5分钟未被使用自动过期。
         val code = call.request.queryParameters["code"]
@@ -316,11 +318,10 @@ fun Routing.oAuthApi(
                 result.msg = res.errMsg
             }
         }
+
+
         //前端若是SPA，通知路径可能需要添加browserHistorySeparator: /wxoa/authNotify  or /#!/wxoa/authNotify
-        //已注释掉PrefOfficialAccount中的oauthWebUrl，不再支持不同公众号拥有自定义的配置，否则此处需额外查询
-        //各公众号各自的配置通知路径，也就是说 不同的公众号不同的通知路径，没必要再支持自定义，而是统一一致使用OfficialAccount中的配置
-        val path = if (OfficialAccount.browserHistorySeparator.isEmpty()) notifyWebAppUrl
-        else "/${OfficialAccount.browserHistorySeparator}${notifyWebAppUrl}"
+        val path = BrowserRouterSeperatorUtil.getUri(call.parameters["separator"]?:"0", notifyWebAppUrl)
         call.respondRedirect("$path?${result.serialize()}", permanent = false)
     }
 
@@ -328,7 +329,7 @@ fun Routing.oAuthApi(
      * notify2: 用户授权后得到通知回调，获取用户信息，并重定向通知给前端
      * 引入needUserInfo完全是与notify1兼容，没有其它意义
      * */
-    get("$notifyPath2/{appId}") {
+    get("$notifyPath2/{appId}/{separator}") {
         val appId = call.parameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]
@@ -373,18 +374,14 @@ fun Routing.oAuthApi(
         }
         //notify webapp
         //前端若是SPA，通知路径可能需要添加browserHistorySeparator: /wxoa/authNotify  or /#!/wxoa/authNotify
-        val path = if (OfficialAccount.browserHistorySeparator.isEmpty()) notifyWebAppUrl
-        else "/${OfficialAccount.browserHistorySeparator}${notifyWebAppUrl}"
+        val path = BrowserRouterSeperatorUtil.getUri(call.parameters["separator"]?:"0", notifyWebAppUrl)
         call.respondRedirect("$path?${result.serialize()}", permanent = false)
     }
 }
 
 
 fun Routing.jsSdkSignature(path: String = OfficialAccount.jsSdkSignaturePath) {
-
-    get(path) {
-        val appId = call.request.queryParameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
-        val url = (call.request.queryParameters["url"]?: call.request.headers["Referer"])?.split('#')?.firstOrNull()
+    suspend fun sig(call: ApplicationCall, appId: String?, url: String?){
         val msg = if(url == null){
             "request Referer is null"
         }else{
@@ -406,5 +403,28 @@ fun Routing.jsSdkSignature(path: String = OfficialAccount.jsSdkSignaturePath) {
         if (msg != null) {
             call.respond(HttpStatusCode.BadRequest, msg)
         }
+    }
+
+    /**
+     * 只适合于同域名(提供完整Referrer信息)，或者跨域带有#分隔符的SPA页面
+     * */
+    get(path) {
+        val appId = call.request.queryParameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
+        //使用传递过来的参数，可能不全，因为&分隔被当成get(path)的参数，除非前端encode一下或用post？，或优先采用Referer
+        val url =  call.request.headers["Referer"]?.split('#')?.firstOrNull()?: call.request.queryParameters["url"]
+
+        sig(call, appId, url)
+    }
+
+
+    /**
+     * 适合各种情景，包括跨域
+     * url参数通过PostData中的data传递过来。url中有多个参数时，避免被认为api的参数
+     * */
+    post(path){
+        val appId = call.request.queryParameters["appId"] ?: OfficialAccount.ApiContextMap.values.firstOrNull()?.appId
+        val url = call.receive<PostData>().data
+
+        sig(call, appId, url)
     }
 }

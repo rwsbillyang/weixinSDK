@@ -20,11 +20,13 @@ package com.github.rwsbillyang.wxWork
 
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.apiBox.PostData
 import com.github.rwsbillyang.ktorKit.server.respondBoxKO
 import com.github.rwsbillyang.ktorKit.server.respondBoxOK
 import com.github.rwsbillyang.ktorKit.util.IpCheckUtil
 import com.github.rwsbillyang.wxSDK.security.AesException
 import com.github.rwsbillyang.wxSDK.security.JsAPI
+import com.github.rwsbillyang.wxSDK.util.BrowserRouterSeperatorUtil
 import com.github.rwsbillyang.wxSDK.work.*
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWork
 import com.github.rwsbillyang.wxSDK.work.isv.IsvWorkMulti
@@ -233,8 +235,8 @@ fun Routing.wxWorkOAuthApi(
      * code作为换取access_token的票据，每次用户授权带上的code将不一样，code只能使用一次，5分钟未被使用自动过期。
      * "/api/wx/work/oauth/notify/{corpId}/{agentId}/{needUserInfo?}" or /api/wx/work/isv/oauth/notify/{suiteId}/{needUserInfo?}
      * */
-    get(if(Work.isIsv) IsvWork.oauthNotifyPath + "/{suiteId}/{needUserInfo?}"
-        else Work.oauthNotifyPath + "/{corpId}/{agentId}/{needUserInfo?}")
+    get(if(Work.isIsv) IsvWork.oauthNotifyPath + "/{suiteId}/{needUserInfo}/{separator}"
+        else Work.oauthNotifyPath + "/{corpId}/{agentId}/{needUserInfo}/{separator}")
     { //默认路径： /api/wx/work/oauth/notify/{corpId}/{agentId} or /api/wx/work/isv/oauth/notify/{suiteId}
         val code = call.request.queryParameters["code"]
         val state = call.request.queryParameters["state"]
@@ -306,13 +308,8 @@ fun Routing.wxWorkOAuthApi(
                 result.errMsg = e.message
             }
 
-            //log.info("get oauth notify from tencent: schema=${call.request.origin.scheme},path=${call.request.origin.uri}")
-            //通知到前端是使用http还是https，取决于微信公众号后台配置，若前端网页与后台配置不一致，将导致storage找不到对应的值，将会出问题
-            //val host = call.request.origin.scheme +"://"+ call.request.host()
-
             //前端若是SPA，通知路径可能需要添加browserHistorySeparator: /wxwork/authNotify  or /#!/wxwork/authNotify
-            val path = if (Work.browserHistorySeparator.isEmpty()) notifyWebAppUrl
-            else "/${Work.browserHistorySeparator}${notifyWebAppUrl}"
+            val path = BrowserRouterSeperatorUtil.getUri(call.parameters["separator"]?:"0", notifyWebAppUrl)
             call.respondRedirect("$path?${result.serialize()}", permanent = false)
         }
     }
@@ -334,15 +331,7 @@ fun Routing.wxWorkOAuthApi(
 fun Routing.workJsSdkSignature() {
     val log = LoggerFactory.getLogger("workJsSdkSignature")
 
-    //  /api/wx/work/jssdk/signature
-    //corpId=wwfc2fead39b1e60dd&agentId=1000006&url=https%3A%2F%2Fwxadmin.zhuanzhuan360.com%2F
-    get(Work.jsSdkSignaturePath) { //默认路径： /api/wx/work/jssdk/signature?corpId=XXX&type=agent_config
-        val suiteId = call.request.queryParameters["suiteId"]//IsvWorkMulti时需非空
-        val corpId = call.request.queryParameters["corpId"] //均不能空
-        val agentId = call.request.queryParameters["agentId"]//内部多应用时提供 OrSysAgentKey
-        val isInjectAgentConfig = call.request.queryParameters["type"] == "agent_config" //agent_config
-        val url = (call.request.queryParameters["url"]?: call.request.headers["Referer"])?.split('#')?.firstOrNull()
-
+    suspend fun sig(call: ApplicationCall, corpId: String?, agentId: String?, suiteId: String?, isInjectAgentConfig: Boolean, url: String?){
         val jsTicket: String?
         if (url == null) {
             log.warn("request Referer or url parameter is null")
@@ -359,7 +348,7 @@ fun Routing.workJsSdkSignature() {
                     } else {
                         jsTicket =  if(isInjectAgentConfig)
                             IsvWorkMulti.ApiContextMap[suiteId]?.agentJsTicket?.get()
-                            else IsvWorkMulti.ApiContextMap[suiteId]?.jsTicket?.get()
+                        else IsvWorkMulti.ApiContextMap[suiteId]?.jsTicket?.get()
 
                         if (jsTicket == null) {
                             log.warn("IsvWorkMulti: jsTicket is null")
@@ -367,7 +356,7 @@ fun Routing.workJsSdkSignature() {
                         } else {
                             //agentId在登录时得到
                             call.respond(DataBox("OK", null, JsAPI.getSignature(corpId, jsTicket, url,
-                            if(isInjectAgentConfig)agentId else null)))
+                                if(isInjectAgentConfig)agentId else null)))
                         }
                     }
                 } else {
@@ -390,6 +379,35 @@ fun Routing.workJsSdkSignature() {
                 }
             }
         }
+    }
+
+    /**
+     * 只适合于同域名(提供完整Referrer信息)，或者跨域带有#分隔符的SPA页面
+     * /api/wx/work/jssdk/signature
+     * */
+    get(Work.jsSdkSignaturePath) { //默认路径： /api/wx/work/jssdk/signature?corpId=XXX&type=agent_config
+        val suiteId = call.request.queryParameters["suiteId"]//IsvWorkMulti时需非空
+        val corpId = call.request.queryParameters["corpId"] //均不能空
+        val agentId = call.request.queryParameters["agentId"]//内部多应用时提供 OrSysAgentKey
+        val isInjectAgentConfig = call.request.queryParameters["type"] == "agent_config" //agent_config
+        //使用传递过来的参数，可能不全，因为&分隔被当成get(path)的参数，除非前端encode一下或用post？，或优先采用Referer
+        val url =  call.request.headers["Referer"]?.split('#')?.firstOrNull()?: call.request.queryParameters["url"]
+
+       sig(call, corpId,agentId, suiteId, isInjectAgentConfig, url)
+    }
+
+    /**
+     * 适合各种情景，包括跨域
+     * url参数通过PostData中的data传递过来。url中有多个参数时，避免被认为api的参数
+     * */
+    post(Work.jsSdkSignaturePath) { //默认路径： /api/wx/work/jssdk/signature?corpId=XXX&type=agent_config
+        val suiteId = call.request.queryParameters["suiteId"]//IsvWorkMulti时需非空
+        val corpId = call.request.queryParameters["corpId"] //均不能空
+        val agentId = call.request.queryParameters["agentId"]//内部多应用时提供 OrSysAgentKey
+        val isInjectAgentConfig = call.request.queryParameters["type"] == "agent_config" //agent_config
+
+        val url = call.receive<PostData>().data
+        sig(call, corpId,agentId, suiteId, isInjectAgentConfig, url)
     }
 
 }

@@ -18,13 +18,22 @@
 @file:UseContextualSerialization(ObjectId::class)
 package com.github.rwsbillyang.wxWork.wxkf
 
-import com.github.rwsbillyang.wxSDK.work.EnterSessionContext
+import com.github.rwsbillyang.ktorKit.apiBox.IUmiPaginationParams
+import io.ktor.resources.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.UseContextualSerialization
 import kotlinx.serialization.json.JsonObject
+import org.bson.conversions.Bson
 import org.bson.types.ObjectId
+import org.litote.kmongo.and
+import org.litote.kmongo.eq
+import org.litote.kmongo.or
 
+
+/**
+ * 微信客服账号，里面可配置多个接待人员
+ * */
 @Serializable
 data class WxkfAccount(
     val _id: String, //open_kfid
@@ -33,6 +42,10 @@ data class WxkfAccount(
     val manage_privilege: Boolean,
     val corpId: String,
 )
+
+/**
+ * 微信客服账号里的接待员
+ * */
 @Serializable
 data class WxkfServicer(
     val _id: String, //open_kfid
@@ -41,6 +54,8 @@ data class WxkfServicer(
     val department: List<Int>?
 )
 /**
+ * 客服账号下的场景
+ *
  * @param kfId 客服id
  * @param scene 场景值 不多于32字节 字符串取值范围(正则表达式)：[0-9a-zA-Z_-]*
  * @param corpId 企业corpId
@@ -83,8 +98,12 @@ data class WxkfMsg(
     val open_kfid: String? = null, //enter_session时为空
     val external_userid: String? = null,//enter_session时为空
     val servicer_userid: String? = null
-
 )
+
+
+/**
+ * 同步消息的最新cursor
+ * */
 @Serializable
 data class WxkfMsgCursor(
     val _id: String,//open_kfid
@@ -92,11 +111,51 @@ data class WxkfMsgCursor(
 )
 
 
+//@Serializable
+//class WxkfCustomer(
+//    val nickname: String,
+//    val avatar: String?,
+//    val gender: Int,
+//    val externalId: String,
+//    val enterSessions: List<EnterSessionContext>? = null, //wxkf 中的来源场景列表
+//)
+
+
+//查询会话记录列表数据及额外信息：ChatSessionInfo
 @Serializable
-class WxkfCustomer(
-    val nickname: String,
+@Resource("/chat/msg/list")
+class WxMsgPageParams(
+    override val umi: String? = null,
+    val open_kfId: String? = null,
+    val staff_Id: String? = null,
+    val external_userid: String? = null,
+    val corpId: String?= null
+) : IUmiPaginationParams {
+    override fun toFilter(): Bson {
+        val f1 = open_kfId?.let { WxkfMsg::open_kfid eq it }
+        val f2 = external_userid?.let { or(WxkfMsg::external_userid eq it, ) }
+        val f3 = staff_Id?.let { WxkfMsg::servicer_userid eq it }
+        val f4 = corpId?.let { WxkfMsg::corpId eq it }
+
+        return and(f1,f2,f3,f4)
+    }
+}
+
+@Serializable
+class ChatSessionInfo(
+    val external: ChatPeer?,
+    val me: ChatPeer?,
+    val map: Map<String,ChatPeer>,
+    val msgList: List<WxkfMsg>
+)
+
+//对应着前端的IContact
+@Serializable
+class ChatPeer(
+    val id: String,
     val avatar: String?,
-    val gender: Int,
-    val externalId: String,
-    val enterSessions: List<EnterSessionContext>? = null, //wxkf 中的来源场景列表
+    val nickname: String?,
+    val message: String? = null, //最后一条消息
+    val date: String? = null,//最后一条消息时间
+    val desc: String? = null, //简述备注
 )

@@ -208,7 +208,7 @@ data class ExternalContact(
 }
 @Serializable
 @Resource("/list")
-data class ExternalListParams(
+class ExternalListParams(
     val corpId: String,
 
     var userId: String? = null, //指定成员的客户 用于follow中的查询
@@ -221,7 +221,9 @@ data class ExternalListParams(
     val name: String? = null,
     val type: Int? = null,
     val gender: Int? = null, //0表示未定义，1表示男性，2表示女性
-    val lastId: String? = null
+    val lastId: String? = null,
+    val wxkf: Boolean? = null,
+
 ) : IUmiPaginationParams {
     override fun toFilter(): Bson {
         val corpIdFilter = ExternalContact::corpId eq corpId
@@ -238,8 +240,8 @@ data class ExternalListParams(
         val nameFilter = name?.let { ExternalContact::name regex ".*$it.*" }
         val typeFilter = type?.let { ExternalContact::type eq it }
         val genderFilter = gender?.let { ExternalContact::gender eq it }
-
-        return and(idFilter,corpIdFilter, userChannelFilter,  typeFilter, genderFilter,nameFilter)
+        val f6 = wxkf?.let { ExternalContact::wxkf eq true }
+        return and(idFilter,corpIdFilter, userChannelFilter,  typeFilter,f6, genderFilter,nameFilter)
     }
 
 }

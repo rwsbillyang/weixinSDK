@@ -25,8 +25,10 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
+import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.routing.get
 import org.koin.ktor.ext.inject
 
 
@@ -95,7 +97,13 @@ fun Routing.wxkfApi() {
                 }else{
                     call.respondBoxOK(controller.delScene(id))
                 }
+            }
 
+            get<WxMsgPageParams>{
+                call.respondBox(controller.getChatSessionInf(it, call.appId))
+            }
+            get("/external/list"){
+                call.respondBox(controller.getExternalListInfo(call.appId))
             }
         }
     }

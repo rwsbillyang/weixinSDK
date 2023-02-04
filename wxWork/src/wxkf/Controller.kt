@@ -19,8 +19,14 @@
 package com.github.rwsbillyang.wxWork.wxkf
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
+import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
 import com.github.rwsbillyang.wxSDK.work.KfAccountListResponse
 import com.github.rwsbillyang.wxSDK.work.WxKefuApi
+import com.github.rwsbillyang.wxWork.contacts.ContactService
+import com.github.rwsbillyang.wxWork.contacts.ExternalContact
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.bson.types.ObjectId
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -31,6 +37,7 @@ import org.slf4j.LoggerFactory
 class WxkfController:KoinComponent {
     private val log = LoggerFactory.getLogger("WxkfController")
     private val service:WxkfService by inject()
+    private val contactService: ContactService by inject()
 
     //将腾讯的客服账号列表同步到自己的数据库中
     fun syncWxKfAccountList(corpId: String): DataBox<Int>{
@@ -112,4 +119,73 @@ class WxkfController:KoinComponent {
     }
 
     fun delScene(id: String) = service.deleteOne<WxkfScene>("wxkfScene", id)
+
+    fun getChatSessionInf(params: WxMsgPageParams, appId: String?): DataBox<ChatSessionInfo>{
+        val list = service.findPage<WxkfMsg>(service.wxkfMsgCol, params)
+        val corpId = appId?:params.corpId?:list.firstOrNull()?.corpId
+        if(corpId.isNullOrEmpty()){
+            return DataBox.ko("no corpId in auth header or query params or wxMsgList")
+        }
+        val kfIds = mutableSetOf<String>()
+        val servicers = mutableSetOf<String>()
+
+        list.forEach {
+            if(it.origin == 4){
+                if(it.jsonStr != null){
+                    //{"event_type":"enter_session","scene":"oamenu3","open_kfid":"wkfqLUQwAApHj0eaMhYPQOOamS3Wz17w","external_userid":"wmfqLUQwAAHniQno9qrSYAQBiwoP6xog","welcome_code":"8EW1TOYcpSP2tGD2UEWpXSM3gZS3qDHs7X2fwtk_oTc","scene_param":"%E5%9C%BA%E6%99%AF3"}
+                    val json = Json.decodeFromString(JsonObject.serializer(), it.jsonStr)
+                    json["open_kfid"]?.jsonPrimitive?.content?.let { kfIds.add(it) }
+                    json["external_userid"]?.jsonPrimitive?.content?.let { servicers.add(it) }
+                }
+            }else{
+                if(it.open_kfid != null)
+                    kfIds.add(it.open_kfid)
+                if(it.servicer_userid != null){
+                    servicers.add(it.servicer_userid)
+                }
+            }
+        }
+
+        val external = params.external_userid?.let {
+            contactService.findExternalContact(it, corpId)
+        }?.let {
+            val enter = it.enterSessions?.lastOrNull()
+            ChatPeer(it.externalId, it.avatar, it.name, null, null, "来自：" + enter?.scene_param)
+        }
+
+        val map = mutableMapOf<String, ChatPeer>()
+        var me: ChatPeer? = null
+        kfIds.forEach {
+            val a = service.findOne<WxkfAccount>("wxkfAccount", it, false)
+            if(a!=null)
+            {
+                me = ChatPeer(it, a.avatar, a.name)
+                map[it] = me!!
+            }
+        }
+
+        servicers.forEach {
+            val a = contactService.findContact(it, corpId)
+            if(a!=null)
+            {
+                map[it] = ChatPeer(it, a.avatar, a.name)
+            }
+        }
+
+        return DataBox.ok(ChatSessionInfo(external, me, map.toMap(), list))
+    }
+
+    fun getExternalListInfo(corpId: String?):DataBox<List<ChatPeer>>{
+        if(corpId.isNullOrEmpty()){
+            return DataBox.ko("no corpId in auth header")
+        }
+        val list = contactService.findExternalListAll(and(ExternalContact::corpId eq corpId, ExternalContact::wxkf eq true))
+            .map{
+                val enter = it.enterSessions?.lastOrNull()
+                ChatPeer(it.externalId, it.avatar, it.name, "from：" + enter?.scene_param, enter?.time?.let{DatetimeUtil.format(it,"yy-MM-dd HH:mm")})
+            }
+
+        return DataBox.ok(list)
+
+    }
 }

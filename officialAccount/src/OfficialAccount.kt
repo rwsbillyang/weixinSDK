@@ -32,8 +32,9 @@ object OfficialAccount {
 
     /**
      * 前端获取api签名信息，重定向到请求腾讯授权页面
+     * 不再需要，前端直接构造oauth info
      * */
-    var oauthInfoPath: String = "/api/wx/oa/oauth/info"
+    //var oauthInfoPath: String = "/api/wx/oa/oauth/info"
 
     /**
      * 微信服务器通知到后端的路径（无需用户授权）, 最后面的参数为{appId}，用于通知openId
@@ -47,8 +48,9 @@ object OfficialAccount {
 
     /**
      * 一些前端SPA应用路径通常使用"#!"进行隔离，若为正常路径，可赋值为""
+     * 不再固定设置，为了支持不同的前端路由，前端通过notify路径参数指定
      * */
-    var browserHistorySeparator = "#!"
+    //var browserHistorySeparator = "#!"
 
     /**
      * 授权后经过后端再跳转到前端，前端记录下授权结果路径

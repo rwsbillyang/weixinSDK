@@ -59,8 +59,6 @@ object Work {
     var isIsv by Delegates.notNull<Boolean>()
 
 
-
-
     const val prefix = "/api/wx/work"
 
     /**
@@ -69,8 +67,9 @@ object Work {
     var msgNotifyUri = "${prefix}/msg"
     /**
      * 前端获取api签名信息，重定向到请求腾讯授权页面
+     * 不再需要，前端直接构造oauth info
      * */
-    var oauthInfoPath: String = "$prefix/oauth/info"
+    //var oauthInfoPath: String = "$prefix/oauth/info"
 
     /**
      * 用户授权后的通知微信服务器通知到后端的路径
@@ -79,8 +78,10 @@ object Work {
 
     /**
      * 一些前端SPA应用路径通常使用"#!"进行隔离，若为正常路径，可赋值为""
+     * 不再固定设置，为了支持不同的前端路由，前端通过notify路径参数指定
      * */
-    var browserHistorySeparator = "#!"
+    //var browserHistorySeparator = "#!"
+
     /**
      * 授权后腾讯通知到后端，处理后再跳转一下通知前端，前端记录下授权结果路径
      * */
