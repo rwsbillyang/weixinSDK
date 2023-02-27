@@ -20,6 +20,7 @@ package com.github.rwsbillyang.wxWork.wxkf
 
 import com.github.rwsbillyang.ktorKit.apiBox.DataBox
 import com.github.rwsbillyang.ktorKit.util.DatetimeUtil
+import com.github.rwsbillyang.wxSDK.work.EnterSessionContext
 import com.github.rwsbillyang.wxSDK.work.KfAccountListResponse
 import com.github.rwsbillyang.wxSDK.work.WxKefuApi
 import com.github.rwsbillyang.wxWork.contacts.ContactService
@@ -129,6 +130,7 @@ class WxkfController:KoinComponent {
         val kfIds = mutableSetOf<String>()
         val servicers = mutableSetOf<String>()
 
+        //TODO: image等消息下载media_id对应的资源
         list.forEach {
             if(it.origin == 4){
                 if(it.jsonStr != null){
@@ -146,12 +148,38 @@ class WxkfController:KoinComponent {
             }
         }
 
-        val external = params.external_userid?.let {
+
+        val externalId = params.external_userid
+        val externalContact = externalId?.let {
             contactService.findExternalContact(it, corpId)
-        }?.let {
-            val enter = it.enterSessions?.lastOrNull()
-            ChatPeer(it.externalId, it.avatar, it.name, null, null, "来自：" + enter?.scene_param)
         }
+
+        val external = if(externalContact != null){
+            val enter = externalContact.enterSessions?.lastOrNull()
+            ChatPeer(externalContact.externalId, externalContact.avatar, externalContact.name, null, null, "来自：" + enter?.scene_param)
+        }else{
+            if(externalId != null ){ //尝试再次获取客户信息, 在不接收消息事件时，新咨询者总会为空，此处试图获取其信息
+                val res = WxKefuApi(corpId).getCustomerDetail(listOf(externalId))
+                if (res.isOK()) {
+                    res.customer_list?.forEach {
+                        val enters = it.enter_session_context?.let {
+                            listOf(EnterSessionContext(it.scene, it.scene_param))
+                        }?: listOf()
+                        contactService.upsertExternalContactByWxkf(corpId, it.external_userid, it.nickname,
+                            it.avatar, it.gender, it.unionid, enters)//可能只是更新基本信息和插入enter_session信息
+
+                    }
+                    val detail = res.customer_list?.firstOrNull()
+                    ChatPeer(externalId, detail?.avatar, detail?.nickname, null, null, "来自：" + detail?.enter_session_context?.scene_param)
+                } else {
+                    log.warn("fail to getCustomerDetail: ${res.errCode}: ${res.errMsg}")
+                    null
+                }
+            }else{
+               null
+            }
+        }
+
 
         val map = mutableMapOf<String, ChatPeer>()
         var me: ChatPeer? = null

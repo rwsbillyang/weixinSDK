@@ -63,37 +63,27 @@ class AccountService(cache: ICache) : MongoGenericService(cache) {
         }
     }
 
-    fun findById(id: String) = cacheable("u/id/$id") {
-        runBlocking {
-            accountCol.findOneById(id.toObjectId())
-        }
+    fun findById(id: String) = runBlocking {
+        accountCol.findOneById(id.toObjectId())
     }
 
-    fun findOne(id: ObjectId) = cacheable("u/id/${id.to64String()}") {
-        runBlocking {
-            accountCol.findOneById(id)
-        }
+    fun findOne(id: ObjectId) = runBlocking {
+        accountCol.findOneById(id)
     }
 
-    fun findByTel(tel: String) = cacheable("u/tel/$tel") {
-        runBlocking {
-            accountCol.findOne(Account::tel eq tel)
-        }
+    fun findByTel(tel: String) = runBlocking {
+        accountCol.findOne(Account::tel eq tel)
     }
 
-    fun findByName(name: String) = cacheable("u/name/$name") {
-        runBlocking {
-            accountCol.findOne(Account::name eq name)
-        }
+    fun findByName(name: String) = runBlocking {
+        accountCol.findOne(Account::name eq name)
     }
 
 
 
     //for update openId1, openId2 etc.
-    fun updateOneById(id: String, update: Bson) = evict("u/id/$id") {
-        runBlocking {
-            accountCol.updateOneById(id.toObjectId(), update)//setValue(Account::openId1, "")
-        }
+    fun updateOneById(id: String, update: Bson) = runBlocking {
+        accountCol.updateOneById(id.toObjectId(), update)//setValue(Account::openId1, "")
     }
 
     /**
@@ -126,10 +116,8 @@ class AccountService(cache: ICache) : MongoGenericService(cache) {
     }
 
 
-    fun updatePwdAndSalt(account: Account, pwd: String?, salt: String?) = evict("u/name/${account.name}") {
-        runBlocking {
-            accountCol.updateOneById(account._id, set(SetTo(Account::pwd, pwd), SetTo(Account::salt, salt)))
-        }
+    fun updatePwdAndSalt(account: Account, pwd: String?, salt: String?) = runBlocking {
+        accountCol.updateOneById(account._id, set(SetTo(Account::pwd, pwd), SetTo(Account::salt, salt)))
     }
 
 
@@ -187,15 +175,12 @@ class AccountService(cache: ICache) : MongoGenericService(cache) {
 
 
 
-    fun joinGroup(uId: String, groupId: String) = evict("u/id/$uId") {
-        runBlocking {
-            accountCol.updateOneById(
-                uId.toObjectId(),
-                addToSet(Account::gId, groupId.toObjectId())
-            ).matchedCount//setValue(Account::openId1, "")
-        }
+    fun joinGroup(uId: String, groupId: String) = runBlocking {
+        accountCol.updateOneById(
+            uId.toObjectId(),
+            addToSet(Account::gId, groupId.toObjectId())
+        ).matchedCount//setValue(Account::openId1, "")
     }
-
 
     private fun accountIdToIdName(id: ObjectId?): IdName? {
         if (id == null) return null
@@ -218,27 +203,21 @@ class AccountService(cache: ICache) : MongoGenericService(cache) {
         }
     }
 
-    fun findGroup(id: String) = cacheable("group/$id") {
-        runBlocking { groupCol.findOneById(id.toObjectId()) }
-    }
+    fun findGroup(id: String) = runBlocking { groupCol.findOneById(id.toObjectId()) }
 
     //前端实际传递的数据结构与
-    fun saveGroup(bean: GroupBean) = evict("group/${bean._id}") {
-        runBlocking {
-            if (bean._id == null) {
-                val g = Group(ObjectId(), bean.name,bean.appId, bean.status, bean.creator?.toObjectId())
-                groupCol.insertOne(g)
-                bean._id = g._id.to64String()
-            } else {
-                groupCol.updateOneById(bean._id!!.toObjectId(), setValue(Group::name, bean.name))
-            }
-            bean
+    fun saveGroup(bean: GroupBean) = runBlocking {
+        if (bean._id == null) {
+            val g = Group(ObjectId(), bean.name,bean.appId, bean.status, bean.creator?.toObjectId())
+            groupCol.insertOne(g)
+            bean._id = g._id.to64String()
+        } else {
+            groupCol.updateOneById(bean._id!!.toObjectId(), setValue(Group::name, bean.name))
         }
+        bean
     }
 
-    fun delGroup(id: String) = evict("group/$id") {
-        runBlocking { groupCol.deleteOneById(id.toObjectId()) }
-    }
+    fun delGroup(id: String) = runBlocking { groupCol.deleteOneById(id.toObjectId()) }
 
 
 }
